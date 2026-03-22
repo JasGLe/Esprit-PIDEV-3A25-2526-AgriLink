@@ -1,0 +1,25 @@
+{# Card Component
+   Usage: {% embed 'components/_card.html.twig' %}
+              {% block card_title %}Titre{% endblock %}
+              {% block card_content %}Contenu{% endblock %}
+          {% endembed %}
+#}
+
+<div class="bg-white shadow rounded-lg overflow-hidden {{ classes|default('') }}">
+    {% block card_header %}
+        {% if block('card_title') is defined %}
+            <div class="px-4 py-5 border-b border-gray-200 sm:px-6">
+                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                    {% block card_title %}{% endblock %}
+                </h3>
+                {% block card_description %}{% endblock %}
+            </div>
+        {% endif %}
+    {% endblock %}
+    
+    <div class="px-4 py-5 sm:p-6">
+        {% block card_content %}{% endblock %}
+    </div>
+    
+    {% block card_footer %}{% endblock %}
+</div>
