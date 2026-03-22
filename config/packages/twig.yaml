@@ -1,5 +1,10 @@
 twig:
     file_name_pattern: '*.twig'
+    
+    globals:
+        uploads_base_url: '%env(UPLOADS_BASE_URL)%'
+    
+    default_path: '%kernel.project_dir%/templates'
 
 when@test:
     twig:
