@@ -1,0 +1,80 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}Modifier mon profil - AgriLink{% endblock %}
+
+{% block page_content %}
+    <div class="mb-8">
+        <div class="flex items-center space-x-4">
+            <a href="{{ path('app_profile') }}" class="text-gray-500 hover:text-gray-700">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </a>
+            <h1 class="text-2xl font-bold text-gray-900">Modifier mon profil</h1>
+        </div>
+    </div>
+
+    <div class="max-w-3xl">
+        {% embed 'components/_card.html.twig' %}
+            {% block card_content %}
+                {{ form_start(form) }}
+                    <div class="space-y-6">
+                        {# Photo de profil actuelle #}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Photo actuelle</label>
+                            <div class="flex items-center space-x-4">
+                                {{ include('components/_avatar.html.twig', {user: app.user, size: 'large'}) }}
+                                {% if app.user.profilePhotoPath %}
+                                    <p class="text-sm text-gray-500">Téléchargez une nouvelle photo pour la remplacer</p>
+                                {% else %}
+                                    <p class="text-sm text-gray-500">Aucune photo de profil</p>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {# Upload nouvelle photo #}
+                        <div>
+                            {{ form_label(form.profilePhoto) }}
+                            {{ form_widget(form.profilePhoto) }}
+                            {{ form_help(form.profilePhoto) }}
+                            {{ form_errors(form.profilePhoto) }}
+                        </div>
+
+                        <hr class="border-gray-200">
+
+                        {# Nom complet #}
+                        <div>
+                            {{ form_label(form.fullName) }}
+                            {{ form_widget(form.fullName) }}
+                            {{ form_errors(form.fullName) }}
+                        </div>
+
+                        {# Email #}
+                        <div>
+                            {{ form_label(form.email) }}
+                            {{ form_widget(form.email) }}
+                            {{ form_errors(form.email) }}
+                            <p class="mt-1 text-xs text-gray-500">L'email doit être unique dans le système.</p>
+                        </div>
+
+                        {# Téléphone #}
+                        <div>
+                            {{ form_label(form.phoneNumber) }}
+                            {{ form_widget(form.phoneNumber) }}
+                            {{ form_errors(form.phoneNumber) }}
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex items-center justify-end space-x-3 pt-6 border-t border-gray-200">
+                        <a href="{{ path('app_profile') }}" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
+                            Annuler
+                        </a>
+                        <button type="submit" class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                            Enregistrer les modifications
+                        </button>
+                    </div>
+                {{ form_end(form) }}
+            {% endblock %}
+        {% endembed %}
+    </div>
+{% endblock %}
