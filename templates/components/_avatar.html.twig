@@ -1,0 +1,24 @@
+{# Avatar Component
+   Usage: {{ include('components/_avatar.html.twig', {
+       user: user,
+       size: 'large'  (small, medium, large)
+   }) }}
+#}
+
+{% set sizes = {
+    'small': 'w-8 h-8 text-xs',
+    'medium': 'w-10 h-10 text-sm',
+    'large': 'w-16 h-16 text-xl',
+} %}
+
+{% set sizeClass = sizes[size|default('medium')] %}
+
+{% if user.profilePhotoPath %}
+    <img src="{{ uploads_base_url }}/{{ user.profilePhotoPath }}" 
+         alt="{{ user.displayName }}" 
+         class="{{ sizeClass }} rounded-full object-cover {{ classes|default('') }}">
+{% else %}
+    <div class="flex items-center justify-center {{ sizeClass }} rounded-full bg-primary-600 text-white font-semibold {{ classes|default('') }}">
+        {{ user.initials }}
+    </div>
+{% endif %}

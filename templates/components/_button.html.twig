@@ -1,0 +1,27 @@
+{# Button Component
+   Usage: {{ include('components/_button.html.twig', {
+       text: 'Mon bouton',
+       type: 'primary',  (primary, secondary, danger)
+       href: path('route_name'),  (for links)
+       submit: true,  (for submit buttons)
+       classes: 'additional-classes'
+   }) }}
+#}
+
+{% set buttonClasses = {
+    'primary': 'bg-primary-600 hover:bg-primary-700 text-white',
+    'secondary': 'bg-gray-200 hover:bg-gray-300 text-gray-800',
+    'danger': 'bg-red-600 hover:bg-red-700 text-white',
+} %}
+
+{% set baseClasses = 'inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors' %}
+
+{% if href is defined %}
+    <a href="{{ href }}" class="{{ baseClasses }} {{ buttonClasses[type|default('primary')] }} {{ classes|default('') }}">
+        {{ text }}
+    </a>
+{% else %}
+    <button type="{{ submit is defined and submit ? 'submit' : 'button' }}" class="{{ baseClasses }} {{ buttonClasses[type|default('primary')] }} {{ classes|default('') }}">
+        {{ text }}
+    </button>
+{% endif %}
