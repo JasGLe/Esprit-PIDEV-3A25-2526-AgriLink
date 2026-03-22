@@ -1,0 +1,93 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}Tableau de bord - AgriLink{% endblock %}
+
+{% block page_content %}
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900">Tableau de bord</h1>
+        <p class="mt-1 text-sm text-gray-600">Bienvenue sur votre espace AgriLink, {{ app.user.displayName }} !</p>
+    </div>
+
+    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {# Card: Profil #}
+        {% embed 'components/_card.html.twig' %}
+            {% block card_title %}Mon profil{% endblock %}
+            {% block card_content %}
+                <div class="flex items-center space-x-4">
+                    {{ include('components/_avatar.html.twig', {user: app.user, size: 'large'}) }}
+                    <div>
+                        <p class="text-lg font-semibold text-gray-900">{{ app.user.displayName }}</p>
+                        <p class="text-sm text-gray-500">{{ app.user.email }}</p>
+                        {{ include('components/_role_badge.html.twig', {role: app.user.roles|first}) }}
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <a href="{{ path('app_profile') }}" class="text-primary-600 hover:text-primary-700 text-sm font-medium">
+                        Voir mon profil →
+                    </a>
+                </div>
+            {% endblock %}
+        {% endembed %}
+
+        {# Card: Statistiques #}
+        {% embed 'components/_card.html.twig' %}
+            {% block card_title %}Activité{% endblock %}
+            {% block card_content %}
+                <div class="text-center py-8">
+                    <p class="text-gray-500 text-sm">Vos statistiques apparaîtront ici.</p>
+                </div>
+            {% endblock %}
+        {% endembed %}
+
+        {# Card: Actions rapides #}
+        {% embed 'components/_card.html.twig' %}
+            {% block card_title %}Actions rapides{% endblock %}
+            {% block card_content %}
+                <div class="space-y-2">
+                    <a href="{{ path('app_profile_edit') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                        ✏️ Modifier mon profil
+                    </a>
+                    {% if is_granted('ROLE_ADMIN') %}
+                        <a href="{{ path('app_admin_users') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                            👥 Gérer les utilisateurs
+                        </a>
+                    {% endif %}
+                </div>
+            {% endblock %}
+        {% endembed %}
+    </div>
+
+    {# Informations additionnelles #}
+    <div class="mt-8">
+        {% embed 'components/_card.html.twig' %}
+            {% block card_title %}Bienvenue sur AgriLink Module 1 : Users & Auth{% endblock %}
+            {% block card_content %}
+                <div class="prose prose-sm max-w-none">
+                    <p class="text-gray-700">
+                        Ce module de base vous permet de gérer votre compte utilisateur et vos informations personnelles.
+                    </p>
+                    <ul class="mt-4 space-y-2">
+                        <li class="flex items-start">
+                            <span class="text-primary-600 mr-2">✓</span>
+                            <span class="text-gray-700">Authentification sécurisée avec "Se souvenir de moi"</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-primary-600 mr-2">✓</span>
+                            <span class="text-gray-700">Gestion de profil avec photo personnalisée</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-primary-600 mr-2">✓</span>
+                            <span class="text-gray-700">Interface moderne avec Tailwind CSS</span>
+                        </li>
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <li class="flex items-start">
+                                <span class="text-primary-600 mr-2">✓</span>
+                                <span class="text-gray-700">Administration complète des utilisateurs</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            {% endblock %}
+        {% endembed %}
+    </div>
+{% endblock %}

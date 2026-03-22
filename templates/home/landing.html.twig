@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Bienvenue sur AgriLink{% endblock %}
+
+{% block body %}
+<div class="min-h-screen bg-gradient-to-b from-primary-50 to-white">
+    <nav class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <span class="text-2xl">🌾</span>
+                    <span class="ml-2 text-xl font-bold text-primary-600">AgriLink</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="{{ path('app_login') }}" class="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium">
+                        Connexion
+                    </a>
+                    <a href="{{ path('app_register') }}" class="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                        Créer un compte
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div class="text-center">
+            <h1 class="text-5xl font-bold text-gray-900 mb-6">
+                Bienvenue sur <span class="text-primary-600">AgriLink</span>
+            </h1>
+            <p class="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+                La plateforme qui connecte agriculteurs, fournisseurs et professionnels du secteur agricole.
+            </p>
+            <div class="flex justify-center space-x-4">
+                <a href="{{ path('app_register') }}" class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700">
+                    Commencer maintenant
+                </a>
+                <a href="{{ path('app_login') }}" class="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Se connecter
+                </a>
+            </div>
+        </div>
+
+        <div class="mt-24 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="text-4xl mb-4">👨‍🌾</div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Pour les Agriculteurs</h3>
+                <p class="text-gray-600">Gérez votre exploitation et connectez-vous avec des fournisseurs de confiance.</p>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl mb-4">🏭</div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Pour les Fournisseurs</h3>
+                <p class="text-gray-600">Proposez vos produits et services aux professionnels agricoles.</p>
+            </div>
+            <div class="text-center">
+                <div class="text-4xl mb-4">🤝</div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Réseau Professionnel</h3>
+                <p class="text-gray-600">Échangez avec une communauté active d'experts du secteur.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
