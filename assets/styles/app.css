@@ -1,3 +1,8 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom styles */
 body {
-    background-color: skyblue;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
