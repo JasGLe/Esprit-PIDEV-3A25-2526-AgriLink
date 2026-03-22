@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Créer un compte - AgriLink{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full space-y-8">
+        <div>
+            <div class="flex justify-center">
+                <span class="text-6xl">🌾</span>
+            </div>
+            <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">
+                Créer un compte AgriLink
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+                Ou
+                <a href="{{ path('app_login') }}" class="font-medium text-primary-600 hover:text-primary-500">
+                    connectez-vous si vous avez déjà un compte
+                </a>
+            </p>
+        </div>
+
+        {{ form_start(registrationForm, {'attr': {'class': 'mt-8 space-y-6'}}) }}
+            <div class="space-y-4">
+                <div>
+                    {{ form_label(registrationForm.email) }}
+                    {{ form_widget(registrationForm.email) }}
+                    {{ form_errors(registrationForm.email) }}
+                </div>
+
+                <div>
+                    {{ form_label(registrationForm.fullName) }}
+                    {{ form_widget(registrationForm.fullName) }}
+                    {{ form_errors(registrationForm.fullName) }}
+                </div>
+
+                <div>
+                    {{ form_label(registrationForm.plainPassword.first) }}
+                    {{ form_widget(registrationForm.plainPassword.first) }}
+                    {{ form_errors(registrationForm.plainPassword.first) }}
+                    <p class="mt-1 text-xs text-gray-500">Minimum 6 caractères</p>
+                </div>
+
+                <div>
+                    {{ form_label(registrationForm.plainPassword.second) }}
+                    {{ form_widget(registrationForm.plainPassword.second) }}
+                    {{ form_errors(registrationForm.plainPassword.second) }}
+                </div>
+
+                <div class="flex items-center">
+                    {{ form_widget(registrationForm.agreeTerms) }}
+                    {{ form_label(registrationForm.agreeTerms) }}
+                </div>
+                {{ form_errors(registrationForm.agreeTerms) }}
+            </div>
+
+            <div>
+                <button type="submit" class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500">
+                    Créer mon compte
+                </button>
+            </div>
+        {{ form_end(registrationForm) }}
+    </div>
+</div>
+{% endblock %}
