@@ -8,6 +8,7 @@ use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -49,12 +50,8 @@ class RegistrationFormType extends AbstractType
                     ],
                     'label_attr' => ['class' => 'block text-sm font-medium text-gray-700'],
                     'constraints' => [
-                        new NotBlank(['message' => 'Veuillez saisir un mot de passe.']),
-                        new Length([
-                            'min' => 6,
-                            'minMessage' => 'Le mot de passe doit contenir au moins {{ limit }} caractères.',
-                            'max' => 4096,
-                        ]),
+                        new NotBlank(message: 'Veuillez saisir un mot de passe.'),
+                        new Length(min: 6, minMessage: 'Le mot de passe doit contenir au moins {{ limit }} caractères.', max: 4096,),
                     ],
                 ],
                 'second_options' => [
@@ -71,10 +68,16 @@ class RegistrationFormType extends AbstractType
                 'label' => 'J\'accepte les conditions d\'utilisation',
                 'mapped' => false,
                 'constraints' => [
-                    new IsTrue(['message' => 'Vous devez accepter les conditions d\'utilisation.']),
+                    new IsTrue(message: 'Vous devez accepter les conditions d\'utilisation.'),
                 ],
                 'attr' => ['class' => 'h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded'],
                 'label_attr' => ['class' => 'ml-2 block text-sm text-gray-900'],
+            ])
+            ->add('submit', SubmitType::class, [
+                'label' => 'Créer mon compte',
+                'attr' => [
+                    'class' => 'group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500',
+                ],
             ]);
     }
 
@@ -82,6 +85,9 @@ class RegistrationFormType extends AbstractType
     {
         $resolver->setDefaults([
             'data_class' => User::class,
+            'csrf_protection' => true,
+            'csrf_field_name' => '_token',
+            'csrf_token_id' => 'registration',
         ]);
     }
 }

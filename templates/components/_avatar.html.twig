@@ -13,12 +13,46 @@
 
 {% set sizeClass = sizes[size|default('medium')] %}
 
-{% if user.profilePhotoPath %}
-    <img src="{{ uploads_base_url }}/{{ user.profilePhotoPath }}" 
-         alt="{{ user.displayName }}" 
-         class="{{ sizeClass }} rounded-full object-cover {{ classes|default('') }}">
-{% else %}
-    <div class="flex items-center justify-center {{ sizeClass }} rounded-full bg-primary-600 text-white font-semibold {{ classes|default('') }}">
-        {{ user.initials }}
-    </div>
-{% endif %}
+<div class="relative inline-block {{ classes|default('') }}">
+    {% if user.photoProfil %}
+        {# Handle different path formats in database:
+           - New format: profiles/filename.jpg
+           - Old format 1: agrilink/uploads/profiles/filename.jpg
+           - Old format 2: /agrilink/uploads/profiles/filename.jpg
+        #}
+        {% set photoPath = user.photoProfil %}
+        {% if photoPath starts with '/agrilink/' %}
+            {# Already has leading slash #}
+            {% set finalPath = photoPath %}
+        {% elseif photoPath starts with 'agrilink/' %}
+            {# Add leading slash #}
+            {% set finalPath = '/' ~ photoPath %}
+        {% else %}
+            {# Relative path - add base URL #}
+            {% set finalPath = '/agrilink/uploads/' ~ photoPath %}
+        {% endif %}
+        
+        <img src="{{ finalPath }}" 
+             alt="{{ user.nom }}" 
+             class="{{ sizeClass }} rounded-full object-cover border-2 border-gray-200"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        {# Fallback if image fails to load #}
+        <div class="hidden items-center justify-center {{ sizeClass }} rounded-full bg-primary-600 text-white font-semibold">
+            {% set names = user.nom|split(' ') %}
+            {% if names|length > 0 %}
+                {{ names[0]|first|upper }}{% if names|length > 1 %}{{ names[1]|first|upper }}{% endif %}
+            {% else %}
+                ?
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="flex items-center justify-center {{ sizeClass }} rounded-full bg-primary-600 text-white font-semibold">
+            {% set names = user.nom|split(' ') %}
+            {% if names|length > 0 %}
+                {{ names[0]|first|upper }}{% if names|length > 1 %}{{ names[1]|first|upper }}{% endif %}
+            {% else %}
+                ?
+            {% endif %}
+        </div>
+    {% endif %}
+</div>

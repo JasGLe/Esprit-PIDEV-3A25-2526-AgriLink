@@ -1,8 +1,5 @@
 # yaml-language-server: $schema=../vendor/symfony/dependency-injection/Loader/schema/services.schema.json
 
-imports:
-    - { resource: 'services_custom.yaml' }
-
 # This file is the entry point to configure your own services.
 # Files in the packages/ subdirectory configure your dependencies.
 # See also https://symfony.com/doc/current/service_container/import.html
@@ -10,6 +7,8 @@ imports:
 # Put parameters here that don't need to change on each machine where the app is deployed
 # https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
 parameters:
+    uploads_base_dir: '%env(resolve:UPLOADS_BASE_DIR)%'
+    uploads_base_url: '%env(resolve:UPLOADS_BASE_URL)%'
 
 services:
     # default configuration for services in *this* file
@@ -21,6 +20,25 @@ services:
     # this creates a service per class whose id is the fully-qualified class name
     App\:
         resource: '../src/'
+        exclude:
+            - '../src/DependencyInjection/'
+            - '../src/Entity/'
+            - '../src/Kernel.php'
+
+    # FileUploader service with explicit parameters
+    App\Service\FileUploader:
+        arguments:
+            $uploadsBaseDir: '%uploads_base_dir%'
+            $uploadsBaseUrl: '%uploads_base_url%'
+
+    # Login event listeners
+    App\EventListener\LoginSuccessListener:
+        tags:
+            - { name: kernel.event_listener, event: Symfony\Component\Security\Http\Event\LoginSuccessEvent }
+
+    App\EventListener\LoginFailureListener:
+        tags:
+            - { name: kernel.event_listener, event: Symfony\Component\Security\Http\Event\LoginFailureEvent }
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

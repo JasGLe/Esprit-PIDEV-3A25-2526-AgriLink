@@ -1,0 +1,483 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Administration - Utilisateurs{% endblock %}
+
+{% block main_content %}
+<!-- DEBUG SECTION -->
+<div style="background: #ffffcc; padding: 20px; margin: 20px; border: 2px solid #ff0000;">
+    <h2 style="color: #ff0000;">DEBUG INFO:</h2>
+    <p><strong>Total:</strong> {{ total }}</p>
+    <p><strong>Users count:</strong> {{ users|length }}</p>
+    <p><strong>Users variable type:</strong> {{ users is iterable ? 'iterable' : 'not iterable' }}</p>
+    {% if users|length > 0 %}
+        <p><strong>First user:</strong> {{ users[0].nom ?? 'No nom property' }} ({{ users[0].email ?? 'No email' }})</p>
+    {% else %}
+        <p style="color: #ff0000;"><strong>Users array is EMPTY!</strong></p>
+    {% endif %}
+</div>
+<!-- END DEBUG -->
+<div class="px-4 sm:px-6 lg:px-8 py-8">
+    {# Page header #}
+    <div class="sm:flex sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-gray-900">Gestion des utilisateurs</h1>
+            <p class="mt-1 text-sm text-gray-500">Gérez tous les comptes utilisateurs de la plateforme AgriLink</p>
+        </div>
+        <div class="mt-4 sm:mt-0">
+            <a href="{{ path('admin_users_create') }}" class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Ajouter un utilisateur
+            </a>
+        </div>
+    </div>
+
+    {# Flash messages #}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="mt-4 rounded-md p-4 {{ label == 'success' ? 'bg-green-50' : (label == 'error' ? 'bg-red-50' : 'bg-blue-50') }}">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        {% if label == 'success' %}
+                            <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        {% elseif label == 'error' %}
+                            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        {% else %}
+                            <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        {% endif %}
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium {{ label == 'success' ? 'text-green-800' : (label == 'error' ? 'text-red-800' : 'text-blue-800') }}">{{ message }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {# Statistics cards #}
+    <div class="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-md bg-green-500 p-3">
+                            <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total utilisateurs</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ stats.total }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-md bg-blue-500 p-3">
+                            <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Comptes actifs</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ stats.active }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-md bg-yellow-500 p-3">
+                            <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Emails vérifiés</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ stats.verified }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="rounded-md bg-purple-500 p-3">
+                            <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Nouveaux ce mois</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ stats.newThisMonth }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Filters #}
+    <div class="mt-6 bg-white shadow rounded-lg">
+        <div class="p-4 sm:p-6">
+            <form method="GET" action="{{ path('admin_users_list') }}" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                    <label for="search" class="block text-sm font-medium text-gray-700">Rechercher</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input type="text" name="search" id="search" value="{{ search }}" class="focus:ring-green-500 focus:border-green-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-md" placeholder="Nom ou email...">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="role" class="block text-sm font-medium text-gray-700">Rôle</label>
+                    <select id="role" name="role" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                        <option value="">Tous les rôles</option>
+                        {% for role in validRoles %}
+                            <option value="{{ role }}" {{ roleFilter == role ? 'selected' : '' }}>
+                                {% if role == 'ADMIN' %}Administrateur
+                                {% elseif role == 'AGRICULTEUR' %}Agriculteur
+                                {% elseif role == 'AGRIPLUS' %}AgriPlus
+                                {% elseif role == 'FOURNISSEUR' %}Fournisseur
+                                {% else %}Utilisateur{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700">Statut</label>
+                    <select id="status" name="status" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm rounded-md">
+                        <option value="">Tous</option>
+                        <option value="active" {{ statusFilter == 'active' ? 'selected' : '' }}>Actifs</option>
+                        <option value="inactive" {{ statusFilter == 'inactive' ? 'selected' : '' }}>Inactifs</option>
+                    </select>
+                </div>
+
+                <div class="flex items-end space-x-2">
+                    <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                        </svg>
+                        Filtrer
+                    </button>
+                    {% if search or roleFilter or statusFilter %}
+                        <a href="{{ path('admin_users_list') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            Réinitialiser
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# Users table #}
+    <div class="mt-6 bg-white shadow overflow-hidden sm:rounded-lg">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <a href="{{ path('admin_users_list', {search: search, role: roleFilter, status: statusFilter, orderBy: 'nom', orderDir: orderBy == 'nom' and orderDir == 'ASC' ? 'DESC' : 'ASC'}) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                <span>Utilisateur</span>
+                                {% if orderBy == 'nom' %}
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ orderDir == 'ASC' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}" />
+                                    </svg>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <a href="{{ path('admin_users_list', {search: search, role: roleFilter, status: statusFilter, orderBy: 'role', orderDir: orderBy == 'role' and orderDir == 'ASC' ? 'DESC' : 'ASC'}) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                <span>Rôle</span>
+                                {% if orderBy == 'role' %}
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ orderDir == 'ASC' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}" />
+                                    </svg>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <a href="{{ path('admin_users_list', {search: search, role: roleFilter, status: statusFilter, orderBy: 'createdAt', orderDir: orderBy == 'createdAt' and orderDir == 'ASC' ? 'DESC' : 'ASC'}) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                <span>Inscrit le</span>
+                                {% if orderBy == 'createdAt' %}
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ orderDir == 'ASC' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}" />
+                                    </svg>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <a href="{{ path('admin_users_list', {search: search, role: roleFilter, status: statusFilter, orderBy: 'lastLogin', orderDir: orderBy == 'lastLogin' and orderDir == 'ASC' ? 'DESC' : 'ASC'}) }}" class="flex items-center space-x-1 hover:text-gray-700">
+                                <span>Dernière connexion</span>
+                                {% if orderBy == 'lastLogin' %}
+                                    <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ orderDir == 'ASC' ? 'M5 15l7-7 7 7' : 'M19 9l-7 7-7-7' }}" />
+                                    </svg>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th scope="col" class="relative px-6 py-3">
+                            <span class="sr-only">Actions</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% if users is empty %}
+                        <tr><td colspan="7" class="px-6 py-4 text-center text-red-600 font-bold">❌ USERS ARRAY IS EMPTY!</td></tr>
+                    {% endif %}
+                    
+                    {# SIMPLE TEST ROW #}
+                    {% for user in users %}
+                        <tr class="hover:bg-gray-50 border-2 border-blue-500" data-user-id="{{ user.id }}">
+                            <td class="px-6 py-4 text-sm">
+                                TEST: {{ user.nom }} - {{ user.email }}
+                            </td>
+                            <td class="px-6 py-4">ROLE: {{ user.role }}</td>
+                            <td class="px-6 py-4">STATUS: {{ user.isActive ? 'Active' : 'Inactive' }}</td>
+                            <td class="px-6 py-4">ID: {{ user.id }}</td>
+                            <td class="px-6 py-4">Created: {{ user.createdAt ? user.createdAt|date('Y-m-d') : 'N/A' }}</td>
+                            <td class="px-6 py-4">Login: {{ user.lastLogin ? user.lastLogin|date('Y-m-d') : 'Never' }}</td>
+                            <td class="px-6 py-4">
+                                <a href="{{ path('admin_users_edit', {id: user.id}) }}" class="text-blue-600">Edit</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    
+                    {# OLD COMPLEX ROW - COMMENTED OUT #}
+                    {#
+                    {% for user in users %}
+                        <tr class="hover:bg-gray-50" data-user-id="{{ user.id }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        {{ include('components/_avatar.html.twig', {user: user, size: 'medium'}) }}
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ user.nom }}</div>
+                                        <div class="text-sm text-gray-500">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% set roleKey = 'ROLE_' ~ user.role %}
+                                {{ include('components/_role_badge.html.twig', {role: roleKey}) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex flex-col space-y-1">
+                                    {% if user.isActive %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-green-400" fill="currentColor" viewBox="0 0 8 8">
+                                                <circle cx="4" cy="4" r="3" />
+                                            </svg>
+                                            Actif
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <svg class="-ml-0.5 mr-1.5 h-2 w-2 text-red-400" fill="currentColor" viewBox="0 0 8 8">
+                                                <circle cx="4" cy="4" r="3" />
+                                            </svg>
+                                            Inactif
+                                        </span>
+                                    {% endif %}
+                                    {% if user.emailVerified %}
+                                        <span class="inline-flex items-center text-xs text-green-600">
+                                            <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                            </svg>
+                                            Email vérifié
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center text-xs text-yellow-600">
+                                            <svg class="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                            </svg>
+                                            Non vérifié
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ user.createdAt ? user.createdAt|date('d/m/Y') : '-' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ user.lastLogin ? user.lastLogin|date('d/m/Y H:i') : 'Jamais' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex items-center justify-end space-x-2">
+                                    <a href="{{ path('admin_users_edit', {id: user.id}) }}" class="text-green-600 hover:text-green-900" title="Modifier">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </a>
+                                    {% if user.id != app.user.id %}
+                                        <form method="POST" action="{{ path('admin_users_toggle_status', {id: user.id}) }}" class="inline" onsubmit="return confirm('{{ user.isActive ? 'Voulez-vous vraiment suspendre cet utilisateur ?' : 'Voulez-vous vraiment activer cet utilisateur ?' }}');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('toggle-status-' ~ user.id) }}">
+                                            <button type="submit" class="{{ user.isActive ? 'text-yellow-600 hover:text-yellow-900' : 'text-green-600 hover:text-green-900' }}" title="{{ user.isActive ? 'Suspendre' : 'Activer' }}">
+                                                {% if user.isActive %}
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                                    </svg>
+                                                {% else %}
+                                                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                    </svg>
+                                                {% endif %}
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ path('admin_users_delete', {id: user.id}) }}" class="inline" onsubmit="return confirm('Voulez-vous vraiment supprimer cet utilisateur ? Cette action est irréversible.');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete-user-' ~ user.id) }}">
+                                            <button type="submit" class="text-red-600 hover:text-red-900" title="Supprimer">
+                                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="px-6 py-12 text-center">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">Aucun utilisateur trouvé</h3>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    {% if search or roleFilter or statusFilter %}
+                                        Aucun utilisateur ne correspond à vos critères de recherche.
+                                    {% else %}
+                                        Commencez par créer un nouvel utilisateur.
+                                    {% endif %}
+                                </p>
+                                {% if search or roleFilter or statusFilter %}
+                                    <div class="mt-4">
+                                        <a href="{{ path('admin_users_list') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                            Réinitialiser les filtres
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    #}
+                </tbody>
+            </table>
+        </div>
+
+        {# Pagination #}
+        {% if totalPages > 1 %}
+            <div class="bg-white px-4 py-3 border-t border-gray-200 sm:px-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1 flex justify-between sm:hidden">
+                        {% if page > 1 %}
+                            <a href="{{ path('admin_users_list', {page: page - 1, search: search, role: roleFilter, status: statusFilter, orderBy: orderBy, orderDir: orderDir}) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Précédent
+                            </a>
+                        {% endif %}
+                        {% if page < totalPages %}
+                            <a href="{{ path('admin_users_list', {page: page + 1, search: search, role: roleFilter, status: statusFilter, orderBy: orderBy, orderDir: orderDir}) }}" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                                Suivant
+                            </a>
+                        {% endif %}
+                    </div>
+                    <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                        <div>
+                            <p class="text-sm text-gray-700">
+                                Affichage de
+                                <span class="font-medium">{{ ((page - 1) * limit) + 1 }}</span>
+                                à
+                                <span class="font-medium">{{ min(page * limit, total) }}</span>
+                                sur
+                                <span class="font-medium">{{ total }}</span>
+                                résultats
+                            </p>
+                        </div>
+                        <div>
+                            <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                {# Previous button #}
+                                {% if page > 1 %}
+                                    <a href="{{ path('admin_users_list', {page: page - 1, search: search, role: roleFilter, status: statusFilter, orderBy: orderBy, orderDir: orderDir}) }}" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                        <span class="sr-only">Précédent</span>
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </a>
+                                {% else %}
+                                    <span class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
+                                {% endif %}
+
+                                {# Page numbers #}
+                                {% for i in max(1, page - 2)..min(totalPages, page + 2) %}
+                                    {% if i == page %}
+                                        <span class="relative inline-flex items-center px-4 py-2 border border-green-500 bg-green-50 text-sm font-medium text-green-600">
+                                            {{ i }}
+                                        </span>
+                                    {% else %}
+                                        <a href="{{ path('admin_users_list', {page: i, search: search, role: roleFilter, status: statusFilter, orderBy: orderBy, orderDir: orderDir}) }}" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                            {{ i }}
+                                        </a>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {# Next button #}
+                                {% if page < totalPages %}
+                                    <a href="{{ path('admin_users_list', {page: page + 1, search: search, role: roleFilter, status: statusFilter, orderBy: orderBy, orderDir: orderDir}) }}" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                        <span class="sr-only">Suivant</span>
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </a>
+                                {% else %}
+                                    <span class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-gray-100 text-sm font-medium text-gray-400 cursor-not-allowed">
+                                        <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                        </svg>
+                                    </span>
+                                {% endif %}
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,4 +1,3 @@
-
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
@@ -26,3 +25,11 @@
 npm-debug.log
 yarn-error.log
 ###< symfony/webpack-encore-bundle ###
+
+###> Project-specific ###
+.DS_Store
+*.log
+/Entity_backup_*/
+/prompt*.txt
+/assets/vendor/
+###< Project-specific ###
