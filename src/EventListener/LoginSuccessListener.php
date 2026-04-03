@@ -2,7 +2,7 @@
 
 namespace App\EventListener;
 
-use App\Entity\User;
+use App\Entity\UserManagement\User;
 use App\Service\SecurityEventService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;

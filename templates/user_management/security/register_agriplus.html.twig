@@ -1,0 +1,387 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription AgriPlus Premium - AgriLink{% endblock %}
+
+{% block body %}
+{# Premium AgriPlus yellow gradient background with curved forms #}
+<div class="position-fixed top-0 start-0 w-100 h-100" style="z-index: -10; overflow: hidden; background: linear-gradient(135deg, #fefce8 0%, #ffffff 50%, #fef9c3 100%);">
+    {# Curved gradient shapes for premium feel #}
+    <div class="position-absolute" style="top: -96px; left: -96px; width: 384px; height: 384px; background: linear-gradient(135deg, rgba(254, 243, 199, 0.6) 0%, rgba(254, 252, 232, 0.4) 100%); border-radius: 50%; filter: blur(80px); opacity: 0.7;"></div>
+    <div class="position-absolute" style="top: -128px; right: -128px; width: 500px; height: 500px; background: linear-gradient(225deg, rgba(255, 237, 213, 0.5) 0%, transparent 100%); border-radius: 50%; filter: blur(80px); opacity: 0.6;"></div>
+    <div class="position-absolute" style="bottom: -80px; left: -80px; width: 320px; height: 320px; background: linear-gradient(45deg, rgba(254, 243, 199, 0.5) 0%, transparent 100%); border-radius: 50%; filter: blur(60px); opacity: 0.5;"></div>
+    <div class="position-absolute" style="bottom: -128px; right: -64px; width: 384px; height: 384px; background: linear-gradient(315deg, rgba(255, 237, 213, 0.6) 0%, rgba(254, 252, 232, 0.4) 100%); border-radius: 50%; filter: blur(80px); opacity: 0.6;"></div>
+</div>
+
+<div class="min-vh-100 py-5 px-3 px-sm-4">
+    <div class="container" style="max-width: 1200px;">
+        <!-- Header -->
+        <div class="text-center mb-4">
+            <div class="d-flex justify-content-center mb-3">
+                <div class="position-relative">
+                    <span style="font-size: 4rem;">⭐</span>
+                    <span class="position-absolute bg-warning text-white small fw-bold px-2 py-1 rounded-pill" style="top: -4px; right: -4px;">PREMIUM</span>
+                </div>
+            </div>
+            <h1 class="display-5 fw-bold text-dark">
+                Rejoignez <span class="text-warning">AgriPlus</span>
+            </h1>
+            <p class="mt-2 text-muted">
+                Accédez aux fonctionnalités premium d'AgriLink
+            </p>
+        </div>
+
+        {% for flash_message in app.flashes('error') %}
+            <div class="alert alert-danger border border-danger mb-4">
+                <div class="d-flex">
+                    <div class="flex-shrink-0">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <div class="ms-3">
+                        <p class="mb-0 small">{{ flash_message }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+
+        <!-- Subscription Plans Section -->
+        <div class="mb-5">
+            <h2 class="h4 fw-semibold text-dark text-center mb-4">Choisissez votre plan</h2>
+            
+            <div class="row row-cols-1 row-cols-md-3 g-4">
+                <!-- Basic Plan -->
+                <div class="col">
+                    <div class="plan-card card h-100 shadow border-2 p-4 position-relative" data-plan="BASIC" style="cursor: pointer; transition: all 0.3s;">
+                        <div class="card-body text-center">
+                            <h3 class="h5 fw-bold text-dark mb-2">Basic</h3>
+                            <div class="mb-3">
+                                <span class="display-6 fw-bold text-dark">29</span>
+                                <span class="text-muted">DT/mois</span>
+                            </div>
+                            <ul class="list-unstyled small text-muted text-start">
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg class="text-success me-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Accès aux outils de base
+                                </li>
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg class="text-success me-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Support par email
+                                </li>
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg class="text-success me-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    5 annonces par mois
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Premium Plan (Recommended) -->
+                <div class="col">
+                    <div class="plan-card card h-100 shadow border-2 border-warning p-4 position-relative" data-plan="PREMIUM" style="cursor: pointer; transition: all 0.3s; transform: scale(1.05);">
+                        <div class="position-absolute top-0 start-50 translate-middle">
+                            <span class="badge bg-warning text-white">RECOMMANDÉ</span>
+                        </div>
+                        <div class="card-body text-center">
+                            <h3 class="h5 fw-bold text-warning mb-2">Premium</h3>
+                            <div class="mb-3">
+                                <span class="display-6 fw-bold text-warning">59</span>
+                                <span class="text-muted">DT/mois</span>
+                            </div>
+                            <ul class="list-unstyled small text-muted text-start">
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg class="text-warning me-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Toutes les fonctionnalités
+                                </li>
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg class="text-warning me-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Support prioritaire
+                                </li>
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg class="text-warning me-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Annonces illimitées
+                                </li>
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg class="text-warning me-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Statistiques avancées
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Enterprise Plan -->
+                <div class="col">
+                    <div class="plan-card card h-100 shadow border-2 p-4 position-relative" data-plan="ENTERPRISE" style="cursor: pointer; transition: all 0.3s;">
+                        <div class="position-absolute top-0 start-50 translate-middle">
+                            <span class="badge bg-dark text-white">PRO</span>
+                        </div>
+                        <div class="card-body text-center">
+                            <h3 class="h5 fw-bold text-dark mb-2">Enterprise</h3>
+                            <div class="mb-3">
+                                <span class="display-6 fw-bold text-dark">149</span>
+                                <span class="text-muted">DT/mois</span>
+                            </div>
+                            <ul class="list-unstyled small text-muted text-start">
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg class="text-success me-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Tout Premium inclus
+                                </li>
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg class="text-success me-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Support dédié 24/7
+                                </li>
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg class="text-success me-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Accès API
+                                </li>
+                                <li class="d-flex align-items-center mb-2">
+                                    <svg class="text-success me-2" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                    Compte multi-utilisateurs
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration Form -->
+        <div class="card shadow-lg p-4">
+            <h2 class="h4 fw-semibold text-dark mb-4">Informations personnelles</h2>
+            
+            {{ form_start(registrationForm, {'attr': {'class': '', 'id': 'agriplus-form', 'novalidate': 'novalidate'}}) }}
+                
+                <!-- Hidden subscription field linked to plan cards -->
+                <div class="d-none" id="subscription-wrapper">
+                    {{ form_widget(registrationForm.agriplusAbonnement) }}
+                </div>
+                
+                <!-- Selected Plan Display -->
+                <div class="alert alert-warning border border-warning mb-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <p class="small text-warning fw-medium mb-1">Plan sélectionné</p>
+                            <p class="h5 fw-bold text-warning mb-0" id="selected-plan-display">Premium - 59 DT/mois</p>
+                        </div>
+                        <span style="font-size: 3rem;">⭐</span>
+                    </div>
+                </div>
+                {{ form_errors(registrationForm.agriplusAbonnement) }}
+
+                <div class="row g-4 mb-4">
+                    <!-- Nom -->
+                    <div class="col-12 col-md-6">
+                        {{ form_label(registrationForm.nom) }}
+                        {{ form_widget(registrationForm.nom) }}
+                        {{ form_errors(registrationForm.nom) }}
+                    </div>
+
+                    <!-- Email -->
+                    <div class="col-12 col-md-6">
+                        {{ form_label(registrationForm.email) }}
+                        {{ form_widget(registrationForm.email) }}
+                        {{ form_errors(registrationForm.email) }}
+                    </div>
+
+                    <!-- Password -->
+                    <div class="col-12 col-md-6">
+                        {{ form_label(registrationForm.plainPassword.first) }}
+                        {{ form_widget(registrationForm.plainPassword.first) }}
+                        {{ form_errors(registrationForm.plainPassword.first) }}
+                        <p class="mt-1 small text-muted">Minimum 6 caractères</p>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="col-12 col-md-6">
+                        {{ form_label(registrationForm.plainPassword.second) }}
+                        {{ form_widget(registrationForm.plainPassword.second) }}
+                        {{ form_errors(registrationForm.plainPassword.second) }}
+                    </div>
+
+                    <!-- Telephone -->
+                    <div class="col-12 col-md-6">
+                        {{ form_label(registrationForm.telephone) }}
+                        {{ form_widget(registrationForm.telephone) }}
+                        {{ form_errors(registrationForm.telephone) }}
+                    </div>
+
+                    <!-- Date de naissance -->
+                    <div class="col-12 col-md-6">
+                        {{ form_label(registrationForm.dateNaissance) }}
+                        {{ form_widget(registrationForm.dateNaissance) }}
+                        {{ form_errors(registrationForm.dateNaissance) }}
+                    </div>
+
+                    <!-- Gouvernorat -->
+                    <div class="col-12 col-md-6">
+                        {{ form_label(registrationForm.gouvernant) }}
+                        {{ form_widget(registrationForm.gouvernant) }}
+                        {{ form_errors(registrationForm.gouvernant) }}
+                    </div>
+
+                    <!-- Ville -->
+                    <div class="col-12 col-md-6">
+                        {{ form_label(registrationForm.ville) }}
+                        {{ form_widget(registrationForm.ville) }}
+                        {{ form_errors(registrationForm.ville) }}
+                    </div>
+
+                    <!-- Code Postal -->
+                    <div class="col-12">
+                        {{ form_label(registrationForm.codePostale) }}
+                        <div style="max-width: 300px;">
+                            {{ form_widget(registrationForm.codePostale) }}
+                        </div>
+                        {{ form_errors(registrationForm.codePostale) }}
+                    </div>
+                </div>
+
+                <!-- Terms -->
+                <div class="border-top pt-4 mb-4">
+                    <div class="form-check">
+                        {{ form_widget(registrationForm.agreeTerms) }}
+                        <label for="{{ registrationForm.agreeTerms.vars.id }}" class="form-check-label small">
+                            J'accepte les <a href="#" class="text-warning text-decoration-none">conditions d'utilisation</a> et la <a href="#" class="text-warning text-decoration-none">politique de confidentialité</a>
+                        </label>
+                    </div>
+                    {{ form_errors(registrationForm.agreeTerms) }}
+                </div>
+
+                <!-- Payment Note -->
+                <div class="alert alert-info border border-info mb-4">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div class="ms-3">
+                            <p class="mb-0 small">
+                                <strong>Note :</strong> Le paiement sera effectué après validation de votre compte. Vous bénéficierez d'un mois d'essai gratuit.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" class="btn btn-warning w-100 py-3 text-white position-relative shadow" style="background: linear-gradient(to right, #eab308, #f59e0b);">
+                        <span class="position-absolute start-0 top-50 translate-middle-y ps-3">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20" style="color: rgba(254, 243, 199, 0.8);">
+                                <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </span>
+                        Créer mon compte AgriPlus
+                    </button>
+                </div>
+            {{ form_end(registrationForm) }}
+        </div>
+
+        <!-- Back Link -->
+        <div class="text-center mt-4">
+            <a href="{{ path('app_register') }}" class="text-decoration-none text-muted small d-inline-flex align-items-center">
+                <svg class="me-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Retour au choix d'inscription
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const planCards = document.querySelectorAll('.plan-card');
+    const subscriptionInputs = document.querySelectorAll('#subscription-wrapper input[type="radio"]');
+    const selectedPlanDisplay = document.getElementById('selected-plan-display');
+    
+    const planLabels = {
+        'BASIC': 'Basic - 29 DT/mois',
+        'PREMIUM': 'Premium - 59 DT/mois',
+        'ENTERPRISE': 'Enterprise - 149 DT/mois'
+    };
+
+    function updateSelectedPlan(planValue) {
+        // Update radio button
+        subscriptionInputs.forEach(input => {
+            if (input.value === planValue) {
+                input.checked = true;
+            }
+        });
+
+        // Update plan cards styling (Bootstrap classes)
+        planCards.forEach(card => {
+            const cardPlan = card.dataset.plan;
+            if (cardPlan === planValue) {
+                card.classList.remove('border-secondary');
+                card.classList.add('border-warning');
+                card.style.boxShadow = '0 10px 25px -5px rgba(234, 179, 8, 0.3)';
+            } else {
+                card.classList.remove('border-warning');
+                if (cardPlan !== 'PREMIUM' || planValue !== 'PREMIUM') {
+                    card.classList.add('border-secondary');
+                }
+                card.style.boxShadow = '';
+            }
+        });
+
+        // Update display
+        if (selectedPlanDisplay) {
+            selectedPlanDisplay.textContent = planLabels[planValue] || planValue;
+        }
+    }
+
+    // Add click handlers to plan cards
+    planCards.forEach(card => {
+        card.addEventListener('click', function() {
+            const planValue = this.dataset.plan;
+            updateSelectedPlan(planValue);
+        });
+    });
+
+    // Initialize with Premium as default
+    const checkedInput = document.querySelector('#subscription-wrapper input[type="radio"]:checked');
+    if (checkedInput) {
+        updateSelectedPlan(checkedInput.value);
+    } else {
+        updateSelectedPlan('PREMIUM');
+    }
+});
+</script>
+
+<style>
+.plan-card {
+    transition: all 0.3s ease;
+}
+.plan-card:hover {
+    transform: translateY(-4px) !important;
+}
+.plan-card.border-warning {
+    box-shadow: 0 10px 25px -5px rgba(234, 179, 8, 0.3);
+}
+</style>
+{% endblock %}

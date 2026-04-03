@@ -6,7 +6,7 @@
         <title>{% block title %}AgriLink{% endblock %}</title>
         <link rel="icon" href="{{ asset('logo_without_text.png') }}">
         
-        {# Tailwind CSS #}
+        {# Bootstrap CSS #}
         <link rel="stylesheet" href="{{ asset('build/app.css') }}">
         
         {# AgriLink Logo Styles #}
@@ -23,8 +23,11 @@
         {% block javascripts %}
             {% block importmap %}{{ importmap('app') }}{% endblock %}
         {% endblock %}
+        
+        {# Bootstrap JS Bundle (includes Popper) - loaded at end of body for better performance #}
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
     </head>
-    <body class="bg-gray-50 min-h-screen">
+    <body class="bg-light min-vh-100">
         {% block body %}{% endblock %}
     </body>
 </html>

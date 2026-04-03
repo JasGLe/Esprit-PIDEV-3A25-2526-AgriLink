@@ -2,8 +2,8 @@
 
 namespace App\Service;
 
-use App\Entity\User;
-use App\Repository\UserRepository;
+use App\Entity\UserManagement\User;
+use App\Repository\UserManagement\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
