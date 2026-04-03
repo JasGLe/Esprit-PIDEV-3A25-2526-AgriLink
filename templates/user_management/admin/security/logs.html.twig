@@ -1,0 +1,344 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Sécurité - Admin - AgriLink{% endblock %}
+{% block page_title %}Tableau de bord Sécurité{% endblock %}
+
+{% block dashboard_content %}
+    {# Page header #}
+    <div class="mb-5">
+        <h2 class="h2 fw-bold text-dark mb-2">🔐 Surveillance de la sécurité</h2>
+        <p class="text-muted">Vue d'ensemble de la sécurité du système et des logs d'activité</p>
+    </div>
+
+    {# Security Statistics Cards #}
+    <div class="row g-4 mb-5">
+        {# Active Accounts #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="stat-icon bg-success-subtle">
+                            <svg class="text-success" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="ms-3 flex-grow-1">
+                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Comptes actifs</p>
+                            <h3 class="h4 mb-0 fw-bold text-dark">
+                                {{ accountStats.active }}<span class="text-muted" style="font-size: 0.7em;">/{{ accountStats.total }}</span>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-3">
+                    <small class="text-muted">{{ (accountStats.active / accountStats.total * 100)|round(1) }}% actifs</small>
+                </div>
+            </div>
+        </div>
+
+        {# Verified Emails #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="stat-icon bg-primary-subtle">
+                            <svg class="text-primary" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                        </div>
+                        <div class="ms-3 flex-grow-1">
+                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Emails vérifiés</p>
+                            <h3 class="h4 mb-0 fw-bold text-dark">
+                                {{ accountStats.verified }}<span class="text-muted" style="font-size: 0.7em;">/{{ accountStats.total }}</span>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-3">
+                    <small class="text-muted">{{ (accountStats.verified / accountStats.total * 100)|round(1) }}% vérifiés</small>
+                </div>
+            </div>
+        </div>
+
+        {# Locked Accounts #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="stat-icon {{ accountStats.lockedNow > 0 ? 'bg-danger-subtle' : 'bg-secondary-subtle' }}">
+                            <svg class="{{ accountStats.lockedNow > 0 ? 'text-danger' : 'text-secondary' }}" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+                        <div class="ms-3 flex-grow-1">
+                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Comptes verrouillés</p>
+                            <h3 class="h4 mb-0 fw-bold {{ accountStats.lockedNow > 0 ? 'text-danger' : 'text-dark' }}">
+                                {{ accountStats.lockedNow }}
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                {% if accountStats.lockedNow > 0 %}
+                    <div class="card-footer bg-light border-0 p-3">
+                        <small class="text-danger fw-semibold">⚠️ Attention requise</small>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# 2FA Enabled #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="stat-icon" style="background-color: rgba(168, 85, 247, 0.1);">
+                            <svg style="color: #a855f7;" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                        </div>
+                        <div class="ms-3 flex-grow-1">
+                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">2FA Activé</p>
+                            <h3 class="h4 mb-0 fw-bold text-dark">
+                                {{ accountStats.twoFactorEnabled }}<span class="text-muted" style="font-size: 0.7em;">/{{ accountStats.total }}</span>
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-3">
+                    <small class="text-muted">{{ (accountStats.twoFactorEnabled / accountStats.total * 100)|round(1) }}% sécurisé</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Recent Security Events - Activity Timeline #}
+    <div class="row g-4 mb-5">
+        <div class="col-12 col-lg-6">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3>🛡️ Événements sécurité récents</h3>
+                    <p>Les derniers événements détectés</p>
+                </div>
+                <div class="admin-card-body">
+                    {% if recentEvents is defined and recentEvents|length > 0 %}
+                        <div class="activity-timeline">
+                            {% for event in recentEvents|slice(0, 5) %}
+                                <div class="timeline-item 
+                                    {% if event.eventType in ['LOGIN_FAILED', 'ACCOUNT_LOCKED', 'SUSPICIOUS_ACTIVITY', '2FA_FAILED'] %}
+                                        timeline-danger
+                                    {% elseif event.eventType in ['2FA_OTP_SENT', 'SESSION_REVOKED'] %}
+                                        timeline-warning
+                                    {% elseif event.eventType in ['LOGIN_SUCCESS', 'EMAIL_VERIFIED', 'PASSWORD_CHANGED'] %}
+                                        timeline-success
+                                    {% else %}
+                                        timeline-info
+                                    {% endif %}
+                                ">
+                                    <h6 class="small fw-bold text-dark mb-1">{{ event.eventType|replace({'_': ' '}) }}</h6>
+                                    <p class="text-muted mb-0" style="font-size: 0.85rem;">{{ event.details|default('No details') }}</p>
+                                    {% if event.user %}
+                                        <small class="text-muted d-block mt-2">Par: {{ event.user.displayName }}</small>
+                                    {% endif %}
+                                    <small class="text-muted d-block">{{ event.createdAt ? event.createdAt|date('d/m/Y H:i') : 'N/A' }}</small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center py-4 mb-0">Aucun événement sécurité</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Quick Security Actions #}
+        <div class="col-12 col-lg-6">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3>⚡ Actions de sécurité</h3>
+                    <p>Gestion et monitoring</p>
+                </div>
+                <div class="admin-card-body">
+                    <div class="d-flex flex-column gap-3">
+                        <a href="#" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none transition hover-bg-light" style="transition: all 0.2s ease-in-out;">
+                            <div class="d-flex align-items-center justify-content-center rounded-2 p-3 bg-danger-subtle" style="width: 48px; height: 48px; flex-shrink: 0;">
+                                <svg style="color: #ef4444;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                            <div class="ms-3">
+                                <p class="small fw-bold text-dark mb-1">Débloquer les comptes</p>
+                                <p class="text-muted mb-0" style="font-size: 0.8rem;">Débloquer les comptes verrouillés</p>
+                            </div>
+                            <svg class="ms-auto" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #d1d5db;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+
+                        <a href="#" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none transition hover-bg-light" style="transition: all 0.2s ease-in-out;">
+                            <div class="d-flex align-items-center justify-content-center rounded-2 p-3" style="background-color: rgba(59, 130, 246, 0.1); width: 48px; height: 48px; flex-shrink: 0;">
+                                <svg style="color: #3b82f6;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                            </div>
+                            <div class="ms-3">
+                                <p class="small fw-bold text-dark mb-1">Réinitialiser les sessions</p>
+                                <p class="text-muted mb-0" style="font-size: 0.8rem;">Forcer la déconnexion de tous les utilisateurs</p>
+                            </div>
+                            <svg class="ms-auto" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #d1d5db;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+
+                        <a href="#" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none transition hover-bg-light" style="transition: all 0.2s ease-in-out;">
+                            <div class="d-flex align-items-center justify-content-center rounded-2 p-3" style="background-color: rgba(245, 158, 11, 0.1); width: 48px; height: 48px; flex-shrink: 0;">
+                                <svg style="color: #f59e0b;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                            </div>
+                            <div class="ms-3">
+                                <p class="small fw-bold text-dark mb-1">Audits et rapports</p>
+                                <p class="text-muted mb-0" style="font-size: 0.8rem;">Générer des rapports de sécurité détaillés</p>
+                            </div>
+                            <svg class="ms-auto" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #d1d5db;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Security Logs Table #}
+    <div class="card admin-card">
+        <div class="admin-card-header">
+            <h5>📋 Historique des logs</h5>
+            <p class="text-muted mb-0">Tous les événements de sécurité enregistrés</p>
+        </div>
+
+        {# Filter Bar #}
+        <div class="card-body p-4 border-bottom bg-light">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-6">
+                    <label for="filterType" class="form-label small fw-semibold text-dark">Type d'événement</label>
+                    <select class="form-select form-select-sm" id="filterType">
+                        <option value="">Tous les types</option>
+                        <option value="LOGIN_SUCCESS">Connexion réussie</option>
+                        <option value="LOGIN_FAILED">Connexion échouée</option>
+                        <option value="ACCOUNT_LOCKED">Compte verrouillé</option>
+                        <option value="PASSWORD_CHANGED">Changement mot de passe</option>
+                        <option value="EMAIL_VERIFIED">Email vérifié</option>
+                        <option value="2FA_SUCCESS">2FA réussi</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6">
+                    <button class="btn btn-outline-secondary btn-sm w-100">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1" style="display: inline;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Appliquer les filtres
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {# Logs Table #}
+        <div class="table-responsive">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th class="fs-6">Timestamp</th>
+                        <th class="fs-6">Type d'événement</th>
+                        <th class="fs-6">Utilisateur</th>
+                        <th class="fs-6">Détails</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if logs is defined and logs|length > 0 %}
+                        {% for log in logs %}
+                            <tr class="align-middle">
+                                <td>
+                                    <small class="text-muted">{{ log.createdAt ? log.createdAt|date('d/m/Y H:i:s') : 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    {% set eventType = log.eventType %}
+                                    {% if eventType in ['LOGIN_FAILED', 'ACCOUNT_LOCKED', 'SUSPICIOUS_ACTIVITY', '2FA_FAILED'] %}
+                                        <span class="badge bg-danger">🔴 {{ eventType|replace({'_': ' '}) }}</span>
+                                    {% elseif eventType in ['2FA_OTP_SENT', 'SESSION_REVOKED'] %}
+                                        <span class="badge bg-warning text-dark">🟡 {{ eventType|replace({'_': ' '}) }}</span>
+                                    {% elseif eventType in ['LOGIN_SUCCESS', 'EMAIL_VERIFIED', 'PASSWORD_CHANGED'] %}
+                                        <span class="badge bg-success">✅ {{ eventType|replace({'_': ' '}) }}</span>
+                                    {% else %}
+                                        <span class="badge bg-info">🔵 {{ eventType|replace({'_': ' '}) }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if log.user %}
+                                        <span class="text-body fw-semibold">{{ log.user.displayName }}</span>
+                                        <br>
+                                        <small class="text-muted">{{ log.user.email }}</small>
+                                    {% else %}
+                                        <span class="text-muted">Anonyme</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-body">{{ log.details|default('N/A') }}</small>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="4" class="text-center py-5">
+                                <p class="text-muted mb-0">Aucun log de sécurité trouvé</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Pagination Footer #}
+        {% if logs is defined and logs.totalPages is defined and logs.totalPages > 1 %}
+            <div class="card-footer bg-light border-top p-4">
+                <nav aria-label="Page navigation" class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        Affichage {{ logs.firstItemNumber }} à {{ logs.lastItemNumber }} sur {{ logs.totalItemCount }} logs
+                    </small>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if logs.hasPreviousPage %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ path('admin_security_logs', {'page': logs.previousPage}) }}">Précédent</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Précédent</span>
+                            </li>
+                        {% endif %}
+
+                        {% for page in range(1, logs.totalPages) %}
+                            {% if page == logs.currentPage %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ path('admin_security_logs', {'page': page}) }}">{{ page }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if logs.hasNextPage %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ path('admin_security_logs', {'page': logs.nextPage}) }}">Suivant</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Suivant</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

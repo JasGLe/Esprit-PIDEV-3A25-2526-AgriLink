@@ -1,9 +1,9 @@
-
 ###> symfony/framework-bundle ###
 /.env.local
 /.env.local.php
 /.env.*.local
-/config/secrets/prod/prod.decrypt.private.php
+/config/secrets/dev/
+/config/secrets/prod/
 /public/bundles/
 /var/
 /vendor/
@@ -11,10 +11,25 @@
 
 ###> phpunit/phpunit ###
 /phpunit.xml
-/.phpunit.cache/
+.phpunit.result.cache
 ###< phpunit/phpunit ###
 
-###> symfony/asset-mapper ###
-/public/assets/
+###> symfony/phpunit-bridge ###
+.phpunit.result.cache
+/phpunit.xml
+###< symfony/phpunit-bridge ###
+
+###> symfony/webpack-encore-bundle ###
+/node_modules/
+/public/build/
+npm-debug.log
+yarn-error.log
+###< symfony/webpack-encore-bundle ###
+
+###> Project-specific ###
+.DS_Store
+*.log
+/Entity_backup_*/
+/prompt*.txt
 /assets/vendor/
-###< symfony/asset-mapper ###
+###< Project-specific ###

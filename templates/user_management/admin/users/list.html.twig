@@ -1,0 +1,310 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Administration - Utilisateurs{% endblock %}
+
+{% block main_content %}
+<div class="container-fluid py-4">
+    {# Page header #}
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h2 mb-1 fw-bold">Gestion des utilisateurs</h1>
+            <p class="text-muted">Gérez tous les comptes utilisateurs de la plateforme AgriLink</p>
+        </div>
+        <div>
+            <a href="{{ path('admin_users_create') }}" class="btn btn-success">
+                <svg class="me-2" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                Ajouter un utilisateur
+            </a>
+        </div>
+    </div>
+
+    {# Flash messages #}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'success' ? 'success' : (label == 'error' ? 'danger' : 'info') }} alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
+                {% if label == 'success' %}
+                    <svg class="me-2 flex-shrink-0" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                {% elseif label == 'error' %}
+                    <svg class="me-2 flex-shrink-0" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                {% else %}
+                    <svg class="me-2 flex-shrink-0" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                {% endif %}
+                <div>{{ message }}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    {# Statistics cards row #}
+    <div class="row g-4 mb-5">
+        {# Total users stat card #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="stat-icon" style="background-color: rgba(34, 197, 94, 0.1);">
+                            <svg style="color: #22c55e;" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <div class="ms-3 flex-grow-1">
+                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Total utilisateurs</p>
+                            <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.total }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Active users stat card #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="stat-icon bg-primary-subtle">
+                            <svg class="text-primary" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="ms-3 flex-grow-1">
+                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Comptes actifs</p>
+                            <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.active }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Verified emails stat card #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="stat-icon" style="background-color: rgba(168, 85, 247, 0.1);">
+                            <svg style="color: #a855f7;" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                            </svg>
+                        </div>
+                        <div class="ms-3 flex-grow-1">
+                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Emails vérifiés</p>
+                            <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.verified }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Premium subscribers stat card #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="stat-icon bg-warning-subtle">
+                            <svg class="text-warning" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                        </div>
+                        <div class="ms-3 flex-grow-1">
+                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Abonnés AgriPlus</p>
+                            <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.premium }}</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Users table card with enhanced styling #}
+    <div class="card admin-card">
+        <div class="admin-card-header">
+            <h5>Liste des utilisateurs</h5>
+            <p class="text-muted mb-0">Gérez et editez les informations des utilisateurs</p>
+        </div>
+
+        {# Filter/Search bar #}
+        <div class="card-body p-4 border-bottom bg-light">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label for="filterRole" class="form-label small fw-semibold text-dark">Filtrer par rôle</label>
+                    <select class="form-select form-select-sm" id="filterRole">
+                        <option value="">Tous les rôles</option>
+                        <option value="ROLE_AGRICULTEUR">Agriculteur</option>
+                        <option value="ROLE_FOURNISSEUR">Fournisseur</option>
+                        <option value="ROLE_AGRIPLUS">AgriPlus</option>
+                        <option value="ROLE_ADMIN">Admin</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label for="filterStatus" class="form-label small fw-semibold text-dark">État du compte</label>
+                    <select class="form-select form-select-sm" id="filterStatus">
+                        <option value="">Tous les états</option>
+                        <option value="active">Actif</option>
+                        <option value="inactive">Inactif</option>
+                        <option value="pending">En attente</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                    <label for="searchUser" class="form-label small fw-semibold text-dark">Rechercher</label>
+                    <input type="text" class="form-control form-control-sm" id="searchUser" placeholder="Nom, email...">
+                </div>
+                <div class="col-12 col-md-6 col-lg-3">
+                    <button class="btn btn-outline-secondary btn-sm w-100">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1" style="display: inline;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        Appliquer les filtres
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        {# Responsive table wrapper #}
+        <div class="table-responsive">
+            <table class="table admin-table mb-0">
+                <thead>
+                    <tr>
+                        <th class="fs-6">Utilisateur</th>
+                        <th class="fs-6">Email</th>
+                        <th class="fs-6">Rôle</th>
+                        <th class="fs-6">État</th>
+                        <th class="fs-6">Inscription</th>
+                        <th class="fs-6 text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if users is defined and users|length > 0 %}
+                        {% for user in users %}
+                            <tr class="align-middle">
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar avatar-sm me-3">
+                                            {% if user.avatar %}
+                                                <img src="{{ asset('uploads/avatars/' ~ user.avatar) }}" alt="{{ user.displayName }}" class="rounded-circle" width="40" height="40">
+                                            {% else %}
+                                                <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 40px; height: 40px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); font-weight: bold; color: white;">
+                                                    {{ user.displayName|slice(0, 1)|upper }}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="fw-semibold text-dark">{{ user.displayName }}</div>
+                                            <small class="text-muted">ID: {{ user.id }}</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="text-body">{{ user.email }}</span>
+                                    {% if user.emailVerified %}
+                                        <br>
+                                        <small class="badge badge-status status-verified">✓ Vérifié</small>
+                                    {% else %}
+                                        <br>
+                                        <small class="badge badge-status status-pending">⏱ En attente</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if 'ROLE_ADMIN' in user.roles %}
+                                        <span class="badge bg-danger">Admin</span>
+                                    {% elseif 'ROLE_AGRIPLUS' in user.roles %}
+                                        <span class="badge bg-warning text-dark">AgriPlus Premium</span>
+                                    {% elseif 'ROLE_FOURNISSEUR' in user.roles %}
+                                        <span class="badge bg-info">Fournisseur</span>
+                                    {% elseif 'ROLE_AGRICULTEUR' in user.roles %}
+                                        <span class="badge bg-success">Agriculteur</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if user.isActive %}
+                                        <span class="badge badge-status status-active">● Actif</span>
+                                    {% else %}
+                                        <span class="badge badge-status status-inactive">● Inactif</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ user.createdAt ? user.createdAt|date('d/m/Y') : 'N/A' }}</small>
+                                </td>
+                                <td>
+                                    <div class="action-row">
+                                        <a href="{{ path('admin_users_edit', {'id': user.id}) }}" class="btn btn-sm btn-outline-primary" title="Modifier">
+                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="if(confirm('Êtes-vous sûr?')) { document.getElementById('delete-{{ user.id }}').submit(); }" title="Supprimer">
+                                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                        <form id="delete-{{ user.id }}" action="{{ path('admin_users_delete', {'id': user.id}) }}" method="POST" style="display: none;">
+                                            <input type="hidden" name="_method" value="DELETE">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete') }}">
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <p class="text-muted mb-0">Aucun utilisateur trouvé</p>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+
+        {# Pagination footer #}
+        {% if users is defined and users.totalPages > 1 %}
+            <div class="card-footer bg-light border-top p-4">
+                <nav aria-label="Page navigation" class="d-flex justify-content-between align-items-center">
+                    <small class="text-muted">
+                        Affichage {{ users.firstItemNumber }} à {{ users.lastItemNumber }} sur {{ users.totalItemCount }} utilisateurs
+                    </small>
+                    <ul class="pagination pagination-sm mb-0">
+                        {% if users.hasPreviousPage %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ path('admin_users_list', {'page': users.previousPage}) }}">Précédent</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Précédent</span>
+                            </li>
+                        {% endif %}
+
+                        {% for page in range(1, users.totalPages) %}
+                            {% if page == users.currentPage %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ page }}</span>
+                                </li>
+                            {% else %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ path('admin_users_list', {'page': page}) }}">{{ page }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if users.hasNextPage %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ path('admin_users_list', {'page': users.nextPage}) }}">Suivant</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Suivant</span>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,34 @@
+{# Role Badge Component
+   Usage: {{ include('components/_role_badge.html.twig', {role: 'ROLE_ADMIN'}) }}
+#}
+
+{% set badgeClasses = {
+    'ROLE_ADMIN': 'bg-danger text-white',
+    'ROLE_AGRIPLUS': 'bg-warning text-dark',
+    'ROLE_FOURNISSEUR': 'bg-primary text-white',
+    'ROLE_FOURNISSEUR_SOCIETE': 'bg-primary text-white',
+    'ROLE_FOURNISSEUR_PERSONNE': 'bg-primary text-white',
+    'ROLE_AGRICULTEUR': 'bg-success text-white',
+} %}
+
+{% set badgeTexts = {
+    'ROLE_ADMIN': 'Administrateur',
+    'ROLE_AGRIPLUS': 'AgriPlus',
+    'ROLE_FOURNISSEUR': 'Fournisseur',
+    'ROLE_FOURNISSEUR_SOCIETE': 'Fournisseur Société',
+    'ROLE_FOURNISSEUR_PERSONNE': 'Fournisseur Personne',
+    'ROLE_AGRICULTEUR': 'Agriculteur',
+} %}
+
+{% set badgeIcons = {
+    'ROLE_ADMIN': '🛡️',
+    'ROLE_AGRIPLUS': '⭐',
+    'ROLE_FOURNISSEUR': '🏢',
+    'ROLE_FOURNISSEUR_SOCIETE': '🏭',
+    'ROLE_FOURNISSEUR_PERSONNE': '🏪',
+    'ROLE_AGRICULTEUR': '🌱',
+} %}
+
+<span class="badge rounded-pill {{ badgeClasses[role]|default('bg-secondary text-white') }}">
+    {{ badgeIcons[role]|default('👤') }} {{ badgeTexts[role]|default('Utilisateur') }}
+</span>

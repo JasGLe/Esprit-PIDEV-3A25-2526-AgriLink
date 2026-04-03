@@ -1,0 +1,52 @@
+{# 
+  Reusable gradient mesh background component for authentication screens
+  Creates a subtle, minimalistic design with curved forms and gradient mesh
+#}
+<div class="position-fixed top-0 start-0 w-100 h-100" style="z-index: -1; overflow: hidden; background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 50%, #dbeafe 100%);">
+    {# Curved gradient shapes - positioned absolutely for organic feel #}
+    
+    {# Top-left curved gradient blob #}
+    <div class="position-absolute rounded-circle" style="top: -6rem; left: -6rem; width: 24rem; height: 24rem; background: linear-gradient(135deg, rgba(220, 252, 231, 0.6), rgba(240, 253, 244, 0.4)); filter: blur(80px); opacity: 0.7;"></div>
+    
+    {# Top-right curved gradient blob #}
+    <div class="position-absolute rounded-circle" style="top: -8rem; right: -8rem; width: 31.25rem; height: 31.25rem; background: linear-gradient(225deg, rgba(219, 234, 254, 0.5), transparent); filter: blur(80px); opacity: 0.6;"></div>
+    
+    {# Bottom-left curved form #}
+    <div class="position-absolute rounded-circle" style="bottom: -5rem; left: -5rem; width: 20rem; height: 20rem; background: linear-gradient(45deg, rgba(220, 252, 231, 0.5), transparent); filter: blur(60px); opacity: 0.5;"></div>
+    
+    {# Bottom-right curved gradient #}
+    <div class="position-absolute rounded-circle" style="bottom: -8rem; right: -4rem; width: 24rem; height: 24rem; background: linear-gradient(315deg, rgba(219, 234, 254, 0.6), rgba(240, 253, 244, 0.4)); filter: blur(80px); opacity: 0.6;"></div>
+    
+    {# Center subtle accent #}
+    <div class="position-absolute top-50 start-50 translate-middle rounded-circle" style="width: 37.5rem; height: 37.5rem; background: radial-gradient(circle, rgba(240, 253, 244, 0.3), transparent); filter: blur(80px); opacity: 0.4;"></div>
+    
+    {# SVG Pattern Overlay for subtle texture #}
+    <svg class="position-absolute top-0 start-0 w-100 h-100" style="opacity: 0.03;" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+                <circle cx="16" cy="16" r="1" fill="#22c55e"/>
+            </pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)"/>
+    </svg>
+    
+    {# Curved lines decoration #}
+    <svg class="position-absolute top-0 start-0 w-100 h-100" style="opacity: 0.1;" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <linearGradient id="curveGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:rgb(34, 197, 94);stop-opacity:0.3" />
+                <stop offset="100%" style="stop-color:rgb(59, 130, 246);stop-opacity:0.1" />
+            </linearGradient>
+            <linearGradient id="curveGradient2" x1="100%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:rgb(59, 130, 246);stop-opacity:0.3" />
+                <stop offset="100%" style="stop-color:rgb(34, 197, 94);stop-opacity:0.1" />
+            </linearGradient>
+        </defs>
+        
+        {# Smooth curved lines flowing across the background #}
+        <path d="M-100,200 Q400,100 900,300 T1900,200" stroke="url(#curveGradient1)" stroke-width="2" fill="none" opacity="0.4"/>
+        <path d="M-100,400 Q400,300 900,500 T1900,400" stroke="url(#curveGradient1)" stroke-width="1.5" fill="none" opacity="0.3"/>
+        <path d="M1900,300 Q1400,400 900,200 T-100,300" stroke="url(#curveGradient2)" stroke-width="2" fill="none" opacity="0.4"/>
+        <path d="M1900,600 Q1400,700 900,500 T-100,600" stroke="url(#curveGradient2)" stroke-width="1.5" fill="none" opacity="0.3"/>
+    </svg>
+</div>
