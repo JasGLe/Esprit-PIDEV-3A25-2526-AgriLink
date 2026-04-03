@@ -2,11 +2,12 @@
   "name": "agrilink",
   "private": true,
   "scripts": {
-    "dev": "tailwindcss -i ./assets/styles/app.css -o ./public/build/app.css --watch",
-    "build": "tailwindcss -i ./assets/styles/app.css -o ./public/build/app.css --minify"
+    "dev": "sass --watch ./assets/styles/bootstrap-custom.scss:./public/build/app.css",
+    "build": "sass ./assets/styles/bootstrap-custom.scss:./public/build/app.css --style=compressed"
   },
   "devDependencies": {
-    "tailwindcss": "^3.4.1",
-    "@tailwindcss/forms": "^0.5.7"
+    "@popperjs/core": "^2.11.8",
+    "bootstrap": "^5.3.8",
+    "sass": "^1.99.0"
   }
 }

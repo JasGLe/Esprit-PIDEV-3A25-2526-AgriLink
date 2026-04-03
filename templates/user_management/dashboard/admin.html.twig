@@ -1,0 +1,217 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Tableau de bord Admin - AgriLink{% endblock %}
+{% block page_title %}Administration{% endblock %}
+
+{% block role_badge %}
+    <span class="badge rounded-pill bg-danger text-white d-inline-flex align-items-center px-3 py-2 fw-medium">
+        🛡️ Administrateur
+    </span>
+{% endblock %}
+
+{% block dashboard_content %}
+    {# Welcome section with improved typography #}
+    <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h2 class="display-6 fw-bold text-dark mb-2">Bienvenue, {{ app.user.displayName }} 👋</h2>
+                <p class="fs-6 text-muted mb-0">Tableau de bord de gestion de la plateforme AgriLink. Synthèse et actions rapides ci-dessous.</p>
+            </div>
+        </div>
+    </div>
+
+    {# Key Statistics Cards - Enhanced Design #}
+    <div class="row g-4 mb-5">
+        {# Total Users Card #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="stat-icon bg-danger-subtle">
+                            <svg class="text-danger" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                        </div>
+                        <div class="ms-4 flex-grow-1">
+                            <p class="text-muted small text-uppercase fw-semibold letter-spacing mb-1" style="letter-spacing: 0.5px;">Total Utilisateurs</p>
+                            <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.total ?? 0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-3 d-flex justify-content-between align-items-center">
+                    <span class="text-muted small">Tous les comptes actifs</span>
+                    <a href="{{ path('admin_users_list') }}" class="text-danger text-decoration-none fw-medium small" style="font-size: 0.9rem;">
+                        Gérer →
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {# Agriculteurs Card #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="stat-icon bg-success-subtle">
+                            <svg class="text-success" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0110.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div class="ms-4 flex-grow-1">
+                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Agriculteurs</p>
+                            <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-3">
+                    <span class="badge badge-status status-active">
+                        Actifs ce mois
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {# Fournisseurs Card #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="stat-icon bg-primary-subtle">
+                            <svg class="text-primary" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                        </div>
+                        <div class="ms-4 flex-grow-1">
+                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Fournisseurs</p>
+                            <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-3">
+                    <span class="badge badge-status status-verified">
+                        Vérifiés
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {# AgriPlus Subscribers Card #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="stat-icon" style="background-color: rgba(245, 158, 11, 0.1);">
+                            <svg style="color: #f59e0b;" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                            </svg>
+                        </div>
+                        <div class="ms-4 flex-grow-1">
+                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Abonnés AgriPlus</p>
+                            <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light border-0 p-3">
+                    <span class="badge badge-status" style="background-color: rgba(245, 158, 11, 0.1); color: #b45309;">
+                        Premium actifs
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Admin Actions & Recent Activity Section #}
+    <div class="row g-4">
+        {# Quick Actions Card #}
+        <div class="col-12 col-lg-6">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3>⚡ Actions Rapides</h3>
+                    <p>Accès rapide aux fonctions d'administration</p>
+                </div>
+                <div class="admin-card-body">
+                    <div class="d-flex flex-column gap-3">
+                        {# User Management #}
+                        <a href="{{ path('admin_users_list') }}" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none transition hover-bg-light" style="transition: all 0.2s ease-in-out;">
+                            <div class="d-flex align-items-center justify-content-center rounded-2 p-3" style="background-color: rgba(239, 68, 68, 0.1); width: 48px; height: 48px; flex-shrink: 0;">
+                                <svg style="color: #ef4444;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                                </svg>
+                            </div>
+                            <div class="ms-3">
+                                <p class="small fw-bold text-dark mb-1">Gérer les utilisateurs</p>
+                                <p class="text-muted mb-0" style="font-size: 0.8rem;">Ajouter, modifier ou supprimer des comptes</p>
+                            </div>
+                            <svg class="ms-auto" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #d1d5db;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+
+                        {# Reports #}
+                        <a href="#" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none transition hover-bg-light" style="transition: all 0.2s ease-in-out;">
+                            <div class="d-flex align-items-center justify-content-center rounded-2 p-3" style="background-color: rgba(59, 130, 246, 0.1); width: 48px; height: 48px; flex-shrink: 0;">
+                                <svg style="color: #3b82f6;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                </svg>
+                            </div>
+                            <div class="ms-3">
+                                <p class="small fw-bold text-dark mb-1">Générer un rapport</p>
+                                <p class="text-muted mb-0" style="font-size: 0.8rem;">Exporter les statistiques et données</p>
+                            </div>
+                            <svg class="ms-auto" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #d1d5db;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+
+                        {# System Notifications #}
+                        <a href="#" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none transition hover-bg-light" style="transition: all 0.2s ease-in-out;">
+                            <div class="d-flex align-items-center justify-content-center rounded-2 p-3" style="background-color: rgba(168, 85, 247, 0.1); width: 48px; height: 48px; flex-shrink: 0;">
+                                <svg style="color: #a855f7;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                            </div>
+                            <div class="ms-3">
+                                <p class="small fw-bold text-dark mb-1">Notifications système</p>
+                                <p class="text-muted mb-0" style="font-size: 0.8rem;">Envoyer une annonce globale</p>
+                            </div>
+                            <svg class="ms-auto" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #d1d5db;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Recent Activity Timeline #}
+        <div class="col-12 col-lg-6">
+            <div class="admin-card">
+                <div class="admin-card-header">
+                    <h3>📊 Activité Récente</h3>
+                    <p>Les derniers événements de la plateforme</p>
+                </div>
+                <div class="admin-card-body">
+                    <div class="activity-timeline">
+                        <div class="timeline-item timeline-success">
+                            <h6 class="small fw-bold text-dark mb-1">Nouvel utilisateur inscrit</h6>
+                            <p class="text-muted mb-0" style="font-size: 0.85rem;">Un nouvel agriculteur s'est inscrit sur la plateforme</p>
+                            <small class="text-muted d-block mt-2">Il y a quelques minutes</small>
+                        </div>
+                        
+                        <div class="timeline-item timeline-warning">
+                            <h6 class="small fw-bold text-dark mb-1">Nouvel abonnement AgriPlus Premium</h6>
+                            <p class="text-muted mb-0" style="font-size: 0.85rem;">Un utilisateur a souscrit à une formule premium</p>
+                            <small class="text-muted d-block mt-2">Il y a 2 heures</small>
+                        </div>
+                        
+                        <div class="timeline-item timeline-info">
+                            <h6 class="small fw-bold text-dark mb-1">Fournisseur vérifié</h6>
+                            <p class="text-muted mb-0" style="font-size: 0.85rem;">Un compte fournisseur a été approuvé et vérifié</p>
+                            <small class="text-muted d-block mt-2">Hier</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -2,8 +2,8 @@
 
 namespace App\Service;
 
-use App\Entity\SecurityEvent;
-use App\Entity\User;
+use App\Entity\UserManagement\SecurityEvent;
+use App\Entity\UserManagement\User;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 

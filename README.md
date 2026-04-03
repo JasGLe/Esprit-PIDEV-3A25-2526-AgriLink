@@ -14,6 +14,14 @@ Ce projet est divisé en **6 modules** développés en parallèle par l'équipe.
 | 4 | Marketplace & E-commerce | [@selmiroua](https://github.com/selmiroua) | `features/module4` |
 | 5 | Actualités & Interactions Sociales | [@Mohamed Yassine Azzouz](https://github.com/yassineazzouz1920) | `features/module5` |
 | 6 | Équipements & Maintenance | [@Rayen Sassi](https://github.com/RSassi22) | `features/module6` |
+| Module | Description                                 | Responsable                                                     | Branche            |
+| ------ | ------------------------------------------- | --------------------------------------------------------------- | ------------------ |
+| 1      | Gestion des Utilisateurs & Authentification | [@JasGLe](https://github.com/JasGLe)                            | `features/module1` |
+| 2      | Gestion des Exploitations Agricoles         | [@BoualiWejdene](https://github.com/BoualiWejdene)              | `features/module2` |
+| 3      | Activités & Planification                   | [@Mohamed Yassine Ben Aissa](https://github.com/Yvssine04)      | `features/module3` |
+| 4      | Marketplace & E-commerce                    | [@selmiroua](https://github.com/selmiroua)                      | `features/module4` |
+| 5      | Actualités & Interactions Sociales          | [@Mohamed Yassine Azzouz](https://github.com/yassineazzouz1920) | `features/module5` |
+| 6      | Équipements & Maintenance                   | [@Rayen Sassi](https://github.com/RSassi22)                     | `features/module6` |
 
 📖 **Documentation complète:** [docs/MODULES.md](docs/MODULES.md)
 
@@ -105,6 +113,10 @@ git push origin features/module[X]
 | Admin | jasser@agrilink.tn | test123 |
 | Agriculteur | hassen.trabelsi@agrilink.tn| agri123 |
 
+| Rôle        | Email                       | Mot de passe |
+| ----------- | --------------------------- | ------------ |
+| Admin       | jasser@agrilink.tn          | test123      |
+| Agriculteur | hassen.trabelsi@agrilink.tn | agri123      |
 
 ## Technologies
 
