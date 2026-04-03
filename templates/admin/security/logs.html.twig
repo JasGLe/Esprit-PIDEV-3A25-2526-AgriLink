@@ -1,0 +1,311 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Sécurité - Admin - AgriLink{% endblock %}
+{% block page_title %}Tableau de bord Sécurité{% endblock %}
+
+{% block dashboard_content %}
+    <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-900">Surveillance de la sécurité</h2>
+        <p class="mt-1 text-sm text-gray-600">Vue d'ensemble de la sécurité du système</p>
+    </div>
+
+    {# Security Stats Cards #}
+    <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+        {# Comptes actifs #}
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="p-3 bg-green-100 rounded-full">
+                            <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Comptes actifs</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ accountStats.active }}/{{ accountStats.total }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Emails vérifiés #}
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="p-3 bg-blue-100 rounded-full">
+                            <svg class="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Emails vérifiés</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ accountStats.verified }}/{{ accountStats.total }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Comptes verrouillés #}
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="p-3 {{ accountStats.lockedNow > 0 ? 'bg-red-100' : 'bg-gray-100' }} rounded-full">
+                            <svg class="h-6 w-6 {{ accountStats.lockedNow > 0 ? 'text-red-600' : 'text-gray-600' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">Comptes verrouillés</dt>
+                            <dd class="text-lg font-semibold {{ accountStats.lockedNow > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ accountStats.lockedNow }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# 2FA activé #}
+        <div class="bg-white overflow-hidden shadow rounded-lg">
+            <div class="p-5">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <div class="p-3 bg-purple-100 rounded-full">
+                            <svg class="h-6 w-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="ml-5 w-0 flex-1">
+                        <dl>
+                            <dt class="text-sm font-medium text-gray-500 truncate">2FA activé</dt>
+                            <dd class="text-lg font-semibold text-gray-900">{{ accountStats.twoFactorEnabled }}</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Activity Summary #}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+        {# 24h #}
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Dernières 24 heures</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Connexions réussies</span>
+                    <span class="font-semibold text-green-600">{{ stats24h.loginSuccess }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Connexions échouées</span>
+                    <span class="font-semibold {{ stats24h.loginFailed > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ stats24h.loginFailed }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Comptes verrouillés</span>
+                    <span class="font-semibold {{ stats24h.accountLocked > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ stats24h.accountLocked }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Mots de passe changés</span>
+                    <span class="font-semibold text-gray-900">{{ stats24h.passwordChanged }}</span>
+                </div>
+            </div>
+        </div>
+
+        {# 7 days #}
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">7 derniers jours</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Connexions réussies</span>
+                    <span class="font-semibold text-green-600">{{ stats7d.loginSuccess }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Connexions échouées</span>
+                    <span class="font-semibold {{ stats7d.loginFailed > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ stats7d.loginFailed }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Comptes verrouillés</span>
+                    <span class="font-semibold {{ stats7d.accountLocked > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ stats7d.accountLocked }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Mots de passe changés</span>
+                    <span class="font-semibold text-gray-900">{{ stats7d.passwordChanged }}</span>
+                </div>
+            </div>
+        </div>
+
+        {# 30 days #}
+        <div class="bg-white shadow rounded-lg p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">30 derniers jours</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Connexions réussies</span>
+                    <span class="font-semibold text-green-600">{{ stats30d.loginSuccess }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Connexions échouées</span>
+                    <span class="font-semibold {{ stats30d.loginFailed > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ stats30d.loginFailed }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Comptes verrouillés</span>
+                    <span class="font-semibold {{ stats30d.accountLocked > 0 ? 'text-red-600' : 'text-gray-900' }}">{{ stats30d.accountLocked }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm text-gray-600">Mots de passe changés</span>
+                    <span class="font-semibold text-gray-900">{{ stats30d.passwordChanged }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {# Locked Accounts #}
+        {% if lockedAccounts|length > 0 %}
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                    </svg>
+                    Comptes verrouillés ({{ lockedAccounts|length }})
+                </h3>
+            </div>
+            <ul class="divide-y divide-gray-200">
+                {% for user in lockedAccounts %}
+                <li class="px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ user.nom ?? user.email }}</p>
+                            <p class="text-xs text-gray-500">{{ user.email }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-xs text-red-600">Verrouillé jusqu'à</p>
+                            <p class="text-sm text-gray-900">{{ user.lockedUntil|date('d/m/Y H:i') }}</p>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {# Failed Login Attempts #}
+        {% if failedLoginUsers|length > 0 %}
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-amber-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                    Tentatives de connexion échouées
+                </h3>
+            </div>
+            <ul class="divide-y divide-gray-200">
+                {% for user in failedLoginUsers %}
+                <li class="px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ user.nom ?? user.email }}</p>
+                            <p class="text-xs text-gray-500">{{ user.email }}</p>
+                        </div>
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                            {{ user.failedLoginAttempts }} tentative(s)
+                        </span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {# Unverified Accounts #}
+        {% if unverifiedAccounts|length > 0 %}
+        <div class="bg-white shadow rounded-lg">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                    <svg class="h-5 w-5 text-gray-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                    Emails non vérifiés (+30 jours)
+                </h3>
+            </div>
+            <ul class="divide-y divide-gray-200 max-h-64 overflow-y-auto">
+                {% for user in unverifiedAccounts|slice(0, 10) %}
+                <li class="px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ user.nom ?? 'Sans nom' }}</p>
+                            <p class="text-xs text-gray-500">{{ user.email }}</p>
+                        </div>
+                        <span class="text-xs text-gray-400">
+                            {{ user.createdAt|date('d/m/Y') }}
+                        </span>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+            {% if unverifiedAccounts|length > 10 %}
+            <div class="px-6 py-3 bg-gray-50 text-center text-sm text-gray-500">
+                Et {{ unverifiedAccounts|length - 10 }} autres...
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {# Recent Activity #}
+        <div class="bg-white shadow rounded-lg {{ (lockedAccounts|length == 0 and failedLoginUsers|length == 0) ? 'lg:col-span-2' : '' }}">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-medium text-gray-900">Activité récente</h3>
+            </div>
+            <ul class="divide-y divide-gray-200 max-h-96 overflow-y-auto">
+                {% for event in recentEvents %}
+                <li class="px-6 py-3">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            {% if event.eventType == 'LOGIN_SUCCESS' %}
+                                <span class="w-2 h-2 bg-green-400 rounded-full mr-3"></span>
+                            {% elseif event.eventType == 'LOGIN_FAILED' or event.eventType == 'ACCOUNT_LOCKED' %}
+                                <span class="w-2 h-2 bg-red-400 rounded-full mr-3"></span>
+                            {% elseif event.eventType starts with '2FA' %}
+                                <span class="w-2 h-2 bg-purple-400 rounded-full mr-3"></span>
+                            {% else %}
+                                <span class="w-2 h-2 bg-blue-400 rounded-full mr-3"></span>
+                            {% endif %}
+                            <div>
+                                <p class="text-sm text-gray-900">
+                                    {% if event.eventType == 'LOGIN_SUCCESS' %}Connexion réussie
+                                    {% elseif event.eventType == 'LOGIN_FAILED' %}Connexion échouée
+                                    {% elseif event.eventType == 'ACCOUNT_LOCKED' %}Compte verrouillé
+                                    {% elseif event.eventType == 'PASSWORD_CHANGED' %}Mot de passe modifié
+                                    {% elseif event.eventType == 'EMAIL_VERIFIED' %}Email vérifié
+                                    {% elseif event.eventType == '2FA_SUCCESS' %}2FA réussi
+                                    {% elseif event.eventType == '2FA_FAILED' %}2FA échoué
+                                    {% elseif event.eventType == 'LOGOUT' %}Déconnexion
+                                    {% else %}{{ event.eventType }}
+                                    {% endif %}
+                                </p>
+                                <p class="text-xs text-gray-500">
+                                    {% if event.user %}{{ event.user.email }}{% else %}Utilisateur inconnu{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-400">{{ event.createdAt|date('d/m H:i') }}</span>
+                    </div>
+                </li>
+                {% else %}
+                <li class="px-6 py-4 text-center text-sm text-gray-500">Aucune activité récente</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}

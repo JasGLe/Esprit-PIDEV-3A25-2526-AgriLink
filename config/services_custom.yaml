@@ -1,6 +1,0 @@
-services:
-    # Configuration du service FileUploader avec les variables d'environnement
-    App\Service\FileUploader:
-        arguments:
-            $uploadsBaseDir: '%env(UPLOADS_BASE_DIR)%'
-            $uploadsBaseUrl: '%env(UPLOADS_BASE_URL)%'

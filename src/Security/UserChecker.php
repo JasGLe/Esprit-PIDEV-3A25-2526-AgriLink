@@ -16,6 +16,17 @@ class UserChecker implements UserCheckerInterface
             return;
         }
 
+        // Check if account is locked
+        if ($user->isLockedOut()) {
+            $lockedUntil = $user->getLockedUntil();
+            $remainingMinutes = ceil(($lockedUntil->getTimestamp() - time()) / 60);
+            
+            throw new CustomUserMessageAccountStatusException(
+                'Votre compte est temporairement verrouillé suite à plusieurs tentatives de connexion échouées. Veuillez réessayer dans ' . $remainingMinutes . ' minute(s).'
+            );
+        }
+
+        // Check if account is active
         if (!$user->isActive()) {
             throw new CustomUserMessageAccountStatusException(
                 'Votre compte est désactivé. Veuillez contacter un administrateur.'
@@ -28,5 +39,9 @@ class UserChecker implements UserCheckerInterface
         if (!$user instanceof User) {
             return;
         }
+
+        // Check email verification (warning only, allow login for now)
+        // This could be used to display a flash message or redirect to verification page
+        // For now, we allow login but this check is available for future use
     }
 }

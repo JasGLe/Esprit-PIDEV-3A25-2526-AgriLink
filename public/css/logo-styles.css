@@ -1,0 +1,319 @@
+/* ========================================
+   AGRILINK LOGO STYLING
+   ======================================== */
+
+/* Base logo styles */
+.logo {
+    display: block;
+    object-fit: contain;
+    object-position: center;
+}
+
+/* Logo sizing variants */
+
+/* Extra Small - Icon only context (h-6 / 24px) */
+.logo--xs {
+    height: 24px;
+    width: auto;
+    max-width: 100%;
+}
+
+/* Small - Navigation, sidebar, compact areas (h-10 / 40px) */
+.logo--sm {
+    height: 40px;
+    width: auto;
+    max-width: 100%;
+}
+
+/* Medium - Standard display (h-16 / 64px) */
+.logo--md {
+    height: 64px;
+    width: auto;
+    max-width: 100%;
+}
+
+/* Large - Main header/hero (h-32 / 128px) */
+.logo--lg {
+    height: 128px;
+    width: auto;
+    max-width: 100%;
+}
+
+/* Extra Large - Full page hero (h-48 / 192px) */
+.logo--xl {
+    height: 192px;
+    width: auto;
+    max-width: 100%;
+}
+
+/* Context-specific logo sizing */
+
+/* Logo in page headers */
+.logo-header {
+    height: 128px;
+    width: auto;
+    max-width: 100%;
+    margin: 0 auto;
+    display: block;
+}
+
+/* Logo in navigation bar */
+.logo-nav {
+    height: 40px;
+    width: auto;
+    max-width: 100%;
+}
+
+/* Logo in favicon (small icon) */
+.logo-favicon {
+    height: 24px;
+    width: auto;
+    max-width: 100%;
+}
+
+/* Logo in email templates */
+.logo-email {
+    height: 80px;
+    width: auto;
+    max-width: 100%;
+    display: block;
+    margin: 0 auto 20px;
+}
+
+/* Logo in dashboard/sidebar */
+.logo-sidebar {
+    height: 40px;
+    width: auto;
+    max-width: 100%;
+}
+
+/* Logo as loading indicator/spinner */
+.logo-loading {
+    height: 64px;
+    width: auto;
+    max-width: 100%;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Logo wrapper with centered alignment */
+.logo-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+/* Logo wrapper with padding */
+.logo-wrapper--padded {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 20px;
+}
+
+/* Logo with shadow effect */
+.logo--shadow {
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.1));
+}
+
+/* Logo with hover effect */
+.logo--hoverable:hover {
+    filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.15));
+    transition: filter 0.3s ease-in-out;
+}
+
+/* Logo with reduced opacity (inactive/disabled state) */
+.logo--muted {
+    opacity: 0.6;
+}
+
+/* Logo with increased opacity (active/highlighted state) */
+.logo--highlight {
+    opacity: 1;
+    filter: drop-shadow(0 2px 4px rgba(45, 80, 22, 0.2));
+}
+
+/* Responsive logo sizing */
+@media (max-width: 768px) {
+    /* Reduce header logo size on mobile */
+    .logo-header {
+        height: 96px;
+    }
+    
+    /* Adjust navigation logo on mobile */
+    .logo-nav {
+        height: 32px;
+    }
+}
+
+@media (max-width: 640px) {
+    /* Further reduce on small screens */
+    .logo-header {
+        height: 80px;
+    }
+    
+    .logo--lg {
+        height: 96px;
+    }
+    
+    .logo--md {
+        height: 48px;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Ultra-small screens */
+    .logo-header {
+        height: 64px;
+    }
+    
+    .logo-nav {
+        height: 28px;
+    }
+    
+    .logo--xl {
+        height: 120px;
+    }
+}
+
+/* Print styles for logo */
+@media print {
+    .logo {
+        max-width: 100%;
+        height: auto;
+    }
+    
+    .logo-header {
+        height: 60px;
+        margin-bottom: 20px;
+    }
+}
+
+/* Logo animation effects */
+
+/* Fade in animation on page load */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.logo--fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Bounce animation for emphasis */
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.logo--bounce {
+    animation: bounce 1s ease-in-out;
+}
+
+/* Pulse animation for attention */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.logo--pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Slide in animation */
+@keyframes slideInDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.logo--slide-in {
+    animation: slideInDown 0.6s ease-out;
+}
+
+/* Logo aspect ratio preservation */
+.logo-container {
+    position: relative;
+    width: 100%;
+}
+
+.logo-container::before {
+    content: "";
+    display: block;
+    padding-bottom: 100%; /* 1:1 aspect ratio */
+}
+
+.logo-container-content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Accessibility improvements */
+.logo[alt] {
+    /* Screen readers can now read the alt text */
+}
+
+/* Focus state for keyboard navigation */
+.logo:focus-visible {
+    outline: 2px solid #2D5016;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
+/* Dark mode logo adjustments (if needed) */
+@media (prefers-color-scheme: dark) {
+    .logo--shadow {
+        filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+    }
+}
+
+/* Lazy loading placeholder */
+.logo:not([src]) {
+    background-color: #f3f4f6;
+    border-radius: 4px;
+}
+
+/* ========================================
+   AGRILINK BRANDING COLOR VARIABLES
+   ======================================== */
+
+:root {
+    --agrilink-dark-green: #2D5016;
+    --agrilink-light-green: #A8D66D;
+    --agrilink-brown: #A67C52;
+    --agrilink-border: #E5E7EB;
+}
