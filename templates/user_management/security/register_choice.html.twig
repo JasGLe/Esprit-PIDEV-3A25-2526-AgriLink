@@ -1,0 +1,143 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Inscription - AgriLink{% endblock %}
+
+{% block body %}
+{{ include('components/_auth_background.html.twig') }}
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-5 px-3 px-sm-4">
+    <div class="w-100" style="max-width: 1200px;">
+        <div>
+            <div class="d-flex justify-content-center">
+                <img src="{{ asset('logo_with_text.png') }}" alt="AgriLink Logo" class="logo logo-header">
+            </div>
+            <h2 class="mt-4 text-center display-6 fw-bold text-dark">
+                Rejoignez AgriLink
+            </h2>
+            <p class="mt-2 text-center small text-muted">
+                Choisissez votre type de compte pour commencer
+            </p>
+        </div>
+
+        {% for flash_message in app.flashes('info') %}
+            <div class="alert alert-info border border-info d-flex align-items-start mt-3">
+                <div class="flex-shrink-0">
+                    <svg class="bi" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <div class="ms-3">
+                    <p class="mb-0 small">{{ flash_message }}</p>
+                </div>
+            </div>
+        {% endfor %}
+
+        <div class="row row-cols-1 row-cols-md-3 g-4 mt-4">
+            <!-- Agriculteur Card -->
+            <div class="col">
+                <a href="{{ path('app_register_agriculteur') }}" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm border-2 hover-card">
+                        <div class="card-body p-4 text-center">
+                            <span class="fs-1 d-block mb-3">🌾</span>
+                            <h3 class="h5 fw-bold text-dark mb-2 card-title-hover">
+                                Agriculteur
+                            </h3>
+                            <p class="text-muted small">
+                                Vous êtes agriculteur et souhaitez gérer votre exploitation
+                            </p>
+                            <div class="mt-4">
+                                <span class="btn btn-outline-primary w-100">
+                                    Commencer
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Fournisseur Card -->
+            <div class="col">
+                <a href="{{ path('app_register_fournisseur') }}" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm border-2 hover-card">
+                        <div class="card-body p-4 text-center">
+                            <span class="fs-1 d-block mb-3">📦</span>
+                            <h3 class="h5 fw-bold text-dark mb-2 card-title-hover">
+                                Fournisseur
+                            </h3>
+                            <p class="text-muted small">
+                                Vous êtes fournisseur de produits ou services agricoles
+                            </p>
+                            <div class="mt-4">
+                                <span class="btn btn-outline-primary w-100">
+                                    Commencer
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- AgriPlus Card -->
+            <div class="col">
+                <a href="{{ path('app_register_agriplus') }}" class="text-decoration-none">
+                    <div class="card h-100 shadow-sm border-2 hover-card-yellow position-relative overflow-hidden">
+                        <div class="position-absolute top-0 end-0 bg-warning text-white small fw-bold px-3 py-1 rounded-bottom-start">
+                            Premium
+                        </div>
+                        <div class="card-body p-4 text-center">
+                            <span class="fs-1 d-block mb-3">⭐</span>
+                            <h3 class="h5 fw-bold text-dark mb-2 card-title-hover-yellow">
+                                AgriPlus
+                            </h3>
+                            <p class="text-muted small">
+                                Accédez aux fonctionnalités premium d'AgriLink
+                            </p>
+                            <div class="mt-4">
+                                <span class="btn btn-outline-warning w-100 text-warning">
+                                    Commencer
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <p class="small text-muted">
+                Déjà inscrit ?
+                <a href="{{ path('app_login') }}" class="fw-medium text-primary">
+                    Se connecter
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+.hover-card {
+    transition: all 0.3s ease;
+}
+.hover-card:hover {
+    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
+    border-color: var(--bs-primary) !important;
+    transform: translateY(-4px);
+}
+.hover-card:hover .card-title-hover {
+    color: var(--bs-primary) !important;
+}
+.hover-card:hover .btn-outline-primary {
+    background-color: var(--bs-primary);
+    color: white;
+}
+.hover-card-yellow:hover {
+    border-color: #ffc107 !important;
+}
+.hover-card-yellow:hover .card-title-hover-yellow {
+    color: #ffc107 !important;
+}
+.hover-card-yellow:hover .btn-outline-warning {
+    background-color: #ffc107;
+    color: white;
+}
+</style>
+{% endblock %}

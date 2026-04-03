@@ -3,12 +3,12 @@
 #}
 
 {% set badgeClasses = {
-    'ROLE_ADMIN': 'bg-red-100 text-red-800',
-    'ROLE_AGRIPLUS': 'bg-yellow-100 text-yellow-800',
-    'ROLE_FOURNISSEUR': 'bg-blue-100 text-blue-800',
-    'ROLE_FOURNISSEUR_SOCIETE': 'bg-blue-100 text-blue-800',
-    'ROLE_FOURNISSEUR_PERSONNE': 'bg-blue-100 text-blue-800',
-    'ROLE_AGRICULTEUR': 'bg-green-100 text-green-800',
+    'ROLE_ADMIN': 'bg-danger text-white',
+    'ROLE_AGRIPLUS': 'bg-warning text-dark',
+    'ROLE_FOURNISSEUR': 'bg-primary text-white',
+    'ROLE_FOURNISSEUR_SOCIETE': 'bg-primary text-white',
+    'ROLE_FOURNISSEUR_PERSONNE': 'bg-primary text-white',
+    'ROLE_AGRICULTEUR': 'bg-success text-white',
 } %}
 
 {% set badgeTexts = {
@@ -29,6 +29,6 @@
     'ROLE_AGRICULTEUR': '🌱',
 } %}
 
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {{ badgeClasses[role]|default('bg-gray-100 text-gray-800') }}">
+<span class="badge rounded-pill {{ badgeClasses[role]|default('bg-secondary text-white') }}">
     {{ badgeIcons[role]|default('👤') }} {{ badgeTexts[role]|default('Utilisateur') }}
 </span>

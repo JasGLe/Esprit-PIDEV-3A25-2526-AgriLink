@@ -6,14 +6,14 @@
 #}
 
 {% set sizes = {
-    'small': 'w-8 h-8 text-xs',
-    'medium': 'w-10 h-10 text-sm',
-    'large': 'w-16 h-16 text-xl',
+    'small': 'avatar-sm',
+    'medium': 'avatar-md',
+    'large': 'avatar-lg',
 } %}
 
 {% set sizeClass = sizes[size|default('medium')] %}
 
-<div class="relative inline-block {{ classes|default('') }}">
+<div class="position-relative d-inline-block {{ classes|default('') }}">
     {% if user.photoProfil %}
         {# Handle different path formats in database:
            - New format: profiles/filename.jpg
@@ -34,10 +34,10 @@
         
         <img src="{{ finalPath }}" 
              alt="{{ user.nom }}" 
-             class="{{ sizeClass }} rounded-full object-cover border-2 border-gray-200"
+             class="avatar {{ sizeClass }} border border-2 border-gray-200"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
         {# Fallback if image fails to load #}
-        <div class="hidden items-center justify-center {{ sizeClass }} rounded-full bg-primary-600 text-white font-semibold">
+        <div class="avatar {{ sizeClass }} bg-success text-white fw-semibold d-none">
             {% set names = user.nom|split(' ') %}
             {% if names|length > 0 %}
                 {{ names[0]|first|upper }}{% if names|length > 1 %}{{ names[1]|first|upper }}{% endif %}
@@ -46,7 +46,7 @@
             {% endif %}
         </div>
     {% else %}
-        <div class="flex items-center justify-center {{ sizeClass }} rounded-full bg-primary-600 text-white font-semibold">
+        <div class="avatar {{ sizeClass }} bg-success text-white fw-semibold">
             {% set names = user.nom|split(' ') %}
             {% if names|length > 0 %}
                 {{ names[0]|first|upper }}{% if names|length > 1 %}{{ names[1]|first|upper }}{% endif %}

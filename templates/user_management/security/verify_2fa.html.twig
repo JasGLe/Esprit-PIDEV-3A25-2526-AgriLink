@@ -1,0 +1,268 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Vérification en deux étapes - AgriLink{% endblock %}
+
+{% block body %}
+{{ include('components/_auth_background.html.twig') }}
+<div class="min-vh-100 d-flex align-items-center justify-content-center py-5 px-3">
+    <div class="w-100" style="max-width: 28rem;">
+        <div class="mb-4">
+            <div class="d-flex justify-content-center">
+                <span style="font-size: 3.75rem;">🔐</span>
+            </div>
+            <h2 class="mt-4 text-center display-6 fw-bold text-dark">
+                Vérification en deux étapes
+            </h2>
+            <p class="mt-2 text-center small text-muted">
+                Un code de vérification a été envoyé à<br>
+                <span class="fw-medium text-success">{{ user.email|slice(0, 3) }}***{{ user.email|split('@')[1] }}</span>
+            </p>
+        </div>
+
+        {# Error message #}
+        {% if error %}
+            <div class="alert alert-danger d-flex align-items-start" role="alert">
+                <svg class="flex-shrink-0 me-2" style="width: 1.25rem; height: 1.25rem;" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <div>{{ error }}</div>
+            </div>
+        {% endif %}
+
+        {# Success message for resend #}
+        <div id="success-message" class="alert alert-success d-none" role="alert">
+            <div class="d-flex align-items-start">
+                <svg class="flex-shrink-0 me-2" style="width: 1.25rem; height: 1.25rem;" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <div id="success-text"></div>
+            </div>
+        </div>
+
+        {# Expiration timer #}
+        <div class="text-center mb-3">
+            <div id="timer-container" class="d-inline-flex align-items-center px-3 py-2 rounded-pill {% if expiration_seconds > 60 %}bg-success bg-opacity-10 text-success{% elseif expiration_seconds > 0 %}bg-warning bg-opacity-10 text-warning{% else %}bg-danger bg-opacity-10 text-danger{% endif %}">
+                <svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <span id="timer-text">
+                    {% if expiration_seconds > 0 %}
+                        Code valide pendant <span id="countdown">{{ (expiration_seconds / 60)|round(0, 'ceil') }}</span> min
+                    {% else %}
+                        Code expiré
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+        {# Remaining attempts #}
+        {% if remaining_attempts < max_attempts %}
+            <div class="text-center small {% if remaining_attempts <= 1 %}text-danger{% else %}text-warning{% endif %} mb-3">
+                <svg class="d-inline me-1" style="width: 1rem; height: 1rem;" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                {{ remaining_attempts }} tentative{{ remaining_attempts > 1 ? 's' : '' }} restante{{ remaining_attempts > 1 ? 's' : '' }}
+            </div>
+        {% endif %}
+
+        {# OTP Form #}
+        <form id="otp-form" class="mt-4" action="{{ path('app_2fa_verify') }}" method="post">
+            <div class="mb-3">
+                <label for="otp_code" class="form-label text-center d-block fw-medium mb-3">
+                    Entrez le code à 6 chiffres
+                </label>
+                
+                {# Single input for OTP #}
+                <div class="d-flex justify-content-center">
+                    <input type="text" 
+                           id="otp_code" 
+                           name="otp_code" 
+                           maxlength="6" 
+                           pattern="[0-9]{6}"
+                           inputmode="numeric"
+                           autocomplete="one-time-code"
+                           required
+                           class="form-control text-center fs-4 font-monospace"
+                           style="width: 12rem; letter-spacing: 0.5em;"
+                           placeholder="000000"
+                           autofocus>
+                </div>
+            </div>
+
+            <div class="d-grid mb-3">
+                <button type="submit" 
+                        id="submit-btn"
+                        class="btn btn-success d-flex align-items-center justify-content-center">
+                    <svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    Vérifier le code
+                </button>
+            </div>
+        </form>
+
+        {# Resend and Cancel buttons #}
+        <div class="d-grid gap-3">
+            {# Resend button #}
+            <button type="button" 
+                    id="resend-btn"
+                    onclick="resendCode()"
+                    class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
+                    {% if not can_resend %}disabled{% endif %}>
+                <svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                </svg>
+                <span id="resend-text">
+                    {% if can_resend %}
+                        Renvoyer le code
+                    {% else %}
+                        Renvoyer dans <span id="cooldown">{{ cooldown_seconds }}</span>s
+                    {% endif %}
+                </span>
+            </button>
+
+            {# Cancel link #}
+            <a href="{{ path('app_2fa_cancel') }}" 
+               class="btn btn-link text-muted d-flex align-items-center justify-content-center text-decoration-none">
+                <svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Annuler et retourner à la connexion
+            </a>
+        </div>
+
+        {# Help text #}
+        <div class="mt-4 text-center text-muted" style="font-size: 0.75rem;">
+            <p>Vous n'avez pas reçu le code ?</p>
+            <p class="mt-1">Vérifiez votre dossier spam ou cliquez sur "Renvoyer le code".</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Timer for OTP expiration
+    let expirationSeconds = {{ expiration_seconds }};
+    let cooldownSeconds = {{ cooldown_seconds }};
+    
+    function updateExpirationTimer() {
+        if (expirationSeconds <= 0) {
+            document.getElementById('timer-text').textContent = 'Code expiré';
+            document.getElementById('timer-container').className = 'd-inline-flex align-items-center px-3 py-2 rounded-pill bg-danger bg-opacity-10 text-danger';
+            document.getElementById('submit-btn').disabled = true;
+            return;
+        }
+        
+        expirationSeconds--;
+        const minutes = Math.floor(expirationSeconds / 60);
+        const seconds = expirationSeconds % 60;
+        
+        let displayText;
+        if (minutes > 0) {
+            displayText = `Code valide pendant ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        } else {
+            displayText = `Code valide pendant ${seconds}s`;
+        }
+        document.getElementById('timer-text').innerHTML = displayText;
+        
+        // Update color based on time remaining
+        const container = document.getElementById('timer-container');
+        if (expirationSeconds > 60) {
+            container.className = 'd-inline-flex align-items-center px-3 py-2 rounded-pill bg-success bg-opacity-10 text-success';
+        } else if (expirationSeconds > 30) {
+            container.className = 'd-inline-flex align-items-center px-3 py-2 rounded-pill bg-warning bg-opacity-10 text-warning';
+        } else {
+            container.className = 'd-inline-flex align-items-center px-3 py-2 rounded-pill bg-danger bg-opacity-10 text-danger';
+        }
+    }
+    
+    function updateCooldownTimer() {
+        if (cooldownSeconds <= 0) {
+            document.getElementById('resend-btn').disabled = false;
+            document.getElementById('resend-text').textContent = 'Renvoyer le code';
+            return;
+        }
+        
+        cooldownSeconds--;
+        document.getElementById('resend-text').innerHTML = `Renvoyer dans <span id="cooldown">${cooldownSeconds}</span>s`;
+    }
+    
+    // Start timers
+    if (expirationSeconds > 0) {
+        setInterval(updateExpirationTimer, 1000);
+    }
+    if (cooldownSeconds > 0) {
+        setInterval(updateCooldownTimer, 1000);
+    }
+    
+    // Resend code via AJAX
+    async function resendCode() {
+        const btn = document.getElementById('resend-btn');
+        const successMsg = document.getElementById('success-message');
+        const successText = document.getElementById('success-text');
+        
+        btn.disabled = true;
+        btn.innerHTML = '<div class="spinner-border spinner-border-sm me-2" role="status"><span class="visually-hidden">Loading...</span></div>Envoi en cours...';
+        
+        try {
+            const response = await fetch('{{ path('app_2fa_resend') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.redirect) {
+                window.location.href = data.redirect;
+                return;
+            }
+            
+            if (data.success) {
+                // Show success message
+                successText.textContent = data.message;
+                successMsg.classList.remove('d-none');
+                
+                // Reset expiration timer
+                expirationSeconds = data.expiration_seconds;
+                document.getElementById('submit-btn').disabled = false;
+                
+                // Reset cooldown
+                cooldownSeconds = data.cooldown_seconds;
+                btn.innerHTML = '<svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><span id="resend-text">Renvoyer dans <span id="cooldown">' + cooldownSeconds + '</span>s</span>';
+                
+                // Hide success message after 5 seconds
+                setTimeout(() => {
+                    successMsg.classList.add('d-none');
+                }, 5000);
+            } else {
+                // Show error
+                alert(data.message);
+                if (data.cooldown) {
+                    cooldownSeconds = data.cooldown;
+                }
+                btn.innerHTML = '<svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><span id="resend-text">Renvoyer dans <span id="cooldown">' + cooldownSeconds + '</span>s</span>';
+            }
+        } catch (error) {
+            alert('Erreur lors de l\'envoi du code. Veuillez réessayer.');
+            btn.disabled = false;
+            btn.innerHTML = '<svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><span id="resend-text">Renvoyer le code</span>';
+        }
+    }
+    
+    // Auto-submit when 6 digits entered
+    document.getElementById('otp_code').addEventListener('input', function(e) {
+        // Only allow digits
+        this.value = this.value.replace(/[^0-9]/g, '');
+        
+        // Auto-submit when 6 digits are entered
+        if (this.value.length === 6) {
+            // Small delay to show the last digit
+            setTimeout(() => {
+                document.getElementById('otp-form').submit();
+            }, 100);
+        }
+    });
+</script>
+{% endblock %}
