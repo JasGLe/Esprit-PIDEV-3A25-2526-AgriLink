@@ -19,12 +19,8 @@ security:
             lazy: true
             provider: app_user_provider
             user_checker: App\Security\UserChecker
-
-            form_login:
-                login_path: app_login
-                check_path: app_login
-                enable_csrf: true
-                default_target_path: app_dashboard
+            custom_authenticators:
+                - App\Security\UserAuthenticator
                 
             remember_me:
                 secret: '%kernel.secret%'

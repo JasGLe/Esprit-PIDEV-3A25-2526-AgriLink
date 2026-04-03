@@ -3,11 +3,12 @@
 {% block title %}Créer un compte - AgriLink{% endblock %}
 
 {% block body %}
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+{{ include('components/_auth_background.html.twig') }}
+<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
         <div>
             <div class="flex justify-center">
-                <span class="text-6xl">🌾</span>
+                <img src="{{ asset('logo_with_text.png') }}" alt="AgriLink Logo" class="logo logo-header">
             </div>
             <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">
                 Créer un compte AgriLink
@@ -20,7 +21,7 @@
             </p>
         </div>
 
-        {{ form_start(registrationForm, {'attr': {'class': 'mt-8 space-y-6'}}) }}
+        {{ form_start(registrationForm, {'attr': {'class': 'mt-8 space-y-6', 'novalidate': 'novalidate'}}) }}
             <div class="space-y-4">
                 <div>
                     {{ form_label(registrationForm.email) }}
