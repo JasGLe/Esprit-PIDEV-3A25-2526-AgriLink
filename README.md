@@ -101,9 +101,9 @@ git push origin features/module[X]
 
 | Rôle | Email | Mot de passe |
 |------|-------|--------------|
-| Admin | admin@agrilink.com | Admin123! |
-| Agriculteur | agri@test.com | Test123! |
-| Fournisseur | fourn@test.com | Test123! |
+| Admin | jasser@agrilink.tn | test123 |
+| Agriculteur | hassen.trabelsi@agrilink.tn| agri123 |
+
 
 ## Technologies
 
