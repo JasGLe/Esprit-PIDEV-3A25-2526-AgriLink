@@ -8,12 +8,12 @@ Ce projet est divisé en **6 modules** développés en parallèle par l'équipe.
 
 | Module | Description | Responsable | Branche |
 |--------|-------------|-------------|---------|
-| 1 | Gestion des Utilisateurs | - | `features/module1` |
-| 2 | Exploitations Agricoles | - | `features/module2` |
-| 3 | Marketplace & Produits | - | `features/module3` |
-| 4 | Équipements & Maintenance | - | `features/module4` |
-| 5 | Forum & Communication | - | `features/module5` |
-| 6 | Événements & Calendrier | - | `features/module6` |
+| 1 | Gestion des Utilisateurs & Authentification | [@JasGLe](https://github.com/JasGLe) | `features/module1` |
+| 2 | Gestion des Exploitations Agricoles | [@BoualiWejdene](https://github.com/BoualiWejdene) | `features/module2` |
+| 3 | Activités & Planification | [@Mohamed Yassine Ben Aissa](https://github.com/Yvssine04) | `features/module3`
+| 4 | Marketplace & E-commerce | [@selmiroua](https://github.com/selmiroua) | `features/module4` |
+| 5 | Actualités & Interactions Sociales | [@Mohamed Yassine Azzouz](https://github.com/yassineazzouz1920) | `features/module5` |
+| 6 | Équipements & Maintenance | [@Rayen Sassi](https://github.com/RSassi22) | `features/module6` |
 
 📖 **Documentation complète:** [docs/MODULES.md](docs/MODULES.md)
 
@@ -69,10 +69,11 @@ MAILER_DSN=smtp://localhost:1025
 - `dev` - Développement (intégration)
 - `features/module1` - Module 1: User Management
 - `features/module2` - Module 2: Exploitations
-- `features/module3` - Module 3: Marketplace
-- `features/module4` - Module 4: Équipements
+- `features/module3` - Module 3: Événements
+- `features/module4` - Module 4: Marketplace
 - `features/module5` - Module 5: Forum
-- `features/module6` - Module 6: Événements
+- `features/module6` - Module 6: Équipements
+
 
 ## Workflow Git
 
