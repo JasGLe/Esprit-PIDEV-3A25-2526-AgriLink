@@ -1,0 +1,70 @@
+{# Custom Form Theme - Enhanced Bootstrap 5 #}
+{% use 'bootstrap_5_layout.html.twig' %}
+
+{# Form row with help text and enhanced errors #}
+{% block form_row %}
+    {% set row_class = row_attr.class|default('') ~ ' mb-3' %}
+    <div class="{{ row_class|trim }}">
+        {{ form_label(form) }}
+        {% if help is defined and help is not empty %}
+            <div class="form-text text-muted small mb-2">
+                <i class="bi bi-info-circle"></i> {{ help }}
+            </div>
+        {% endif %}
+        {{ form_widget(form) }}
+        {{ form_errors(form) }}
+    </div>
+{% endblock %}
+
+{# Enhanced error display #}
+{% block form_errors %}
+    {% if errors|length > 0 %}
+        <div class="invalid-feedback d-block mt-1">
+            {% for error in errors %}
+                <div class="d-flex align-items-start">
+                    <i class="bi bi-exclamation-triangle-fill text-danger me-2 flex-shrink-0" style="margin-top: 2px;"></i>
+                    <span>{{ error.message }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+{% endblock %}
+
+{# Add is-invalid class to text inputs with errors #}
+{% block form_widget_simple %}
+    {% if errors|length > 0 %}
+        {% set attr = attr|merge({class: (attr.class|default('') ~ ' is-invalid')|trim}) %}
+    {% endif %}
+    {{ parent() }}
+{% endblock %}
+
+{# Add is-invalid class to textareas with errors #}
+{% block textarea_widget %}
+    {% if errors|length > 0 %}
+        {% set attr = attr|merge({class: (attr.class|default('') ~ ' is-invalid')|trim}) %}
+    {% endif %}
+    {{ parent() }}
+{% endblock %}
+
+{# Add is-invalid class to select dropdowns with errors #}
+{% block choice_widget_collapsed %}
+    {% if errors|length > 0 %}
+        {% set attr = attr|merge({class: (attr.class|default('') ~ ' is-invalid')|trim}) %}
+    {% endif %}
+    {{ parent() }}
+{% endblock %}
+
+{# Enhanced label with required indicator #}
+{% block form_label %}
+    {% if label is not same as(false) %}
+        {% if required %}
+            {% set label_attr = label_attr|merge({class: (label_attr.class|default('') ~ ' required')|trim}) %}
+        {% endif %}
+        <label{% if label_attr %} {% for attrname, attrvalue in label_attr %}{{ attrname }}="{{ attrvalue }}" {% endfor %}{% endif %} for="{{ id }}" class="form-label">
+            {{ label|trans({}, translation_domain) }}
+            {% if required %}
+                <span class="text-danger fw-bold">*</span>
+            {% endif %}
+        </label>
+    {% endif %}
+{% endblock %}

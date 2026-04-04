@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Invitation officielle</title>
+    <style>
+        body {
+            font-family: DejaVu Sans, Arial, sans-serif;
+            color: #111827;
+            margin: 0;
+            padding: 28px;
+            background: #f3f4f6;
+        }
+
+        .sheet {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 14px;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .header {
+            background: #ecfdf5;
+            border-bottom: 1px solid #bbf7d0;
+            padding: 22px 24px;
+            text-align: center;
+        }
+
+        .logo {
+            width: 160px;
+            height: auto;
+            margin-bottom: 8px;
+        }
+
+        .header-title {
+            color: #166534;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: 0.01em;
+        }
+
+        .header-subtitle {
+            color: #4b5563;
+            margin-top: 6px;
+            font-size: 13px;
+        }
+
+        .content {
+            padding: 26px 24px;
+        }
+
+        .greeting {
+            margin-bottom: 18px;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .invitee {
+            font-size: 20px;
+            color: #0f766e;
+            font-weight: 700;
+            margin-bottom: 14px;
+        }
+
+        .event-box {
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+
+        .label {
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            font-size: 11px;
+            color: #6b7280;
+            margin-bottom: 4px;
+        }
+
+        .value {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .grid {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 14px;
+        }
+
+        .grid td {
+            width: 50%;
+            padding: 10px 0;
+            vertical-align: top;
+        }
+
+        .description {
+            margin-top: 16px;
+            padding: 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 10px;
+            background: #f9fafb;
+            line-height: 1.7;
+            font-size: 13px;
+        }
+
+        .signature {
+            margin-top: 26px;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .footer {
+            margin-top: 26px;
+            font-size: 12px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="sheet">
+        <div class="header">
+            {% if logoDataUri %}
+                <img src="{{ logoDataUri }}" alt="AgriLink" class="logo">
+            {% endif %}
+            <h1 class="header-title">Invitation Officielle</h1>
+            <div class="header-subtitle">Document généré le {{ generatedAt|date('d/m/Y à H:i') }}</div>
+        </div>
+
+        <div class="content">
+            <div class="greeting">Nous avons le plaisir de vous inviter à participer à l'événement suivant.</div>
+            <div class="invitee">{{ inviteeName }}</div>
+
+            <div class="event-box">
+                <div class="label">Événement</div>
+                <div class="value">{{ evenement.titre }}</div>
+            </div>
+
+            <table class="grid">
+                <tr>
+                    <td>
+                        <div class="label">Type d'événement</div>
+                        <div class="value">{{ evenement.typeEvenement }}</div>
+                    </td>
+                    <td>
+                        <div class="label">Date et heure</div>
+                        <div class="value">{{ evenement.dateEvenement|date('d/m/Y H:i') }}</div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div class="label">Lieu</div>
+                        <div class="value">{{ evenement.lieu }}</div>
+                    </td>
+                    <td>
+                        <div class="label">Référence</div>
+                        <div class="value">INV-{{ evenement.id }}-{{ generatedAt|date('Ymd') }}</div>
+                    </td>
+                </tr>
+            </table>
+
+            {% if evenement.description %}
+                <div class="description">
+                    <div class="label">Description</div>
+                    <div>{{ evenement.description }}</div>
+                </div>
+            {% endif %}
+
+            <div class="signature">
+                En vous remerciant de votre intérêt,<br>
+                <strong>L'équipe AgriLink</strong>
+            </div>
+
+            <div class="footer">
+                Invitation générée automatiquement par AgriLink.
+            </div>
+        </div>
+    </div>
+</body>
+</html>

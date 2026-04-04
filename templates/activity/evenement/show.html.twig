@@ -1,0 +1,174 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}{{ evenement.titre }} - AgriLink{% endblock %}
+{% block page_title %}Détails événement{% endblock %}
+
+{% block dashboard_content %}
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <a href="{{ path('evenement_list') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
+        {% if canManage %}
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exportInvitationModal">
+                    📨 Invitation PDF
+                </button>
+                <a href="{{ path('evenement_edit', {'id': evenement.id}) }}" class="btn btn-success">Modifier</a>
+                <form method="post" action="{{ path('evenement_delete', {'id': evenement.id}) }}" onsubmit="return confirm('Supprimer cet événement ?');" class="d-inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.id) }}">
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="card-header bg-success bg-opacity-10 border-0 p-4">
+            <div class="d-flex flex-column flex-lg-row gap-3 align-items-lg-center">
+                <div class="display-6">📅</div>
+                <div>
+                    <h2 class="h4 fw-bold text-dark mb-2">{{ evenement.titre }}</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge text-bg-light text-dark border">{{ evenement.typeEvenement }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            {% if evenement.description %}
+                <div class="mb-4 p-3 rounded-3 bg-light border">
+                    <div class="text-muted small text-uppercase fw-semibold mb-2">Description</div>
+                    <div class="text-dark">{{ evenement.description }}</div>
+                </div>
+            {% endif %}
+
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <div class="p-3 rounded-3 bg-light border">
+                        <div class="text-muted small text-uppercase fw-semibold">Date événement</div>
+                        <div class="fw-semibold text-dark">{{ evenement.dateEvenement|date('d/m/Y H:i') }}</div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="p-3 rounded-3 bg-light border">
+                        <div class="text-muted small text-uppercase fw-semibold">Lieu</div>
+                        <div class="fw-semibold text-dark">{{ evenement.lieu }}</div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="p-3 rounded-3 bg-light border">
+                        <div class="text-muted small text-uppercase fw-semibold">Type</div>
+                        <div class="fw-semibold text-dark">{{ evenement.typeEvenement }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if canManage %}
+        <div class="modal fade" id="exportInvitationModal" tabindex="-1" aria-labelledby="exportInvitationModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exportInvitationModalLabel">Exporter l'invitation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                    </div>
+                    <form id="pdfExportForm" method="get" action="{{ path('evenement_export_pdf', {'id': evenement.id}) }}" data-turbo="false">
+                        <div class="modal-body">
+                            <label for="invitee_name" class="form-label fw-semibold">Nom de la personne invitée</label>
+                            <input
+                                type="text"
+                                id="invitee_name"
+                                name="invitee_name"
+                                class="form-control"
+                                placeholder="Ex: Mohamed Ben Salah"
+                                required
+                            >
+                            <div id="pdfError" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Annuler</button>
+                            <button type="submit" class="btn btn-primary" id="pdfSubmitBtn">
+                                <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                                <span class="btn-text">Générer et télécharger</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('pdfExportForm');
+            const submitBtn = document.getElementById('pdfSubmitBtn');
+            const errorDiv = document.getElementById('pdfError');
+            const spinner = submitBtn.querySelector('.spinner-border');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const modal = bootstrap.Modal.getInstance(document.getElementById('exportInvitationModal')) || new bootstrap.Modal(document.getElementById('exportInvitationModal'));
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const inviteeName = document.getElementById('invitee_name').value.trim();
+                if (!inviteeName) {
+                    showError('Veuillez saisir le nom de l\'invité.');
+                    return;
+                }
+
+                // Show loading state
+                submitBtn.disabled = true;
+                spinner.classList.remove('d-none');
+                btnText.textContent = ' Génération...';
+                errorDiv.classList.add('d-none');
+
+                // Build URL with query parameter
+                const url = form.action + '?invitee_name=' + encodeURIComponent(inviteeName);
+
+                // Use fetch to download the PDF
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/pdf'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de la génération du PDF (Code: ' + response.status + ')');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    // Create a download link
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'invitation-evenement-{{ evenement.id }}-' + inviteeName.replace(/[^a-zA-Z0-9]/g, '_') + '.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    // Close modal and reset form
+                    modal.hide();
+                    form.reset();
+                })
+                .catch(error => {
+                    console.error('PDF Export Error:', error);
+                    showError(error.message || 'Une erreur est survenue lors de la génération du PDF.');
+                })
+                .finally(() => {
+                    // Reset button state
+                    submitBtn.disabled = false;
+                    spinner.classList.add('d-none');
+                    btnText.textContent = 'Générer et télécharger';
+                });
+            });
+
+            function showError(message) {
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('d-none');
+            }
+        });
+        </script>
+    {% endif %}
+{% endblock %}
