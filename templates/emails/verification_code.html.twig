@@ -5,42 +5,103 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vérification de votre email - AgriLink</title>
 </head>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
-    <div style="background-color: #f8f9fa; border-radius: 8px; padding: 30px; text-align: center;">
-        <div style="font-size: 48px; margin-bottom: 20px;">🌾</div>
-        <h1 style="color: #2d5016; margin-bottom: 10px;">AgriLink</h1>
-        <p style="color: #666; margin-bottom: 30px;">Vérification de votre adresse email</p>
-    </div>
+<body style="margin:0;padding:0;background-color:#f1f5f1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f1;">
+        <tr>
+            <td align="center" style="padding:40px 16px;">
+                <table role="presentation" width="100%" style="max-width:600px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);" cellpadding="0" cellspacing="0">
 
-    <div style="padding: 30px 0;">
-        <p>Bonjour <strong>{{ user.nom ?? user.email }}</strong>,</p>
+                    {# Logo Header #}
+                    <tr>
+                        <td style="background-color:#ffffff;padding:28px 40px 20px;text-align:center;border-bottom:3px solid #16a34a;">
+                            <img src="{{ absolute_url(asset('logo_with_text.png')) }}" alt="AgriLink" style="height:56px;width:auto;display:block;margin:0 auto;" />
+                        </td>
+                    </tr>
 
-        <p>Merci de vous être inscrit sur AgriLink ! Pour finaliser votre inscription et sécuriser votre compte, veuillez utiliser le code de vérification ci-dessous :</p>
+                    {# Icon Banner #}
+                    <tr>
+                        <td style="background-color:#166534;padding:24px 40px;text-align:center;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" align="center">
+                                <tr>
+                                    <td style="background-color:rgba(255,255,255,0.15);border-radius:50%;width:52px;height:52px;text-align:center;vertical-align:middle;">
+                                        <svg width="28" height="28" fill="none" stroke="#ffffff" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-top:12px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                        </svg>
+                                    </td>
+                                    <td style="padding-left:14px;text-align:left;">
+                                        <p style="margin:0;color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.01em;">Vérification de votre email</p>
+                                        <p style="margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:13px;">Finaliser votre inscription sur AgriLink</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-        <div style="background-color: #2d5016; color: white; font-size: 32px; font-weight: bold; letter-spacing: 8px; padding: 20px; text-align: center; border-radius: 8px; margin: 30px 0;">
-            {{ code }}
-        </div>
+                    {# Body #}
+                    <tr>
+                        <td style="background-color:#ffffff;padding:36px 40px;">
+                            <p style="margin:0 0 8px;font-size:15px;color:#374151;">Bonjour <strong>{{ user.nom ?? user.email }}</strong>,</p>
+                            <p style="margin:0 0 28px;font-size:15px;color:#374151;line-height:1.6;">
+                                Merci de vous être inscrit sur AgriLink. Pour finaliser votre inscription et sécuriser votre compte, utilisez le code ci-dessous :
+                            </p>
 
-        <p style="text-align: center; color: #666; font-size: 14px;">
-            <strong>⏰ Ce code expire dans {{ expirationMinutes }} minutes.</strong>
-        </p>
+                            {# Code block #}
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:28px;">
+                                <tr>
+                                    <td style="background-color:#f0fdf4;border:2px dashed #16a34a;border-radius:12px;padding:28px;text-align:center;">
+                                        <p style="margin:0 0 8px;font-size:13px;font-weight:600;color:#166534;text-transform:uppercase;letter-spacing:0.08em;">Votre code de vérification</p>
+                                        <p style="margin:0;font-size:40px;font-weight:800;letter-spacing:0.35em;color:#166534;font-family:'Courier New',Courier,monospace;">{{ code }}</p>
+                                        <table role="presentation" cellpadding="0" cellspacing="0" align="center" style="margin-top:14px;">
+                                            <tr>
+                                                <td style="padding-right:6px;vertical-align:middle;">
+                                                    <svg width="14" height="14" fill="none" stroke="#dc2626" viewBox="0 0 24 24" style="display:block;">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                </td>
+                                                <td style="font-size:13px;color:#dc2626;font-weight:600;">Ce code expire dans {{ expirationMinutes }} minutes</td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
 
-        <div style="background-color: #fff3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px; margin: 20px 0;">
-            <p style="margin: 0; color: #856404;">
-                <strong>🔒 Conseils de sécurité :</strong><br>
-                • Ne partagez jamais ce code avec quiconque<br>
-                • L'équipe AgriLink ne vous demandera jamais ce code par téléphone<br>
-                • Si vous n'avez pas demandé ce code, ignorez cet email
-            </p>
-        </div>
-    </div>
+                            {# Security notice #}
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                                <tr>
+                                    <td style="background-color:#fef9c3;border-left:4px solid #eab308;border-radius:0 8px 8px 0;padding:16px 18px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="vertical-align:top;padding-right:10px;padding-top:2px;">
+                                                    <svg width="18" height="18" fill="none" stroke="#92400e" viewBox="0 0 24 24" style="display:block;flex-shrink:0;">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                                    </svg>
+                                                </td>
+                                                <td style="color:#78350f;font-size:14px;line-height:1.6;">
+                                                    <strong style="display:block;margin-bottom:4px;color:#92400e;">Conseils de sécurité</strong>
+                                                    Ne partagez jamais ce code avec quiconque.<br>
+                                                    L'équipe AgriLink ne vous demandera jamais ce code par téléphone.<br>
+                                                    Si vous n'avez pas demandé ce code, ignorez cet email.
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-    <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px; text-align: center; color: #888; font-size: 12px;">
-        <p>Cet email a été envoyé automatiquement par AgriLink.</p>
-        <p>Si vous n'avez pas créé de compte sur AgriLink, vous pouvez ignorer cet email en toute sécurité.</p>
-        <p style="margin-top: 20px;">
-            © {{ "now"|date("Y") }} AgriLink - Connecter les agriculteurs tunisiens
-        </p>
-    </div>
+                    {# Footer #}
+                    <tr>
+                        <td style="background-color:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center;">
+                            <p style="margin:0 0 4px;font-size:12px;color:#6b7280;">Cet email a été envoyé automatiquement par AgriLink.</p>
+                            <p style="margin:0;font-size:12px;color:#9ca3af;">Si vous n'avez pas créé de compte, ignorez cet email en toute sécurité.</p>
+                            <p style="margin:12px 0 0;font-size:11px;color:#d1d5db;">&copy; {{ "now"|date("Y") }} AgriLink — Connecter les agriculteurs tunisiens</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
