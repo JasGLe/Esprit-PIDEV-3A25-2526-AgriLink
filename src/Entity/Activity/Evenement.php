@@ -2,6 +2,7 @@
 
 namespace App\Entity\Activity;
 
+use App\Entity\UserManagement\User;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -53,8 +54,9 @@ class Evenement
     )]
     private string $lieu;
 
-    #[ORM\Column(type: Types::INTEGER)]
-    private ?int $idOrganisateur = null;
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'id_organisateur', referencedColumnName: 'idUtilisateur', nullable: true, onDelete: 'SET NULL')]
+    private ?User $organisateur = null;
 
     public function getId(): int
     {
@@ -128,12 +130,27 @@ class Evenement
 
     public function getIdOrganisateur(): ?int
     {
-        return $this->idOrganisateur;
+        return $this->organisateur?->getId();
     }
 
     public function setIdOrganisateur(?int $idOrganisateur): static
     {
-        $this->idOrganisateur = $idOrganisateur;
+        // Keep backward compatibility for existing code paths.
+        if ($idOrganisateur === null) {
+            $this->organisateur = null;
+        }
+
+        return $this;
+    }
+
+    public function getOrganisateur(): ?User
+    {
+        return $this->organisateur;
+    }
+
+    public function setOrganisateur(?User $organisateur): static
+    {
+        $this->organisateur = $organisateur;
 
         return $this;
     }
