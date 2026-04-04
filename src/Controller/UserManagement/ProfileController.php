@@ -5,6 +5,7 @@ namespace App\Controller\UserManagement;
 use App\Entity\UserManagement\User;
 use App\Form\UserManagement\ChangePasswordType;
 use App\Form\UserManagement\ProfileEditFormType;
+use App\Repository\UserManagement\SecurityEventRepository;
 use App\Service\FileUploader;
 use App\Service\SecurityEventService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -177,6 +178,48 @@ class ProfileController extends AbstractController
         return $this->render('user_management/profile/change_password.html.twig', [
             'form' => $form,
         ]);
+    }
+
+    #[Route('/security', name: 'app_profile_security', methods: ['GET'])]
+    public function securitySettings(
+        SecurityEventRepository $securityEventRepository
+    ): Response {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $recentEvents = $securityEventRepository->findByUser($user->getId(), 8);
+
+        return $this->render('user_management/profile/security.html.twig', [
+            'user'         => $user,
+            'recentEvents' => $recentEvents,
+        ]);
+    }
+
+    #[Route('/security/toggle-2fa', name: 'app_profile_toggle_2fa', methods: ['POST'])]
+    public function toggle2fa(
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): Response {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('toggle_2fa', $request->request->get('_token'))) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('app_profile_security');
+        }
+
+        $enabled = !$user->isTwoFactorEnabled();
+        $user->setTwoFactorEnabled($enabled);
+        $entityManager->flush();
+
+        $this->addFlash(
+            'success',
+            $enabled
+                ? 'La double authentification (2FA) a été activée. Elle sera requise à votre prochaine connexion.'
+                : 'La double authentification (2FA) a été désactivée.'
+        );
+
+        return $this->redirectToRoute('app_profile_security');
     }
 
     #[Route('/delete-photo', name: 'app_profile_delete_photo', methods: ['GET'])]

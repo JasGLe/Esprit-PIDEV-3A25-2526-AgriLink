@@ -183,34 +183,128 @@
             </div>
         </div>
 
-        {# Recent Activity Timeline #}
+        {# Recent Registrations #}
         <div class="col-12 col-lg-6">
-            <div class="admin-card">
-                <div class="admin-card-header">
-                    <h3>📊 Activité Récente</h3>
-                    <p>Les derniers événements de la plateforme</p>
+            <div class="admin-card h-100">
+                <div class="admin-card-header d-flex align-items-start justify-content-between">
+                    <div>
+                        <h3>Nouvelles inscriptions</h3>
+                        <p>7 derniers jours</p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        {% if growthRate > 0 %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size:0.7rem;">
+                                +{{ growthRate|round(1) }}%
+                            </span>
+                        {% elseif growthRate < 0 %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1" style="font-size:0.7rem;">
+                                {{ growthRate|round(1) }}%
+                            </span>
+                        {% endif %}
+                        <span class="badge bg-light text-muted border rounded-pill px-2 py-1" style="font-size:0.7rem;">
+                            {{ recentUsers|length }} nouveau(x)
+                        </span>
+                    </div>
                 </div>
-                <div class="admin-card-body">
-                    <div class="activity-timeline">
-                        <div class="timeline-item timeline-success">
-                            <h6 class="small fw-bold text-dark mb-1">Nouvel utilisateur inscrit</h6>
-                            <p class="text-muted mb-0" style="font-size: 0.85rem;">Un nouvel agriculteur s'est inscrit sur la plateforme</p>
-                            <small class="text-muted d-block mt-2">Il y a quelques minutes</small>
+
+                {# Role distribution mini-bars #}
+                <div class="px-4 py-3 border-bottom" style="background:#fafafa;">
+                    <div class="row g-2">
+                        {% set total = stats.total > 0 ? stats.total : 1 %}
+                        <div class="col-4">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted" style="font-size:0.7rem;">Agriculteurs</small>
+                                <small class="fw-semibold text-success" style="font-size:0.7rem;">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</small>
+                            </div>
+                            <div class="progress" style="height:5px; border-radius:3px;">
+                                <div class="progress-bar bg-success" style="width:{{ ((stats.by_role.ROLE_AGRICULTEUR ?? 0) / total * 100)|round }}%"></div>
+                            </div>
                         </div>
-                        
-                        <div class="timeline-item timeline-warning">
-                            <h6 class="small fw-bold text-dark mb-1">Nouvel abonnement AgriPlus Premium</h6>
-                            <p class="text-muted mb-0" style="font-size: 0.85rem;">Un utilisateur a souscrit à une formule premium</p>
-                            <small class="text-muted d-block mt-2">Il y a 2 heures</small>
+                        <div class="col-4">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted" style="font-size:0.7rem;">Fournisseurs</small>
+                                <small class="fw-semibold text-primary" style="font-size:0.7rem;">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</small>
+                            </div>
+                            <div class="progress" style="height:5px; border-radius:3px;">
+                                <div class="progress-bar bg-primary" style="width:{{ ((stats.by_role.ROLE_FOURNISSEUR ?? 0) / total * 100)|round }}%"></div>
+                            </div>
                         </div>
-                        
-                        <div class="timeline-item timeline-info">
-                            <h6 class="small fw-bold text-dark mb-1">Fournisseur vérifié</h6>
-                            <p class="text-muted mb-0" style="font-size: 0.85rem;">Un compte fournisseur a été approuvé et vérifié</p>
-                            <small class="text-muted d-block mt-2">Hier</small>
+                        <div class="col-4">
+                            <div class="d-flex justify-content-between mb-1">
+                                <small class="text-muted" style="font-size:0.7rem;">AgriPlus</small>
+                                <small class="fw-semibold" style="font-size:0.7rem; color:#f59e0b;">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</small>
+                            </div>
+                            <div class="progress" style="height:5px; border-radius:3px;">
+                                <div class="progress-bar" style="background:#f59e0b; width:{{ ((stats.by_role.ROLE_AGRIPLUS ?? 0) / total * 100)|round }}%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="admin-card-body p-0">
+                    {% if recentUsers|length > 0 %}
+                        <ul class="list-unstyled mb-0">
+                            {% for user in recentUsers %}
+                                {% set userRole = 'ROLE_USER' %}
+                                {% if 'ROLE_ADMIN' in user.roles %}{% set userRole = 'ROLE_ADMIN' %}
+                                {% elseif 'ROLE_AGRIPLUS' in user.roles %}{% set userRole = 'ROLE_AGRIPLUS' %}
+                                {% elseif 'ROLE_FOURNISSEUR' in user.roles %}{% set userRole = 'ROLE_FOURNISSEUR' %}
+                                {% elseif 'ROLE_AGRICULTEUR' in user.roles %}{% set userRole = 'ROLE_AGRICULTEUR' %}
+                                {% endif %}
+
+                                {% set roleColor = {
+                                    'ROLE_AGRICULTEUR': '#198754',
+                                    'ROLE_FOURNISSEUR': '#0d6efd',
+                                    'ROLE_AGRIPLUS':    '#f59e0b',
+                                    'ROLE_ADMIN':       '#dc3545',
+                                    'ROLE_USER':        '#6c757d'
+                                } %}
+                                {% set roleLabel = {
+                                    'ROLE_AGRICULTEUR': 'Agriculteur',
+                                    'ROLE_FOURNISSEUR': 'Fournisseur',
+                                    'ROLE_AGRIPLUS':    'AgriPlus',
+                                    'ROLE_ADMIN':       'Admin',
+                                    'ROLE_USER':        'Utilisateur'
+                                } %}
+
+                                <li class="d-flex align-items-center gap-3 px-4 py-3 border-bottom {{ loop.last ? 'border-0' : '' }}" style="transition:background .15s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
+                                    {# Role dot #}
+                                    <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center fw-bold text-white" style="width:34px;height:34px;font-size:0.75rem;background:{{ roleColor[userRole] ?? '#6c757d' }};">
+                                        {{ user.displayName|slice(0,1)|upper }}
+                                    </div>
+                                    {# Name only #}
+                                    <div class="flex-fill text-truncate">
+                                        <span class="small fw-semibold text-dark">{{ user.displayName }}</span>
+                                    </div>
+                                    {# Role badge #}
+                                    <span class="badge rounded-pill flex-shrink-0" style="font-size:0.65rem;background:{{ roleColor[userRole] ?? '#6c757d' }}1a;color:{{ roleColor[userRole] ?? '#6c757d' }};border:1px solid {{ roleColor[userRole] ?? '#6c757d' }}33;">
+                                        {{ roleLabel[userRole] ?? 'Utilisateur' }}
+                                    </span>
+                                    {# Date #}
+                                    <small class="text-muted flex-shrink-0" style="font-size:0.7rem;">
+                                        {{ user.createdAt ? user.createdAt|date('d/m') : '' }}
+                                    </small>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <div class="d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                            <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="mb-2 opacity-40">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                            </svg>
+                            <p class="small mb-0 fw-medium">Aucune inscription récente</p>
+                            <p class="text-muted" style="font-size:0.75rem;">Les 7 derniers jours</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                {% if recentUsers|length > 0 %}
+                <div class="px-4 py-3 border-top" style="background:#fafafa;">
+                    <a href="{{ path('admin_users_list') }}" class="small text-success text-decoration-none fw-medium">
+                        Voir tous les utilisateurs →
+                    </a>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
