@@ -3,6 +3,7 @@
 namespace App\Controller\UserManagement;
 
 use App\Entity\UserManagement\User;
+use App\Repository\Activity\EvenementRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -38,9 +39,15 @@ class DashboardController extends AbstractController
 
     #[Route('/dashboard/agriculteur', name: 'app_dashboard_agriculteur')]
     #[IsGranted('ROLE_AGRICULTEUR')]
-    public function agriculteurDashboard(): Response
+    public function agriculteurDashboard(EvenementRepository $evenementRepository): Response
     {
-        return $this->render('user_management/dashboard/agriculteur.html.twig');
+        /** @var User $user */
+        $user = $this->getUser();
+
+        return $this->render('user_management/dashboard/agriculteur.html.twig', [
+            'myEvenementsCount' => $evenementRepository->countByOrganisateurId((int) $user->getId()),
+            'myEvenements' => $evenementRepository->findLatestByOrganisateurId((int) $user->getId(), 6),
+        ]);
     }
 
     #[Route('/dashboard/fournisseur', name: 'app_dashboard_fournisseur')]

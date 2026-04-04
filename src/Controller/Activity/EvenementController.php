@@ -66,9 +66,9 @@ class EvenementController extends AbstractController
                 try {
                     $this->applyOwnerForEvenement($evenement);
                     
-                    // Ensure idOrganisateur is set before persisting
-                    if ($evenement->getIdOrganisateur() === null) {
-                        throw new \LogicException('ID organisateur must be set before saving.');
+                    // Ensure organizer relation is set before persisting
+                    if ($evenement->getOrganisateur() === null) {
+                        throw new \LogicException('Organisateur must be set before saving.');
                     }
                     
                     $this->entityManager->persist($evenement);
@@ -172,9 +172,9 @@ class EvenementController extends AbstractController
                 try {
                     $this->applyOwnerForEvenement($evenement);
                     
-                    // Ensure idOrganisateur is set
-                    if ($evenement->getIdOrganisateur() === null) {
-                        throw new \LogicException('ID organisateur must be set before saving.');
+                    // Ensure organizer relation is set
+                    if ($evenement->getOrganisateur() === null) {
+                        throw new \LogicException('Organisateur must be set before saving.');
                     }
                     
                     $this->entityManager->flush();
@@ -238,7 +238,7 @@ class EvenementController extends AbstractController
 
         $user = $this->getUser();
 
-        return $user instanceof User && $evenement->getIdOrganisateur() === $user->getId();
+        return $user instanceof User && $evenement->getOrganisateur()?->getId() === $user->getId();
     }
 
     private function applyOwnerForEvenement(Evenement $evenement): void
@@ -250,7 +250,7 @@ class EvenementController extends AbstractController
         $user = $this->getUser();
 
         if ($user instanceof User) {
-            $evenement->setIdOrganisateur($user->getId());
+            $evenement->setOrganisateur($user);
         }
     }
 }

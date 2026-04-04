@@ -71,4 +71,29 @@ class EvenementRepository extends ServiceEntityRepository
 
         return array_values(array_filter(array_map(static fn (array $row): ?string => $row['type'] ?? null, $rows)));
     }
+
+    /**
+     * @return Evenement[]
+     */
+    public function findLatestByOrganisateurId(int $organisateurId, int $limit = 6): array
+    {
+        return $this->createQueryBuilder('e')
+            ->andWhere('IDENTITY(e.organisateur) = :organisateurId')
+            ->setParameter('organisateurId', $organisateurId)
+            ->orderBy('e.dateEvenement', 'DESC')
+            ->addOrderBy('e.idEvenement', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countByOrganisateurId(int $organisateurId): int
+    {
+        return (int) $this->createQueryBuilder('e')
+            ->select('COUNT(e.idEvenement)')
+            ->andWhere('IDENTITY(e.organisateur) = :organisateurId')
+            ->setParameter('organisateurId', $organisateurId)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
 }
