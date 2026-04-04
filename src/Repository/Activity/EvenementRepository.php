@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Repository\Activity;
+
+use App\Entity\Activity\Evenement;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * @extends ServiceEntityRepository<Evenement>
+ *
+ * @method Evenement|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Evenement|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Evenement[]    findAll()
+ * @method Evenement[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ */
+class EvenementRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Evenement::class);
+    }
+
+    /**
+     * @return Evenement[]
+     */
+    public function findAllOrderedByDateDesc(): array
+    {
+        return $this->createQueryBuilder('e')
+            ->orderBy('e.dateEvenement', 'DESC')
+            ->addOrderBy('e.idEvenement', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @return Evenement[]
+     */
+    public function findBySearchAndType(?string $search, ?string $type): array
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->orderBy('e.dateEvenement', 'DESC')
+            ->addOrderBy('e.idEvenement', 'DESC');
+
+        if ($search) {
+            $qb
+                ->andWhere('LOWER(e.titre) LIKE :search')
+                ->setParameter('search', '%' . mb_strtolower($search) . '%');
+        }
+
+        if ($type) {
+            $qb
+                ->andWhere('e.typeEvenement = :type')
+                ->setParameter('type', $type);
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @return string[]
+     */
+    public function findAvailableTypes(): array
+    {
+        $rows = $this->createQueryBuilder('e')
+            ->select('DISTINCT e.typeEvenement AS type')
+            ->where('e.typeEvenement IS NOT NULL')
+            ->orderBy('e.typeEvenement', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        return array_values(array_filter(array_map(static fn (array $row): ?string => $row['type'] ?? null, $rows)));
+    }
+}

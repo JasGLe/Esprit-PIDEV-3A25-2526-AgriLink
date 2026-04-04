@@ -1,0 +1,237 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Activités - AgriLink{% endblock %}
+{% block page_title %}Activités{% endblock %}
+
+{% block dashboard_content %}
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <h2 class="fs-3 fw-bold text-dark mb-1">Activités agricoles</h2>
+            <p class="text-muted mb-0">Gérez vos activités et suivez leur progression.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-primary px-4" data-bs-toggle="modal" data-bs-target="#activiteExportModal">
+                📊 Extraits
+            </button>
+            <a href="{{ path('activite_new') }}" class="btn btn-success px-4">
+                <span class="me-2">➕</span>
+                Nouvelle activité
+            </a>
+        </div>
+    </div>
+
+    <div class="modal fade" id="activiteExportModal" tabindex="-1" aria-labelledby="activiteExportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="activiteExportModalLabel">Extraits d'activités</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <form id="exportActivitesForm" method="get" action="{{ path('activite_export') }}" data-turbo="false">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="start_date" class="form-label fw-semibold">Date de début</label>
+                            <input type="date" id="start_date" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="end_date" class="form-label fw-semibold">Date de fin</label>
+                            <input type="date" id="end_date" name="end_date" class="form-control" required>
+                        </div>
+                        <div>
+                            <label for="format" class="form-label fw-semibold">Format d'export</label>
+                            <select id="format" name="format" class="form-select" required>
+                                <option value="pdf">📄 PDF</option>
+                                <option value="excel">📊 Excel</option>
+                            </select>
+                        </div>
+                        <div id="exportError" class="alert alert-danger mt-3 d-none" role="alert"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-primary" id="exportSubmitBtn">
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            <span class="btn-text">Générer et télécharger</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <form id="activite-filters" method="get" class="card border-0 shadow-sm mb-4" autocomplete="off">
+        <div class="card-body p-3 p-lg-4">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-lg-5">
+                    <label for="q" class="form-label fw-semibold mb-1">Rechercher par nom</label>
+                    <input id="q" name="q" type="text" class="form-control" placeholder="Ex: Semis de tomates" value="{{ filters.q|default('') }}">
+                </div>
+                <div class="col-12 col-lg-3">
+                    <label for="type" class="form-label fw-semibold mb-1">Filtrer par type</label>
+                    <select id="type" name="type" class="form-select">
+                        <option value="">Tous les types</option>
+                        {% for option in typeOptions %}
+                            <option value="{{ option }}" {{ filters.type|default('') == option ? 'selected' : '' }}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-lg-4">
+                    <label for="status" class="form-label fw-semibold mb-1">Filtrer par statut</label>
+                    <select id="status" name="status" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        {% for option in statusOptions %}
+                            <option value="{{ option }}" {{ filters.status|default('') == option ? 'selected' : '' }}>{{ option }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <div id="activite-results">
+        {% include 'activity/activite/_results.html.twig' with {
+            activites: activites
+        } only %}
+    </div>
+
+    <script>
+        (() => {
+            const form = document.getElementById('activite-filters');
+            const results = document.getElementById('activite-results');
+            if (!form || !results) {
+                return;
+            }
+
+            let debounceTimer = null;
+            let requestCounter = 0;
+
+            const fetchResults = () => {
+                requestCounter += 1;
+                const currentRequest = requestCounter;
+                const params = new URLSearchParams(new FormData(form));
+                const url = `${window.location.pathname}?${params.toString()}`;
+
+                fetch(url, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then((response) => response.text())
+                    .then((html) => {
+                        if (currentRequest !== requestCounter) {
+                            return;
+                        }
+                        results.innerHTML = html;
+                    });
+            };
+
+            form.addEventListener('input', (event) => {
+                if (event.target && event.target.name === 'q') {
+                    window.clearTimeout(debounceTimer);
+                    debounceTimer = window.setTimeout(fetchResults, 220);
+                }
+            });
+
+            form.addEventListener('change', fetchResults);
+            form.addEventListener('submit', (event) => event.preventDefault());
+        })();
+
+        (() => {
+            const exportModal = document.getElementById('activiteExportModal');
+            if (!exportModal) {
+                return;
+            }
+
+            const startInput = exportModal.querySelector('#start_date');
+            const endInput = exportModal.querySelector('#end_date');
+            const formatSelect = exportModal.querySelector('#format');
+            const form = exportModal.querySelector('#exportActivitesForm');
+            const submitBtn = exportModal.querySelector('#exportSubmitBtn');
+            const errorDiv = exportModal.querySelector('#exportError');
+            const spinner = submitBtn.querySelector('.spinner-border');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const modal = bootstrap.Modal.getInstance(exportModal) || new bootstrap.Modal(exportModal);
+
+            form?.addEventListener('submit', (event) => {
+                event.preventDefault();
+                
+                // Validation des dates
+                if (!startInput.value || !endInput.value) {
+                    showError('Veuillez renseigner les deux dates.');
+                    return;
+                }
+                
+                if (startInput.value > endInput.value) {
+                    showError('La date de fin doit être supérieure ou égale à la date de début.');
+                    return;
+                }
+
+                // Afficher le spinner
+                submitBtn.disabled = true;
+                spinner.classList.remove('d-none');
+                btnText.textContent = ' Génération...';
+                errorDiv.classList.add('d-none');
+
+                // Construire l'URL
+                const params = new URLSearchParams({
+                    start_date: startInput.value,
+                    end_date: endInput.value,
+                    format: formatSelect.value
+                });
+                const url = form.action + '?' + params.toString();
+
+                // Type MIME selon le format
+                const mimeType = formatSelect.value === 'excel' 
+                    ? 'application/vnd.ms-excel' 
+                    : 'application/pdf';
+                
+                const extension = formatSelect.value === 'excel' ? '.xls' : '.pdf';
+
+                // Télécharger le fichier
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': mimeType
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de la génération (Code: ' + response.status + ')');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'activites-' + startInput.value + '-' + endInput.value + extension;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+
+                    // Fermer le modal et réinitialiser
+                    modal.hide();
+                    form.reset();
+                })
+                .catch(error => {
+                    console.error('Export Error:', error);
+                    showError(error.message || 'Une erreur est survenue lors de la génération.');
+                })
+                .finally(() => {
+                    submitBtn.disabled = false;
+                    spinner.classList.add('d-none');
+                    btnText.textContent = 'Générer et télécharger';
+                });
+            });
+
+            function showError(message) {
+                errorDiv.textContent = message;
+                errorDiv.classList.remove('d-none');
+            }
+
+            endInput?.addEventListener('input', () => errorDiv.classList.add('d-none'));
+            startInput?.addEventListener('input', () => errorDiv.classList.add('d-none'));
+        })();
+    </script>
+{% endblock %}

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+    <style>
+        body {
+            font-family: DejaVu Sans, Arial, sans-serif;
+            color: #111827;
+            margin: 0;
+            padding: 20px;
+            background: #f3f4f6;
+        }
+
+        .sheet {
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .header {
+            display: table;
+            width: 100%;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 12px;
+        }
+
+        .logo-wrap,
+        .title-wrap {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .logo {
+            width: 130px;
+            height: auto;
+        }
+
+        .title-wrap {
+            text-align: right;
+        }
+
+        .title {
+            margin: 0;
+            font-size: 22px;
+            color: #14532d;
+        }
+
+        .subtitle {
+            margin-top: 6px;
+            color: #4b5563;
+            font-size: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+
+        thead th {
+            background: #ecfdf5;
+            color: #14532d;
+            text-align: left;
+            border: 1px solid #bbf7d0;
+            padding: 8px;
+        }
+
+        tbody td {
+            border: 1px solid #d1d5db;
+            padding: 8px;
+            vertical-align: top;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 16px;
+            color: #6b7280;
+        }
+
+        .footer {
+            margin-top: 12px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 8px;
+            color: #6b7280;
+            font-size: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="sheet">
+    <div class="header">
+        <div class="logo-wrap">
+            {% if logoDataUri %}
+                <img src="{{ logoDataUri }}" alt="AgriLink" class="logo">
+            {% endif %}
+        </div>
+        <div class="title-wrap">
+            <h1 class="title">{{ title }}</h1>
+            <div class="subtitle">Généré le {{ generatedAt|date('d/m/Y H:i') }}</div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Titre</th>
+                <th>Type</th>
+                <th>Statut</th>
+                <th>Date début</th>
+                <th>Date fin</th>
+                <th>Coût estimé (DT)</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% if activites is empty %}
+            <tr>
+                <td colspan="6" class="empty">Aucune activité trouvée dans l'intervalle sélectionné.</td>
+            </tr>
+        {% else %}
+            {% for activite in activites %}
+                <tr>
+                    <td>{{ activite.titre }}</td>
+                    <td>{{ activite.typeActivite }}</td>
+                    <td>{{ activite.statut }}</td>
+                    <td>{{ activite.dateDebut|date('d/m/Y H:i') }}</td>
+                    <td>{{ activite.dateFin ? activite.dateFin|date('d/m/Y H:i') : '-' }}</td>
+                    <td>{{ activite.coutEstime ?: '-' }}</td>
+                </tr>
+            {% endfor %}
+        {% endif %}
+        </tbody>
+    </table>
+
+    <div class="footer">
+        AgriLink - Export des activités du {{ startDate|date('d/m/Y') }} au {{ endDate|date('d/m/Y') }}
+    </div>
+</div>
+</body>
+</html>

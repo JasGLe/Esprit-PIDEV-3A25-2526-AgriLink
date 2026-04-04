@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+    xmlns:o="urn:schemas-microsoft-com:office:office"
+    xmlns:x="urn:schemas-microsoft-com:office:excel"
+    xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+    xmlns:html="http://www.w3.org/TR/REC-html40">
+    <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+        <Title>{{ title }}</Title>
+        <Subject>Extraits d'activités agricoles</Subject>
+        <Author>AgriLink</Author>
+        <Created>{{ generatedAt|date('Y-m-d\\TH:i:s\\Z') }}</Created>
+    </DocumentProperties>
+    <Styles>
+        <Style ss:ID="Default" ss:Name="Normal">
+            <Alignment ss:Vertical="Bottom"/>
+            <Font ss:FontName="Calibri" ss:Size="11"/>
+        </Style>
+        <Style ss:ID="Header">
+            <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+            <Font ss:FontName="Calibri" ss:Size="14" ss:Bold="1" ss:Color="#FFFFFF"/>
+            <Interior ss:Color="#10b981" ss:Pattern="Solid"/>
+        </Style>
+        <Style ss:ID="TableHeader">
+            <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+            <Font ss:FontName="Calibri" ss:Size="11" ss:Bold="1" ss:Color="#166534"/>
+            <Interior ss:Color="#d1fae5" ss:Pattern="Solid"/>
+            <Borders>
+                <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bbf7d0"/>
+                <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bbf7d0"/>
+                <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bbf7d0"/>
+                <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#bbf7d0"/>
+            </Borders>
+        </Style>
+        <Style ss:ID="TableCell">
+            <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+            <Font ss:FontName="Calibri" ss:Size="11"/>
+            <Borders>
+                <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e5e7eb"/>
+                <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e5e7eb"/>
+                <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e5e7eb"/>
+                <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e5e7eb"/>
+            </Borders>
+        </Style>
+        <Style ss:ID="DateCell">
+            <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+            <Font ss:FontName="Calibri" ss:Size="11"/>
+            <NumberFormat ss:Format="dd/mm/yyyy hh:mm"/>
+            <Borders>
+                <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e5e7eb"/>
+                <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e5e7eb"/>
+                <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e5e7eb"/>
+                <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#e5e7eb"/>
+            </Borders>
+        </Style>
+        <Style ss:ID="MetaCell">
+            <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+            <Font ss:FontName="Calibri" ss:Size="10" ss:Italic="1" ss:Color="#6b7280"/>
+        </Style>
+    </Styles>
+    <Worksheet ss:Name="Activités">
+        <Table>
+            <Column ss:Width="200"/>
+            <Column ss:Width="120"/>
+            <Column ss:Width="100"/>
+            <Column ss:Width="120"/>
+            <Column ss:Width="120"/>
+            <Column ss:Width="100"/>
+            
+            <Row ss:Height="25">
+                <Cell ss:StyleID="Header" ss:MergeAcross="5">
+                    <Data ss:Type="String">{{ title }}</Data>
+                </Cell>
+            </Row>
+            
+            <Row ss:Height="18">
+                <Cell ss:StyleID="MetaCell" ss:MergeAcross="5">
+                    <Data ss:Type="String">Généré le {{ generatedAt|date('d/m/Y à H:i') }} - Période: {{ startDate|date('d/m/Y') }} au {{ endDate|date('d/m/Y') }}</Data>
+                </Cell>
+            </Row>
+            
+            <Row ss:Height="5"/>
+            
+            <Row ss:Height="22">
+                <Cell ss:StyleID="TableHeader"><Data ss:Type="String">Titre</Data></Cell>
+                <Cell ss:StyleID="TableHeader"><Data ss:Type="String">Type d'activité</Data></Cell>
+                <Cell ss:StyleID="TableHeader"><Data ss:Type="String">Statut</Data></Cell>
+                <Cell ss:StyleID="TableHeader"><Data ss:Type="String">Date de début</Data></Cell>
+                <Cell ss:StyleID="TableHeader"><Data ss:Type="String">Date de fin</Data></Cell>
+                <Cell ss:StyleID="TableHeader"><Data ss:Type="String">Coût estimé (DT)</Data></Cell>
+            </Row>
+            
+            {% if activites is empty %}
+                <Row>
+                    <Cell ss:StyleID="TableCell" ss:MergeAcross="5">
+                        <Data ss:Type="String">Aucune activité trouvée dans l'intervalle sélectionné.</Data>
+                    </Cell>
+                </Row>
+            {% else %}
+                {% for activite in activites %}
+                    <Row>
+                        <Cell ss:StyleID="TableCell">
+                            <Data ss:Type="String">{{ activite.titre }}</Data>
+                        </Cell>
+                        <Cell ss:StyleID="TableCell">
+                            <Data ss:Type="String">{{ activite.typeActivite }}</Data>
+                        </Cell>
+                        <Cell ss:StyleID="TableCell">
+                            <Data ss:Type="String">{{ activite.statut }}</Data>
+                        </Cell>
+                        <Cell ss:StyleID="TableCell">
+                            <Data ss:Type="String">{{ activite.dateDebut|date('d/m/Y H:i') }}</Data>
+                        </Cell>
+                        <Cell ss:StyleID="TableCell">
+                            <Data ss:Type="String">{{ activite.dateFin ? activite.dateFin|date('d/m/Y H:i') : '-' }}</Data>
+                        </Cell>
+                        <Cell ss:StyleID="TableCell">
+                            <Data ss:Type="String">{{ activite.coutEstime ?: '-' }}</Data>
+                        </Cell>
+                    </Row>
+                {% endfor %}
+            {% endif %}
+        </Table>
+    </Worksheet>
+</Workbook>
