@@ -1,0 +1,155 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}{{ activite.titre }} - AgriLink{% endblock %}
+{% block page_title %}Détails activité{% endblock %}
+
+{% block dashboard_content %}
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <a href="{{ path('activite_list') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
+        {% if canManage %}
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-primary" id="exportPdfBtn">
+                    📄 Extrait PDF
+                </button>
+                <button type="button" class="btn btn-outline-success" id="exportExcelBtn">
+                    📊 Extrait Excel
+                </button>
+                <a href="{{ path('activite_edit', {'id': activite.id}) }}" class="btn btn-success">Modifier</a>
+                <form method="post" action="{{ path('activite_delete', {'id': activite.id}) }}" onsubmit="return confirm('Supprimer cette activité ?');" class="d-inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ activite.id) }}">
+                    <button type="submit" class="btn btn-danger">Supprimer</button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="card border-0 shadow-sm overflow-hidden">
+        <div class="card-header bg-success bg-opacity-10 border-0 p-4">
+            <div class="d-flex flex-column flex-lg-row gap-3 align-items-lg-center">
+                <div class="display-6">🌾</div>
+                <div>
+                    <h2 class="h4 fw-bold text-dark mb-2">{{ activite.titre }}</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge text-bg-success">{{ activite.statut }}</span>
+                        <span class="badge text-bg-light text-dark border">{{ activite.typeActivite }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <div class="p-3 rounded-3 bg-light border">
+                        <div class="text-muted small text-uppercase fw-semibold">Date début</div>
+                        <div class="fw-semibold text-dark">{{ activite.dateDebut|date('d/m/Y H:i') }}</div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="p-3 rounded-3 bg-light border">
+                        <div class="text-muted small text-uppercase fw-semibold">Date fin</div>
+                        <div class="fw-semibold text-dark">{{ activite.dateFin ? activite.dateFin|date('d/m/Y H:i') : 'Non renseignée' }}</div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-6">
+                    <div class="p-3 rounded-3 bg-light border">
+                        <div class="text-muted small text-uppercase fw-semibold">Coût estimé</div>
+                        <div class="fw-semibold text-dark">{{ activite.coutEstime ? activite.coutEstime ~ ' DT' : 'Non renseigné' }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if canManage %}
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const pdfBtn = document.getElementById('exportPdfBtn');
+            const excelBtn = document.getElementById('exportExcelBtn');
+
+            pdfBtn.addEventListener('click', function() {
+                const btn = this;
+                const originalText = btn.innerHTML;
+                
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Génération...';
+
+                const url = '{{ path('activite_export_pdf', {'id': activite.id}) }}';
+                
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/pdf'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de la génération du PDF (Code: ' + response.status + ')');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'extrait-activite-{{ activite.id }}.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                })
+                .catch(error => {
+                    console.error('PDF Export Error:', error);
+                    alert('Erreur lors de la génération du PDF: ' + error.message);
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            });
+
+            excelBtn.addEventListener('click', function() {
+                const btn = this;
+                const originalText = btn.innerHTML;
+                
+                btn.disabled = true;
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Génération...';
+
+                const url = '{{ path('activite_export_excel', {'id': activite.id}) }}';
+                
+                fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/vnd.ms-excel'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de la génération du fichier Excel (Code: ' + response.status + ')');
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'extrait-activite-{{ activite.id }}.xls';
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                })
+                .catch(error => {
+                    console.error('Excel Export Error:', error);
+                    alert('Erreur lors de la génération du fichier Excel: ' + error.message);
+                })
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalText;
+                });
+            });
+        });
+        </script>
+    {% endif %}
+{% endblock %}
