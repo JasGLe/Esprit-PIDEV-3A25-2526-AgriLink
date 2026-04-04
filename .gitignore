@@ -33,3 +33,4 @@ yarn-error.log
 /prompt*.txt
 /assets/vendor/
 ###< Project-specific ###
+/docs/.claude/
