@@ -1,0 +1,45 @@
+<div class="row g-3 mb-4 activity-kpi-row">
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 activity-kpi-card">
+            <div class="card-body">
+                <p class="text-muted text-uppercase fw-semibold small mb-1">Total activités</p>
+                <p class="fs-3 fw-bold mb-0">{{ stats.total|default(0) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 activity-kpi-card">
+            <div class="card-body">
+                <p class="text-muted text-uppercase fw-semibold small mb-1">Progression</p>
+                <p class="fs-3 fw-bold mb-2">{{ stats.completionRate|default(0)|number_format(1, ',', ' ') }}%</p>
+                <div class="progress" role="progressbar" aria-label="Taux de progression" aria-valuenow="{{ stats.completionRate|default(0) }}" aria-valuemin="0" aria-valuemax="100">
+                    <div class="progress-bar bg-success" style="width: {{ stats.completionRate|default(0) }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 activity-kpi-card">
+            <div class="card-body">
+                <p class="text-muted text-uppercase fw-semibold small mb-1">Statuts</p>
+                <div class="small text-muted d-flex flex-column gap-1">
+                    <span>Planifiées: <strong class="text-dark">{{ stats.planned|default(0) }}</strong></span>
+                    <span>En cours: <strong class="text-dark">{{ stats.inProgress|default(0) }}</strong></span>
+                    <span>Terminées: <strong class="text-dark">{{ stats.finished|default(0) }}</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 activity-kpi-card">
+            <div class="card-body">
+                <p class="text-muted text-uppercase fw-semibold small mb-1">Coûts estimés</p>
+                <p class="mb-0">Total: <strong>{{ stats.totalCost|default(0)|number_format(2, ',', ' ') }} DT</strong></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'activity/activite/_results.html.twig' with {
+    activites: activites
+} only %}
