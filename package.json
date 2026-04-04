@@ -2,8 +2,8 @@
   "name": "agrilink",
   "private": true,
   "scripts": {
-    "dev": "sass --watch ./assets/styles/bootstrap-custom.scss:./public/build/app.css",
-    "build": "sass ./assets/styles/bootstrap-custom.scss:./public/build/app.css --style=compressed"
+    "dev": "sass --load-path=node_modules --watch ./assets/styles/bootstrap-custom.scss:./public/build/app.css",
+    "build": "sass --load-path=node_modules ./assets/styles/bootstrap-custom.scss:./public/build/app.css --style=compressed"
   },
   "devDependencies": {
     "@popperjs/core": "^2.11.8",
