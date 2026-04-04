@@ -2,10 +2,13 @@
 
 namespace App\Security;
 
+use App\Entity\UserManagement\User;
+use App\Service\TwoFactorService;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Http\Authenticator\AbstractLoginFormAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge;
@@ -22,8 +25,11 @@ class UserAuthenticator extends AbstractLoginFormAuthenticator
 
     public const LOGIN_ROUTE = 'app_login';
 
-    public function __construct(private UrlGeneratorInterface $urlGenerator)
-    {
+    public function __construct(
+        private UrlGeneratorInterface $urlGenerator,
+        private TwoFactorService $twoFactorService,
+        private TokenStorageInterface $tokenStorage,
+    ) {
     }
 
     public function authenticate(Request $request): Passport
@@ -44,6 +50,30 @@ class UserAuthenticator extends AbstractLoginFormAuthenticator
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        $user = $token->getUser();
+
+        if ($user instanceof User && $user->isTwoFactorEnabled()) {
+            $session = $request->getSession();
+
+            // Store pending 2FA user ID
+            $session->set('_2fa_pending_user', $user->getId());
+
+            // Preserve the original target path so we can redirect after 2FA
+            if ($targetPath = $this->getTargetPath($session, $firewallName)) {
+                $session->set('_security.main.target_path', $targetPath);
+            }
+
+            // Revoke authentication until 2FA is complete
+            $session->remove('_security_main');
+            $this->tokenStorage->setToken(null);
+
+            // Generate and send OTP
+            $this->twoFactorService->generateOtp($user);
+            $this->twoFactorService->sendOtpEmail($user);
+
+            return new RedirectResponse($this->urlGenerator->generate('app_2fa_verify'));
+        }
+
         if ($targetPath = $this->getTargetPath($request->getSession(), $firewallName)) {
             return new RedirectResponse($targetPath);
         }

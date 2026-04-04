@@ -31,6 +31,11 @@ class EmailVerificationController extends AbstractController
             return $this->redirectToRoute('app_dashboard');
         }
 
+        // Track referer so we can redirect back to security settings after verification
+        if ($request->query->get('from') === 'profile') {
+            $request->getSession()->set('_verify_email_referer', 'profile');
+        }
+
         // If no verification token exists, generate one
         if (!$user->getEmailVerificationToken()) {
             $this->emailVerificationService->generateVerificationCode($user);
@@ -61,11 +66,15 @@ class EmailVerificationController extends AbstractController
             // Verify the code
             if ($this->emailVerificationService->verifyCode($user, $code)) {
                 $this->addFlash('success', 'Votre adresse email a été vérifiée avec succès !');
-                
+
                 // Clear resend attempts from session
                 $request->getSession()->remove(self::SESSION_RESEND_ATTEMPTS_KEY);
-                
-                return $this->redirectToRoute('app_dashboard');
+
+                // Redirect to security settings if coming from profile, else dashboard
+                $referer = $request->getSession()->get('_verify_email_referer');
+                $request->getSession()->remove('_verify_email_referer');
+
+                return $this->redirectToRoute($referer === 'profile' ? 'app_profile_security' : 'app_dashboard');
             } else {
                 $this->addFlash('error', 'Code de vérification incorrect. Veuillez réessayer.');
                 return $this->redirectToRoute('app_verify_email');
@@ -133,8 +142,7 @@ class EmailVerificationController extends AbstractController
     #[IsGranted('IS_AUTHENTICATED_FULLY')]
     public function skipVerification(): Response
     {
-        // Soft verification - allow users to skip for now
-        $this->addFlash('info', 'Vous pouvez vérifier votre email plus tard depuis votre profil.');
-        return $this->redirectToRoute('app_dashboard');
+        $this->addFlash('info', 'Vérification ignorée. Vous pouvez vérifier votre email à tout moment depuis les paramètres de sécurité.');
+        return $this->redirectToRoute('app_profile_security');
     }
 }
