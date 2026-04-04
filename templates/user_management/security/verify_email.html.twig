@@ -1,261 +1,297 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Vérification Email - AgriLink{% endblock %}
+{% block title %}Vérification de l'email - AgriLink{% endblock %}
 
 {% block body %}
 {{ include('components/_auth_background.html.twig') }}
+
+<style>
+    .auth-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
+        padding: 2.5rem 2rem;
+    }
+    .email-icon-wrap {
+        width: 72px; height: 72px; border-radius: 50%;
+        background: linear-gradient(135deg, #ffc107, #fd7e14);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1.25rem;
+        box-shadow: 0 4px 16px rgba(255,193,7,.35);
+    }
+    .email-address-pill {
+        display: inline-flex; align-items: center; gap: .375rem;
+        background: #f0fff4; border: 1px solid #b7ebc8;
+        border-radius: 50px; padding: .3rem .875rem;
+        font-size: .8125rem; font-weight: 600; color: #166534;
+        max-width: 100%; overflow: hidden; text-overflow: ellipsis;
+    }
+    .otp-input {
+        width: 13rem;
+        border: 2px solid #dee2e6;
+        border-radius: 12px;
+        font-size: 2rem; font-family: monospace; font-weight: 700;
+        text-align: center; letter-spacing: .6em;
+        padding: .625rem 1rem;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .otp-input:focus {
+        border-color: #ffc107;
+        box-shadow: 0 0 0 4px rgba(255,193,7,.2);
+        outline: none;
+    }
+    .otp-input.is-valid { border-color: #198754; }
+    .otp-input.is-invalid { border-color: #dc3545; }
+    .timer-badge {
+        display: inline-flex; align-items: center; gap: .5rem;
+        padding: .4rem .875rem; border-radius: 50px;
+        font-size: .8125rem; font-weight: 600; transition: all .3s;
+    }
+    .timer-badge.ok     { background: #d1e7dd; color: #0a3622; }
+    .timer-badge.warn   { background: #fff3cd; color: #664d03; }
+    .timer-badge.danger { background: #f8d7da; color: #58151c; }
+    .btn-verify {
+        border-radius: 10px; padding: .7rem 1.5rem; font-weight: 600;
+        background: linear-gradient(135deg, #ffc107, #fd7e14);
+        border: none; color: #1a1a1a;
+        transition: opacity .15s, transform .1s;
+    }
+    .btn-verify:hover  { opacity: .9; transform: translateY(-1px); color:#000; }
+    .btn-verify:active { transform: none; }
+    .btn-verify:disabled { opacity: .55; transform: none; }
+    .skip-link {
+        font-size: .8125rem; color: #6c757d;
+        text-decoration: none; transition: color .15s;
+    }
+    .skip-link:hover { color: #495057; }
+    .alert-auth { border-radius: 10px; border: none; font-size: .875rem; }
+</style>
+
 <div class="min-vh-100 d-flex align-items-center justify-content-center py-5 px-3">
-    <div class="w-100" style="max-width: 28rem;">
-        <div class="mb-4">
-            <div class="d-flex justify-content-center">
-                <span style="font-size: 3.75rem;">📧</span>
-            </div>
-            <h2 class="mt-4 text-center display-6 fw-bold text-dark">
-                Vérifiez votre email
-            </h2>
-            <p class="mt-2 text-center small text-muted">
-                Un code de vérification à 6 chiffres a été envoyé à
-            </p>
-            <p class="text-center small fw-medium text-success">
-                {{ user.email }}
-            </p>
+    <div class="w-100" style="max-width: 420px;">
+
+        {# Logo #}
+        <div class="text-center mb-4">
+            <a href="{{ path('app_home') }}">
+                <img src="{{ asset('logo_with_text.png') }}" alt="AgriLink" class="logo logo-header">
+            </a>
         </div>
 
-        {# Flash messages #}
-        {% for label, messages in app.flashes %}
-            {% for message in messages %}
-                <div class="alert {% if label == 'success' %}alert-success{% elseif label == 'error' %}alert-danger{% elseif label == 'warning' %}alert-warning{% else %}alert-info{% endif %} d-flex align-items-start" role="alert">
-                    <svg class="flex-shrink-0 me-2" style="width: 1.25rem; height: 1.25rem;" fill="currentColor" viewBox="0 0 20 20">
-                        {% if label == 'success' %}
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                        {% elseif label == 'error' %}
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                        {% elseif label == 'warning' %}
-                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                        {% else %}
-                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                        {% endif %}
+        <div class="auth-card">
+            {# Header #}
+            <div class="text-center mb-4">
+                <div class="email-icon-wrap">
+                    <svg fill="none" stroke="#fff" viewBox="0 0 24 24" width="32" height="32">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
                     </svg>
-                    <div>{{ message }}</div>
                 </div>
-            {% endfor %}
-        {% endfor %}
-
-        {# Countdown timer #}
-        {% if timeRemaining > 0 %}
-        <div class="card shadow-sm mb-3">
-            <div class="card-body text-center">
-                <p class="small text-muted mb-2">Le code expire dans :</p>
-                <div id="countdown" class="fs-4 fw-bold text-success" data-expires="{{ timeRemaining }}">
-                    --:--
-                </div>
+                <h2 class="h5 fw-bold mb-2">Vérifiez votre adresse email</h2>
+                <p class="text-muted small mb-2">Un code à 6 chiffres a été envoyé à</p>
+                <span class="email-address-pill">
+                    <svg fill="currentColor" viewBox="0 0 20 20" width="12" height="12">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    {{ user.email }}
+                </span>
             </div>
-        </div>
-        {% else %}
-        <div class="alert alert-danger text-center" role="alert">
-            <svg class="d-inline me-1" style="width: 1.25rem; height: 1.25rem;" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
-            </svg>
-            Le code a expiré. Veuillez demander un nouveau code.
-        </div>
-        {% endif %}
 
-        {# Verification form #}
-        <form method="post" action="{{ path('app_verify_email') }}" class="mt-4">
-            <div class="card shadow-sm mb-3">
-                <div class="card-body">
-                    <label for="verification_code" class="form-label fw-medium text-center d-block mb-2">
-                        Code de vérification
+            {# Flash messages #}
+            {% for label, messages in app.flashes %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-auth d-flex align-items-start gap-2 mb-3" role="alert">
+                        <svg fill="currentColor" viewBox="0 0 20 20" width="16" height="16" class="flex-shrink-0 mt-1">
+                            {% if label == 'success' %}
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            {% else %}
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            {% endif %}
+                        </svg>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endfor %}
+
+            {# Timer #}
+            <div class="text-center mb-3">
+                {% if timeRemaining > 0 %}
+                    <span id="timer-badge"
+                          class="timer-badge {{ timeRemaining > 60 ? 'ok' : (timeRemaining > 0 ? 'warn' : 'danger') }}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <span id="timer-text">Valide {{ (timeRemaining / 60)|round(0, 'ceil') }} min</span>
+                    </span>
+                {% else %}
+                    <span class="timer-badge danger">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Code expiré — demandez-en un nouveau
+                    </span>
+                {% endif %}
+            </div>
+
+            {# OTP form #}
+            <form method="post" action="{{ path('app_verify_email') }}" id="verify-form">
+                <div class="d-flex flex-column align-items-center mb-4">
+                    <label for="verification_code" class="form-label fw-semibold mb-3 text-center" style="font-size:.9rem;">
+                        Entrez le code à 6 chiffres
                     </label>
-                    <input type="text" 
-                           name="verification_code" 
-                           id="verification_code" 
+                    <input type="text"
+                           name="verification_code"
+                           id="verification_code"
                            maxlength="6"
                            pattern="[0-9]{6}"
                            inputmode="numeric"
                            autocomplete="one-time-code"
-                           placeholder="000000"
-                           class="form-control text-center fs-4 font-monospace"
-                           style="letter-spacing: 0.5em;"
-                           required>
-                    <p class="mt-2 text-muted text-center" style="font-size: 0.75rem;">
-                        Entrez le code à 6 chiffres reçu par email
-                    </p>
+                           required
+                           class="otp-input"
+                           placeholder="——————"
+                           autofocus
+                           {% if timeRemaining <= 0 %}disabled{% endif %}>
+                    <div id="otp-feedback" class="form-text mt-2 text-center" style="min-height:1.2em;"></div>
                 </div>
-            </div>
 
-            <div class="d-grid mb-3">
-                <button type="submit" 
-                        class="btn btn-success position-relative"
-                        {% if timeRemaining <= 0 %}disabled{% endif %}>
-                    <svg class="position-absolute start-0 ms-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                    </svg>
-                    Vérifier mon email
-                </button>
-            </div>
-        </form>
+                <div class="d-grid mb-3">
+                    <button type="submit"
+                            id="submit-btn"
+                            class="btn btn-verify"
+                            {% if timeRemaining <= 0 %}disabled{% endif %}>
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" class="me-2">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Vérifier mon email
+                    </button>
+                </div>
+            </form>
 
-        {# Resend code section #}
-        <div class="card bg-light mb-4">
-            <div class="card-body">
-                <p class="small text-muted text-center mb-3">
-                    Vous n'avez pas reçu le code ?
-                </p>
-                
+            {# Resend #}
+            <div class="d-grid gap-2 mb-3">
                 {% if canResend %}
                     <form method="post" action="{{ path('app_resend_verification') }}">
-                        <button type="submit" 
-                                id="resend-btn"
-                                class="btn btn-outline-success w-100 d-flex align-items-center justify-content-center">
-                            <svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                        <button type="submit"
+                                class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2"
+                                style="border-radius:10px;">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                             </svg>
                             Renvoyer le code
                         </button>
                     </form>
                 {% else %}
-                    <button type="button" 
-                            id="resend-btn-disabled"
+                    <button type="button"
+                            id="resend-disabled"
                             disabled
-                            class="btn btn-secondary w-100 d-flex align-items-center justify-content-center"
-                            data-wait-seconds="{{ resendWaitSeconds }}">
-                        <svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2"
+                            style="border-radius:10px;"
+                            data-wait="{{ resendWaitSeconds }}">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span id="resend-countdown">Patienter {{ resendWaitSeconds }}s</span>
+                        <span id="resend-countdown">Renvoyer dans {{ resendWaitSeconds }}s</span>
                     </button>
                     {% if resendMessage %}
-                        <p class="mt-2 text-warning text-center" style="font-size: 0.75rem;">{{ resendMessage }}</p>
+                        <p class="text-center text-warning mb-0" style="font-size:.75rem;">{{ resendMessage }}</p>
                     {% endif %}
                 {% endif %}
             </div>
-        </div>
 
-        {# Skip verification (prominent button) #}
-        <div class="card border-2 border-dashed mb-4">
-            <div class="card-body text-center">
-                <h5 class="card-title h6 mb-2">
-                    Pas le temps maintenant ?
-                </h5>
-                <p class="card-text text-muted mb-3" style="font-size: 0.75rem;">
-                    Vous pourrez vérifier votre email plus tard depuis votre profil
-                </p>
-                <a href="{{ path('app_skip_verification') }}" 
-                   class="btn btn-outline-secondary d-inline-flex align-items-center">
-                    <svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+            {# Skip #}
+            <div class="pt-3 border-top">
+                <a href="{{ path('app_skip_verification') }}"
+                   class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2"
+                   style="border-radius:10px; font-size:.875rem;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    Passer et accéder à mon compte
+                    Vérifier plus tard
                 </a>
+                <p class="text-center text-muted mt-2 mb-0" style="font-size:.75rem;">
+                    Vous pourrez le faire depuis les paramètres de sécurité
+                </p>
             </div>
-        </div>
 
-        {# Help section #}
-        <div class="alert alert-info" role="alert">
-            <h6 class="alert-heading d-flex align-items-center">
-                <svg class="me-1" style="width: 1rem; height: 1rem;" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
-                </svg>
-                Besoin d'aide ?
-            </h6>
-            <ul class="mb-0" style="font-size: 0.75rem;">
-                <li>Vérifiez votre dossier de courrier indésirable (spam)</li>
-                <li>Assurez-vous que l'adresse email est correcte</li>
-                <li>Le code est valable pendant 15 minutes</li>
-            </ul>
+            {# Help #}
+            <div class="mt-3 p-3 rounded-3 text-muted" style="background:#f8f9fa; font-size:.775rem;">
+                <strong>Pas reçu le code ?</strong>
+                Vérifiez vos spams · Le code est valable 15 minutes · Assurez-vous que l'email est correct.
+            </div>
         </div>
     </div>
 </div>
 
-{% block javascripts %}
-{{ parent() }}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Countdown timer for code expiration
-    const countdownEl = document.getElementById('countdown');
-    if (countdownEl) {
-        // Validate and parse time remaining
-        let timeRemaining = parseInt(countdownEl.dataset.expires, 10);
-        
-        // Handle invalid or missing data
-        if (isNaN(timeRemaining) || timeRemaining < 0) {
-            console.error('Invalid or missing expiration time:', countdownEl.dataset.expires);
-            countdownEl.innerHTML = '<span class="text-red-600">Erreur de chargement</span>';
-            return;
-        }
-        
-        function updateCountdown() {
-            if (timeRemaining <= 0) {
-                countdownEl.innerHTML = '<span class="text-red-600">Expiré</span>';
-                return;
-            }
-            
-            const hours = Math.floor(timeRemaining / 3600);
-            const minutes = Math.floor((timeRemaining % 3600) / 60);
-            const seconds = timeRemaining % 60;
-            
-            countdownEl.textContent = 
-                String(hours).padStart(2, '0') + ':' + 
-                String(minutes).padStart(2, '0') + ':' + 
-                String(seconds).padStart(2, '0');
-            
-            timeRemaining--;
-        }
-        
-        // Initialize display immediately
-        updateCountdown();
-        
-        // Update every second
-        const intervalId = setInterval(function() {
-            updateCountdown();
-            
-            // Stop interval when expired
-            if (timeRemaining < 0) {
-                clearInterval(intervalId);
-            }
-        }, 1000);
-    }
+let timeRemaining = {{ timeRemaining }};
+let resendWait    = {{ resendWaitSeconds }};
 
-    // Countdown for resend button
-    const resendDisabledBtn = document.getElementById('resend-btn-disabled');
-    if (resendDisabledBtn) {
-        let waitSeconds = parseInt(resendDisabledBtn.dataset.waitSeconds);
-        const countdownSpan = document.getElementById('resend-countdown');
-        
-        function updateResendCountdown() {
-            if (waitSeconds <= 0) {
-                // Reload page to enable the button
-                window.location.reload();
-                return;
-            }
-            
-            countdownSpan.textContent = 'Patienter ' + waitSeconds + 's';
-            waitSeconds--;
+// — Expiration timer —
+function tickExpiry() {
+    if (timeRemaining <= 0) {
+        const badge = document.getElementById('timer-badge');
+        if (badge) {
+            badge.className = 'timer-badge danger';
+            badge.querySelector('#timer-text').textContent = 'Code expiré — demandez-en un nouveau';
         }
-        
-        updateResendCountdown();
-        setInterval(updateResendCountdown, 1000);
+        const btn = document.getElementById('submit-btn');
+        const inp = document.getElementById('verification_code');
+        if (btn) btn.disabled = true;
+        if (inp) { inp.disabled = true; inp.classList.add('is-invalid'); }
+        return;
     }
-
-    // Auto-format and validate verification code input
-    const codeInput = document.getElementById('verification_code');
-    if (codeInput) {
-        codeInput.addEventListener('input', function(e) {
-            // Only allow digits
-            this.value = this.value.replace(/[^0-9]/g, '');
-            
-            // Auto-submit when 6 digits entered
-            if (this.value.length === 6) {
-                // Optional: auto-submit after short delay
-                // setTimeout(() => this.form.submit(), 300);
-            }
-        });
-
-        // Focus on load
-        codeInput.focus();
+    timeRemaining--;
+    const m = Math.floor(timeRemaining / 60);
+    const s = timeRemaining % 60;
+    const label = m > 0 ? `Valide ${m}:${String(s).padStart(2,'0')}` : `Valide ${s}s`;
+    const txt = document.getElementById('timer-text');
+    if (txt) txt.textContent = label;
+    const badge = document.getElementById('timer-badge');
+    if (badge) {
+        badge.className = 'timer-badge ' + (timeRemaining > 60 ? 'ok' : timeRemaining > 30 ? 'warn' : 'danger');
     }
+}
+if (timeRemaining > 0) setInterval(tickExpiry, 1000);
+
+// — Resend countdown —
+function tickResend() {
+    if (resendWait <= 0) { window.location.reload(); return; }
+    resendWait--;
+    const el = document.getElementById('resend-countdown');
+    if (el) el.textContent = `Renvoyer dans ${resendWait}s`;
+}
+if (resendWait > 0) setInterval(tickResend, 1000);
+
+// — OTP input UX —
+document.addEventListener('DOMContentLoaded', function () {
+    const inp = document.getElementById('verification_code');
+    const fb  = document.getElementById('otp-feedback');
+    if (!inp) return;
+
+    inp.addEventListener('input', function () {
+        this.value = this.value.replace(/\D/g, '');
+        const n = this.value.length;
+        if (n > 0 && n < 6) {
+            this.classList.remove('is-valid','is-invalid');
+            fb.textContent = `${6-n} chiffre${6-n>1?'s':''} restant${6-n>1?'s':''}`;
+            fb.className = 'form-text mt-2 text-center text-muted';
+        } else if (n === 6) {
+            this.classList.add('is-valid');
+            this.classList.remove('is-invalid');
+            fb.textContent = '✓ Code complet';
+            fb.className = 'form-text mt-2 text-center text-success';
+            setTimeout(() => document.getElementById('verify-form').submit(), 150);
+        } else {
+            this.classList.remove('is-valid','is-invalid');
+            fb.textContent = '';
+        }
+    });
+    inp.focus();
 });
 </script>
-{% endblock %}
 {% endblock %}
