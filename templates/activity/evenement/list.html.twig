@@ -3,7 +3,13 @@
 {% block title %}Événements - AgriLink{% endblock %}
 {% block page_title %}Événements{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/bootstrap-custom2.css') }}">
+{% endblock %}
+
 {% block dashboard_content %}
+    <section class="activity-theme activity-theme--evenement">
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <div>
             <h2 class="fs-3 fw-bold text-dark mb-1">Événements</h2>
@@ -35,17 +41,18 @@
         </div>
     </form>
 
-    <div id="evenement-results">
-        {% include 'activity/evenement/_results.html.twig' with {
-            evenements: evenements
+    <div id="evenement-content">
+        {% include 'activity/evenement/_content.html.twig' with {
+            evenements: evenements,
+            stats: stats
         } only %}
     </div>
 
     <script>
         (() => {
             const form = document.getElementById('evenement-filters');
-            const results = document.getElementById('evenement-results');
-            if (!form || !results) {
+            const content = document.getElementById('evenement-content');
+            if (!form || !content) {
                 return;
             }
 
@@ -68,7 +75,7 @@
                         if (currentRequest !== requestCounter) {
                             return;
                         }
-                        results.innerHTML = html;
+                        content.innerHTML = html;
                     });
             };
 
@@ -83,4 +90,5 @@
             form.addEventListener('submit', (event) => event.preventDefault());
         })();
     </script>
+    </section>
 {% endblock %}
