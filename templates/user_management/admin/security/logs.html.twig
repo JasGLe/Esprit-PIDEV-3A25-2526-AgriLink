@@ -1,344 +1,684 @@
 {% extends 'layouts/dashboard_layout.html.twig' %}
 
 {% block title %}Sécurité - Admin - AgriLink{% endblock %}
-{% block page_title %}Tableau de bord Sécurité{% endblock %}
+{% block page_title %}Centre de Sécurité{% endblock %}
+
+{% block stylesheets %}
+<style>
+.sec-kpi-card {
+    background: #fff;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    border: 1px solid #e5e7eb;
+    height: 100%;
+    transition: box-shadow 0.2s;
+}
+.sec-kpi-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.07); }
+.sec-kpi-value { font-size: 2rem; font-weight: 700; line-height: 1; margin-bottom: 0.25rem; }
+.sec-kpi-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.6px; color: #6b7280; font-weight: 600; }
+.sec-kpi-sub { font-size: 0.78rem; color: #9ca3af; margin-top: 0.4rem; }
+.sec-kpi-icon { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.chart-card {
+    background: #fff;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    padding: 1.5rem;
+    height: 100%;
+}
+.chart-card-title { font-size: 0.95rem; font-weight: 600; color: #111827; margin-bottom: 0.2rem; }
+.chart-card-sub { font-size: 0.78rem; color: #9ca3af; margin-bottom: 1.25rem; }
+
+.progress-metric { margin-bottom: 1rem; }
+.progress-metric:last-child { margin-bottom: 0; }
+.progress-metric .progress { height: 7px; border-radius: 4px; background: #f1f5f9; }
+
+.score-wrap { position: relative; width: 170px; height: 170px; margin: 0 auto; }
+.score-center {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center; pointer-events: none;
+}
+
+.risk-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.65rem 0.9rem;
+    border-radius: 0.5rem;
+    background: #f9fafb;
+    margin-bottom: 0.4rem;
+    border-left: 3px solid transparent;
+    transition: background 0.15s;
+}
+.risk-item:hover { background: #f1f5f9; }
+.risk-item.locked { border-left-color: #dc3545; }
+.risk-item.warn   { border-left-color: #f59e0b; }
+.risk-item.info   { border-left-color: #0dcaf0; }
+
+.event-item {
+    display: flex; align-items: center; gap: 0.75rem;
+    padding: 0.65rem 0.9rem;
+    border-radius: 0.5rem;
+    background: #f9fafb;
+    margin-bottom: 0.4rem;
+}
+.event-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+.action-card {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem 1.1rem;
+    border-radius: 0.65rem;
+    border: 1px solid #e5e7eb;
+    text-decoration: none; color: inherit;
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    height: 100%;
+}
+.action-card:hover {
+    border-color: #198754;
+    background: rgba(25,135,84,0.03);
+    color: inherit;
+    box-shadow: 0 2px 10px rgba(25,135,84,0.08);
+}
+.action-icon {
+    width: 44px; height: 44px; border-radius: 0.5rem;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+
+.legend-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+
+.period-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 0.3rem 0.75rem;
+    border-radius: 2rem; font-size: 0.78rem; font-weight: 600;
+    background: #f1f5f9; color: #374151;
+}
+</style>
+{% endblock %}
 
 {% block dashboard_content %}
-    {# Page header #}
-    <div class="mb-5">
-        <h2 class="h2 fw-bold text-dark mb-2">🔐 Surveillance de la sécurité</h2>
-        <p class="text-muted">Vue d'ensemble de la sécurité du système et des logs d'activité</p>
+
+{# ── Compute Security Score ─────────────────────────────────────────────── #}
+{% set score = 0 %}
+{% if accountStats.total > 0 %}
+    {% set s_verified   = (accountStats.verified            / accountStats.total) %}
+    {% set s_twofa      = (accountStats.twoFactorEnabled    / accountStats.total) %}
+    {% set s_active     = (accountStats.active              / accountStats.total) %}
+    {% set s_unlocked   = ((accountStats.total - accountStats.lockedNow) / accountStats.total) %}
+    {% set score = ((s_verified * 25) + (s_twofa * 40) + (s_active * 20) + (s_unlocked * 15))|round(0) %}
+{% endif %}
+{% set scoreColor = score >= 75 ? '#198754' : (score >= 50 ? '#f59e0b' : '#dc3545') %}
+{% set scoreLabel = score >= 75 ? 'Bon'     : (score >= 50 ? 'Moyen'  : 'Critique') %}
+{% set scoreBadge = score >= 75 ? 'bg-success-subtle text-success' : (score >= 50 ? 'bg-warning-subtle text-warning' : 'bg-danger-subtle text-danger') %}
+
+{# Other events count #}
+{% set otherEventsRaw = stats30d.total - stats30d.loginSuccess - stats30d.loginFailed - stats30d.twoFaSuccess - stats30d.accountLocked - stats30d.passwordChanged %}
+{% set otherEvents = otherEventsRaw > 0 ? otherEventsRaw : 0 %}
+
+{# ── Page Header ───────────────────────────────────────────────────────── #}
+<div class="d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+    <div>
+        <h2 class="h3 fw-bold text-dark mb-1">Centre de Sécurité</h2>
+        <p class="text-muted mb-0 small">Surveillance, analyse et contrôle de la sécurité de la plateforme</p>
     </div>
+    <div class="d-flex flex-wrap align-items-center gap-2">
+        {% if accountStats.lockedNow > 0 %}
+        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill">
+            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1" style="vertical-align:-2px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            {{ accountStats.lockedNow }} compte(s) verrouillé(s)
+        </span>
+        {% endif %}
+        <span class="badge {{ scoreBadge }} border px-3 py-2 rounded-pill fw-semibold">
+            Score de sécurité : {{ score }}%
+        </span>
+    </div>
+</div>
 
-    {# Security Statistics Cards #}
-    <div class="row g-4 mb-5">
-        {# Active Accounts #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-start">
-                        <div class="stat-icon bg-success-subtle">
-                            <svg class="text-success" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Comptes actifs</p>
-                            <h3 class="h4 mb-0 fw-bold text-dark">
-                                {{ accountStats.active }}<span class="text-muted" style="font-size: 0.7em;">/{{ accountStats.total }}</span>
-                            </h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light border-0 p-3">
-                    <small class="text-muted">{{ (accountStats.active / accountStats.total * 100)|round(1) }}% actifs</small>
+{# ── Row 1 : Score Gauge + 6 KPIs ────────────────────────────────────── #}
+<div class="row g-4 mb-4">
+
+    {# Security Score + Progress Bars #}
+    <div class="col-12 col-lg-4">
+        <div class="chart-card d-flex flex-column">
+            <div class="chart-card-title">Score de Sécurité Global</div>
+            <div class="chart-card-sub">Basé sur : 2FA (40%), emails vérifiés (25%), comptes actifs (20%), non-verrouillés (15%)</div>
+
+            <div class="score-wrap mb-4">
+                <canvas id="scoreGauge" width="170" height="170"></canvas>
+                <div class="score-center">
+                    <div class="fw-bold" style="font-size:2.1rem; color:{{ scoreColor }}; line-height:1;">{{ score }}%</div>
+                    <div class="fw-semibold small" style="color:{{ scoreColor }};">{{ scoreLabel }}</div>
                 </div>
             </div>
-        </div>
 
-        {# Verified Emails #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-start">
-                        <div class="stat-icon bg-primary-subtle">
-                            <svg class="text-primary" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Emails vérifiés</p>
-                            <h3 class="h4 mb-0 fw-bold text-dark">
-                                {{ accountStats.verified }}<span class="text-muted" style="font-size: 0.7em;">/{{ accountStats.total }}</span>
-                            </h3>
-                        </div>
-                    </div>
+            <div class="progress-metric">
+                <div class="d-flex justify-content-between mb-1">
+                    <small class="text-muted">2FA activé</small>
+                    <small class="fw-semibold">{{ accountStats.total > 0 ? (accountStats.twoFactorEnabled / accountStats.total * 100)|round(1) : 0 }}%</small>
                 </div>
-                <div class="card-footer bg-light border-0 p-3">
-                    <small class="text-muted">{{ (accountStats.verified / accountStats.total * 100)|round(1) }}% vérifiés</small>
-                </div>
+                <div class="progress"><div class="progress-bar bg-success" style="width:{{ accountStats.total > 0 ? (accountStats.twoFactorEnabled / accountStats.total * 100)|round : 0 }}%"></div></div>
             </div>
-        </div>
-
-        {# Locked Accounts #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-start">
-                        <div class="stat-icon {{ accountStats.lockedNow > 0 ? 'bg-danger-subtle' : 'bg-secondary-subtle' }}">
-                            <svg class="{{ accountStats.lockedNow > 0 ? 'text-danger' : 'text-secondary' }}" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Comptes verrouillés</p>
-                            <h3 class="h4 mb-0 fw-bold {{ accountStats.lockedNow > 0 ? 'text-danger' : 'text-dark' }}">
-                                {{ accountStats.lockedNow }}
-                            </h3>
-                        </div>
-                    </div>
+            <div class="progress-metric">
+                <div class="d-flex justify-content-between mb-1">
+                    <small class="text-muted">Emails vérifiés</small>
+                    <small class="fw-semibold">{{ accountStats.total > 0 ? (accountStats.verified / accountStats.total * 100)|round(1) : 0 }}%</small>
                 </div>
-                {% if accountStats.lockedNow > 0 %}
-                    <div class="card-footer bg-light border-0 p-3">
-                        <small class="text-danger fw-semibold">⚠️ Attention requise</small>
-                    </div>
-                {% endif %}
+                <div class="progress"><div class="progress-bar bg-primary" style="width:{{ accountStats.total > 0 ? (accountStats.verified / accountStats.total * 100)|round : 0 }}%"></div></div>
             </div>
-        </div>
-
-        {# 2FA Enabled #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-start">
-                        <div class="stat-icon" style="background-color: rgba(168, 85, 247, 0.1);">
-                            <svg style="color: #a855f7;" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">2FA Activé</p>
-                            <h3 class="h4 mb-0 fw-bold text-dark">
-                                {{ accountStats.twoFactorEnabled }}<span class="text-muted" style="font-size: 0.7em;">/{{ accountStats.total }}</span>
-                            </h3>
-                        </div>
-                    </div>
+            <div class="progress-metric">
+                <div class="d-flex justify-content-between mb-1">
+                    <small class="text-muted">Comptes actifs</small>
+                    <small class="fw-semibold">{{ accountStats.total > 0 ? (accountStats.active / accountStats.total * 100)|round(1) : 0 }}%</small>
                 </div>
-                <div class="card-footer bg-light border-0 p-3">
-                    <small class="text-muted">{{ (accountStats.twoFactorEnabled / accountStats.total * 100)|round(1) }}% sécurisé</small>
-                </div>
+                <div class="progress"><div class="progress-bar" style="background:#6f42c1; width:{{ accountStats.total > 0 ? (accountStats.active / accountStats.total * 100)|round : 0 }}%"></div></div>
             </div>
         </div>
     </div>
 
-    {# Recent Security Events - Activity Timeline #}
-    <div class="row g-4 mb-5">
-        <div class="col-12 col-lg-6">
-            <div class="admin-card">
-                <div class="admin-card-header">
-                    <h3>🛡️ Événements sécurité récents</h3>
-                    <p>Les derniers événements détectés</p>
+    {# 6 KPI Cards #}
+    <div class="col-12 col-lg-8">
+        <div class="row g-3 h-100">
+            <div class="col-6 col-md-4">
+                <div class="sec-kpi-card">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="sec-kpi-label">Comptes actifs</span>
+                        <div class="sec-kpi-icon bg-success-subtle">
+                            <svg class="text-success" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="sec-kpi-value text-success">{{ accountStats.active }}</div>
+                    <div class="sec-kpi-sub">sur {{ accountStats.total }} utilisateurs</div>
                 </div>
-                <div class="admin-card-body">
-                    {% if recentEvents is defined and recentEvents|length > 0 %}
-                        <div class="activity-timeline">
-                            {% for event in recentEvents|slice(0, 5) %}
-                                <div class="timeline-item 
-                                    {% if event.eventType in ['LOGIN_FAILED', 'ACCOUNT_LOCKED', 'SUSPICIOUS_ACTIVITY', '2FA_FAILED'] %}
-                                        timeline-danger
-                                    {% elseif event.eventType in ['2FA_OTP_SENT', 'SESSION_REVOKED'] %}
-                                        timeline-warning
-                                    {% elseif event.eventType in ['LOGIN_SUCCESS', 'EMAIL_VERIFIED', 'PASSWORD_CHANGED'] %}
-                                        timeline-success
-                                    {% else %}
-                                        timeline-info
-                                    {% endif %}
-                                ">
-                                    <h6 class="small fw-bold text-dark mb-1">{{ event.eventType|replace({'_': ' '}) }}</h6>
-                                    <p class="text-muted mb-0" style="font-size: 0.85rem;">{{ event.details|default('No details') }}</p>
-                                    {% if event.user %}
-                                        <small class="text-muted d-block mt-2">Par: {{ event.user.displayName }}</small>
-                                    {% endif %}
-                                    <small class="text-muted d-block">{{ event.createdAt ? event.createdAt|date('d/m/Y H:i') : 'N/A' }}</small>
+            </div>
+
+            <div class="col-6 col-md-4">
+                <div class="sec-kpi-card">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="sec-kpi-label">Emails vérifiés</span>
+                        <div class="sec-kpi-icon bg-primary-subtle">
+                            <svg class="text-primary" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="sec-kpi-value text-primary">{{ accountStats.verified }}</div>
+                    <div class="sec-kpi-sub">{{ accountStats.total > 0 ? (accountStats.verified / accountStats.total * 100)|round(1) : 0 }}% de taux</div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-4">
+                <div class="sec-kpi-card">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="sec-kpi-label">Double auth (2FA)</span>
+                        <div class="sec-kpi-icon" style="background:rgba(111,66,193,0.1);">
+                            <svg style="color:#6f42c1" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="sec-kpi-value" style="color:#6f42c1;">{{ accountStats.twoFactorEnabled }}</div>
+                    <div class="sec-kpi-sub">{{ accountStats.total > 0 ? (accountStats.twoFactorEnabled / accountStats.total * 100)|round(1) : 0 }}% d'adoption</div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-4">
+                <div class="sec-kpi-card">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="sec-kpi-label">Verrouillés</span>
+                        <div class="sec-kpi-icon {{ accountStats.lockedNow > 0 ? 'bg-danger-subtle' : 'bg-secondary-subtle' }}">
+                            <svg class="{{ accountStats.lockedNow > 0 ? 'text-danger' : 'text-secondary' }}" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="sec-kpi-value {{ accountStats.lockedNow > 0 ? 'text-danger' : 'text-secondary' }}">{{ accountStats.lockedNow }}</div>
+                    <div class="sec-kpi-sub">{{ accountStats.lockedNow > 0 ? 'Attention requise' : 'Aucun problème' }}</div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-4">
+                <div class="sec-kpi-card">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="sec-kpi-label">Échecs connexion 24h</span>
+                        <div class="sec-kpi-icon {{ stats24h.loginFailed > 0 ? 'bg-warning-subtle' : 'bg-secondary-subtle' }}">
+                            <svg class="{{ stats24h.loginFailed > 0 ? 'text-warning' : 'text-secondary' }}" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="sec-kpi-value {{ stats24h.loginFailed > 5 ? 'text-warning' : 'text-dark' }}">{{ stats24h.loginFailed }}</div>
+                    <div class="sec-kpi-sub">{{ stats24h.loginSuccess }} réussies (24h)</div>
+                </div>
+            </div>
+
+            <div class="col-6 col-md-4">
+                <div class="sec-kpi-card">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="sec-kpi-label">Activités suspectes 30j</span>
+                        <div class="sec-kpi-icon {{ stats30d.suspiciousActivity > 0 ? 'bg-danger-subtle' : 'bg-secondary-subtle' }}">
+                            <svg class="{{ stats30d.suspiciousActivity > 0 ? 'text-danger' : 'text-secondary' }}" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="sec-kpi-value {{ stats30d.suspiciousActivity > 0 ? 'text-danger' : 'text-secondary' }}">{{ stats30d.suspiciousActivity }}</div>
+                    <div class="sec-kpi-sub">{{ stats30d.total }} événements au total</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Row 2 : Charts ──────────────────────────────────────────────────── #}
+<div class="row g-4 mb-4">
+
+    {# Donut – Event distribution 30 days #}
+    <div class="col-12 col-lg-5">
+        <div class="chart-card">
+            <div class="chart-card-title">Répartition des événements</div>
+            <div class="chart-card-sub">Distribution par type — 30 derniers jours ({{ stats30d.total }} total)</div>
+            <div style="position:relative; height:220px;">
+                <canvas id="eventDistChart"></canvas>
+            </div>
+            <div class="row g-1 mt-3">
+                <div class="col-6"><span class="legend-dot" style="background:#198754;"></span><small class="text-muted">Connexions réussies</small></div>
+                <div class="col-6"><span class="legend-dot" style="background:#dc3545;"></span><small class="text-muted">Connexions échouées</small></div>
+                <div class="col-6"><span class="legend-dot" style="background:#6f42c1;"></span><small class="text-muted">2FA réussi</small></div>
+                <div class="col-6"><span class="legend-dot" style="background:#fd7e14;"></span><small class="text-muted">Verrouillages</small></div>
+                <div class="col-6"><span class="legend-dot" style="background:#0dcaf0;"></span><small class="text-muted">Mots de passe changés</small></div>
+                <div class="col-6"><span class="legend-dot" style="background:#adb5bd;"></span><small class="text-muted">Autres</small></div>
+            </div>
+        </div>
+    </div>
+
+    {# Bar – Login activity by period #}
+    <div class="col-12 col-lg-7">
+        <div class="chart-card">
+            <div class="chart-card-title">Activité de connexion par période</div>
+            <div class="chart-card-sub">Comparatif connexions réussies, échouées et verrouillages</div>
+            <div style="position:relative; height:280px;">
+                <canvas id="loginActivityChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Row 3 : At-Risk Users + Critical Events ─────────────────────────── #}
+<div class="row g-4 mb-4">
+
+    {# At-Risk Users – tabbed #}
+    <div class="col-12 col-lg-7">
+        <div class="chart-card">
+            <div class="chart-card-title">Utilisateurs à risque</div>
+            <div class="chart-card-sub">Comptes nécessitant une attention immédiate</div>
+
+            <ul class="nav nav-pills gap-1 mb-3" id="riskTabs" role="tablist">
+                <li class="nav-item">
+                    <button class="nav-link active py-1 px-3 small" data-bs-toggle="pill" data-bs-target="#tab-locked" type="button">
+                        Verrouillés
+                        {% if lockedAccounts|length > 0 %}
+                            <span class="badge bg-danger ms-1" style="font-size:0.65rem;">{{ lockedAccounts|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link py-1 px-3 small" data-bs-toggle="pill" data-bs-target="#tab-failed" type="button">
+                        Tentatives multiples
+                        {% if failedLoginUsers|length > 0 %}
+                            <span class="badge bg-warning text-dark ms-1" style="font-size:0.65rem;">{{ failedLoginUsers|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-link py-1 px-3 small" data-bs-toggle="pill" data-bs-target="#tab-unverified" type="button">
+                        Non vérifiés
+                        {% if unverifiedAccounts|length > 0 %}
+                            <span class="badge bg-info text-dark ms-1" style="font-size:0.65rem;">{{ unverifiedAccounts|length }}</span>
+                        {% endif %}
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="tab-locked">
+                    {% if lockedAccounts|length > 0 %}
+                        <div style="max-height:230px; overflow-y:auto;">
+                            {% for user in lockedAccounts %}
+                            <div class="risk-item locked">
+                                <div class="rounded-circle bg-danger-subtle d-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;">
+                                    <svg class="text-danger" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                                    </svg>
                                 </div>
+                                <div class="flex-fill">
+                                    <div class="small fw-semibold text-dark">{{ user.displayName }}</div>
+                                    <div class="text-muted" style="font-size:0.73rem;">{{ user.email }}</div>
+                                </div>
+                                <a href="{{ path('admin_users_list') }}" class="badge bg-danger-subtle text-danger text-decoration-none" style="font-size:0.7rem;">Gérer</a>
+                            </div>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <p class="text-muted text-center py-4 mb-0">Aucun événement sécurité</p>
+                        <div class="text-center py-5 text-muted">
+                            <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="mb-2 opacity-40 d-block mx-auto">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                            <p class="small mb-0 fw-medium">Aucun compte verrouillé</p>
+                            <p class="text-muted" style="font-size:0.75rem;">La plateforme est sûre</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="tab-pane fade" id="tab-failed">
+                    {% if failedLoginUsers|length > 0 %}
+                        <div style="max-height:230px; overflow-y:auto;">
+                            {% for user in failedLoginUsers %}
+                            <div class="risk-item warn">
+                                <div class="rounded-circle bg-warning-subtle d-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;">
+                                    <svg class="text-warning" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-fill">
+                                    <div class="small fw-semibold text-dark">{{ user.displayName }}</div>
+                                    <div class="text-muted" style="font-size:0.73rem;">{{ user.email }}</div>
+                                </div>
+                                <span class="badge bg-warning-subtle text-warning" style="font-size:0.7rem;">5+ tentatives</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="mb-2 opacity-40 d-block mx-auto">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <p class="small mb-0 fw-medium">Aucune tentative suspecte</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="tab-pane fade" id="tab-unverified">
+                    {% if unverifiedAccounts|length > 0 %}
+                        <div style="max-height:230px; overflow-y:auto;">
+                            {% for user in unverifiedAccounts %}
+                            <div class="risk-item info">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width:32px;height:32px;background:rgba(13,202,240,0.1);">
+                                    <svg style="color:#0dcaf0;" width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-fill">
+                                    <div class="small fw-semibold text-dark">{{ user.displayName }}</div>
+                                    <div class="text-muted" style="font-size:0.73rem;">{{ user.email }}</div>
+                                </div>
+                                <span class="badge bg-info-subtle text-info" style="font-size:0.7rem;">Non vérifié</span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 text-muted">
+                            <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="mb-2 opacity-40 d-block mx-auto">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                            <p class="small mb-0 fw-medium">Tous les emails sont vérifiés</p>
+                        </div>
                     {% endif %}
                 </div>
             </div>
         </div>
+    </div>
 
-        {# Quick Security Actions #}
-        <div class="col-12 col-lg-6">
-            <div class="admin-card">
-                <div class="admin-card-header">
-                    <h3>⚡ Actions de sécurité</h3>
-                    <p>Gestion et monitoring</p>
+    {# Recent Critical Events #}
+    <div class="col-12 col-lg-5">
+        <div class="chart-card">
+            <div class="chart-card-title">Événements critiques récents</div>
+            <div class="chart-card-sub">Alertes et activités à surveiller en priorité</div>
+
+            {% set criticalTypes = ['LOGIN_FAILED', 'ACCOUNT_LOCKED', 'SUSPICIOUS_ACTIVITY', '2FA_FAILED'] %}
+            {% set criticalEvents = [] %}
+            {% for event in recentEvents %}
+                {% if event.eventType in criticalTypes and criticalEvents|length < 8 %}
+                    {% set criticalEvents = criticalEvents|merge([event]) %}
+                {% endif %}
+            {% endfor %}
+
+            {% if criticalEvents|length > 0 %}
+                <div style="max-height:320px; overflow-y:auto;">
+                    {% for event in criticalEvents %}
+                    {% set isDanger = event.eventType in ['ACCOUNT_LOCKED', 'SUSPICIOUS_ACTIVITY'] %}
+                    <div class="event-item">
+                        <div class="event-dot {{ isDanger ? 'bg-danger' : 'bg-warning' }}"></div>
+                        <div class="flex-fill">
+                            <div class="small fw-semibold text-dark">{{ event.eventType|replace({'_': ' '})|title }}</div>
+                            {% if event.user %}
+                                <div class="text-muted" style="font-size:0.73rem;">{{ event.user.displayName }}</div>
+                            {% else %}
+                                <div class="text-muted" style="font-size:0.73rem;">Anonyme</div>
+                            {% endif %}
+                        </div>
+                        <small class="text-muted flex-shrink-0" style="font-size:0.72rem;">{{ event.createdAt ? event.createdAt|date('d/m H:i') : '' }}</small>
+                    </div>
+                    {% endfor %}
                 </div>
-                <div class="admin-card-body">
-                    <div class="d-flex flex-column gap-3">
-                        <a href="#" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none transition hover-bg-light" style="transition: all 0.2s ease-in-out;">
-                            <div class="d-flex align-items-center justify-content-center rounded-2 p-3 bg-danger-subtle" style="width: 48px; height: 48px; flex-shrink: 0;">
-                                <svg style="color: #ef4444;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                            </div>
-                            <div class="ms-3">
-                                <p class="small fw-bold text-dark mb-1">Débloquer les comptes</p>
-                                <p class="text-muted mb-0" style="font-size: 0.8rem;">Débloquer les comptes verrouillés</p>
-                            </div>
-                            <svg class="ms-auto" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #d1d5db;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </a>
+            {% else %}
+                <div class="d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                    <svg width="44" height="44" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="mb-3 opacity-40">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                    <p class="small mb-1 fw-medium">Aucun événement critique</p>
+                    <p class="text-muted mb-0" style="font-size:0.75rem;">La plateforme est sécurisée</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 
-                        <a href="#" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none transition hover-bg-light" style="transition: all 0.2s ease-in-out;">
-                            <div class="d-flex align-items-center justify-content-center rounded-2 p-3" style="background-color: rgba(59, 130, 246, 0.1); width: 48px; height: 48px; flex-shrink: 0;">
-                                <svg style="color: #3b82f6;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                            </div>
-                            <div class="ms-3">
-                                <p class="small fw-bold text-dark mb-1">Réinitialiser les sessions</p>
-                                <p class="text-muted mb-0" style="font-size: 0.8rem;">Forcer la déconnexion de tous les utilisateurs</p>
-                            </div>
-                            <svg class="ms-auto" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #d1d5db;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </a>
-
-                        <a href="#" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none transition hover-bg-light" style="transition: all 0.2s ease-in-out;">
-                            <div class="d-flex align-items-center justify-content-center rounded-2 p-3" style="background-color: rgba(245, 158, 11, 0.1); width: 48px; height: 48px; flex-shrink: 0;">
-                                <svg style="color: #f59e0b;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
-                            </div>
-                            <div class="ms-3">
-                                <p class="small fw-bold text-dark mb-1">Audits et rapports</p>
-                                <p class="text-muted mb-0" style="font-size: 0.8rem;">Générer des rapports de sécurité détaillés</p>
-                            </div>
-                            <svg class="ms-auto" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #d1d5db;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </a>
+{# ── Row 4 : Quick Admin Actions ─────────────────────────────────────── #}
+<div class="chart-card mb-2">
+    <div class="chart-card-title">Actions d'administration rapides</div>
+    <div class="chart-card-sub">Raccourcis vers les opérations de sécurité fréquentes</div>
+    <div class="row g-3">
+        <div class="col-12 col-sm-6 col-lg-3">
+            <a href="{{ path('admin_users_list') }}" class="action-card">
+                <div class="action-icon bg-danger-subtle">
+                    <svg style="color:#dc3545;" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="small fw-semibold text-dark">Débloquer des comptes</div>
+                    <div class="text-muted" style="font-size:0.73rem;">
+                        {% if accountStats.lockedNow > 0 %}
+                            <span class="text-danger fw-medium">{{ accountStats.lockedNow }} compte(s) bloqué(s)</span>
+                        {% else %}
+                            Aucun compte verrouillé
+                        {% endif %}
                     </div>
                 </div>
-            </div>
+            </a>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <a href="{{ path('admin_users_list') }}" class="action-card">
+                <div class="action-icon" style="background:rgba(13,202,240,0.1);">
+                    <svg style="color:#0dcaf0;" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="small fw-semibold text-dark">Vérifications email</div>
+                    <div class="text-muted" style="font-size:0.73rem;">{{ unverifiedAccounts|length }} email(s) en attente</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <a href="{{ path('admin_users_list') }}" class="action-card">
+                <div class="action-icon" style="background:rgba(111,66,193,0.1);">
+                    <svg style="color:#6f42c1;" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="small fw-semibold text-dark">Gestion utilisateurs</div>
+                    <div class="text-muted" style="font-size:0.73rem;">{{ accountStats.total }} comptes enregistrés</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-12 col-sm-6 col-lg-3">
+            <a href="{{ path('admin_dashboard') }}" class="action-card">
+                <div class="action-icon bg-success-subtle">
+                    <svg class="text-success" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="small fw-semibold text-dark">Tableau de bord</div>
+                    <div class="text-muted" style="font-size:0.73rem;">Vue d'ensemble générale</div>
+                </div>
+            </a>
         </div>
     </div>
+</div>
 
-    {# Security Logs Table #}
-    <div class="card admin-card">
-        <div class="admin-card-header">
-            <h5>📋 Historique des logs</h5>
-            <p class="text-muted mb-0">Tous les événements de sécurité enregistrés</p>
-        </div>
+{% endblock %}
 
-        {# Filter Bar #}
-        <div class="card-body p-4 border-bottom bg-light">
-            <div class="row g-3 align-items-end">
-                <div class="col-12 col-md-6">
-                    <label for="filterType" class="form-label small fw-semibold text-dark">Type d'événement</label>
-                    <select class="form-select form-select-sm" id="filterType">
-                        <option value="">Tous les types</option>
-                        <option value="LOGIN_SUCCESS">Connexion réussie</option>
-                        <option value="LOGIN_FAILED">Connexion échouée</option>
-                        <option value="ACCOUNT_LOCKED">Compte verrouillé</option>
-                        <option value="PASSWORD_CHANGED">Changement mot de passe</option>
-                        <option value="EMAIL_VERIFIED">Email vérifié</option>
-                        <option value="2FA_SUCCESS">2FA réussi</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-6">
-                    <button class="btn btn-outline-secondary btn-sm w-100">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1" style="display: inline;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        Appliquer les filtres
-                    </button>
-                </div>
-            </div>
-        </div>
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    'use strict';
 
-        {# Logs Table #}
-        <div class="table-responsive">
-            <table class="table admin-table mb-0">
-                <thead>
-                    <tr>
-                        <th class="fs-6">Timestamp</th>
-                        <th class="fs-6">Type d'événement</th>
-                        <th class="fs-6">Utilisateur</th>
-                        <th class="fs-6">Détails</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if logs is defined and logs|length > 0 %}
-                        {% for log in logs %}
-                            <tr class="align-middle">
-                                <td>
-                                    <small class="text-muted">{{ log.createdAt ? log.createdAt|date('d/m/Y H:i:s') : 'N/A' }}</small>
-                                </td>
-                                <td>
-                                    {% set eventType = log.eventType %}
-                                    {% if eventType in ['LOGIN_FAILED', 'ACCOUNT_LOCKED', 'SUSPICIOUS_ACTIVITY', '2FA_FAILED'] %}
-                                        <span class="badge bg-danger">🔴 {{ eventType|replace({'_': ' '}) }}</span>
-                                    {% elseif eventType in ['2FA_OTP_SENT', 'SESSION_REVOKED'] %}
-                                        <span class="badge bg-warning text-dark">🟡 {{ eventType|replace({'_': ' '}) }}</span>
-                                    {% elseif eventType in ['LOGIN_SUCCESS', 'EMAIL_VERIFIED', 'PASSWORD_CHANGED'] %}
-                                        <span class="badge bg-success">✅ {{ eventType|replace({'_': ' '}) }}</span>
-                                    {% else %}
-                                        <span class="badge bg-info">🔵 {{ eventType|replace({'_': ' '}) }}</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    {% if log.user %}
-                                        <span class="text-body fw-semibold">{{ log.user.displayName }}</span>
-                                        <br>
-                                        <small class="text-muted">{{ log.user.email }}</small>
-                                    {% else %}
-                                        <span class="text-muted">Anonyme</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <small class="text-body">{{ log.details|default('N/A') }}</small>
-                                </td>
-                            </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="4" class="text-center py-5">
-                                <p class="text-muted mb-0">Aucun log de sécurité trouvé</p>
-                            </td>
-                        </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
+    // ── Security Score Gauge ──────────────────────────────────────────
+    {# Recompute score here since block-scoped variables don't cross blocks #}
+    {% set _score = 0 %}
+    {% if accountStats.total > 0 %}
+        {% set _sv = accountStats.verified            / accountStats.total %}
+        {% set _st = accountStats.twoFactorEnabled    / accountStats.total %}
+        {% set _sa = accountStats.active              / accountStats.total %}
+        {% set _su = (accountStats.total - accountStats.lockedNow) / accountStats.total %}
+        {% set _score = ((_sv * 25) + (_st * 40) + (_sa * 20) + (_su * 15))|round(0) %}
+    {% endif %}
+    {% set _other = stats30d.total - stats30d.loginSuccess - stats30d.loginFailed - stats30d.twoFaSuccess - stats30d.accountLocked - stats30d.passwordChanged %}
+    {% if _other < 0 %}{% set _other = 0 %}{% endif %}
 
-        {# Pagination Footer #}
-        {% if logs is defined and logs.totalPages is defined and logs.totalPages > 1 %}
-            <div class="card-footer bg-light border-top p-4">
-                <nav aria-label="Page navigation" class="d-flex justify-content-between align-items-center">
-                    <small class="text-muted">
-                        Affichage {{ logs.firstItemNumber }} à {{ logs.lastItemNumber }} sur {{ logs.totalItemCount }} logs
-                    </small>
-                    <ul class="pagination pagination-sm mb-0">
-                        {% if logs.hasPreviousPage %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ path('admin_security_logs', {'page': logs.previousPage}) }}">Précédent</a>
-                            </li>
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">Précédent</span>
-                            </li>
-                        {% endif %}
+    const score      = {{ _score }};
+    const scoreColor = score >= 75 ? '#198754' : (score >= 50 ? '#f59e0b' : '#dc3545');
 
-                        {% for page in range(1, logs.totalPages) %}
-                            {% if page == logs.currentPage %}
-                                <li class="page-item active">
-                                    <span class="page-link">{{ page }}</span>
-                                </li>
-                            {% else %}
-                                <li class="page-item">
-                                    <a class="page-link" href="{{ path('admin_security_logs', {'page': page}) }}">{{ page }}</a>
-                                </li>
-                            {% endif %}
-                        {% endfor %}
+    new Chart(document.getElementById('scoreGauge').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                data: [score, 100 - score],
+                backgroundColor: [scoreColor, '#f1f5f9'],
+                borderWidth: 0,
+                circumference: 270,
+                rotation: 225,
+            }]
+        },
+        options: {
+            cutout: '80%',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } }
+        }
+    });
 
-                        {% if logs.hasNextPage %}
-                            <li class="page-item">
-                                <a class="page-link" href="{{ path('admin_security_logs', {'page': logs.nextPage}) }}">Suivant</a>
-                            </li>
-                        {% else %}
-                            <li class="page-item disabled">
-                                <span class="page-link">Suivant</span>
-                            </li>
-                        {% endif %}
-                    </ul>
-                </nav>
-            </div>
-        {% endif %}
-    </div>
+    // ── Event Distribution Donut ──────────────────────────────────────
+    new Chart(document.getElementById('eventDistChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: [
+                'Connexions réussies', 'Connexions échouées',
+                '2FA réussi', 'Verrouillages',
+                'Mdp changés', 'Autres'
+            ],
+            datasets: [{
+                data: [
+                    {{ stats30d.loginSuccess }},
+                    {{ stats30d.loginFailed }},
+                    {{ stats30d.twoFaSuccess }},
+                    {{ stats30d.accountLocked }},
+                    {{ stats30d.passwordChanged }},
+                    {{ _other }}
+                ],
+                backgroundColor: ['#198754', '#dc3545', '#6f42c1', '#fd7e14', '#0dcaf0', '#adb5bd'],
+                borderWidth: 2,
+                borderColor: '#fff',
+                hoverOffset: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '58%',
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ` ${ctx.label}: ${ctx.parsed} événements`
+                    }
+                }
+            }
+        }
+    });
+
+    // ── Login Activity Grouped Bar ────────────────────────────────────
+    new Chart(document.getElementById('loginActivityChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: ['Dernières 24h', '7 derniers jours', '30 derniers jours'],
+            datasets: [
+                {
+                    label: 'Connexions réussies',
+                    data: [{{ stats24h.loginSuccess }}, {{ stats7d.loginSuccess }}, {{ stats30d.loginSuccess }}],
+                    backgroundColor: 'rgba(25,135,84,0.75)',
+                    borderColor: '#198754',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                },
+                {
+                    label: 'Connexions échouées',
+                    data: [{{ stats24h.loginFailed }}, {{ stats7d.loginFailed }}, {{ stats30d.loginFailed }}],
+                    backgroundColor: 'rgba(220,53,69,0.75)',
+                    borderColor: '#dc3545',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                },
+                {
+                    label: 'Verrouillages',
+                    data: [{{ stats24h.accountLocked }}, {{ stats7d.accountLocked }}, {{ stats30d.accountLocked }}],
+                    backgroundColor: 'rgba(253,126,20,0.75)',
+                    borderColor: '#fd7e14',
+                    borderWidth: 1,
+                    borderRadius: 5,
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, font: { size: 11 } },
+                    grid: { color: 'rgba(0,0,0,0.04)' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 11 } }
+                }
+            },
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { boxWidth: 12, padding: 16, font: { size: 11 } }
+                }
+            }
+        }
+    });
+})();
+</script>
 {% endblock %}
