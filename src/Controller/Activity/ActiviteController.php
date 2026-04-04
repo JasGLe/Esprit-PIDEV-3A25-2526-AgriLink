@@ -32,9 +32,14 @@ class ActiviteController extends AbstractController
         $search = trim((string) $request->query->get('q', ''));
         $type = trim((string) $request->query->get('type', ''));
         $status = trim((string) $request->query->get('status', ''));
+        $user = $this->getUser();
+        $connectedUserId = $user instanceof User ? $user->getId() : null;
+
+        $activites = $this->activiteRepository->findBySearchTypeAndStatus($search ?: null, $type ?: null, $status ?: null);
 
         $viewData = [
-            'activites' => $this->activiteRepository->findBySearchTypeAndStatus($search ?: null, $type ?: null, $status ?: null),
+            'activites' => $activites,
+            'stats' => $this->buildActiviteStats($activites, $connectedUserId),
             'filters' => [
                 'q' => $search,
                 'type' => $type,
@@ -45,7 +50,7 @@ class ActiviteController extends AbstractController
         ];
 
         if ($request->isXmlHttpRequest()) {
-            return $this->render('activity/activite/_results.html.twig', $viewData);
+            return $this->render('activity/activite/_content.html.twig', $viewData);
         }
 
         return $this->render('activity/activite/list.html.twig', [
@@ -353,5 +358,52 @@ class ActiviteController extends AbstractController
         if ($user instanceof User) {
             $activite->setIdAgriculteur($user->getId());
         }
+    }
+
+    /**
+     * @param Activite[] $activites
+     *
+     * @return array<string, int|float>
+     */
+    private function buildActiviteStats(array $activites, ?int $connectedUserId): array
+    {
+        $total = count($activites);
+        $planned = 0;
+        $inProgress = 0;
+        $finished = 0;
+        $totalCost = 0.0;
+
+        foreach ($activites as $activite) {
+            $status = strtoupper((string) $activite->getStatut());
+
+            if ($status === 'PLANIFIEE') {
+                ++$planned;
+            } elseif ($status === 'EN_COURS') {
+                ++$inProgress;
+            } elseif ($status === 'TERMINEE') {
+                ++$finished;
+            }
+
+            $costValue = $activite->getCoutEstime();
+            if (
+                $connectedUserId !== null
+                && $activite->getIdAgriculteur() === $connectedUserId
+                && $costValue !== null
+                && $costValue !== ''
+            ) {
+                $totalCost += (float) str_replace(',', '.', (string) $costValue);
+            }
+        }
+
+        $completionRate = $total > 0 ? round(($finished / $total) * 100, 1) : 0.0;
+
+        return [
+            'total' => $total,
+            'planned' => $planned,
+            'inProgress' => $inProgress,
+            'finished' => $finished,
+            'completionRate' => $completionRate,
+            'totalCost' => round($totalCost, 2),
+        ];
     }
 }
