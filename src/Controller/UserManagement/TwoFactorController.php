@@ -66,6 +66,9 @@ class TwoFactorController extends AbstractController
                 $success = true;
                 $session->remove('_2fa_pending_user');
                 
+                // Mark 2FA as verified in this session (critical for defense-in-depth)
+                $session->set('_2fa_verified', true);
+                
                 // Create authentication token
                 $token = new UsernamePasswordToken($user, 'main', $user->getRoles());
                 $this->tokenStorage->setToken($token);

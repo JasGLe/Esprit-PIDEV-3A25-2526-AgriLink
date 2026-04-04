@@ -146,6 +146,7 @@ class RegistrationAgriPlusType extends AbstractType
                 'label' => 'Plan d\'abonnement',
                 'required' => true,
                 'expanded' => true,
+                'data' => 'PREMIUM',
                 'choices' => [
                     'Basic - 29 DT/mois' => 'BASIC',
                     'Premium - 59 DT/mois' => 'PREMIUM',
@@ -168,12 +169,9 @@ class RegistrationAgriPlusType extends AbstractType
                 'attr' => ['class' => 'h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded'],
                 'label_attr' => ['class' => 'ml-2 block text-sm text-gray-900'],
             ])
-            ->add('submit', SubmitType::class, [
-                'label' => 'Créer mon compte AgriPlus',
-                'attr' => [
-                    'class' => 'group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500',
-                ],
-            ]);
+            // Note: Submit button is rendered manually in the template
+            // ->add('submit', SubmitType::class, [...])
+        ;
     }
 
     public function configureOptions(OptionsResolver $resolver): void
