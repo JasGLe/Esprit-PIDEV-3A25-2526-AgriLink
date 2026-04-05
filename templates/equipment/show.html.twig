@@ -1,0 +1,203 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ equipement.nom }} — AgriLink{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .info-label { font-size: .8rem; color: #6c757d; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+    .info-value { font-size: 1rem; font-weight: 500; }
+    .badge-vehicule { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container py-4" style="max-width: 860px">
+
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ type == 'success' ? 'success' : 'danger' }} alert-dismissible fade show">
+                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('equipement_index') }}">Équipements</a></li>
+            <li class="breadcrumb-item active">{{ equipement.nom }}</li>
+        </ol>
+    </nav>
+
+    {# ── Header ── #}
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1">{{ equipement.nom }}</h2>
+            <span class="badge bg-secondary me-1">{{ equipement.type }}</span>
+            <span class="badge bg-light text-dark border">{{ equipement.categorie }}</span>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ path('equipement_edit', {id: equipement.id}) }}" class="btn btn-outline-primary">✏️ Modifier</a>
+            <form method="post" action="{{ path('equipement_delete', {id: equipement.id}) }}"
+                  onsubmit="return confirm('Supprimer définitivement cet équipement ?')">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ equipement.id) }}">
+                <button class="btn btn-outline-danger">🗑 Supprimer</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+
+        {# ── Image ── #}
+        {% if equipement.imageUrl %}
+        <div class="col-md-4">
+            <img src="{{ asset(equipement.imageUrl) }}"
+                 alt="{{ equipement.nom }}"
+                 class="img-fluid rounded shadow-sm w-100"
+                 style="max-height:280px; object-fit:cover">
+        </div>
+        {% endif %}
+
+        {# ── Infos générales ── #}
+        <div class="{{ equipement.imageUrl ? 'col-md-8' : 'col-12' }}">
+            <div class="card shadow-sm mb-3">
+                <div class="card-header fw-semibold bg-white">Informations générales</div>
+                <div class="card-body row g-3">
+
+                    <div class="col-md-6">
+                        <div class="info-label">Statut</div>
+                        <div class="info-value">
+                            {% set couleur = {
+                                'Actif':          'success',
+                                'En panne':       'danger',
+                                'En maintenance': 'warning',
+                                'Hors service':   'secondary'
+                            } %}
+                            <span class="badge bg-{{ couleur[equipement.statut] ?? 'secondary' }}">
+                                {{ equipement.statut ?? 'N/A' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="info-label">Marque / Modèle</div>
+                        <div class="info-value">{{ equipement.marque ?? '—' }} {{ equipement.modele ?? '' }}</div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="info-label">Date d'acquisition</div>
+                        <div class="info-value">
+                            {{ equipement.dateAcquisition ? equipement.dateAcquisition|date('d/m/Y') : '—' }}
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="info-label">Enregistré le</div>
+                        <div class="info-value">
+                            {{ equipement.dateCreation ? equipement.dateCreation|date('d/m/Y à H:i') : '—' }}
+                        </div>
+                    </div>
+
+                    {% if equipement.description %}
+                    <div class="col-12">
+                        <div class="info-label">Description</div>
+                        <div class="info-value">{{ equipement.description }}</div>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Section véhicule (affichée uniquement si véhicule motorisé) ── #}
+    {% if equipement.isVehicule() %}
+    <div class="card shadow-sm mb-4 border-warning">
+        <div class="card-header fw-semibold bg-white">
+            🚗 Détails véhicule
+            <span class="badge badge-vehicule ms-2">Véhicule Motorisé</span>
+        </div>
+        <div class="card-body row g-3">
+
+            <div class="col-md-4">
+                <div class="info-label">Kilométrage actuel</div>
+                <div class="info-value">
+                    {{ equipement.kilometrageActuel is not null
+                        ? equipement.kilometrageActuel|number_format(0, ',', ' ') ~ ' km'
+                        : '—' }}
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-label">Km à la dernière maintenance</div>
+                <div class="info-value">
+                    {{ equipement.kilometrageDerniereMaintenance is not null
+                        ? equipement.kilometrageDerniereMaintenance|number_format(0, ',', ' ') ~ ' km'
+                        : '—' }}
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-label">Seuil maintenance (km)</div>
+                <div class="info-value">
+                    {{ equipement.seuilKmMaintenance is not null
+                        ? equipement.seuilKmMaintenance|number_format(0, ',', ' ') ~ ' km'
+                        : '—' }}
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-label">Heures d'utilisation</div>
+                <div class="info-value">
+                    {{ equipement.heuresUtilisation is not null
+                        ? equipement.heuresUtilisation ~ ' h'
+                        : '—' }}
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-label">Heures à la dernière maintenance</div>
+                <div class="info-value">
+                    {{ equipement.heuresDerniereMaintenance is not null
+                        ? equipement.heuresDerniereMaintenance ~ ' h'
+                        : '—' }}
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-label">Seuil maintenance (heures)</div>
+                <div class="info-value">
+                    {{ equipement.seuilHeuresMaintenance is not null
+                        ? equipement.seuilHeuresMaintenance ~ ' h'
+                        : '—' }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {% endif %}
+
+    {# ── Maintenance générale ── #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-semibold bg-white">🔧 Maintenance</div>
+        <div class="card-body row g-3">
+            <div class="col-md-4">
+                <div class="info-label">Seuil (jours)</div>
+                <div class="info-value">
+                    {{ equipement.seuilJoursMaintenance ? equipement.seuilJoursMaintenance ~ ' jours' : '—' }}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-label">Dernière maintenance</div>
+                <div class="info-value">
+                    {{ equipement.dateDerniereMaintenance
+                        ? equipement.dateDerniereMaintenance|date('d/m/Y')
+                        : '—' }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="{{ path('equipement_index') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
+
+</div>
+{% endblock %}

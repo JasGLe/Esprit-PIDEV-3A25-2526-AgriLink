@@ -1,0 +1,233 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajouter un équipement — AgriLink{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .section-vehicule { border-left: 4px solid #ffc107; }
+    .form-label       { font-weight: 500; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container py-4" style="max-width: 860px">
+
+    {# ── Breadcrumb ── #}
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('equipement_index') }}">Équipements</a></li>
+            <li class="breadcrumb-item active">Ajouter</li>
+        </ol>
+    </nav>
+
+    <h2 class="fw-bold mb-4">➕ Ajouter un équipement</h2>
+
+    {# ── Erreurs globales du formulaire ── #}
+    {%- set allErrors = [] -%}
+    {%- for field in form -%}
+        {%- for error in field.vars.errors -%}
+            {%- set allErrors = allErrors|merge([field.vars.label ~ ' : ' ~ error.message]) -%}
+        {%- endfor -%}
+    {%- endfor -%}
+    {%- for error in form.vars.errors -%}
+        {%- set allErrors = allErrors|merge([error.message]) -%}
+    {%- endfor -%}
+
+    {% if allErrors|length > 0 %}
+    <div class="alert alert-danger border-0 shadow-sm mb-4">
+        <div class="fw-semibold mb-2">Veuillez corriger les erreurs suivantes :</div>
+        <ul class="mb-0">
+            {% for msg in allErrors %}
+                <li>{{ msg }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+    {{ form_start(form, {attr: {novalidate: 'novalidate', enctype: 'multipart/form-data', class: 'needs-validation'}}) }}
+
+        {# ── Section : Informations générales ── #}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header fw-semibold bg-white">Informations générales</div>
+            <div class="card-body row g-3">
+
+                <div class="col-md-6">
+                    {{ form_label(form.nom) }}
+                    {{ form_widget(form.nom) }}
+                    {{ form_errors(form.nom) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.categorie) }}
+                    {{ form_widget(form.categorie) }}
+                    {{ form_errors(form.categorie) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.type) }}
+                    {{ form_widget(form.type) }}
+                    {{ form_errors(form.type) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.statut) }}
+                    {{ form_widget(form.statut) }}
+                    {{ form_errors(form.statut) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.marque) }}
+                    {{ form_widget(form.marque) }}
+                    {{ form_errors(form.marque) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.modele) }}
+                    {{ form_widget(form.modele) }}
+                    {{ form_errors(form.modele) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.dateAcquisition) }}
+                    {{ form_widget(form.dateAcquisition) }}
+                    {{ form_errors(form.dateAcquisition) }}
+                </div>
+
+                <div class="col-12">
+                    {{ form_label(form.description) }}
+                    {{ form_widget(form.description) }}
+                    {{ form_errors(form.description) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.imageFile) }}
+                    {{ form_widget(form.imageFile) }}
+                    {{ form_errors(form.imageFile) }}
+                    <small class="text-muted">JPG, PNG, WEBP — max 2 Mo</small>
+                </div>
+
+            </div>
+        </div>
+
+        {# ── Section : Détails véhicule (masquée par défaut) ── #}
+        <div id="section-vehicule" class="card shadow-sm mb-4 section-vehicule" style="display:none">
+            <div class="card-header fw-semibold bg-white">
+                🚗 Détails véhicule
+                <small class="text-muted fw-normal ms-2">Affiché uniquement pour les véhicules motorisés</small>
+            </div>
+            <div class="card-body row g-3">
+
+                <div class="col-md-6">
+                    {{ form_label(form.kilometrageActuel) }}
+                    {{ form_widget(form.kilometrageActuel) }}
+                    {{ form_errors(form.kilometrageActuel) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.seuilKmMaintenance) }}
+                    {{ form_widget(form.seuilKmMaintenance) }}
+                    {{ form_errors(form.seuilKmMaintenance) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.heuresUtilisation) }}
+                    {{ form_widget(form.heuresUtilisation) }}
+                    {{ form_errors(form.heuresUtilisation) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.seuilHeuresMaintenance) }}
+                    {{ form_widget(form.seuilHeuresMaintenance) }}
+                    {{ form_errors(form.seuilHeuresMaintenance) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.kilometrageDerniereMaintenance) }}
+                    {{ form_widget(form.kilometrageDerniereMaintenance) }}
+                    {{ form_errors(form.kilometrageDerniereMaintenance) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.heuresDerniereMaintenance) }}
+                    {{ form_widget(form.heuresDerniereMaintenance) }}
+                    {{ form_errors(form.heuresDerniereMaintenance) }}
+                </div>
+
+            </div>
+        </div>
+
+        {# ── Section : Maintenance générale ── #}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header fw-semibold bg-white">🔧 Maintenance</div>
+            <div class="card-body row g-3">
+
+                <div class="col-md-6">
+                    {{ form_label(form.seuilJoursMaintenance) }}
+                    {{ form_widget(form.seuilJoursMaintenance) }}
+                    {{ form_errors(form.seuilJoursMaintenance) }}
+                </div>
+
+                <div class="col-md-6">
+                    {{ form_label(form.dateDerniereMaintenance) }}
+                    {{ form_widget(form.dateDerniereMaintenance) }}
+                    {{ form_errors(form.dateDerniereMaintenance) }}
+                </div>
+
+            </div>
+        </div>
+
+        {# ── Boutons ── #}
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-success px-4">
+                ✅ Enregistrer
+            </button>
+            <a href="{{ path('equipement_index') }}" class="btn btn-outline-secondary">
+                Annuler
+            </a>
+        </div>
+
+    {{ form_end(form) }}
+</div>
+
+<script>
+const categorieSelect = document.getElementById('equipement_categorie');
+const typeSelect      = document.getElementById('equipement_type');
+const sectionVehicule = document.getElementById('section-vehicule');
+
+// Valeur du type soumis (pour restaurer après erreur de validation)
+const submittedType = {{ form.type.vars.value is not empty ? ('"' ~ form.type.vars.value|e('js') ~ '"') : 'null' }};
+
+function updateTypeChoices(resetType) {
+    const cat = categorieSelect.value;
+    if (!cat) {
+        typeSelect.innerHTML = '<option value="">-- Choisir un type --</option>';
+        return;
+    }
+    const isVehicule = cat === 'Véhicule Motorisé';
+    sectionVehicule.style.display = isVehicule ? 'block' : 'none';
+
+    fetch(`/equipement/api/types?categorie=${encodeURIComponent(cat)}`)
+        .then(r => r.json())
+        .then(types => {
+            typeSelect.innerHTML = '<option value="">-- Choisir un type --</option>';
+            types.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.textContent = t;
+                if (!resetType && submittedType === t) opt.selected = true;
+                typeSelect.appendChild(opt);
+            });
+        });
+}
+
+categorieSelect.addEventListener('change', () => {
+    sectionVehicule.style.display = categorieSelect.value === 'Véhicule Motorisé' ? 'block' : 'none';
+    updateTypeChoices(true);
+});
+
+// Init : si catégorie déjà sélectionnée (retour après erreur), repeupler le type
+if (categorieSelect.value) {
+    sectionVehicule.style.display = categorieSelect.value === 'Véhicule Motorisé' ? 'block' : 'none';
+    updateTypeChoices(false);
+}
+</script>
+{% endblock %}

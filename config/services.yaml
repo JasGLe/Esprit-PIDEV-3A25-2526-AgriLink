@@ -9,6 +9,7 @@
 parameters:
     uploads_base_dir: '%kernel.project_dir%/public/uploads'
     uploads_base_url: '/uploads'
+    equipements_directory: '%kernel.project_dir%/public/uploads/equipements'
 
 services:
     # default configuration for services in *this* file
