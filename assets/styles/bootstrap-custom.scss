@@ -487,51 +487,106 @@ $box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0
   }
 }
 
+// ============================================================================
+// Modal « Mettre en vente » (Mes exploitations)
+// ============================================================================
+.modal-mettre-en-vente {
+  .modal-content {
+    border: 1px solid rgba($green-500, 0.12);
+    overflow: hidden;
+  }
 
-// Minimum height utilities
-.min-vh-100 { min-height: 100vh !important; }
+  .modal-mettre-en-vente__header {
+    background: linear-gradient(135deg, $green-50 0%, mix(white, $green-100, 35%) 100%);
+    border-bottom: 1px solid rgba($green-500, 0.18) !important;
+  }
 
-// Custom spacing utilities to bridge gaps
-.gap-5 { gap: 3rem !important; }
+  .modal-mettre-en-vente__icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: $border-radius-lg;
+    background: linear-gradient(145deg, $green-500, $green-700);
+    box-shadow: 0 6px 16px rgba($green-600, 0.35);
+    color: $white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
 
-// Hover utilities for links and buttons
-.hover-primary:hover {
-  color: $primary !important;
-}
+  .modal-mettre-en-vente__section {
+    background: $white;
+    border: 1px solid rgba($gray-300, 0.65);
+    border-radius: $border-radius-lg;
+    box-shadow: $box-shadow-sm;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 
-.hover-bg-gray-50:hover {
-  background-color: $gray-50 !important;
-}
+    &:hover {
+      border-color: rgba($green-500, 0.22);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+    }
+  }
 
-// Focus ring utilities (matching Tailwind focus styles)
-.form-control:focus,
-.form-select:focus {
-  border-color: lighten($primary, 25%);
-  box-shadow: 0 0 0 0.25rem rgba($primary, 0.25);
-}
+  .modal-mettre-en-vente__section-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: $green-700;
+    margin-bottom: 0;
+  }
 
-// Custom button hover states
-.btn-primary:hover {
-  background-color: $green-700;
-  border-color: $green-700;
-}
+  .modal-mettre-en-vente__section-bar {
+    width: 3px;
+    border-radius: 2px;
+    background: linear-gradient(180deg, $green-400, $green-600);
+    flex-shrink: 0;
+    min-height: 2.5rem;
+  }
 
-// Gradient background utility
-.bg-gradient-primary {
-  background: linear-gradient(to bottom, $green-50, white);
-}
+  .form-label {
+    font-size: 0.8125rem;
+    color: $gray-700;
+  }
 
-// File input custom styling
-.form-control[type="file"]::file-selector-button {
-  margin-right: 1rem;
-  padding: 0.75rem 1rem;
-  background-color: $primary;
-  color: white;
-  border: none;
-  border-radius: $border-radius;
-  cursor: pointer;
-}
+  .form-control,
+  .form-select {
+    border-color: $gray-300;
 
-.form-control[type="file"]::file-selector-button:hover {
-  background-color: $green-700;
+    &:focus {
+      border-color: $green-400;
+      box-shadow: 0 0 0 0.2rem rgba($green-500, 0.18);
+    }
+  }
+
+  .input-group-text {
+    font-size: 0.875rem;
+  }
+
+  .modal-mettre-en-vente__footer {
+    background: linear-gradient(180deg, $gray-50 0%, $white 100%);
+    border-top: 1px solid $gray-200 !important;
+  }
+
+  .btn-mettre-en-vente-submit {
+    background: linear-gradient(135deg, $green-500, $green-700);
+    border: none;
+    color: $white;
+    font-weight: 600;
+    padding: 0.55rem 1.35rem;
+    border-radius: $border-radius-pill;
+    box-shadow: 0 4px 14px rgba($green-600, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+
+    &:hover {
+      color: $white;
+      filter: brightness(1.05);
+      box-shadow: 0 6px 18px rgba($green-600, 0.4);
+      transform: translateY(-1px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
 }

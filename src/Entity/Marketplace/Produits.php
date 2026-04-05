@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Marketplace;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Repository\ProduitsRepository::class)]
+#[ORM\Entity(repositoryClass: \App\Repository\Marketplace\ProduitsRepository::class)]
 #[ORM\Table(name: 'produits')]
 class Produits
 {
@@ -20,7 +20,7 @@ class Produits
     #[ORM\Column(type: Types::STRING, length: 50)]
     private string $categorie;
 
-    #[ORM\Column(type: Types::FLOAT)]
+    #[ORM\Column(name: 'prixUnitaire', type: Types::FLOAT)]
     private float $prixUnitaire;
 
     #[ORM\Column(type: Types::STRING, length: 50)]
