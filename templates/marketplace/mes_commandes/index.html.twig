@@ -1,0 +1,185 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Mes commandes — AgriLink{% endblock %}
+{% block page_title %}Mes commandes{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ asset('css/mes-commandes-dashboard.css') }}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="mc-orders-scope">
+    <div class="mc-orders-head d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+        <div class="flex-grow-1 min-w-0">
+            <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                <h2 class="mc-orders-title mb-0">Mes commandes</h2>
+                {% if mes_commandes_mode == 'vendeur' and count_annulations_attente > 0 %}
+                    <span class="mc-alert-pill"><i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>{{ count_annulations_attente }} annulation{{ count_annulations_attente > 1 ? 's' : '' }} en attente</span>
+                {% endif %}
+            </div>
+            {% if mes_commandes_mode == 'vendeur' %}
+                <p class="mc-orders-sub mb-0 small">Consultez les commandes clients contenant vos produits (tous acheteurs marketplace).</p>
+            {% else %}
+                <p class="mc-orders-sub mb-0 small">Vos achats marketplace (liés à l’email de votre compte : {{ app.user.email }})</p>
+            {% endif %}
+        </div>
+        <a href="{{ path('mes_commandes_index') }}" class="btn mc-btn-refresh d-inline-flex align-items-center gap-2 flex-shrink-0">
+            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Actualiser
+        </a>
+    </div>
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="mc-stat-card">
+                <span class="mc-stat-card__icon mc-stat-card__icon--green"><i class="bi bi-bag-check" aria-hidden="true"></i></span>
+                <div>
+                    <div class="mc-stat-card__label">Total</div>
+                    <div class="mc-stat-card__val">{{ count_total }} commande{{ count_total > 1 ? 's' : '' }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mc-stat-card">
+                <span class="mc-stat-card__icon mc-stat-card__icon--orange"><i class="bi bi-arrow-repeat" aria-hidden="true"></i></span>
+                <div>
+                    <div class="mc-stat-card__label">En cours</div>
+                    <div class="mc-stat-card__val">{{ count_en_cours }} en traitement</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="mc-stat-card">
+                <span class="mc-stat-card__icon mc-stat-card__icon--lime"><i class="bi bi-check2-all" aria-hidden="true"></i></span>
+                <div>
+                    <div class="mc-stat-card__label">Livrées</div>
+                    <div class="mc-stat-card__val">{{ count_livrees }} réceptionnée{{ count_livrees > 1 ? 's' : '' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mc-table-wrap mc-table-wrap--allow-float">
+        <div class="table-responsive">
+            <table class="table mc-table mb-0">
+                <thead>
+                    <tr>
+                        {% if mes_commandes_mode == 'vendeur' %}
+                            <th>Client</th>
+                            <th>Contact</th>
+                        {% endif %}
+                        <th>N° commande</th>
+                        <th>Date</th>
+                        <th>Montant</th>
+                        <th>Statut</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if mes_commandes_mode == 'vendeur' %}
+                        {% for c in commandes %}
+                            {% set client_nom = [c.prenom, c.nom]|filter(v => v)|join(' ')|trim %}
+                            {% if client_nom is empty %}
+                                {% set client_nom = 'Client' %}
+                                {% set client_initial = '?' %}
+                            {% else %}
+                                {% set client_initial = client_nom|slice(0, 1)|upper %}
+                            {% endif %}
+                            {% set mv = montants_vendeur[c.id]|default(0) %}
+                            <tr>
+                                <td>
+                                    <div class="mc-client-cell d-flex align-items-center gap-2">
+                                        <span class="mc-avatar" aria-hidden="true">{{ client_initial }}</span>
+                                        <span class="mc-client-name">{{ client_nom }}</span>
+                                    </div>
+                                </td>
+                                <td class="mc-contact-cell">
+                                    {% if c.telephone or c.email %}
+                                        
+<div class="mc-contact-stack">
+    {% if c.telephone %}
+        <div class="mc-contact-item">
+            <i class="bi bi-telephone mc-muted" aria-hidden="true"></i>
+            <span>{{ c.telephone }}</span>
+        </div>
+    {% endif %}
+
+    {% if c.email %}
+        <div class="mc-contact-item">
+            <i class="bi bi-envelope mc-muted" aria-hidden="true"></i>
+            <span>{{ c.email }}</span>
+        </div>
+    {% endif %}
+</div>
+
+                                    {% else %}
+                                        <span class="mc-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="mc-num">#{{ c.numCommande }}</span></td>
+                                <td class="mc-date mc-date--nowrap">{{ c.dateCommande|date('Y-m-d') }}</td>
+                                <td><span class="mc-amount">{{ mv|number_format(3, ',', ' ') }} DT</span></td>
+                                <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { status: c.status, commande_id: c.id, dropdown_choices: statut_choices_seller, statut_redirect: 'index' } %}</td>
+                                <td class="text-end mc-actions-cell">
+                                    <div class="mc-act-toolbar">
+                                        <a href="{{ path('mes_commandes_show', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--view" title="Détails"><i class="bi bi-search" aria-hidden="true"></i></a>
+                                        <a href="{{ path('mes_commandes_pdf', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--pdf"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Export PDF</a>
+                                        <a href="{{ path('mes_commandes_show', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--edit" title="Fiche commande"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                                        <a href="{{ path('mes_commandes_show', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--more" title="Fiche commande"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 mc-empty">
+                                    Aucune commande pour le moment. Les achats effectués sur le <a href="{{ path('marketplace_index') }}" class="mc-link">marketplace</a> pour vos annonces apparaîtront ici.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% else %}
+                        {% for c in commandes %}
+                            <tr>
+                                <td><span class="mc-num">#{{ c.numCommande }}</span></td>
+                                <td class="mc-date mc-date--nowrap">{{ c.dateCommande|date('Y-m-d') }}</td>
+                                <td><span class="mc-amount">{{ c.prixTotal|number_format(3, ',', ' ') }} DT</span></td>
+                                <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { status: c.status, commande_id: c.id, dropdown_choices: statut_choices_by_commande[c.id]|default({}), statut_redirect: 'index' } %}</td>
+                                <td class="text-end mc-actions-cell">
+                                    <div class="mc-act-toolbar">
+                                        <a href="{{ path('mes_commandes_show', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--view" title="Détails"><i class="bi bi-search" aria-hidden="true"></i></a>
+                                        <a href="{{ path('mes_commandes_pdf', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--pdf"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Export PDF</a>
+                                        <a href="{{ path('mes_commandes_show', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--edit" title="Fiche commande"><i class="bi bi-pencil" aria-hidden="true"></i></a>
+                                        <a href="{{ path('mes_commandes_show', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--cancel" title="Fiche commande"><i class="bi bi-x-circle me-1" aria-hidden="true"></i>Statut / annulation</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="5" class="text-center py-5 mc-empty">
+                                    Aucune commande pour le moment. Passez commande sur le <a href="{{ path('marketplace_index') }}" class="mc-link">marketplace</a>.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    document.querySelectorAll('.mc-orders-scope .mc-status-details').forEach(function (el) {
+        el.addEventListener('toggle', function () {
+            if (!el.open) {
+                return;
+            }
+            document.querySelectorAll('.mc-orders-scope .mc-status-details').forEach(function (o) {
+                if (o !== el) {
+                    o.removeAttribute('open');
+                }
+            });
+        });
+    });
+})();
+</script>
+{% endblock %}

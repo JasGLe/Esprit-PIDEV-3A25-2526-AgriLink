@@ -3,7 +3,10 @@
 namespace App\Repository\Marketplace;
 
 use App\Entity\Marketplace\Commandes;
+use App\Entity\Marketplace\LigneCommande;
+use App\Entity\UserManagement\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -37,5 +40,44 @@ class CommandesRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    /**
+     * Commandes marketplace passées avec l’email du compte (même base que le desktop).
+     *
+     * @return list<Commandes>
+     */
+    public function findForMarketplaceClient(User $user): array
+    {
+        $email = strtolower(trim((string) $user->getEmail()));
+        if ($email === '') {
+            return [];
+        }
+
+        return $this->createQueryBuilder('c')
+            ->andWhere('LOWER(TRIM(c.email)) = :email')
+            ->setParameter('email', $email)
+            ->orderBy('c.dateCommande', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Commandes marketplace contenant au moins une ligne vendue par cet utilisateur (`ligne_commande.id_fournisseur`).
+     *
+     * @return list<Commandes>
+     */
+    public function findForMarketplaceVendeur(int $sellerUserId): array
+    {
+        return $this->createQueryBuilder('c')
+            ->distinct()
+            ->innerJoin(LigneCommande::class, 'lc', Join::WITH, 'lc.idCommande = c.id')
+            ->andWhere('lc.idFournisseur = :sid')
+            ->setParameter('sid', $sellerUserId)
+            ->orderBy('c.dateCommande', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }

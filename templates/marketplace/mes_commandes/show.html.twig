@@ -1,0 +1,124 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Commande #{{ commande.numCommande }} — AgriLink{% endblock %}
+{% block page_title %}{% if mes_commandes_mode == 'vendeur' %}Commande client{% else %}Détail commande{% endif %}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ asset('css/mes-commandes-dashboard.css') }}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="mc-orders-scope">
+    <a href="{{ path('mes_commandes_index') }}" class="mc-link d-inline-flex align-items-center gap-1 mb-3 small"><i class="bi bi-arrow-left" aria-hidden="true"></i> Retour aux commandes</a>
+
+    {% if mes_commandes_mode == 'vendeur' %}
+        {% set client_nom = [commande.prenom, commande.nom]|filter(v => v)|join(' ')|trim %}
+        {% if client_nom is empty %}
+            {% set client_nom = 'Client' %}
+            {% set client_initial = '?' %}
+        {% else %}
+            {% set client_initial = client_nom|slice(0, 1)|upper %}
+        {% endif %}
+        <div class="mc-detail-card p-4 mb-4">
+            <div class="d-flex flex-wrap align-items-start gap-3 mb-3">
+                <span class="mc-avatar mc-avatar--lg" aria-hidden="true">{{ client_initial }}</span>
+                <div class="flex-grow-1 min-w-0">
+                    <h2 class="mc-orders-title h5 mb-1">{{ client_nom }}</h2>
+                    <p class="mc-orders-sub mb-2 small">Acheteur · commande <span class="mc-num">#{{ commande.numCommande }}</span></p>
+                    <div class="small mc-contact-cell">
+                        {% if commande.telephone or commande.email %}
+                            <div class="mc-contact-inline">
+                                {% if commande.telephone %}
+                                    <span class="mc-contact-item"><i class="bi bi-telephone mc-muted" aria-hidden="true"></i>{{ commande.telephone }}</span>
+                                {% endif %}
+                                {% if commande.telephone and commande.email %}
+                                    <span class="mc-contact-sep" aria-hidden="true">·</span>
+                                {% endif %}
+                                {% if commande.email %}
+                                    <span class="mc-contact-item"><i class="bi bi-envelope mc-muted" aria-hidden="true"></i>{{ commande.email }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="text-lg-end">
+                    <div class="mc-amount fs-5 fw-bold">{{ montant_vendeur|number_format(3, ',', ' ') }} DT</div>
+                    <div class="small mc-muted">Montant de vos articles</div>
+                    {% if has_autres_vendeurs %}
+                        <div class="small mc-muted mt-2">Total commande (tous vendeurs)&nbsp;: {{ commande.prixTotal|number_format(3, ',', ' ') }} DT</div>
+                    {% endif %}
+                </div>
+            </div>
+            <p class="mb-0 small mc-muted">{{ commande.dateCommande|date('d/m/Y') }} · {% include 'marketplace/mes_commandes/_status.html.twig' with { status: commande.status, commande_id: commande.id, dropdown_choices: statut_choices, statut_redirect: 'show' } %}</p>
+            {% if has_autres_vendeurs %}
+                <p class="small mc-muted border-top border-secondary border-opacity-25 pt-3 mt-3 mb-0">Cette commande inclut aussi des produits d’autres agriculteurs ; seuls vos articles sont listés ci-dessous.</p>
+            {% endif %}
+        </div>
+    {% else %}
+        <div class="mc-detail-card p-4 mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+                <div>
+                    <h2 class="mc-orders-title h4 mb-1">#{{ commande.numCommande }}</h2>
+                    <p class="mc-orders-sub mb-0 small">{{ commande.dateCommande|date('d/m/Y') }} · {% include 'marketplace/mes_commandes/_status.html.twig' with { status: commande.status, commande_id: commande.id, dropdown_choices: statut_choices, statut_redirect: 'show' } %}</p>
+                </div>
+                <div class="text-lg-end">
+                    <div class="mc-amount fs-5 fw-bold">{{ commande.prixTotal|number_format(3, ',', ' ') }} DT</div>
+                    <div class="small mc-muted">Total TTC</div>
+                </div>
+            </div>
+            <dl class="row small mb-0 mc-detail-dl">
+                <dt class="col-sm-3 mc-muted">Livraison</dt>
+                <dd class="col-sm-9">{{ commande.adresse|default('—') }}{% if commande.ville %}, {{ commande.ville }}{% endif %}</dd>
+                <dt class="col-sm-3 mc-muted">Contact</dt>
+                <dd class="col-sm-9 mc-contact-inline-wrap">{% if commande.telephone or commande.email %}<span class="mc-contact-inline">{% if commande.telephone %}<span class="mc-contact-item"><i class="bi bi-telephone mc-muted" aria-hidden="true"></i>{{ commande.telephone }}</span>{% endif %}{% if commande.telephone and commande.email %}<span class="mc-contact-sep" aria-hidden="true">·</span>{% endif %}{% if commande.email %}<span class="mc-contact-item"><i class="bi bi-envelope mc-muted" aria-hidden="true"></i>{{ commande.email }}</span>{% endif %}</span>{% else %}—{% endif %}</dd>
+            </dl>
+        </div>
+    {% endif %}
+
+    <h3 class="h6 mc-orders-title mb-3">{% if mes_commandes_mode == 'vendeur' %}Vos articles sur cette commande{% else %}Articles{% endif %}</h3>
+    <div class="mc-table-wrap">
+        <div class="table-responsive">
+            <table class="table mc-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Qté</th>
+                        <th class="text-end">Prix unit.</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in lignes %}
+                        <tr>
+                            <td>{{ l.nomProduit }}</td>
+                            <td>{{ l.quantite }}</td>
+                            <td class="text-end mc-muted">{{ l.prixUnitaire|number_format(3, ',', ' ') }} DT</td>
+                            <td class="text-end mc-amount">{{ l.prixTotal|number_format(3, ',', ' ') }} DT</td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="4" class="text-center py-4 mc-muted">Aucune ligne enregistrée.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<script>
+(function () {
+    document.querySelectorAll('.mc-orders-scope .mc-status-details').forEach(function (el) {
+        el.addEventListener('toggle', function () {
+            if (!el.open) {
+                return;
+            }
+            document.querySelectorAll('.mc-orders-scope .mc-status-details').forEach(function (o) {
+                if (o !== el) {
+                    o.removeAttribute('open');
+                }
+            });
+        });
+    });
+})();
+</script>
+{% endblock %}

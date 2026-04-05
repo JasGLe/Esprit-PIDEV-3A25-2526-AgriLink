@@ -102,6 +102,10 @@ class MarketplaceCartController extends AbstractController
         $codePostal = trim((string) $request->request->get('code_postal'));
         $ville = trim((string) $request->request->get('ville'));
 
+        if ($email === '' && $user->getEmail()) {
+            $email = trim((string) $user->getEmail());
+        }
+
         if ($nomComplet === '' || $telephone === '' || $adresse === '' || $ville === '') {
             $this->addFlash('error', 'Merci de compléter tous les champs obligatoires.');
 

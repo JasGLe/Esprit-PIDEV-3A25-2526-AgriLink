@@ -38,4 +38,33 @@ class LigneCommandeRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    /**
+     * @return list<LigneCommande>
+     */
+    public function findByCommandeAndFournisseur(int $commandeId, int $fournisseurUserId): array
+    {
+        return $this->createQueryBuilder('lc')
+            ->andWhere('lc.idCommande = :cid')
+            ->andWhere('lc.idFournisseur = :fid')
+            ->setParameter('cid', $commandeId)
+            ->setParameter('fid', $fournisseurUserId)
+            ->orderBy('lc.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function sumMontantForFournisseurOnCommande(int $commandeId, int $fournisseurUserId): float
+    {
+        $v = $this->createQueryBuilder('lc')
+            ->select('COALESCE(SUM(lc.prixTotal), 0)')
+            ->andWhere('lc.idCommande = :cid')
+            ->andWhere('lc.idFournisseur = :fid')
+            ->setParameter('cid', $commandeId)
+            ->setParameter('fid', $fournisseurUserId)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (float) $v;
+    }
 }
