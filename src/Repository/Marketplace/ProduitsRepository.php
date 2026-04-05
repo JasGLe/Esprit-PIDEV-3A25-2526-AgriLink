@@ -41,6 +41,91 @@ class ProduitsRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Catalogue public : annonces boutique agriculteur visibles (actives uniquement).
+     *
+     * @return Produits[]
+     */
+    public function findPublicMarketplaceActifs(): array
+    {
+        return $this->findPublicMarketplaceCatalog(null, 'all', null, 'recent');
+    }
+
+    /**
+     * @param int[]|null $sellerIds restrict to these seller user ids (e.g. region filter)
+     * @param 'price_asc'|'price_desc'|'recent' $sort
+     *
+     * @return Produits[]
+     */
+    public function findPublicMarketplaceCatalog(?string $search, string $cat, ?array $sellerIds, string $sort): array
+    {
+        $qb = $this->createQueryBuilder('p')
+            ->andWhere('p.origine = :origine')
+            ->andWhere('p.active = :actif')
+            ->setParameter('origine', self::ORIGINE_BOUTIQUE_AGRICULTEUR)
+            ->setParameter('actif', true);
+
+        if ($search !== null && $search !== '') {
+            $qb->andWhere($qb->expr()->orX(
+                'p.nom LIKE :q',
+                'p.description LIKE :q',
+                'p.categorie LIKE :q'
+            ))
+                ->setParameter('q', '%'.$search.'%');
+        }
+
+        $cat = strtolower($cat);
+        match ($cat) {
+            'legume' => $qb->andWhere('p.category = :catcode')->setParameter('catcode', 'LEGUME'),
+            'fruit' => $qb->andWhere('p.category = :catcode')->setParameter('catcode', 'FRUIT'),
+            'graines' => $qb->andWhere('p.category = :catcode')->setParameter('catcode', 'GRAINS'),
+            'equipement' => $qb->andWhere('p.equipementId IS NOT NULL'),
+            default => null,
+        };
+
+        if ($sellerIds !== null) {
+            if ($sellerIds === []) {
+                return [];
+            }
+            $qb->andWhere('p.idFournisseur IN (:sids)')
+                ->setParameter('sids', $sellerIds);
+        }
+
+        match ($sort) {
+            'price_desc' => $qb->orderBy('p.prixUnitaire', 'DESC'),
+            'recent' => $qb->orderBy('p.id', 'DESC'),
+            default => $qb->orderBy('p.prixUnitaire', 'ASC'),
+        };
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * @return int[]
+     */
+    public function findDistinctSellerIdsPublicCatalog(): array
+    {
+        $rows = $this->createQueryBuilder('p')
+            ->select('DISTINCT p.idFournisseur AS sid')
+            ->andWhere('p.origine = :origine')
+            ->andWhere('p.active = :actif')
+            ->andWhere('p.idFournisseur IS NOT NULL')
+            ->setParameter('origine', self::ORIGINE_BOUTIQUE_AGRICULTEUR)
+            ->setParameter('actif', true)
+            ->getQuery()
+            ->getScalarResult();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $id = isset($row['sid']) ? (int) $row['sid'] : (isset($row[0]) ? (int) $row[0] : null);
+            if ($id !== null && $id > 0) {
+                $out[] = $id;
+            }
+        }
+
+        return array_values(array_unique($out));
+    }
+
     public function save(Produits $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);

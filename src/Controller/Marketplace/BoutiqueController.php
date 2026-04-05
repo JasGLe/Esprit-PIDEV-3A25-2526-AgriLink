@@ -236,7 +236,9 @@ class BoutiqueController extends AbstractController
         $current = $produit->getActive();
         $produit->setActive(!$current);
         $this->entityManager->flush();
-        $this->addFlash('success', $produit->getActive() ? 'Annonce visible dans votre boutique.' : 'Annonce masquée.');
+        $this->addFlash('success', $produit->getActive()
+            ? 'Annonce active : visible sur le marketplace public.'
+            : 'Annonce masquée : elle n’apparaît plus sur le marketplace.');
 
         return $this->redirectToRoute('boutique_index');
     }

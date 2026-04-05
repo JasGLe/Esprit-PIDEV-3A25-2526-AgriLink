@@ -1,0 +1,260 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Marketplace — AgriLink{% endblock %}
+{% block body_class %}marketplace-tropical{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ asset('css/marketplace-front.css') }}">
+    <style>
+        body.marketplace-tropical {
+            --tropical-bg-image: url("{{ asset('images/marketplace/marketplace-background.jpg') }}");
+        }
+    </style>
+{% endblock %}
+
+{% block body %}
+
+{# ── Navigation (transparent + lime CTA, reference layout) ── #}
+<header class="tropical-header">
+    <nav class="navbar navbar-expand-lg navbar-dark tropical-nav py-2">
+        <div class="container-fluid px-2 px-md-3 tropical-page-gutter">
+            <a class="navbar-brand tropical-brand" href="{{ path('marketplace_index') }}">
+                <img src="{{ asset('logo_without_text.png') }}" alt="" width="34" height="34" class="rounded-circle me-2">
+                AgriLink
+            </a>
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#tropicalNav" aria-controls="tropicalNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="tropicalNav">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-1">
+                    <li class="nav-item"><a class="nav-link tropical-nav-link" href="#hero">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link tropical-nav-link" href="#about">À propos</a></li>
+                    <li class="nav-item"><a class="nav-link tropical-nav-link" href="#produits">Produits</a></li>
+                    <li class="nav-item"><a class="nav-link tropical-nav-link" href="#stats">Chiffres</a></li>
+                </ul>
+                <div class="d-flex flex-wrap align-items-center gap-2 gap-lg-3 ms-lg-3 tropical-nav-end">
+                    {# Ordre : recherche (gauche du groupe) → panier (libellé + badge) → compte → tableau de bord #}
+                    <button type="button" class="tropical-nav-search-btn" id="tropicalNavSearch" title="Rechercher" aria-label="Rechercher">
+                        <i class="bi bi-search"></i>
+                    </button>
+                    <a href="#" class="tropical-nav-cart text-decoration-none" onclick="return false;" title="Panier — bientôt disponible">
+                        <span class="tropical-nav-cart__icon-wrap">
+                            <i class="bi bi-bag tropical-nav-cart__icon" aria-hidden="true"></i>
+                            {% if panier_count > 0 %}
+                                <span class="tropical-nav-cart__badge">{{ panier_count }}</span>
+                            {% endif %}
+                        </span>
+                        <span class="tropical-nav-cart__label d-sm-none">Panier</span>
+                        <span class="tropical-nav-cart__label d-none d-sm-inline">Aller au panier</span>
+                    </a>
+                    <a class="tropical-nav-user" href="{{ is_granted('ROLE_USER') ? path('app_dashboard') : path('app_login') }}" title="{{ is_granted('ROLE_USER') ? 'Tableau de bord' : 'Connexion' }}">
+                        <i class="bi bi-person"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+{# ── Hero (centered headline, reference copy style) ── #}
+<section id="hero" class="tropical-hero text-center">
+    <div class="container px-2 px-md-3 py-2 py-lg-2">
+        <p class="tropical-hero__kicker mb-2 mb-lg-1">AgriLink · Le marché agricole</p>
+        <h1 class="tropical-hero__title mx-auto mb-2 mb-lg-2">
+            Créez un intérieur tropical chez vous avec des produits frais et locaux.
+        </h1>
+        <p class="tropical-hero__lead mx-auto mb-0">
+            Parcourez les annonces publiées par les agriculteurs tunisiens : fruits, légumes, graines et équipements — livrés directement depuis la ferme.
+        </p>
+    </div>
+</section>
+
+{# ── Filters toolbar (server-side query preserved) ── #}
+{% set qp = query_params %}
+<section class="tropical-toolbar py-1 tropical-toolbar--compact">
+    <div class="container-fluid px-2 px-md-3 tropical-page-gutter">
+        <div class="d-flex flex-column flex-xl-row align-items-stretch align-items-xl-center justify-content-between gap-1 gap-xl-2 mb-1">
+            <div class="d-flex flex-wrap gap-1 justify-content-start">
+                <a href="{{ path('marketplace_index', qp|merge({cat: 'all'})) }}" class="tropical-pill {{ filter_cat == 'all' ? 'is-active' : '' }}"><i class="bi bi-grid-2x2"></i> Tout</a>
+                <a href="{{ path('marketplace_index', qp|merge({cat: 'legume'})) }}" class="tropical-pill {{ filter_cat == 'legume' ? 'is-active' : '' }}"><i class="bi bi-flower2"></i> Légumes</a>
+                <a href="{{ path('marketplace_index', qp|merge({cat: 'fruit'})) }}" class="tropical-pill {{ filter_cat == 'fruit' ? 'is-active' : '' }}"><i class="bi bi-apple"></i> Fruits</a>
+                <a href="{{ path('marketplace_index', qp|merge({cat: 'graines'})) }}" class="tropical-pill {{ filter_cat == 'graines' ? 'is-active' : '' }}"><i class="bi bi-globe2"></i> Graines</a>
+                <a href="{{ path('marketplace_index', qp|merge({cat: 'equipement'})) }}" class="tropical-pill {{ filter_cat == 'equipement' ? 'is-active' : '' }}"><i class="bi bi-truck-front"></i> Équipements</a>
+            </div>
+            <form method="get" action="{{ path('marketplace_index') }}" class="row g-1 align-items-end tropical-filter-form">
+                <input type="hidden" name="cat" value="{{ filter_cat }}">
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="tropical-filter-label">Région</label>
+                    <select name="region" class="form-select form-select-sm tropical-select" onchange="this.form.submit()">
+                        <option value="">Toutes les régions</option>
+                        {% for v in villes_region %}
+                            <option value="{{ v }}" {{ filter_region == v ? 'selected' : '' }}>{{ v }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-6 col-md-3 col-xl-2">
+                    <label class="tropical-filter-label">Trier</label>
+                    <select name="sort" class="form-select form-select-sm tropical-select" onchange="this.form.submit()">
+                        <option value="price_asc" {{ filter_sort == 'price_asc' ? 'selected' : '' }}>Prix croissant</option>
+                        <option value="price_desc" {{ filter_sort == 'price_desc' ? 'selected' : '' }}>Prix décroissant</option>
+                        <option value="recent" {{ filter_sort == 'recent' ? 'selected' : '' }}>Plus récents</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-6 col-xl-4">
+                    <label class="tropical-filter-label">Recherche</label>
+                    <div class="input-group">
+                        <input type="search" name="q" value="{{ filter_q }}" id="marketplace-search-input" class="form-control tropical-input" placeholder="Produits, origines…" autocomplete="off">
+                        <button class="btn tropical-btn-lime-solid" type="submit"><i class="bi bi-search"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <p class="small tropical-muted mb-0 tropical-toolbar-meta text-start">
+            <i class="bi bi-box-seam me-1 tropical-lime"></i>
+            <strong class="text-white">{{ produits|length }}</strong> produit{{ produits|length > 1 ? 's' : '' }} disponible{{ produits|length > 1 ? 's' : '' }}
+            <a href="{{ path('marketplace_index') }}" class="tropical-link-reset ms-2"><i class="bi bi-arrow-counterclockwise"></i> Réinitialiser</a>
+        </p>
+    </div>
+</section>
+
+{# ── Products (horizontal scroll mobile / grid desktop) — data: même requête contrôleur ── #}
+<section id="produits" class="tropical-products-section py-3 py-md-4">
+    <div class="container-fluid px-2 px-md-3 tropical-page-gutter">
+        <h2 class="tropical-section-title text-start mb-1">Meilleure sélection</h2>
+        <p class="tropical-muted mb-3 small">Produits actifs issus de <strong class="text-white">Ma boutique</strong> des agriculteurs</p>
+
+        {% if produits is empty %}
+            <div class="tropical-empty text-center py-5 rounded-4">
+                <i class="bi bi-inboxes display-4 tropical-lime mb-3 d-block"></i>
+                <p class="tropical-muted mb-3">Aucun produit ne correspond à vos filtres.</p>
+                <a href="{{ path('marketplace_index') }}" class="btn tropical-btn-register">Réinitialiser</a>
+            </div>
+        {% else %}
+            <div class="tropical-products-wrap">
+                {% for p in produits %}
+                    <div class="tropical-card-shell">
+                        {% include 'marketplace/public/_product_card_tropical.html.twig' with { p: p, vendeurs: vendeurs } %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+{# ── About ── #}
+<section id="about" class="tropical-about py-5">
+    <div class="container px-2 px-md-3">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <p class="tropical-about__kicker mb-2">À propos d’AgriLink</p>
+                <h2 class="tropical-about__title mb-4">Une plateforme pensée pour les agriculteurs et leurs clients.</h2>
+                <p class="tropical-muted mb-4">
+                    Chaque fiche produit est publiée par un agriculteur depuis son espace <strong class="text-white">Ma boutique</strong>.
+                    Seules les annonces <strong class="text-white">actives</strong> apparaissent ici sur le marketplace public.
+                </p>
+                <a href="#produits" class="btn tropical-btn-register tropical-btn-register--wide">Voir les produits</a>
+            </div>
+            <div class="col-lg-6 text-center">
+                <div class="tropical-about__visual mx-auto">
+                    <div class="tropical-about__glow"></div>
+                    <div class="tropical-about__frame">
+                        <i class="bi bi-flower2"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── Stats ── #}
+<section id="stats" class="tropical-stats py-5">
+    <div class="container px-2 px-md-3">
+        <div class="row g-4 text-center tropical-stats__row">
+            <div class="col-6 col-md-3">
+                <div class="tropical-stat__num">{{ produits|length > 0 ? produits|length ~ '+' : '0' }}</div>
+                <div class="tropical-stat__label">Produits listés</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="tropical-stat__num">4+</div>
+                <div class="tropical-stat__label">Catégories</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="tropical-stat__num">{{ vendeurs|length > 0 ? vendeurs|length ~ '+' : '1+' }}</div>
+                <div class="tropical-stat__label">Agriculteurs partenaires</div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="tropical-stat__num">4.9</div>
+                <div class="tropical-stat__label">Satisfaction (démo)</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── Category cards (filter links) ── #}
+<section class="tropical-categories py-5 mb-4">
+    <div class="container px-2 px-md-3">
+        <h2 class="tropical-section-title text-center mb-4">Collections</h2>
+        <div class="row g-3 g-lg-4">
+            <div class="col-12 col-lg-7">
+                <a href="{{ path('marketplace_index', qp|merge({cat: 'legume'})) }}" class="tropical-cat-card tropical-cat-card--wide d-block text-decoration-none rounded-4 p-4 p-lg-5 position-relative overflow-hidden">
+                    <span class="tropical-cat-card__label">AgriLink</span>
+                    <h3 class="tropical-cat-card__title text-white mb-2">Légumes &amp; fraîcheur</h3>
+                    <span class="tropical-cat-card__more">Voir plus</span>
+                </a>
+            </div>
+            <div class="col-12 col-lg-5">
+                <div class="row g-3 g-lg-4 h-100">
+                    <div class="col-12 col-sm-6">
+                        <a href="{{ path('marketplace_index', qp|merge({cat: 'fruit'})) }}" class="tropical-cat-card tropical-cat-card--tall d-block text-decoration-none rounded-4 p-4 h-100 position-relative overflow-hidden">
+                            <span class="tropical-cat-card__label">AgriLink</span>
+                            <h3 class="tropical-cat-card__title text-white mb-0">Fruits</h3>
+                            <span class="tropical-cat-card__more">Voir plus</span>
+                        </a>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <a href="{{ path('marketplace_index', qp|merge({cat: 'equipement'})) }}" class="tropical-cat-card tropical-cat-card--tall tropical-cat-card--sand d-block text-decoration-none rounded-4 p-4 h-100 position-relative overflow-hidden">
+                            <span class="tropical-cat-card__label">AgriLink</span>
+                            <h3 class="tropical-cat-card__title text-white mb-0">Équipements</h3>
+                            <span class="tropical-cat-card__more">Voir plus</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ── Footer ── #}
+<footer class="tropical-footer py-4 mt-auto">
+    <div class="container-fluid px-2 px-md-3 tropical-page-gutter">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+            <div class="d-flex align-items-center gap-2">
+                <img src="{{ asset('logo_without_text.png') }}" alt="" width="24" height="24" class="rounded-circle opacity-50">
+                <span class="small tropical-muted mb-0">© {{ 'now'|date('Y') }} AgriLink — Marketplace</span>
+            </div>
+            <a href="{{ is_granted('ROLE_USER') ? path('app_dashboard') : path('app_login') }}" class="small tropical-footer__link">
+                <i class="bi bi-person-circle me-1"></i>Espace membre
+            </a>
+        </div>
+    </div>
+</footer>
+
+<script>
+(function () {
+    var btn = document.getElementById('tropicalNavSearch');
+    var input = document.getElementById('marketplace-search-input');
+    var produits = document.getElementById('produits');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+        if (produits) produits.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(function () { if (input) { input.focus({ preventScroll: true }); } }, 350);
+        var nav = document.getElementById('tropicalNav');
+        if (nav && nav.classList.contains('show') && typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+            bootstrap.Collapse.getOrCreateInstance(nav, { toggle: false }).hide();
+        }
+    });
+})();
+</script>
+{% endblock %}

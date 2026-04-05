@@ -281,4 +281,60 @@ class UserRepository extends ServiceEntityRepository
             'withFailedAttempts' => (int) $withFailedAttempts,
         ];
     }
+
+    /**
+     * @return int[]
+     */
+    public function findUserIdsByVille(string $ville): array
+    {
+        $rows = $this->createQueryBuilder('u')
+            ->select('u.id')
+            ->where('u.ville = :v')
+            ->setParameter('v', $ville)
+            ->getQuery()
+            ->getScalarResult();
+
+        $ids = [];
+        foreach ($rows as $row) {
+            $id = $row['id'] ?? null;
+            if ($id !== null) {
+                $ids[] = (int) $id;
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * @param int[] $userIds
+     *
+     * @return string[]
+     */
+    public function findDistinctVillesByUserIds(array $userIds): array
+    {
+        if ($userIds === []) {
+            return [];
+        }
+
+        $rows = $this->createQueryBuilder('u')
+            ->select('DISTINCT u.ville AS ville')
+            ->where('u.id IN (:ids)')
+            ->andWhere('u.ville IS NOT NULL')
+            ->andWhere("TRIM(u.ville) <> ''")
+            ->setParameter('ids', $userIds)
+            ->getQuery()
+            ->getArrayResult();
+
+        $villes = [];
+        foreach ($rows as $row) {
+            $v = $row['ville'] ?? null;
+            if (\is_string($v) && $v !== '') {
+                $villes[] = $v;
+            }
+        }
+
+        sort($villes);
+
+        return array_values(array_unique($villes));
+    }
 }
