@@ -18,9 +18,11 @@ class Activite
     private int $idActivite;
 
     #[ORM\Column(type: Types::STRING, length: 100)]
-    #[Assert\NotBlank(message: 'Ce champ est obligatoire.')]
+    #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
     #[Assert\Length(
+        min: 3,
         max: 100,
+        minMessage: 'Le titre doit contenir au moins {{ limit }} caractères.',
         maxMessage: 'Le titre ne peut pas dépasser {{ limit }} caractères.'
     )]
     private string $titre;
@@ -34,10 +36,10 @@ class Activite
     #[Assert\Length(max: 50)]
     private string $typeActivite;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Assert\NotBlank(message: 'Ce champ est obligatoire.')]
     #[Assert\Type(\DateTimeInterface::class)]
-    private \DateTimeInterface $dateDebut;
+    private ?\DateTimeInterface $dateDebut = null;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Assert\Type(\DateTimeInterface::class)]
@@ -50,7 +52,7 @@ class Activite
         message: 'Veuillez choisir un statut valide.'
     )]
     #[Assert\Length(max: 20)]
-    private string $statut;
+    private ?string $statut = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     #[Assert\PositiveOrZero(message: 'Le coût doit être positif ou zéro.')]
@@ -97,12 +99,12 @@ class Activite
         return $this;
     }
 
-    public function getDateDebut(): \DateTimeInterface
+    public function getDateDebut(): ?\DateTimeInterface
     {
         return $this->dateDebut;
     }
 
-    public function setDateDebut(\DateTimeInterface $dateDebut): static
+    public function setDateDebut(?\DateTimeInterface $dateDebut): static
     {
         $this->dateDebut = $dateDebut;
 
@@ -121,12 +123,12 @@ class Activite
         return $this;
     }
 
-    public function getStatut(): string
+    public function getStatut(): ?string
     {
         return $this->statut;
     }
 
-    public function setStatut(string $statut): static
+    public function setStatut(?string $statut): static
     {
         $this->statut = $statut;
 
@@ -159,6 +161,17 @@ class Activite
 
     public function validateDates(ExecutionContextInterface $context, $payload): void
     {
+        // Check if dateDebut is not in the past
+        if ($this->dateDebut !== null) {
+            $today = new \DateTime('today');
+            if ($this->dateDebut < $today) {
+                $context->buildViolation('La date de début ne peut pas être dans le passé.')
+                    ->atPath('dateDebut')
+                    ->addViolation();
+            }
+        }
+
+        // Check if dateFin is after dateDebut
         if ($this->dateFin !== null && $this->dateDebut !== null) {
             if ($this->dateFin <= $this->dateDebut) {
                 $context->buildViolation('La date de fin doit être après la date de début.')

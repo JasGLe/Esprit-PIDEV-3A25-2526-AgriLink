@@ -32,8 +32,11 @@ class EvenementController extends AbstractController
         $search = trim((string) $request->query->get('q', ''));
         $type = trim((string) $request->query->get('type', ''));
 
+        $evenements = $this->evenementRepository->findBySearchAndType($search ?: null, $type ?: null);
+
         $viewData = [
-            'evenements' => $this->evenementRepository->findBySearchAndType($search ?: null, $type ?: null),
+            'evenements' => $evenements,
+            'stats' => $this->buildEvenementStats($evenements),
             'filters' => [
                 'q' => $search,
                 'type' => $type,
@@ -42,7 +45,7 @@ class EvenementController extends AbstractController
         ];
 
         if ($request->isXmlHttpRequest()) {
-            return $this->render('activity/evenement/_results.html.twig', $viewData);
+            return $this->render('activity/evenement/_content.html.twig', $viewData);
         }
 
         return $this->render('activity/evenement/list.html.twig', [
@@ -81,15 +84,7 @@ class EvenementController extends AbstractController
                     $this->addFlash('error', 'Une erreur est survenue lors de l\'enregistrement de l\'événement. Veuillez réessayer.');
                 }
             } else {
-                // DEBUG: Afficher toutes les erreurs
-                $errors = [];
-                foreach ($form->getErrors(true) as $error) {
-                    $errors[] = $error->getMessage();
-                }
-                $this->addFlash('warning', 'Le formulaire contient des erreurs. Veuillez les corriger avant de soumettre.');
-                if (!empty($errors)) {
-                    $this->addFlash('error', 'Détails des erreurs: ' . implode(' | ', $errors));
-                }
+                // Form validation failed - errors displayed in template
             }
         }
 
@@ -252,5 +247,67 @@ class EvenementController extends AbstractController
         if ($user instanceof User) {
             $evenement->setOrganisateur($user);
         }
+    }
+
+    /**
+     * @param Evenement[] $evenements
+     *
+     * @return array<string, int|float|string>
+     */
+    private function buildEvenementStats(array $evenements): array
+    {
+        $total = count($evenements);
+        $official = 0;
+        $personal = 0;
+        $upcoming = 0;
+        $pastThisMonth = 0;
+        $upcomingThisMonth = 0;
+        $now = new \DateTimeImmutable();
+        $nextDate = null;
+
+        foreach ($evenements as $evenement) {
+            $type = strtoupper((string) $evenement->getTypeEvenement());
+            $date = $evenement->getDateEvenement();
+
+            if ($type === 'OFFICIEL') {
+                ++$official;
+            } elseif ($type === 'PERSONNEL') {
+                ++$personal;
+            }
+
+            if ($date >= $now) {
+                ++$upcoming;
+
+                if ($nextDate === null || $date < $nextDate) {
+                    $nextDate = $date;
+                }
+
+                if ($date->format('Y-m') === $now->format('Y-m')) {
+                    ++$upcomingThisMonth;
+                }
+            } elseif ($date->format('Y-m') === $now->format('Y-m')) {
+                ++$pastThisMonth;
+            }
+        }
+
+        $upcomingRate = $total > 0 ? round(($upcoming / $total) * 100, 1) : 0.0;
+        $nextInDays = null;
+        if ($nextDate !== null) {
+            $todayDate = new \DateTimeImmutable($now->format('Y-m-d'));
+            $nextEventDate = new \DateTimeImmutable($nextDate->format('Y-m-d'));
+            $nextInDays = (int) $todayDate->diff($nextEventDate)->days;
+        }
+
+        return [
+            'total' => $total,
+            'official' => $official,
+            'personal' => $personal,
+            'upcoming' => $upcoming,
+            'pastThisMonth' => $pastThisMonth,
+            'upcomingThisMonth' => $upcomingThisMonth,
+            'upcomingRate' => $upcomingRate,
+            'nextDate' => $nextDate?->format('d/m/Y H:i') ?? 'Aucune date à venir',
+            'nextInDays' => $nextInDays,
+        ];
     }
 }

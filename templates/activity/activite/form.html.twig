@@ -40,10 +40,13 @@
                 <div>
                     <h5 class="alert-heading mb-2">Vérifiez les champs</h5>
                     <ul class="mb-0 ps-3">
+                        {% set shown_fields = [] %}
                         {% for child in form %}
-                            {% for error in child.vars.errors %}
-                                <li><strong>{{ child.vars.label|default(child.vars.name) }}:</strong> {{ error.message }}</li>
-                            {% endfor %}
+                            {% if child.vars.errors|length > 0 and child.vars.name not in shown_fields %}
+                                {% set first_error = child.vars.errors|first %}
+                                <li><strong>{{ child.vars.label|default(child.vars.name) }}:</strong> {{ first_error.message }}</li>
+                                {% set shown_fields = shown_fields|merge([child.vars.name]) %}
+                            {% endif %}
                         {% endfor %}
                         {% for error in form.vars.errors %}
                             <li>{{ error.message }}</li>
@@ -61,7 +64,7 @@
             <p class="text-muted small mb-0">Les champs marqués d'un <span class="text-danger">*</span> sont obligatoires.</p>
         </div>
         <div class="card-body p-4 p-lg-5">
-            {{ form_start(form) }}
+            {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
                 <div class="row g-3">
                     <div class="col-12 col-lg-6">{{ form_row(form.titre) }}</div>
                     <div class="col-12 col-lg-6">{{ form_row(form.typeActivite) }}</div>

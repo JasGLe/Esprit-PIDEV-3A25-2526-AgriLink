@@ -3,7 +3,13 @@
 {% block title %}Activités - AgriLink{% endblock %}
 {% block page_title %}Activités{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/bootstrap-custom2.css') }}">
+{% endblock %}
+
 {% block dashboard_content %}
+    <section class="activity-theme activity-theme--activite">
     <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
         <div>
             <h2 class="fs-3 fw-bold text-dark mb-1">Activités agricoles</h2>
@@ -87,17 +93,18 @@
         </div>
     </form>
 
-    <div id="activite-results">
-        {% include 'activity/activite/_results.html.twig' with {
-            activites: activites
+    <div id="activite-content">
+        {% include 'activity/activite/_content.html.twig' with {
+            activites: activites,
+            stats: stats
         } only %}
     </div>
 
     <script>
         (() => {
             const form = document.getElementById('activite-filters');
-            const results = document.getElementById('activite-results');
-            if (!form || !results) {
+            const content = document.getElementById('activite-content');
+            if (!form || !content) {
                 return;
             }
 
@@ -120,7 +127,7 @@
                         if (currentRequest !== requestCounter) {
                             return;
                         }
-                        results.innerHTML = html;
+                        content.innerHTML = html;
                     });
             };
 
@@ -234,4 +241,5 @@
             startInput?.addEventListener('input', () => errorDiv.classList.add('d-none'));
         })();
     </script>
+    </section>
 {% endblock %}

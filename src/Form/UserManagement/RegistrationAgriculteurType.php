@@ -192,13 +192,13 @@ class RegistrationAgriculteurType extends AbstractType
                 ],
                 'attr' => ['class' => 'h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded'],
                 'label_attr' => ['class' => 'ml-2 block text-sm text-gray-900'],
-            ])
-            ->add('submit', SubmitType::class, [
-                'label' => 'Créer mon compte Agriculteur',
-                'attr' => [
-                    'class' => 'group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500',
-                ],
             ]);
+            // ->add('submit', SubmitType::class, [
+            //     'label' => 'Créer mon compte Agriculteur',
+            //     'attr' => [
+            //         'class' => 'group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500',
+            //     ],
+            // ]);
     }
 
     public function configureOptions(OptionsResolver $resolver): void
