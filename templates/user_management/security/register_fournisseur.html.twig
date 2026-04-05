@@ -541,7 +541,7 @@
     width: 52px;
     height: 52px;
     object-fit: contain;
-    filter: brightness(0) invert(1);
+    filter: none;
     opacity: .95;
     flex-shrink: 0;
     transition: transform 0.3s ease;
@@ -1656,7 +1656,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (cinInput) cinInput.required = isPersonne;
     }
 
-    cardPersonne.addEventListener('click', function() {
+    cardPersonne.addEventListener('click', function(event) {
         // Add ripple effect
         createRipple(this, event);
         selectedType = 'PERSONNE';
@@ -1665,7 +1665,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (navigator.vibrate) navigator.vibrate(50);
     });
 
-    cardSociete.addEventListener('click', function() {
+    cardSociete.addEventListener('click', function(event) {
         // Add ripple effect
         createRipple(this, event);
         selectedType = 'SOCIETE';

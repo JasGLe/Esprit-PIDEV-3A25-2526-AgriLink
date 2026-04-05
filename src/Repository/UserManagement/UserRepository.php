@@ -141,7 +141,7 @@ class UserRepository extends ServiceEntityRepository
     ): array {
         $qb = $this->createQueryBuilder('u');
 
-        if ($role !== null) {
+        if ($role !== null && $role !== '') {
             $qb->andWhere('u.role = :role')
                 ->setParameter('role', $role);
         }

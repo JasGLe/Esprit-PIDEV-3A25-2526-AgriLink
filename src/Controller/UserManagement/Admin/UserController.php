@@ -43,9 +43,9 @@ class UserController extends AbstractController
             $activeFilter = false;
         }
 
-        // Validate role filter
+        // Validate and clean role filter
         $validRoles = ['ADMIN', 'AGRICULTEUR', 'AGRIPLUS', 'FOURNISSEUR', 'USER'];
-        if ($roleFilter && !in_array($roleFilter, $validRoles)) {
+        if (!$roleFilter || !in_array($roleFilter, $validRoles)) {
             $roleFilter = null;
         }
 
@@ -63,25 +63,6 @@ class UserController extends AbstractController
 
         // Get statistics for the dashboard cards
         $stats = $this->userRepository->getStatistics();
-        
-        // COMPREHENSIVE DEBUG
-        dump([
-            'total' => $result['total'],
-            'data_count' => count($result['data']),
-            'page' => $page,
-            'limit' => $limit,
-            'roleFilter' => $roleFilter,
-            'activeFilter' => $activeFilter,
-            'search' => $search,
-            'orderBy' => $orderBy,
-            'orderDir' => $orderDir,
-            'first_user' => !empty($result['data']) ? [
-                'id' => $result['data'][0]->getId(),
-                'nom' => $result['data'][0]->getNom(),
-                'email' => $result['data'][0]->getEmail(),
-                'role' => $result['data'][0]->getRole(),
-            ] : null
-        ]);
 
         return $this->render('user_management/admin/users/list.html.twig', [
             'users' => $result['data'],
@@ -221,11 +202,16 @@ class UserController extends AbstractController
             return $this->redirectToRoute('admin_users_list');
         }
 
-        // Soft delete: deactivate the user
-        $user->setIsActive(false);
+        // Nullify exploitation references (no onDelete cascade on that FK)
+        foreach ($user->getExploitations() as $exploitation) {
+            $exploitation->setUser(null);
+        }
+
+        $userName = $user->getDisplayName();
+        $this->entityManager->remove($user);
         $this->entityManager->flush();
 
-        $this->addFlash('success', 'Utilisateur supprimé (désactivé) avec succès.');
+        $this->addFlash('success', sprintf('Utilisateur "%s" supprimé définitivement.', $userName));
 
         return $this->redirectToRoute('admin_users_list');
     }

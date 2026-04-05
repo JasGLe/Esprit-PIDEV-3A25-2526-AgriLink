@@ -3,14 +3,15 @@
 {% block title %}Inscription AgriPlus - AgriLink{% endblock %}
 
 {% block body %}
-<div class="min-vh-100" style="background:#f0f4f0;">
+<div class="registration-wrapper">
+<div class="registration-container">
 
     {# ── Green Gradient Header ─────────────────────────────── #}
     <div class="registration-header">
         <div class="header-blob-tr"></div>
         <div class="header-blob-bl"></div>
 
-        <div class="container" style="max-width:900px; position:relative; z-index:1;">
+        <div style="position:relative; z-index:1;">
             {# Top bar: logo + nav #}
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <div class="d-flex align-items-center gap-3">
@@ -55,7 +56,7 @@
         </div>
     </div>
 
-    <div class="container py-4 py-lg-5" style="max-width:900px;">
+    <div class="registration-content">
 
         {# Flash / form errors #}
         {% for flash_message in app.flashes('error') %}
@@ -380,14 +381,44 @@
             {{ form_end(registrationForm) }}
         </div>{# /.reg-card #}
 
-    </div>{# /.container #}
-</div>{# /.min-vh-100 #}
+    </div>{# /.registration-content #}
+
+</div>{# /.registration-container #}
+</div>{# /.registration-wrapper #}
 
 <style>
+/* ── Wrapper & Container (matching fournisseur layout) ── */
+.registration-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem;
+    background: #f8fafc;
+}
+.registration-container {
+    width: 100%;
+    max-width: 960px;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow:
+        0 20px 60px -15px rgba(0,0,0,.1),
+        0 0 0 1px rgba(0,0,0,.05);
+    overflow: hidden;
+}
+.registration-content {
+    padding: 2rem 2.5rem 2.5rem;
+}
+@media (max-width: 767px) {
+    .registration-wrapper { padding: 1rem; }
+    .registration-container { border-radius: 16px; }
+    .registration-content { padding: 1.5rem; }
+}
+
 /* ── Page & Header ──────────────────────────────────────── */
 .registration-header {
     background: linear-gradient(155deg, #0f4c2a 0%, #1a7a4a 45%, #22c55e 100%);
-    padding: 2rem 1.5rem 2.5rem;
+    padding: 2rem 2.5rem 2.5rem;
     position: relative;
     overflow: hidden;
 }
@@ -409,7 +440,7 @@
 }
 .main-logo {
     width: 52px; height: 52px;
-    filter: brightness(0) invert(1);
+    filter: none;
     flex-shrink: 0;
 }
 .logo-name {
