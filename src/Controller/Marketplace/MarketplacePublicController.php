@@ -3,6 +3,8 @@
 namespace App\Controller\Marketplace;
 
 use App\Entity\Marketplace\Produits;
+use App\Entity\UserManagement\User;
+use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
 use App\Repository\UserManagement\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -16,6 +18,7 @@ class MarketplacePublicController extends AbstractController
     public function __construct(
         private readonly ProduitsRepository $produitsRepository,
         private readonly UserRepository $userRepository,
+        private readonly PanierRepository $panierRepository,
     ) {
     }
 
@@ -85,6 +88,12 @@ class MarketplacePublicController extends AbstractController
             $villesRegion = $this->userRepository->findDistinctVillesByUserIds($sellerIdsForDropdown);
         }
 
+        $panierCount = 0;
+        $user = $this->getUser();
+        if ($user instanceof User && $user->getId() !== null) {
+            $panierCount = $this->panierRepository->countLignesProduitsPourUtilisateur((int) $user->getId());
+        }
+
         return $this->render('marketplace/public/index.html.twig', [
             'produits' => $produits,
             'vendeurs' => $vendeurs,
@@ -94,7 +103,7 @@ class MarketplacePublicController extends AbstractController
             'filter_region' => $region,
             'filter_sort' => $sort,
             'query_params' => $request->query->all(),
-            'panier_count' => 0,
+            'panier_count' => $panierCount,
         ]);
     }
 }

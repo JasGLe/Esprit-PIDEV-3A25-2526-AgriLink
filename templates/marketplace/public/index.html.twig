@@ -39,16 +39,71 @@
                     <button type="button" class="tropical-nav-search-btn" id="tropicalNavSearch" title="Rechercher" aria-label="Rechercher">
                         <i class="bi bi-search"></i>
                     </button>
-                    <a href="#" class="tropical-nav-cart text-decoration-none" onclick="return false;" title="Panier — bientôt disponible">
-                        <span class="tropical-nav-cart__icon-wrap">
-                            <i class="bi bi-bag tropical-nav-cart__icon" aria-hidden="true"></i>
-                            {% if panier_count > 0 %}
-                                <span class="tropical-nav-cart__badge">{{ panier_count }}</span>
-                            {% endif %}
-                        </span>
-                        <span class="tropical-nav-cart__label d-sm-none">Panier</span>
-                        <span class="tropical-nav-cart__label d-none d-sm-inline">Aller au panier</span>
-                    </a>
+                    {% if is_granted('ROLE_USER') %}
+                        <div class="dropdown tropical-cart-dropdown-wrap">
+                            <button type="button" class="tropical-nav-cart tropical-nav-cart--trigger tropical-cart-dropdown-toggle text-decoration-none border-0 bg-transparent p-0" id="marketplaceCartDropdown" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" aria-expanded="false" title="Aperçu du panier" aria-haspopup="true" data-cart-apercu-url="{{ path('marketplace_panier_apercu') }}">
+                                <span class="tropical-nav-cart__icon-wrap">
+                                    <i class="bi bi-bag tropical-nav-cart__icon" aria-hidden="true"></i>
+                                    <span class="tropical-nav-cart__badge js-marketplace-cart-badge{{ panier_count > 0 ? '' : ' d-none' }}" aria-hidden="{{ panier_count > 0 ? 'false' : 'true' }}">{{ panier_count > 0 ? panier_count : 0 }}</span>
+                                </span>
+                                <span class="tropical-nav-cart__label d-sm-none">Panier</span>
+                                <span class="tropical-nav-cart__label d-none d-sm-inline">Panier</span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-end tropical-cart-dropdown p-0" id="marketplaceCartPanel" aria-labelledby="marketplaceCartDropdown" data-panier-quantite-url="{{ path('marketplace_panier_ligne_quantite') }}" data-panier-quantite-token="{{ csrf_token('panier_quantite') }}" data-panier-supprimer-url="{{ path('marketplace_panier_ligne_supprimer') }}" data-panier-supprimer-token="{{ csrf_token('panier_supprimer') }}">
+                                <div class="tropical-cart-modal__sheet tropical-cart-dropdown__sheet">
+                                    <div class="tropical-cart-modal__header align-items-start">
+                                        <h2 class="tropical-cart-modal__title mb-0" id="marketplaceCartPanelTitle">
+                                            <span class="tropical-cart-modal__title-row">
+                                                <i class="bi bi-bag tropical-cart-modal__title-icon" aria-hidden="true"></i>
+                                                <span>Mon panier</span>
+                                                <span class="tropical-cart-modal__count js-marketplace-cart-modal-count">({{ panier_count }})</span>
+                                            </span>
+                                        </h2>
+                                        <button type="button" class="btn tropical-cart-modal__btn-close js-marketplace-cart-close-dropdown" aria-label="Fermer">
+                                            <i class="bi bi-x-lg" aria-hidden="true"></i>
+                                        </button>
+                                    </div>
+                                    <div class="tropical-cart-modal__body">
+                                        <div class="tropical-cart-modal__loading js-marketplace-cart-preview-loading text-center py-4 d-none" aria-live="polite">
+                                            <div class="spinner-border tropical-cart-modal__spinner" role="status" style="width: 2rem; height: 2rem;"><span class="visually-hidden">Chargement…</span></div>
+                                            <p class="small tropical-cart-modal__muted mt-2 mb-0">Chargement…</p>
+                                        </div>
+                                        <div class="js-marketplace-cart-preview-main">
+                                            <div class="js-marketplace-cart-preview-empty tropical-cart-modal__empty text-center py-3 px-2 d-none">
+                                                <div class="tropical-cart-modal__empty-icon mx-auto mb-2" aria-hidden="true">
+                                                    <i class="bi bi-bag"></i>
+                                                </div>
+                                                <p class="tropical-cart-modal__empty-title mb-2">Votre panier est vide</p>
+                                                <p class="tropical-cart-modal__empty-lead small mb-3">Explorez nos produits frais et ajoutez vos coups de cœur ici.</p>
+                                                <button type="button" class="btn tropical-cart-modal__cta-explore js-marketplace-cart-explore-products">
+                                                    <i class="bi bi-flower2 me-2" aria-hidden="true"></i>Explorer les produits
+                                                </button>
+                                            </div>
+                                            <div class="js-marketplace-cart-preview-list d-none">
+                                                <ul class="list-unstyled mb-0 tropical-cart-modal__lines js-marketplace-cart-lines"></ul>
+                                                <div class="tropical-cart-modal__subtotal d-flex justify-content-between align-items-center mt-2 pt-3 border-top border-secondary border-opacity-25">
+                                                    <span class="small text-white-50">Sous-total</span>
+                                                    <strong class="tropical-cart-modal__subtotal-val js-marketplace-cart-subtotal">0,000 DT</strong>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="tropical-cart-modal__footer flex-column gap-2 border-0 pt-0 pb-3 px-3">
+                                        <a href="{{ path('marketplace_panier_index') }}" class="btn tropical-cart-modal__cta-full w-100">Voir le panier complet</a>
+                                        <button type="button" class="btn tropical-cart-modal__btn-secondary w-100 js-marketplace-cart-close-dropdown">Continuer les achats</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="{{ path('app_login') }}" class="tropical-nav-cart text-decoration-none" title="Connexion requise pour le panier">
+                            <span class="tropical-nav-cart__icon-wrap">
+                                <i class="bi bi-bag tropical-nav-cart__icon" aria-hidden="true"></i>
+                            </span>
+                            <span class="tropical-nav-cart__label d-sm-none">Panier</span>
+                            <span class="tropical-nav-cart__label d-none d-sm-inline">Panier</span>
+                        </a>
+                    {% endif %}
                     <a class="tropical-nav-user" href="{{ is_granted('ROLE_USER') ? path('app_dashboard') : path('app_login') }}" title="{{ is_granted('ROLE_USER') ? 'Tableau de bord' : 'Connexion' }}">
                         <i class="bi bi-person"></i>
                     </a>
@@ -57,6 +112,23 @@
         </div>
     </nav>
 </header>
+
+{% for message in app.flashes('success') %}
+    <div class="container-fluid px-2 px-md-3 tropical-page-gutter pt-2">
+        <div class="alert alert-success alert-dismissible fade show mb-0 tropical-flash" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+        </div>
+    </div>
+{% endfor %}
+{% for message in app.flashes('error') %}
+    <div class="container-fluid px-2 px-md-3 tropical-page-gutter pt-2">
+        <div class="alert alert-danger alert-dismissible fade show mb-0 tropical-flash" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Fermer"></button>
+        </div>
+    </div>
+{% endfor %}
 
 {# ── Hero (centered headline, reference copy style) ── #}
 <section id="hero" class="tropical-hero text-center">
@@ -254,6 +326,278 @@
         if (nav && nav.classList.contains('show') && typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
             bootstrap.Collapse.getOrCreateInstance(nav, { toggle: false }).hide();
         }
+    });
+})();
+(function () {
+    var panelEl = document.getElementById('marketplaceCartPanel');
+    var wrap = document.querySelector('.tropical-cart-dropdown-wrap');
+    var trigger = document.querySelector('[data-cart-apercu-url]');
+    var money = new Intl.NumberFormat('fr-TN', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+
+    function fmtDt(n) {
+        if (n == null || isNaN(Number(n))) return money.format(0) + ' DT';
+        return money.format(Number(n)) + ' DT';
+    }
+
+    function escapeHtml(s) {
+        var d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    function closeCartDropdown() {
+        if (!wrap || typeof bootstrap === 'undefined') return;
+        var t = wrap.querySelector('[data-bs-toggle="dropdown"]');
+        if (!t) return;
+        var inst = bootstrap.Dropdown.getInstance(t);
+        if (inst) inst.hide();
+    }
+
+    function setCartBadge(count) {
+        var badge = document.querySelector('.js-marketplace-cart-badge');
+        if (!badge) return;
+        var n = parseInt(count, 10);
+        if (isNaN(n) || n < 1) {
+            badge.textContent = '0';
+            badge.classList.add('d-none');
+            badge.setAttribute('aria-hidden', 'true');
+            return;
+        }
+        badge.textContent = String(n);
+        badge.classList.remove('d-none');
+        badge.setAttribute('aria-hidden', 'false');
+    }
+
+    function applyCartPreview(data) {
+        if (!data || typeof data.count === 'undefined') return;
+        setCartBadge(data.count);
+        if (!panelEl) return;
+        var titleCount = panelEl.querySelector('.js-marketplace-cart-modal-count');
+        if (titleCount) titleCount.textContent = '(' + data.count + ')';
+        var emptyEl = panelEl.querySelector('.js-marketplace-cart-preview-empty');
+        var listWrap = panelEl.querySelector('.js-marketplace-cart-preview-list');
+        var linesUl = panelEl.querySelector('.js-marketplace-cart-lines');
+        var subtotalEl = panelEl.querySelector('.js-marketplace-cart-subtotal');
+        if (!emptyEl || !listWrap || !linesUl) return;
+        var lines = data.lines || [];
+        if (lines.length === 0) {
+            emptyEl.classList.remove('d-none');
+            listWrap.classList.add('d-none');
+            linesUl.innerHTML = '';
+            if (subtotalEl) subtotalEl.textContent = fmtDt(0);
+            return;
+        }
+        emptyEl.classList.add('d-none');
+        listWrap.classList.remove('d-none');
+        linesUl.innerHTML = lines.map(function (row) {
+            var nom = row.nom || 'Produit';
+            var pt = row.prixTotal != null ? row.prixTotal : 0;
+            var pid = row.produitId != null ? String(row.produitId) : '';
+            var stepper = pid !== ''
+                ? '<div class="tropical-cart-qty-stepper">' +
+                '<button type="button" class="tropical-cart-qty-stepper__btn js-marketplace-cart-qty-btn" data-delta="-1" data-produit-id="' + pid + '" aria-label="Diminuer la quantité">−</button>' +
+                '<span class="tropical-cart-qty-stepper__val">' + row.quantite + '</span>' +
+                '<button type="button" class="tropical-cart-qty-stepper__btn js-marketplace-cart-qty-btn" data-delta="1" data-produit-id="' + pid + '" aria-label="Augmenter la quantité">+</button>' +
+                '</div>'
+                : '<span class="tropical-cart-qty-stepper__val tropical-cart-qty-stepper__val--solo">' + row.quantite + '</span>';
+            var removeBtn = pid !== ''
+                ? '<button type="button" class="tropical-cart-line-remove js-marketplace-cart-remove-btn" data-produit-id="' + pid + '" title="Retirer du panier" aria-label="Retirer du panier"><i class="bi bi-trash3" aria-hidden="true"></i></button>'
+                : '';
+            return '<li class="tropical-cart-modal__line">' +
+                '<div class="tropical-cart-modal__line-top">' +
+                '<span class="tropical-cart-modal__line-name">' + escapeHtml(nom) + '</span>' +
+                '<div class="tropical-cart-modal__line-top-end">' +
+                '<span class="tropical-cart-modal__line-price">' + fmtDt(pt) + '</span>' +
+                removeBtn +
+                '</div></div>' +
+                '<div class="tropical-cart-modal__line-qty-row">' +
+                '<span class="tropical-cart-modal__line-qty-label">Quantité</span>' +
+                stepper +
+                '</div></li>';
+        }).join('');
+        if (subtotalEl) subtotalEl.textContent = fmtDt(data.totalPrix != null ? data.totalPrix : 0);
+    }
+
+    var exploreBtn = document.querySelector('.js-marketplace-cart-explore-products');
+    if (exploreBtn) {
+        exploreBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            closeCartDropdown();
+            setTimeout(function () {
+                var sec = document.getElementById('produits');
+                if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                var nav = document.getElementById('tropicalNav');
+                if (nav && nav.classList.contains('show') && typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
+                    bootstrap.Collapse.getOrCreateInstance(nav, { toggle: false }).hide();
+                }
+            }, 200);
+        });
+    }
+
+    document.querySelectorAll('.js-marketplace-cart-close-dropdown').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            closeCartDropdown();
+        });
+    });
+
+    function postPanierQuantite(produitId, delta) {
+        if (!panelEl || !produitId) return;
+        var qUrl = panelEl.getAttribute('data-panier-quantite-url');
+        var qToken = panelEl.getAttribute('data-panier-quantite-token');
+        if (!qUrl || !qToken) return;
+        var body = new URLSearchParams();
+        body.set('produitId', String(produitId));
+        body.set('delta', String(delta));
+        body.set('_token', qToken);
+        fetch(qUrl, {
+            method: 'POST',
+            body: body,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            credentials: 'same-origin'
+        })
+            .then(function (r) {
+                return r.text().then(function (text) {
+                    var data = {};
+                    try { data = text ? JSON.parse(text) : {}; } catch (e) { data = {}; }
+                    return { ok: r.ok, data: data };
+                });
+            })
+            .then(function (res) {
+                if (res.data && typeof res.data.count !== 'undefined') {
+                    applyCartPreview(res.data);
+                }
+                if (!res.ok && res.data && res.data.message) {
+                    window.alert(res.data.message);
+                }
+            })
+            .catch(function () {
+                window.alert('Impossible de mettre à jour la quantité.');
+            });
+    }
+
+    function postPanierSupprimer(produitId) {
+        if (!panelEl || !produitId) return;
+        var sUrl = panelEl.getAttribute('data-panier-supprimer-url');
+        var sToken = panelEl.getAttribute('data-panier-supprimer-token');
+        if (!sUrl || !sToken) return;
+        var body = new URLSearchParams();
+        body.set('produitId', String(produitId));
+        body.set('_token', sToken);
+        fetch(sUrl, {
+            method: 'POST',
+            body: body,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            credentials: 'same-origin'
+        })
+            .then(function (r) {
+                return r.text().then(function (text) {
+                    var data = {};
+                    try { data = text ? JSON.parse(text) : {}; } catch (e) { data = {}; }
+                    return { ok: r.ok, data: data };
+                });
+            })
+            .then(function (res) {
+                if (res.data && typeof res.data.count !== 'undefined') {
+                    applyCartPreview(res.data);
+                }
+                if (!res.ok && res.data && res.data.message) {
+                    window.alert(res.data.message);
+                }
+            })
+            .catch(function () {
+                window.alert('Impossible de retirer le produit.');
+            });
+    }
+
+    if (panelEl) {
+        panelEl.addEventListener('click', function (e) {
+            var qtyBtn = e.target.closest('.js-marketplace-cart-qty-btn');
+            if (qtyBtn) {
+                e.preventDefault();
+                var pid = qtyBtn.getAttribute('data-produit-id');
+                var delta = parseInt(qtyBtn.getAttribute('data-delta'), 10);
+                if (!pid || (delta !== 1 && delta !== -1)) return;
+                postPanierQuantite(pid, delta);
+                return;
+            }
+            var rm = e.target.closest('.js-marketplace-cart-remove-btn');
+            if (rm) {
+                e.preventDefault();
+                var rid = rm.getAttribute('data-produit-id');
+                if (!rid) return;
+                postPanierSupprimer(rid);
+            }
+        });
+    }
+
+    if (wrap && trigger && panelEl) {
+        var url = trigger.getAttribute('data-cart-apercu-url');
+        var loading = panelEl.querySelector('.js-marketplace-cart-preview-loading');
+        var main = panelEl.querySelector('.js-marketplace-cart-preview-main');
+        wrap.addEventListener('show.bs.dropdown', function () {
+            if (!loading || !main) return;
+            loading.classList.remove('d-none');
+            main.classList.add('d-none');
+            fetch(url, { headers: { 'Accept': 'application/json' }, credentials: 'same-origin' })
+                .then(function (r) {
+                    return r.text().then(function (text) {
+                        try { return text ? JSON.parse(text) : {}; } catch (e) { return {}; }
+                    });
+                })
+                .then(function (data) {
+                    loading.classList.add('d-none');
+                    main.classList.remove('d-none');
+                    applyCartPreview(data);
+                })
+                .catch(function () {
+                    loading.classList.add('d-none');
+                    main.classList.remove('d-none');
+                    applyCartPreview({ count: 0, lines: [], totalPrix: 0 });
+                });
+        });
+    }
+
+    document.addEventListener('submit', function (e) {
+        var form = e.target;
+        if (!form || !form.classList || !form.classList.contains('js-marketplace-panier-form')) return;
+        e.preventDefault();
+        var fd = new FormData(form);
+        fetch(form.action, {
+            method: 'POST',
+            body: fd,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            credentials: 'same-origin'
+        })
+            .then(function (r) {
+                return r.text().then(function (text) {
+                    var data = {};
+                    try { data = text ? JSON.parse(text) : {}; } catch (err) { data = {}; }
+                    return { ok: r.ok, data: data };
+                });
+            })
+            .then(function (res) {
+                if (res.data && typeof res.data.count !== 'undefined') {
+                    applyCartPreview(res.data);
+                }
+                if (!res.ok && res.data && res.data.message) {
+                    window.alert(res.data.message);
+                }
+            })
+            .catch(function () {
+                window.alert('Impossible d’ajouter au panier. Réessayez.');
+            });
     });
 })();
 </script>

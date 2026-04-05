@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Marketplace;
 
+use App\Repository\Marketplace\PanierRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Repository\PanierRepository::class)]
+#[ORM\Entity(repositoryClass: PanierRepository::class)]
 #[ORM\Table(name: 'panier')]
 class Panier
 {
@@ -14,22 +15,22 @@ class Panier
     #[ORM\Column(type: Types::INTEGER)]
     private int $id;
 
-    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    #[ORM\Column(name: 'idPersonne', type: Types::INTEGER, nullable: true)]
     private ?int $idPersonne = null;
 
-    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    #[ORM\Column(name: 'idProduit', type: Types::INTEGER, nullable: true)]
     private ?int $idProduit = null;
 
-    #[ORM\Column(type: Types::STRING, nullable: true)]
+    #[ORM\Column(name: 'nomProduit', type: Types::STRING, nullable: true)]
     private ?string $nomProduit = null;
 
     #[ORM\Column(type: Types::INTEGER)]
     private int $quantite;
 
-    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    #[ORM\Column(name: 'prixTotal', type: Types::FLOAT, nullable: true)]
     private ?float $prixTotal = null;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    #[ORM\Column(name: 'dateAjout', type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $dateAjout = null;
 
     public function getId(): int

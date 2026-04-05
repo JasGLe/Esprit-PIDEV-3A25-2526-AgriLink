@@ -1,6 +1,7 @@
 {# Tropical / lime card — data from Produits + vendeurs #}
 {% set vid = p.idFournisseur %}
 {% set vendeur = vid and vendeurs[vid] is defined ? vendeurs[vid] : null %}
+{% set is_owner = is_granted('ROLE_USER') and vid is not null and app.user.id == vid %}
 {% set cat_parts = ' · ' in p.categorie ? p.categorie|split(' · ', 2) : [p.categorie] %}
 {% set is_eq = p.equipementId is not null %}
 {% set cat_code = p.category|default('') %}
@@ -75,9 +76,20 @@
                 <a href="#produits" class="tropical-card__link">Plus d’infos</a>
             </div>
 
-            <button type="button" class="tropical-btn-cart w-100" disabled title="Panier — bientôt disponible">
-                Ajouter au panier
-            </button>
+            {% if is_owner %}
+                <button type="button" class="tropical-btn-cart w-100" disabled title="Vous êtes le vendeur de ce produit">
+                    Votre produit
+                </button>
+            {% elseif p.quantite < 1 %}
+                <button type="button" class="tropical-btn-cart w-100" disabled>Rupture de stock</button>
+            {% elseif is_granted('ROLE_USER') %}
+                <form method="post" action="{{ path('marketplace_panier_ajouter', { id: p.id }) }}" class="js-marketplace-panier-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('panier_ajout') }}">
+                    <button type="submit" class="tropical-btn-cart w-100 js-marketplace-panier-add">Ajouter au panier</button>
+                </form>
+            {% else %}
+                <a href="{{ path('app_login') }}" class="tropical-btn-cart w-100 d-inline-block text-center text-decoration-none">Connexion pour acheter</a>
+            {% endif %}
         </div>
     </div>
 </article>

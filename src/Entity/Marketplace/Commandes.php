@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Marketplace;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Repository\CommandesRepository::class)]
+#[ORM\Entity(repositoryClass: \App\Repository\Marketplace\CommandesRepository::class)]
 #[ORM\Table(name: 'commandes')]
 class Commandes
 {
@@ -14,16 +14,17 @@ class Commandes
     #[ORM\Column(type: Types::INTEGER)]
     private int $id;
 
-    #[ORM\Column(type: Types::STRING, length: 50)]
+    /** Colonnes camelCase héritées de la table SQL (naming strategy underscore sinon). */
+    #[ORM\Column(name: 'numCommande', type: Types::STRING, length: 50)]
     private string $numCommande;
 
-    #[ORM\Column(type: Types::DATE_MUTABLE)]
+    #[ORM\Column(name: 'dateCommande', type: Types::DATE_MUTABLE)]
     private \DateTimeInterface $dateCommande;
 
     #[ORM\Column(type: Types::INTEGER)]
     private int $quantite;
 
-    #[ORM\Column(type: Types::FLOAT)]
+    #[ORM\Column(name: 'prixTotal', type: Types::FLOAT)]
     private float $prixTotal;
 
     #[ORM\Column(type: Types::STRING, length: 50)]
@@ -44,7 +45,7 @@ class Commandes
     #[ORM\Column(type: Types::STRING, nullable: true)]
     private ?string $complement = null;
 
-    #[ORM\Column(type: Types::STRING, length: 20, nullable: true)]
+    #[ORM\Column(name: 'codePostal', type: Types::STRING, length: 20, nullable: true)]
     private ?string $codePostal = null;
 
     #[ORM\Column(type: Types::STRING, length: 100, nullable: true)]
