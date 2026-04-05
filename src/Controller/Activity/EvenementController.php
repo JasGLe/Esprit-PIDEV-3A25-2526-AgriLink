@@ -84,15 +84,7 @@ class EvenementController extends AbstractController
                     $this->addFlash('error', 'Une erreur est survenue lors de l\'enregistrement de l\'événement. Veuillez réessayer.');
                 }
             } else {
-                // DEBUG: Afficher toutes les erreurs
-                $errors = [];
-                foreach ($form->getErrors(true) as $error) {
-                    $errors[] = $error->getMessage();
-                }
-                $this->addFlash('warning', 'Le formulaire contient des erreurs. Veuillez les corriger avant de soumettre.');
-                if (!empty($errors)) {
-                    $this->addFlash('error', 'Détails des erreurs: ' . implode(' | ', $errors));
-                }
+                // Form validation failed - errors displayed in template
             }
         }
 
