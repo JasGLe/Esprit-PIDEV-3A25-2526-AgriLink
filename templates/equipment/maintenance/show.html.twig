@@ -1,0 +1,111 @@
+{% extends 'base.html.twig' %}
+{% block title %}Maintenance #{{ maintenance.id }} — AgriLink{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .info-label { font-size:.8rem; color:#6c757d; text-transform:uppercase; letter-spacing:.05em; font-weight:600; }
+    .info-value { font-size:1rem; font-weight:500; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="container py-4" style="max-width:860px">
+
+    {% for type, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ type == 'success' ? 'success' : 'danger' }} alert-dismissible fade show">
+                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('maintenance_index') }}">Maintenances</a></li>
+            <li class="breadcrumb-item active">Maintenance #{{ maintenance.id }}</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1">Maintenance #{{ maintenance.id }}</h2>
+            {% if equipement %}
+                <span class="text-muted">Équipement : </span>
+                <a href="{{ path('equipement_show', {id: equipement.id}) }}" class="fw-semibold">
+                    {{ equipement.nom }}
+                </a>
+            {% endif %}
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ path('maintenance_edit', {id: maintenance.id}) }}" class="btn btn-outline-primary">✏️ Modifier</a>
+            <form method="post" action="{{ path('maintenance_delete', {id: maintenance.id}) }}"
+                  onsubmit="return confirm('Supprimer cette maintenance ?')">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ maintenance.id) }}">
+                <button class="btn btn-outline-danger">🗑 Supprimer</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-semibold bg-white">Détails</div>
+        <div class="card-body row g-3">
+
+            <div class="col-md-4">
+                <div class="info-label">Type</div>
+                <div class="info-value">
+                    <span class="badge bg-{{ maintenance.type == 'Préventive' ? 'info text-dark' : 'warning text-dark' }}">
+                        {{ maintenance.type }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-label">Catégorie</div>
+                <div class="info-value">{{ maintenance.categorie }}</div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="info-label">Statut</div>
+                <div class="info-value">
+                    {% set couleurs = {'Planifiée':'primary','En cours':'warning','Terminée':'success','Annulée':'secondary'} %}
+                    <span class="badge bg-{{ couleurs[maintenance.statut] ?? 'secondary' }}">
+                        {{ maintenance.statut }}
+                    </span>
+                    {% if maintenance.isEnRetard() %}
+                        <span class="badge bg-danger ms-1">En retard</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="info-label">Date planifiée</div>
+                <div class="info-value">
+                    {{ maintenance.datePlanifiee ? maintenance.datePlanifiee|date('d/m/Y') : '—' }}
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="info-label">Date réelle</div>
+                <div class="info-value">
+                    {{ maintenance.dateReelle ? maintenance.dateReelle|date('d/m/Y') : 'Pas encore effectuée' }}
+                </div>
+            </div>
+
+            <div class="col-12">
+                <div class="info-label">Description</div>
+                <div class="info-value">{{ maintenance.description }}</div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="info-label">Créée le</div>
+                <div class="info-value">
+                    {{ maintenance.dateCreation ? maintenance.dateCreation|date('d/m/Y à H:i') : '—' }}
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <a href="{{ path('maintenance_index') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
+</div>
+{% endblock %}

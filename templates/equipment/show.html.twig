@@ -196,6 +196,22 @@
             </div>
         </div>
     </div>
+    {# ── Maintenances de cet équipement ── #}
+{% set maintenances = equipement.id ? app.request.attributes.get('maintenances', []) : [] %}
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header fw-semibold bg-white d-flex justify-content-between align-items-center">
+        🔧 Maintenances
+        <a href="{{ path('maintenance_new_for_equipement', {equipementId: equipement.id}) }}"
+           class="btn btn-sm btn-outline-success">+ Planifier</a>
+    </div>
+    <div class="card-body p-0">
+        {# On passe les maintenances depuis le controller show de l'équipement #}
+        <p class="text-muted p-3 mb-0">
+            <a href="{{ path('maintenance_index') }}">Voir toutes les maintenances →</a>
+        </p>
+    </div>
+</div>
 
     <a href="{{ path('equipement_index') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
 
