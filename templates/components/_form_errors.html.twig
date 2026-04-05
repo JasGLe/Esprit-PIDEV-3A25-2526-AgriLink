@@ -1,0 +1,27 @@
+{% if not form.vars.valid and form.vars.submitted %}
+    <div class="alert d-flex align-items-start gap-3 mb-4"
+         style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);
+                border-radius:12px;padding:16px;">
+        <div class="flex-shrink-0" style="color:#dc2626;margin-top:2px;">
+            <svg style="width:1.1rem;height:1.1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+        </div>
+        <div>
+            <div class="fw-semibold small" style="color:#dc2626;">
+                Veuillez corriger les erreurs ci-dessous
+            </div>
+            <ul class="mb-0 mt-1 ps-3" style="font-size:0.8rem;color:#dc2626;">
+                {% for child in form %}
+                    {% for error in child.vars.errors %}
+                        <li>{{ child.vars.label ?? child.vars.name }} : {{ error.message }}</li>
+                    {% endfor %}
+                {% endfor %}
+                {% for error in form.vars.errors %}
+                    <li>{{ error.message }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endif %}
