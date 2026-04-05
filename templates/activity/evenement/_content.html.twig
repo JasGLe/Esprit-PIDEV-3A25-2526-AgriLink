@@ -1,0 +1,46 @@
+<div class="row g-3 mb-4 activity-kpi-row">
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 activity-kpi-card">
+            <div class="card-body">
+                <p class="text-muted text-uppercase fw-semibold small mb-1">Total événements</p>
+                <p class="fs-3 fw-bold mb-0">{{ stats.total|default(0) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 activity-kpi-card">
+            <div class="card-body">
+                <p class="text-muted text-uppercase fw-semibold small mb-1">Types</p>
+                <div class="small text-muted d-flex flex-column gap-1">
+                    <span>Officiels: <strong class="text-dark">{{ stats.official|default(0) }}</strong></span>
+                    <span>Personnels: <strong class="text-dark">{{ stats.personal|default(0) }}</strong></span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 activity-kpi-card">
+            <div class="card-body">
+                <p class="text-muted text-uppercase fw-semibold small mb-1">Pilotage</p>
+                <p class="fs-3 fw-bold mb-1">{{ stats.upcoming|default(0) }}</p>
+                <p class="mb-1 text-muted small">Événements à venir</p>
+                <p class="mb-0 text-muted small">Ce mois (passés): {{ stats.pastThisMonth|default(0) }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100 activity-kpi-card">
+            <div class="card-body">
+                <p class="text-muted text-uppercase fw-semibold small mb-1">Prochaine échéance</p>
+                <p class="mb-1 fw-semibold">{{ stats.nextDate|default('Aucune date à venir') }}</p>
+                {% if stats.nextInDays is not null %}
+                    <p class="mb-1 text-muted small">Délai: J-{{ stats.nextInDays }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'activity/evenement/_results.html.twig' with {
+    evenements: evenements
+} only %}

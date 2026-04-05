@@ -323,6 +323,35 @@
                         }
                     </style>
                     <div class="dashboard-main-wrapper" style="padding-top: 4rem;">
+                        {# Email verification banner #}
+                        {% if app.user and not app.user.emailVerified %}
+                        <div id="email-verify-banner"
+                             class="d-flex align-items-center gap-3 px-4 py-3 mb-0"
+                             style="background:#fffbeb; border-bottom:1px solid #fde68a;">
+                            <svg fill="currentColor" viewBox="0 0 20 20" width="18" height="18" class="flex-shrink-0 text-warning">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            <p class="mb-0 flex-fill" style="font-size:.8125rem; color:#78350f;">
+                                <strong>Email non vérifié.</strong>
+                                Vérifiez votre adresse email pour sécuriser votre compte et activer toutes les fonctionnalités.
+                            </p>
+                            <a href="{{ path('app_verify_email', {'from': 'profile'}) }}"
+                               class="btn btn-sm btn-warning fw-semibold flex-shrink-0" style="font-size:.8rem;">
+                                Vérifier maintenant
+                            </a>
+                            <button type="button"
+                                    onclick="document.getElementById('email-verify-banner').style.display='none'; localStorage.setItem('emailBannerDismissed', '1');"
+                                    class="btn btn-link p-0 text-muted flex-shrink-0" style="font-size:1.1rem; line-height:1;" title="Fermer">
+                                &times;
+                            </button>
+                        </div>
+                        <script>
+                            if (localStorage.getItem('emailBannerDismissed') === '1') {
+                                document.getElementById('email-verify-banner').style.display = 'none';
+                            }
+                        </script>
+                        {% endif %}
+
                         {# Flash messages #}
                         {% for label, messages in app.flashes %}
                             {% for message in messages %}

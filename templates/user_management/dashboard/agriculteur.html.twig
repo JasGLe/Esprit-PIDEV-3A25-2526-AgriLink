@@ -138,26 +138,36 @@
             </div>
         </div>
 
-        {# Cultures actives #}
+        {# Mes événements #}
         <div class="col-12 col-sm-6 col-lg-3">
             <div class="card shadow-sm">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
                             <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #fef08a;">
-                                <span class="fs-5">🌻</span>
+                                <span class="fs-5">📅</span>
                             </div>
                         </div>
                         <div class="ms-3 flex-grow-1">
                             <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Cultures actives</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">--</dd>
+                                <dt class="small fw-medium text-muted text-truncate">Mes événements</dt>
+                                <dd class="fs-5 fw-semibold text-dark mb-0">{{ myEvenementsCount|default(0) }}</dd>
                             </dl>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer bg-light p-3">
-                    <span class="small text-muted">En cours de croissance</span>
+                    <button
+                        id="mes-evenements-btn"
+                        class="btn btn-link p-0 small fw-medium text-decoration-none text-warning d-inline-flex align-items-center gap-1 mes-evenements-trigger"
+                        type="button"
+                        data-bs-toggle="modal"
+                        data-bs-target="#mesEvenementsModal"
+                        aria-label="Ouvrir la liste de mes événements"
+                    >
+                        <span>Voir mes événements</span>
+                        <span id="mes-evenements-arrow" class="mes-evenements-arrow" aria-hidden="true">↓</span>
+                    </button>
                 </div>
             </div>
         </div>
@@ -208,6 +218,43 @@
                 </div>
                 <div class="card-footer bg-light p-3">
                     <span class="small text-muted">{{ app.user.ville|default('Non défini') }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="mesEvenementsModal" tabindex="-1" aria-labelledby="mesEvenementsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="mesEvenementsModalLabel">Mes événements ({{ myEvenementsCount|default(0) }})</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    {% if myEvenements is defined and myEvenements|length > 0 %}
+                        <div class="row g-3">
+                            {% for evenement in myEvenements %}
+                                <div class="col-12 col-md-6">
+                                    <a href="{{ path('evenement_show', {'id': evenement.id}) }}" class="card border-0 shadow-sm text-decoration-none h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                                <h6 class="mb-0 text-dark fw-semibold">{{ evenement.titre }}</h6>
+                                                <span class="badge bg-success-subtle text-success">{{ evenement.typeEvenement }}</span>
+                                            </div>
+                                            <p class="small text-muted mb-1">📍 {{ evenement.lieu }}</p>
+                                            <p class="small text-muted mb-0">🕒 {{ evenement.dateEvenement|date('d/m/Y H:i') }}</p>
+                                        </div>
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="small text-muted mb-0">Aucun événement trouvé pour le moment.</p>
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <a href="{{ path('evenement_list') }}" class="btn btn-outline-success btn-sm">Voir toute la liste</a>
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
                 </div>
             </div>
         </div>
@@ -294,4 +341,50 @@
             </div>
         </div>
     </div>
+
+    <style>
+        .mes-evenements-trigger {
+            transition: color 0.2s ease-in-out, transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
+        }
+
+        .mes-evenements-trigger:hover {
+            color: #b45309 !important;
+            transform: translateX(2px);
+            opacity: 0.95;
+        }
+
+        .mes-evenements-trigger:focus-visible {
+            outline: 2px solid rgba(180, 83, 9, 0.35);
+            outline-offset: 3px;
+            border-radius: 0.25rem;
+        }
+
+        .mes-evenements-arrow {
+            display: inline-block;
+            transition: transform 0.2s ease-in-out;
+        }
+
+        .mes-evenements-arrow.is-open {
+            transform: rotate(180deg);
+        }
+    </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modal = document.getElementById('mesEvenementsModal');
+            const arrow = document.getElementById('mes-evenements-arrow');
+
+            if (!modal || !arrow) {
+                return;
+            }
+
+            modal.addEventListener('show.bs.modal', function () {
+                arrow.classList.add('is-open');
+            });
+
+            modal.addEventListener('hidden.bs.modal', function () {
+                arrow.classList.remove('is-open');
+            });
+        });
+    </script>
 {% endblock %}

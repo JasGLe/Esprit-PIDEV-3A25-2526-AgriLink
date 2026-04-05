@@ -172,6 +172,7 @@ class RegistrationController extends AbstractController
             // Set role to AGRIPLUS (single string for DB)
             $user->setRole(User::ROLE_AGRIPLUS);
             $user->setIsActive(true);
+            $user->setEmailVerified(false);
 
             // Set subscription expiration to 1 month from now
             $expirationDate = new \DateTime();

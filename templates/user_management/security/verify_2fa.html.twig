@@ -4,265 +4,318 @@
 
 {% block body %}
 {{ include('components/_auth_background.html.twig') }}
+
+<style>
+    .auth-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 4px 24px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
+        padding: 2.5rem 2rem;
+    }
+    .otp-icon-wrap {
+        width: 72px; height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #198754, #20c997);
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto 1.25rem;
+        box-shadow: 0 4px 16px rgba(25,135,84,.25);
+    }
+    .otp-input {
+        width: 13rem;
+        border: 2px solid #dee2e6;
+        border-radius: 12px;
+        font-size: 2rem;
+        font-family: monospace;
+        font-weight: 700;
+        text-align: center;
+        letter-spacing: .6em;
+        padding: .625rem 1rem;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .otp-input:focus {
+        border-color: #198754;
+        box-shadow: 0 0 0 4px rgba(25,135,84,.14);
+        outline: none;
+    }
+    .otp-input.is-invalid {
+        border-color: #dc3545;
+    }
+    .otp-input.is-valid {
+        border-color: #198754;
+    }
+    .timer-badge {
+        display: inline-flex; align-items: center; gap: .5rem;
+        padding: .4rem .875rem;
+        border-radius: 50px;
+        font-size: .8125rem; font-weight: 600;
+        transition: all .3s;
+    }
+    .timer-badge.ok    { background: #d1e7dd; color: #0a3622; }
+    .timer-badge.warn  { background: #fff3cd; color: #664d03; }
+    .timer-badge.danger { background: #f8d7da; color: #58151c; }
+    .attempt-dots { display: flex; gap: .4rem; justify-content: center; }
+    .attempt-dot {
+        width: 10px; height: 10px; border-radius: 50%;
+        background: #dee2e6; transition: background .3s;
+    }
+    .attempt-dot.used { background: #dc3545; }
+    .attempt-dot.ok   { background: #198754; }
+    .btn-verify {
+        border-radius: 10px;
+        padding: .7rem 1.5rem;
+        font-weight: 600;
+        background: linear-gradient(135deg, #198754, #20c997);
+        border: none;
+        transition: opacity .15s, transform .1s;
+    }
+    .btn-verify:hover { opacity: .9; transform: translateY(-1px); }
+    .btn-verify:disabled { opacity: .55; transform: none; }
+    .masked-email { font-weight: 600; color: #198754; }
+    .alert-auth { border-radius: 10px; border: none; font-size: .875rem; }
+</style>
+
 <div class="min-vh-100 d-flex align-items-center justify-content-center py-5 px-3">
-    <div class="w-100" style="max-width: 28rem;">
-        <div class="mb-4">
-            <div class="d-flex justify-content-center">
-                <span style="font-size: 3.75rem;">🔐</span>
-            </div>
-            <h2 class="mt-4 text-center display-6 fw-bold text-dark">
-                Vérification en deux étapes
-            </h2>
-            <p class="mt-2 text-center small text-muted">
-                Un code de vérification a été envoyé à<br>
-                <span class="fw-medium text-success">{{ user.email|slice(0, 3) }}***{{ user.email|split('@')[1] }}</span>
-            </p>
+    <div class="w-100" style="max-width: 420px;">
+
+        {# Logo #}
+        <div class="text-center mb-4">
+            <a href="{{ path('app_home') }}">
+                <img src="{{ asset('logo_with_text.png') }}" alt="AgriLink" class="logo logo-header">
+            </a>
         </div>
 
-        {# Error message #}
-        {% if error %}
-            <div class="alert alert-danger d-flex align-items-start" role="alert">
-                <svg class="flex-shrink-0 me-2" style="width: 1.25rem; height: 1.25rem;" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                </svg>
-                <div>{{ error }}</div>
+        <div class="auth-card">
+            {# Header #}
+            <div class="text-center mb-4">
+                <div class="otp-icon-wrap">
+                    <svg fill="none" stroke="#fff" viewBox="0 0 24 24" width="32" height="32">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                    </svg>
+                </div>
+                <h2 class="h5 fw-bold mb-1">Vérification en deux étapes</h2>
+                <p class="text-muted small mb-0">
+                    Code envoyé à
+                    <span class="masked-email">{{ user.email|slice(0,3) }}***@{{ user.email|split('@')[1] }}</span>
+                </p>
             </div>
-        {% endif %}
 
-        {# Success message for resend #}
-        <div id="success-message" class="alert alert-success d-none" role="alert">
-            <div class="d-flex align-items-start">
-                <svg class="flex-shrink-0 me-2" style="width: 1.25rem; height: 1.25rem;" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
-                <div id="success-text"></div>
+            {# Error #}
+            {% if error %}
+                <div class="alert alert-danger alert-auth d-flex align-items-start gap-2 mb-4" role="alert">
+                    <svg fill="currentColor" viewBox="0 0 20 20" width="18" height="18" class="flex-shrink-0 mt-1">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                    </svg>
+                    <div>{{ error }}</div>
+                </div>
+            {% endif %}
+
+            {# Success (resend) #}
+            <div id="success-message" class="alert alert-success alert-auth d-none mb-4" role="alert">
+                <div class="d-flex align-items-start gap-2">
+                    <svg fill="currentColor" viewBox="0 0 20 20" width="18" height="18" class="flex-shrink-0 mt-1">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                    <span id="success-text"></span>
+                </div>
             </div>
-        </div>
 
-        {# Expiration timer #}
-        <div class="text-center mb-3">
-            <div id="timer-container" class="d-inline-flex align-items-center px-3 py-2 rounded-pill {% if expiration_seconds > 60 %}bg-success bg-opacity-10 text-success{% elseif expiration_seconds > 0 %}bg-warning bg-opacity-10 text-warning{% else %}bg-danger bg-opacity-10 text-danger{% endif %}">
-                <svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                <span id="timer-text">
-                    {% if expiration_seconds > 0 %}
-                        Code valide pendant <span id="countdown">{{ (expiration_seconds / 60)|round(0, 'ceil') }}</span> min
-                    {% else %}
-                        Code expiré
-                    {% endif %}
+            {# Timer #}
+            <div class="text-center mb-3">
+                <span id="timer-badge" class="timer-badge {% if expiration_seconds > 60 %}ok{% elseif expiration_seconds > 0 %}warn{% else %}danger{% endif %}">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span id="timer-text">
+                        {% if expiration_seconds > 0 %}
+                            Valide {{ (expiration_seconds / 60)|round(0, 'ceil') }} min
+                        {% else %}
+                            Code expiré
+                        {% endif %}
+                    </span>
                 </span>
             </div>
-        </div>
 
-        {# Remaining attempts #}
-        {% if remaining_attempts < max_attempts %}
-            <div class="text-center small {% if remaining_attempts <= 1 %}text-danger{% else %}text-warning{% endif %} mb-3">
-                <svg class="d-inline me-1" style="width: 1rem; height: 1rem;" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-                </svg>
-                {{ remaining_attempts }} tentative{{ remaining_attempts > 1 ? 's' : '' }} restante{{ remaining_attempts > 1 ? 's' : '' }}
-            </div>
-        {% endif %}
+            {# Attempt dots #}
+            {% if remaining_attempts < max_attempts %}
+                <div class="mb-3">
+                    <div class="attempt-dots mb-1">
+                        {% for i in 1..max_attempts %}
+                            <div class="attempt-dot {{ i <= (max_attempts - remaining_attempts) ? 'used' : 'ok' }}"></div>
+                        {% endfor %}
+                    </div>
+                    <p class="text-center mb-0 {% if remaining_attempts <= 1 %}text-danger{% else %}text-warning{% endif %}"
+                       style="font-size:.8rem;">
+                        {{ remaining_attempts }} tentative{{ remaining_attempts > 1 ? 's' : '' }} restante{{ remaining_attempts > 1 ? 's' : '' }}
+                    </p>
+                </div>
+            {% endif %}
 
-        {# OTP Form #}
-        <form id="otp-form" class="mt-4" action="{{ path('app_2fa_verify') }}" method="post">
-            <div class="mb-3">
-                <label for="otp_code" class="form-label text-center d-block fw-medium mb-3">
-                    Entrez le code à 6 chiffres
-                </label>
-                
-                {# Single input for OTP #}
-                <div class="d-flex justify-content-center">
-                    <input type="text" 
-                           id="otp_code" 
-                           name="otp_code" 
-                           maxlength="6" 
+            {# OTP form #}
+            <form id="otp-form" action="{{ path('app_2fa_verify') }}" method="post">
+                <div class="d-flex flex-column align-items-center mb-4">
+                    <label for="otp_code" class="form-label fw-semibold mb-3 text-center" style="font-size:.9rem;">
+                        Entrez le code à 6 chiffres
+                    </label>
+                    <input type="text"
+                           id="otp_code"
+                           name="otp_code"
+                           maxlength="6"
                            pattern="[0-9]{6}"
                            inputmode="numeric"
                            autocomplete="one-time-code"
                            required
-                           class="form-control text-center fs-4 font-monospace"
-                           style="width: 12rem; letter-spacing: 0.5em;"
-                           placeholder="000000"
+                           class="otp-input"
+                           placeholder="——————"
                            autofocus>
+                    <div id="otp-feedback" class="form-text mt-2 text-center" style="min-height:1.2em;"></div>
                 </div>
-            </div>
 
-            <div class="d-grid mb-3">
-                <button type="submit" 
-                        id="submit-btn"
-                        class="btn btn-success d-flex align-items-center justify-content-center">
-                    <svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                <div class="d-grid mb-3">
+                    <button type="submit" id="submit-btn" class="btn btn-verify text-white">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" class="me-2">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Vérifier le code
+                    </button>
+                </div>
+            </form>
+
+            {# Resend + cancel #}
+            <div class="d-grid gap-2">
+                <button type="button"
+                        id="resend-btn"
+                        onclick="resendCode()"
+                        class="btn btn-outline-secondary d-flex align-items-center justify-content-center gap-2"
+                        style="border-radius:10px;"
+                        {% if not can_resend %}disabled{% endif %}>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
                     </svg>
-                    Vérifier le code
+                    <span id="resend-text">
+                        {% if can_resend %}Renvoyer le code{% else %}Renvoyer dans <span id="cooldown">{{ cooldown_seconds }}</span>s{% endif %}
+                    </span>
                 </button>
+
+                <a href="{{ path('app_2fa_cancel') }}"
+                   class="btn btn-link text-muted text-decoration-none d-flex align-items-center justify-content-center gap-2"
+                   style="font-size:.875rem;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Retour à la connexion
+                </a>
             </div>
-        </form>
 
-        {# Resend and Cancel buttons #}
-        <div class="d-grid gap-3">
-            {# Resend button #}
-            <button type="button" 
-                    id="resend-btn"
-                    onclick="resendCode()"
-                    class="btn btn-outline-secondary d-flex align-items-center justify-content-center"
-                    {% if not can_resend %}disabled{% endif %}>
-                <svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
-                <span id="resend-text">
-                    {% if can_resend %}
-                        Renvoyer le code
-                    {% else %}
-                        Renvoyer dans <span id="cooldown">{{ cooldown_seconds }}</span>s
-                    {% endif %}
-                </span>
-            </button>
-
-            {# Cancel link #}
-            <a href="{{ path('app_2fa_cancel') }}" 
-               class="btn btn-link text-muted d-flex align-items-center justify-content-center text-decoration-none">
-                <svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-                Annuler et retourner à la connexion
-            </a>
-        </div>
-
-        {# Help text #}
-        <div class="mt-4 text-center text-muted" style="font-size: 0.75rem;">
-            <p>Vous n'avez pas reçu le code ?</p>
-            <p class="mt-1">Vérifiez votre dossier spam ou cliquez sur "Renvoyer le code".</p>
+            {# Help #}
+            <div class="text-center text-muted mt-4 pt-3 border-top" style="font-size:.775rem;">
+                Code non reçu ? Vérifiez vos spams ou cliquez sur "Renvoyer le code".
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Timer for OTP expiration
-    let expirationSeconds = {{ expiration_seconds }};
-    let cooldownSeconds = {{ cooldown_seconds }};
-    
-    function updateExpirationTimer() {
-        if (expirationSeconds <= 0) {
-            document.getElementById('timer-text').textContent = 'Code expiré';
-            document.getElementById('timer-container').className = 'd-inline-flex align-items-center px-3 py-2 rounded-pill bg-danger bg-opacity-10 text-danger';
-            document.getElementById('submit-btn').disabled = true;
-            return;
-        }
-        
-        expirationSeconds--;
-        const minutes = Math.floor(expirationSeconds / 60);
-        const seconds = expirationSeconds % 60;
-        
-        let displayText;
-        if (minutes > 0) {
-            displayText = `Code valide pendant ${minutes}:${seconds.toString().padStart(2, '0')}`;
+let expirationSeconds = {{ expiration_seconds }};
+let cooldownSeconds   = {{ cooldown_seconds }};
+
+// — Timers —
+function updateExpTimer() {
+    if (expirationSeconds <= 0) {
+        document.getElementById('timer-text').textContent = 'Code expiré';
+        const badge = document.getElementById('timer-badge');
+        badge.className = 'timer-badge danger';
+        document.getElementById('submit-btn').disabled = true;
+        document.getElementById('otp_code').classList.add('is-invalid');
+        return;
+    }
+    expirationSeconds--;
+    const m = Math.floor(expirationSeconds / 60);
+    const s = expirationSeconds % 60;
+    const label = m > 0
+        ? `Valide ${m}:${String(s).padStart(2,'0')}`
+        : `Valide ${s}s`;
+    document.getElementById('timer-text').textContent = label;
+
+    const badge = document.getElementById('timer-badge');
+    if (expirationSeconds > 60)      badge.className = 'timer-badge ok';
+    else if (expirationSeconds > 30) badge.className = 'timer-badge warn';
+    else                             badge.className = 'timer-badge danger';
+}
+
+function updateCooldown() {
+    if (cooldownSeconds <= 0) {
+        document.getElementById('resend-btn').disabled = false;
+        document.getElementById('resend-text').textContent = 'Renvoyer le code';
+        return;
+    }
+    cooldownSeconds--;
+    document.getElementById('resend-text').innerHTML = `Renvoyer dans <span id="cooldown">${cooldownSeconds}</span>s`;
+}
+
+if (expirationSeconds > 0) setInterval(updateExpTimer, 1000);
+if (cooldownSeconds   > 0) setInterval(updateCooldown,  1000);
+
+// — OTP input UX —
+document.getElementById('otp_code').addEventListener('input', function () {
+    this.value = this.value.replace(/\D/g, '');
+    const len = this.value.length;
+    const fb  = document.getElementById('otp-feedback');
+
+    if (len > 0 && len < 6) {
+        this.classList.remove('is-valid', 'is-invalid');
+        fb.textContent = `${6 - len} chiffre${6-len>1?'s':''} restant${6-len>1?'s':''}`;
+        fb.className = 'form-text mt-2 text-center text-muted';
+    } else if (len === 6) {
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+        fb.textContent = '✓ Code complet';
+        fb.className = 'form-text mt-2 text-center text-success';
+        setTimeout(() => document.getElementById('otp-form').submit(), 150);
+    } else {
+        this.classList.remove('is-valid', 'is-invalid');
+        fb.textContent = '';
+    }
+});
+
+// — Resend —
+async function resendCode() {
+    const btn         = document.getElementById('resend-btn');
+    const successMsg  = document.getElementById('success-message');
+    const successText = document.getElementById('success-text');
+
+    btn.disabled = true;
+    btn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Envoi en cours…`;
+
+    try {
+        const res  = await fetch('{{ path('app_2fa_resend') }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'}
+        });
+        const data = await res.json();
+
+        if (data.redirect) { window.location.href = data.redirect; return; }
+
+        if (data.success) {
+            successText.textContent = data.message;
+            successMsg.classList.remove('d-none');
+            expirationSeconds = data.expiration_seconds;
+            cooldownSeconds   = data.cooldown_seconds;
+            document.getElementById('submit-btn').disabled = false;
+            document.getElementById('otp_code').classList.remove('is-invalid');
+            btn.innerHTML = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><span id="resend-text">Renvoyer dans <span id="cooldown">${data.cooldown_seconds}</span>s</span>`;
+            setTimeout(() => successMsg.classList.add('d-none'), 5000);
         } else {
-            displayText = `Code valide pendant ${seconds}s`;
+            if (data.cooldown) cooldownSeconds = data.cooldown;
+            btn.innerHTML = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><span id="resend-text">Renvoyer dans <span id="cooldown">${data.cooldown || cooldownSeconds}</span>s</span>`;
         }
-        document.getElementById('timer-text').innerHTML = displayText;
-        
-        // Update color based on time remaining
-        const container = document.getElementById('timer-container');
-        if (expirationSeconds > 60) {
-            container.className = 'd-inline-flex align-items-center px-3 py-2 rounded-pill bg-success bg-opacity-10 text-success';
-        } else if (expirationSeconds > 30) {
-            container.className = 'd-inline-flex align-items-center px-3 py-2 rounded-pill bg-warning bg-opacity-10 text-warning';
-        } else {
-            container.className = 'd-inline-flex align-items-center px-3 py-2 rounded-pill bg-danger bg-opacity-10 text-danger';
-        }
+    } catch {
+        btn.disabled = false;
+        btn.innerHTML = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Renvoyer le code`;
     }
-    
-    function updateCooldownTimer() {
-        if (cooldownSeconds <= 0) {
-            document.getElementById('resend-btn').disabled = false;
-            document.getElementById('resend-text').textContent = 'Renvoyer le code';
-            return;
-        }
-        
-        cooldownSeconds--;
-        document.getElementById('resend-text').innerHTML = `Renvoyer dans <span id="cooldown">${cooldownSeconds}</span>s`;
-    }
-    
-    // Start timers
-    if (expirationSeconds > 0) {
-        setInterval(updateExpirationTimer, 1000);
-    }
-    if (cooldownSeconds > 0) {
-        setInterval(updateCooldownTimer, 1000);
-    }
-    
-    // Resend code via AJAX
-    async function resendCode() {
-        const btn = document.getElementById('resend-btn');
-        const successMsg = document.getElementById('success-message');
-        const successText = document.getElementById('success-text');
-        
-        btn.disabled = true;
-        btn.innerHTML = '<div class="spinner-border spinner-border-sm me-2" role="status"><span class="visually-hidden">Loading...</span></div>Envoi en cours...';
-        
-        try {
-            const response = await fetch('{{ path('app_2fa_resend') }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (data.redirect) {
-                window.location.href = data.redirect;
-                return;
-            }
-            
-            if (data.success) {
-                // Show success message
-                successText.textContent = data.message;
-                successMsg.classList.remove('d-none');
-                
-                // Reset expiration timer
-                expirationSeconds = data.expiration_seconds;
-                document.getElementById('submit-btn').disabled = false;
-                
-                // Reset cooldown
-                cooldownSeconds = data.cooldown_seconds;
-                btn.innerHTML = '<svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><span id="resend-text">Renvoyer dans <span id="cooldown">' + cooldownSeconds + '</span>s</span>';
-                
-                // Hide success message after 5 seconds
-                setTimeout(() => {
-                    successMsg.classList.add('d-none');
-                }, 5000);
-            } else {
-                // Show error
-                alert(data.message);
-                if (data.cooldown) {
-                    cooldownSeconds = data.cooldown;
-                }
-                btn.innerHTML = '<svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><span id="resend-text">Renvoyer dans <span id="cooldown">' + cooldownSeconds + '</span>s</span>';
-            }
-        } catch (error) {
-            alert('Erreur lors de l\'envoi du code. Veuillez réessayer.');
-            btn.disabled = false;
-            btn.innerHTML = '<svg class="me-2" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg><span id="resend-text">Renvoyer le code</span>';
-        }
-    }
-    
-    // Auto-submit when 6 digits entered
-    document.getElementById('otp_code').addEventListener('input', function(e) {
-        // Only allow digits
-        this.value = this.value.replace(/[^0-9]/g, '');
-        
-        // Auto-submit when 6 digits are entered
-        if (this.value.length === 6) {
-            // Small delay to show the last digit
-            setTimeout(() => {
-                document.getElementById('otp-form').submit();
-            }, 100);
-        }
-    });
+}
 </script>
 {% endblock %}

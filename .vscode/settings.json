@@ -1,0 +1,10 @@
+{
+  "intelephense.environment.includePaths": [
+    "vendor"
+  ],
+  "intelephense.files.exclude": [
+    "**/var/cache/**",
+    "**/node_modules/**"
+  ],
+  "php.validate.executablePath": "php"
+}

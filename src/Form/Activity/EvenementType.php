@@ -3,10 +3,11 @@
 namespace App\Form\Activity;
 
 use App\Entity\Activity\Evenement;
+use App\Entity\UserManagement\User;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
-use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -101,18 +102,19 @@ class EvenementType extends AbstractType
             ]);
 
         if ($options['is_admin']) {
-            $builder->add('idOrganisateur', IntegerType::class, [
-                'label' => 'ID organisateur',
+            $builder->add('organisateur', EntityType::class, [
+                'class' => User::class,
+                'choice_label' => static fn (User $user): string => sprintf('#%d - %s', $user->getId(), $user->getDisplayName()),
+                'label' => 'Organisateur',
                 'required' => true,
                 'attr' => [
-                    'class' => 'form-control',
-                    'placeholder' => 'ID de l\'organisateur',
-                    'min' => 1,
+                    'class' => 'form-select',
                 ],
                 'help' => 'Requis en mode admin.',
+                'placeholder' => '-- Sélectionner un utilisateur --',
                 'constraints' => [
-                    new Assert\Positive([
-                        'message' => 'L\'ID organisateur doit être supérieur à 0.',
+                    new Assert\NotNull([
+                        'message' => 'Veuillez sélectionner un organisateur.',
                     ]),
                 ],
             ]);
