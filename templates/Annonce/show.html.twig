@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+<h1>{{ annonce.titre }}</h1>
+<p><strong>Type :</strong> {{ annonce.type }}</p>
+<p><strong>Quantité :</strong> {{ annonce.quantite }}</p>
+<p><strong>Prix unitaire :</strong> {{ annonce.prixUnitaire }} TND</p>
+<p><strong>Statut :</strong> {{ annonce.status }}</p>
+<p><strong>Photos :</strong> {{ annonce.photos }}</p>
+<a href="{{ path('annonce_edit', {id: annonce.id}) }}" class="btn btn-warning">Modifier</a>
+<a href="{{ path('annonce_index') }}" class="btn btn-secondary">Retour</a>
+{% endblock %}

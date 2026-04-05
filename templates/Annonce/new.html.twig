@@ -1,0 +1,138 @@
+{% extends 'layouts/app.html.twig' %}
+
+{% block title %}Nouvelle annonce - AgriLink{% endblock %}
+
+{% block page_content %}
+
+    <div class="mb-4">
+        <h2 class="fs-3 fw-bold text-dark">Nouvelle annonce 📢</h2>
+        <p class="mt-1 small text-muted">Remplissez les informations pour publier votre annonce.</p>
+    </div>
+
+    <div class="row g-4">
+
+        {# Formulaire principal #}
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h5 class="fw-semibold text-dark mb-4">Informations de l'annonce</h5>
+
+                    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+
+                    {# Titre #}
+                    <div class="mb-3">
+                        <label class="form-label small fw-medium text-dark">Titre</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">✏️</span>
+                            {{ form_widget(form.titre, {'attr': {'class': 'form-control border-start-0', 'placeholder': 'Ex: Tomates fraîches bio...'}}) }}
+                        </div>
+                        {{ form_errors(form.titre) }}
+                    </div>
+
+                    {# Type + Quantité #}
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label small fw-medium text-dark">Type de produit</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">🌿</span>
+                                {{ form_widget(form.type, {'attr': {'class': 'form-control border-start-0', 'placeholder': 'Ex: Légume, Fruit...'}}) }}
+                            </div>
+                            {{ form_errors(form.type) }}
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label small fw-medium text-dark">Quantité</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">📦</span>
+                                {{ form_widget(form.quantite, {'attr': {'class': 'form-control border-start-0', 'placeholder': 'Ex: 100'}}) }}
+                                <span class="input-group-text bg-light">kg</span>
+                            </div>
+                            {{ form_errors(form.quantite) }}
+                        </div>
+                    </div>
+
+                    {# Prix + Statut #}
+                    <div class="row g-3 mb-3">
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label small fw-medium text-dark">Prix unitaire</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">💰</span>
+                                {{ form_widget(form.prixUnitaire, {'attr': {'class': 'form-control border-start-0', 'placeholder': '0.00'}}) }}
+                                <span class="input-group-text bg-light">TND</span>
+                            </div>
+                            {{ form_errors(form.prixUnitaire) }}
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label small fw-medium text-dark">Statut</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">📋</span>
+                                {{ form_widget(form.status, {'attr': {'class': 'form-select border-start-0'}}) }}
+                            </div>
+                            {{ form_errors(form.status) }}
+                        </div>
+                    </div>
+
+                    {# Photos #}
+                    <div class="mb-4">
+                        <label class="form-label small fw-medium text-dark">
+                            Photos <span class="text-muted fw-normal">(optionnel)</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0">🖼️</span>
+                            {{ form_widget(form.photos, {'attr': {'class': 'form-control border-start-0', 'placeholder': 'URL de la photo...'}}) }}
+                        </div>
+                        {{ form_errors(form.photos) }}
+                    </div>
+
+                    {# Boutons #}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success btn-sm px-4">
+                            ✅ Publier l'annonce
+                        </button>
+                        <a href="{{ path('annonce_index') }}" class="btn btn-outline-secondary btn-sm px-4">
+                            Annuler
+                        </a>
+                    </div>
+
+                    {{ form_end(form) }}
+                </div>
+            </div>
+        </div>
+
+        {# Colonne conseils #}
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-body p-4">
+                    <h6 class="fw-semibold text-dark mb-3">💡 Conseils</h6>
+                    <div class="d-flex flex-column gap-3">
+                        <div class="d-flex align-items-start gap-2">
+                            <span class="text-success fw-bold">✓</span>
+                            <p class="small text-muted mb-0">Donnez un titre clair et précis à votre annonce.</p>
+                        </div>
+                        <div class="d-flex align-items-start gap-2">
+                            <span class="text-success fw-bold">✓</span>
+                            <p class="small text-muted mb-0">Indiquez la quantité disponible en kg ou unités.</p>
+                        </div>
+                        <div class="d-flex align-items-start gap-2">
+                            <span class="text-success fw-bold">✓</span>
+                            <p class="small text-muted mb-0">Un prix compétitif attire plus d'acheteurs.</p>
+                        </div>
+                        <div class="d-flex align-items-start gap-2">
+                            <span class="text-success fw-bold">✓</span>
+                            <p class="small text-muted mb-0">Ajoutez une photo pour augmenter vos chances de vente.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Promo AgriPlus #}
+            <div class="rounded-3 overflow-hidden" style="background: linear-gradient(to right, #16a34a, #15803d);">
+                <div class="p-4">
+                    <h6 class="fw-bold text-white mb-1">Passez à AgriPlus ! 🌟</h6>
+                    <p class="small mb-3" style="color: #dcfce7;">Publiez des annonces illimitées et atteignez plus d'acheteurs.</p>
+                    <a href="#" class="btn btn-light btn-sm text-success fw-medium">Découvrir</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

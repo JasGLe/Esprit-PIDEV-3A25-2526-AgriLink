@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Annonce;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Repository\AnnonceRepository::class)]
+#[ORM\Entity(repositoryClass: \App\Repository\Annonce\AnnonceRepository::class)]
 #[ORM\Table(name: 'annonce')]
 class Annonce
 {
@@ -23,7 +23,7 @@ class Annonce
     #[ORM\Column(type: Types::INTEGER)]
     private int $quantite;
 
-    #[ORM\Column(type: Types::FLOAT)]
+    #[ORM\Column(name: 'prixUnitaire', type: Types::FLOAT)]
     private float $prixUnitaire;
 
     #[ORM\Column(type: Types::STRING, length: 30)]

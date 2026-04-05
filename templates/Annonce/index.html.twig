@@ -1,0 +1,29 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+<h1>Annonces</h1>
+<a href="{{ path('annonce_new') }}" class="btn btn-primary mb-3">Nouvelle annonce</a>
+<table class="table table-bordered">
+    <thead>
+        <tr><th>Titre</th><th>Type</th><th>Quantité</th><th>Prix</th><th>Statut</th><th>Actions</th></tr>
+    </thead>
+    <tbody>
+    {% for annonce in annonces %}
+        <tr>
+            <td>{{ annonce.titre }}</td>
+            <td>{{ annonce.type }}</td>
+            <td>{{ annonce.quantite }}</td>
+            <td>{{ annonce.prixUnitaire }} TND</td>
+            <td>{{ annonce.status }}</td>
+            <td>
+                <a href="{{ path('annonce_show', {id: annonce.id}) }}" class="btn btn-sm btn-info">Voir</a>
+                <a href="{{ path('annonce_edit', {id: annonce.id}) }}" class="btn btn-sm btn-warning">Modifier</a>
+                <form method="post" action="{{ path('annonce_delete', {id: annonce.id}) }}" style="display:inline">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete'~annonce.id) }}">
+                    <button class="btn btn-sm btn-danger" onclick="return confirm('Supprimer ?')">Supprimer</button>
+                </form>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
