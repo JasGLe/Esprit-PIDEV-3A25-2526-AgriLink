@@ -1,0 +1,34 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Nouvelle annonce - AgriLink{% endblock %}
+{% block page_title %}Nouvelle annonce{% endblock %}
+
+{% block dashboard_content %}
+    <div class="row g-4">
+        <div class="col-12 col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 p-lg-5">
+                    <h2 class="fs-4 fw-bold text-dark mb-1">Publier une annonce</h2>
+                    <p class="text-muted mb-4">Ajoutez une annonce claire et complete pour faciliter les echanges.</p>
+                    {% include 'Annonce/_form.html.twig' with {
+                        form: form,
+                        submit_label: 'Publier l annonce'
+                    } only %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <h3 class="fs-6 fw-bold text-dark mb-3">Bonnes pratiques</h3>
+                    <ul class="list-unstyled d-flex flex-column gap-3 mb-0 text-muted small">
+                        <li>Utilisez un titre descriptif et un type de produit precis.</li>
+                        <li>Renseignez une quantite et un prix coherents.</li>
+                        <li>Ajoutez un lien photo si vous en avez un.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

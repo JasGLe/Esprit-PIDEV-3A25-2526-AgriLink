@@ -1,0 +1,20 @@
+{{ form_start(form) }}
+    <div class="row g-3">
+        <div class="col-12">
+            {{ form_label(form.titre, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+            {{ form_widget(form.titre, {'attr': {'class': 'form-control', 'placeholder': 'Titre du sujet'}}) }}
+            {{ form_errors(form.titre) }}
+        </div>
+
+        <div class="col-12">
+            {{ form_label(form.categorie, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+            {{ form_widget(form.categorie, {'attr': {'class': 'form-select'}}) }}
+            {{ form_errors(form.categorie) }}
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mt-4">
+        <button type="submit" class="btn btn-success">{{ submit_label|default('Enregistrer') }}</button>
+        <a href="{{ path('forum_index') }}" class="btn btn-outline-secondary">Annuler</a>
+    </div>
+{{ form_end(form) }}

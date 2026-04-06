@@ -1,0 +1,33 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+{% block title %}Modifier le sujet - AgriLink{% endblock %}
+{% block page_title %}Modifier le sujet{% endblock %}
+
+{% block dashboard_content %}
+    <div class="row g-4">
+        <div class="col-12 col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 p-lg-5">
+                    <h2 class="fs-4 fw-bold text-dark mb-1">{{ forum.titre }}</h2>
+                    <p class="text-muted mb-4">Ajustez le titre ou la categorie du sujet.</p>
+                    {% include 'Forum/_form.html.twig' with {
+                        form: form,
+                        submit_label: 'Enregistrer'
+                    } only %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="fs-6 fw-bold text-dark mb-3">Suppression</h3>
+                    <p class="text-muted small">Cette action supprime le sujet du forum.</p>
+                    <form method="post" action="{{ path('forum_delete', {id: forum.id}) }}" onsubmit="return confirm('Supprimer ce sujet ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ forum.id) }}">
+                        <button class="btn btn-outline-danger">Supprimer le sujet</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
