@@ -16,9 +16,69 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class CancellationRequestsRepository extends ServiceEntityRepository
 {
+    public const STATUS_PENDING = 'PENDING';
+
+    public const STATUS_APPROVED = 'APPROVED';
+
+    public const STATUS_REJECTED = 'REJECTED';
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, CancellationRequests::class);
+    }
+
+    public function findOnePendingByCommandeId(int $commandeId): ?CancellationRequests
+    {
+        return $this->findOneBy([
+            'commandeId' => $commandeId,
+            'status' => self::STATUS_PENDING,
+        ]);
+    }
+
+    /**
+     * @param list<int> $commandeIds
+     *
+     * @return array<int, true>
+     */
+    public function findPendingCommandeIdMap(array $commandeIds): array
+    {
+        if ($commandeIds === []) {
+            return [];
+        }
+
+        $entities = $this->createQueryBuilder('cr')
+            ->where('cr.commandeId IN (:ids)')
+            ->andWhere('cr.status = :st')
+            ->setParameter('ids', $commandeIds)
+            ->setParameter('st', self::STATUS_PENDING)
+            ->getQuery()
+            ->getResult();
+
+        $out = [];
+        foreach ($entities as $cr) {
+            $out[$cr->getCommandeId()] = true;
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param list<int> $commandeIds
+     */
+    public function countPendingForCommandeIds(array $commandeIds): int
+    {
+        if ($commandeIds === []) {
+            return 0;
+        }
+
+        return (int) $this->createQueryBuilder('cr')
+            ->select('COUNT(cr.id)')
+            ->where('cr.commandeId IN (:ids)')
+            ->andWhere('cr.status = :st')
+            ->setParameter('ids', $commandeIds)
+            ->setParameter('st', self::STATUS_PENDING)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     public function save(CancellationRequests $entity, bool $flush = false): void

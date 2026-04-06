@@ -509,6 +509,31 @@ button.mc-act--delete:disabled {
     cursor: not-allowed;
 }
 
+/* AgriPlus acheteur : annulation (pas corbeille), rouge affirmé */
+.mc-act--agriplus-cancel {
+    background: rgba(220, 38, 38, 0.22);
+    border-color: rgba(220, 38, 38, 0.75);
+    color: #f87171 !important;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+button.mc-act--agriplus-cancel:hover:not(:disabled) {
+    background: rgba(220, 38, 38, 0.35);
+    border-color: rgba(248, 113, 113, 0.9);
+    color: #fecaca !important;
+}
+
+button.mc-act--agriplus-cancel:disabled {
+    opacity: 0.42;
+    cursor: not-allowed;
+    color: #fca5a5 !important;
+}
+
 .mc-act-toolbar form.d-inline {
     display: inline-flex !important;
     vertical-align: middle;
@@ -1425,7 +1450,31 @@ a.mc-act--more:hover {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: rgba(220, 38, 38, 0.10);
+    background: rgba(220, 38, 38, 0.12);
+    color: #dc2626;
+}
+
+.boutique-confirm__icon .bi {
+    font-size: 1rem;
+    line-height: 1;
+}
+
+/* Modale annulation : même registre visuel que « Supprimer » */
+.mc-cancel-request-modal__header {
+    background: linear-gradient(90deg, rgba(220, 38, 38, 0.14), rgba(220, 38, 38, 0.04)) !important;
+}
+
+.mc-cancel-request-modal__title {
+    color: #991b1b;
+}
+
+.mc-cancel-request-modal__footer .btn-danger {
+    font-weight: 700;
+    box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
+}
+
+.mc-cancel-request-modal__footer .btn-danger:hover {
+    filter: brightness(0.95);
 }
 
 .boutique-confirm__body {

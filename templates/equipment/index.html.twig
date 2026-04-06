@@ -12,6 +12,30 @@
     .card-equipement            { transition: all .2s; }
     .img-equipement             { width: 100%; height: 180px; object-fit: cover; border-radius: 8px 8px 0 0; }
     .img-placeholder            { width: 100%; height: 180px; background: #e9ecef; border-radius: 8px 8px 0 0; display: flex; align-items: center; justify-content: center; color: #adb5bd; font-size: 3rem; }
+
+    /* Put for sale modal (soft green calming palette) */
+    .eq-sale-modal__content { border-radius: 1rem; overflow: hidden; border: 0; }
+    .eq-sale-modal__header { background: linear-gradient(135deg, #d1fae5, #ecfdf5); color: #064e3b; border: 0; }
+    .eq-sale-modal__title { font-weight: 900; letter-spacing: -0.02em; display:flex; align-items:center; gap:.5rem; }
+    .eq-sale-modal__title-badge { display:inline-flex; align-items:center; justify-content:center; width:2rem; height:2rem; border-radius:.75rem; background: rgba(16,185,129,0.16); color:#047857; }
+    .eq-sale-modal__body { background: linear-gradient(180deg, #dcfce7 0%, #d1fae5 100%); padding: 1rem; }
+    .eq-sale-grid { display:grid; grid-template-columns: 1.05fr 1fr; gap: 0.9rem; }
+    @media (max-width: 992px){ .eq-sale-grid { grid-template-columns: 1fr; } }
+    .eq-panel { background: rgba(255,255,255,0.70); border: 1px solid rgba(6,95,70,0.14); border-radius: 0.95rem; padding: 0.95rem; color:#064e3b; box-shadow: 0 10px 30px rgba(2,6,23,0.08); }
+    .eq-panel__k { font-size: .7rem; font-weight: 900; letter-spacing:.08em; text-transform: uppercase; color: rgba(6,95,70,0.65); }
+    .eq-panel__v { font-size: .9rem; font-weight: 750; color:#064e3b; }
+    .eq-field-label { font-size: .68rem; font-weight: 900; letter-spacing:.08em; text-transform: uppercase; color: rgba(6,95,70,0.65); margin-bottom: .35rem; }
+    .eq-input { background: rgba(255,255,255,0.88) !important; border: 1px solid rgba(6,95,70,0.20) !important; color:#064e3b !important; border-radius:.75rem !important; padding:.62rem .75rem !important; }
+    .eq-input:focus { border-color: rgba(16,185,129,0.65) !important; box-shadow: 0 0 0 .2rem rgba(16,185,129,0.18) !important; }
+    .eq-input[readonly], .eq-input:disabled { background: rgba(255,255,255,0.70) !important; color: rgba(6,95,70,0.85) !important; }
+    .eq-radio { accent-color: #10b981; }
+    .eq-sale-footer { background: linear-gradient(180deg, rgba(209,250,229,0.55), rgba(236,253,245,0.95)); border: 0; padding: 0.9rem 1rem 1rem; display:flex; gap:.6rem; justify-content:flex-end; position: sticky; bottom: 0; }
+    .eq-btn-primary { background: linear-gradient(135deg,#34d399,#10b981); border:0; color:#064e3b; font-weight: 900; border-radius:.75rem; padding:.65rem 1.1rem; }
+    .eq-btn-primary:hover { filter: brightness(1.05); }
+    .eq-btn-secondary { background: rgba(255,255,255,0.75); border:1px solid rgba(6,95,70,0.18); color:#065f46; font-weight: 800; border-radius:.75rem; padding:.65rem 1.0rem; }
+    .eq-sale-btn { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.35); color: #16a34a; font-weight: 700; }
+    .eq-sale-btn:hover { background: rgba(34,197,94,0.18); color:#0f7a34; }
+    .eq-sale-btn:disabled { opacity: .55; cursor:not-allowed; }
 </style>
 {% endblock %}
 
@@ -56,6 +80,7 @@
     {% else %}
         <div class="row g-3" id="grille-equipements">
             {% for eq in equipements %}
+                {% set deja_en_boutique = eq.id in (equipement_ids_en_boutique|default([])) %}
                 <div class="col-sm-6 col-lg-4 equipement-card"
                      data-statut="{{ eq.statut }}"
                      data-search="{{ (eq.nom ~ ' ' ~ eq.type ~ ' ' ~ (eq.marque ?? '') ~ ' ' ~ (eq.statut ?? ''))|lower }}">
@@ -95,11 +120,26 @@
                         </div>
 
                         {# Actions #}
-                        <div class="card-footer bg-transparent border-0 d-flex gap-2 pb-3">
+                        <div class="card-footer bg-transparent border-0 d-flex gap-2 pb-3 flex-wrap">
                             <a href="{{ path('equipement_show', {id: eq.id}) }}"
                                class="btn btn-sm btn-outline-primary flex-fill">Voir</a>
                             <a href="{{ path('equipement_edit', {id: eq.id}) }}"
                                class="btn btn-sm btn-outline-secondary flex-fill">Modifier</a>
+                            <button type="button"
+                                    class="btn btn-sm eq-sale-btn flex-fill js-eq-put-for-sale"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalEqPutForSale"
+                                    data-eq-id="{{ eq.id }}"
+                                    data-eq-nom="{{ (eq.nom ?? '')|e('html_attr') }}"
+                                    data-eq-type="{{ (eq.type ?? '')|e('html_attr') }}"
+                                    data-eq-marque="{{ (eq.marque ?? '')|e('html_attr') }}"
+                                    data-eq-modele="{{ (eq.modele ?? '')|e('html_attr') }}"
+                                    data-eq-statut="{{ (eq.statut ?? '')|e('html_attr') }}"
+                                    data-eq-categorie="{{ (eq.categorie ?? '')|e('html_attr') }}"
+                                    data-eq-image="{{ (eq.imageUrl ?? '')|e('html_attr') }}"
+                                    {{ deja_en_boutique ? 'disabled' : '' }}>
+                                {{ deja_en_boutique ? 'Déjà en boutique' : 'Mettre en vente' }}
+                            </button>
                             <form method="post"
                                   action="{{ path('equipement_delete', {id: eq.id}) }}"
                                   onsubmit="return confirm('Supprimer cet équipement ?')">
@@ -112,6 +152,157 @@
             {% endfor %}
         </div>
     {% endif %}
+
+    {# Put for sale modal (Equipment → My Boutique) #}
+    <div class="modal fade" id="modalEqPutForSale" tabindex="-1" aria-labelledby="modalEqPutForSaleLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content eq-sale-modal__content eq-sale-modal__content">
+                <div class="modal-header eq-sale-modal__header">
+                    <h2 class="modal-title eq-sale-modal__title" id="modalEqPutForSaleLabel">
+                        <span class="eq-sale-modal__title-badge" aria-hidden="true">🛒</span>
+                        Mettre en vente
+                        <span class="opacity-75 fw-semibold" id="eqSaleTitleName" style="font-size:.95rem;">—</span>
+                    </h2>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body eq-sale-modal__body">
+                    <div class="eq-sale-grid">
+                        <div class="eq-panel">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="rounded-3 overflow-hidden flex-shrink-0" style="width:86px;height:86px;background:rgba(16,185,129,0.10);border:1px solid rgba(6,95,70,0.12);display:flex;align-items:center;justify-content:center;">
+                                    <img id="eqSaleImg" src="" alt="" style="width:100%;height:100%;object-fit:cover;display:none;">
+                                    <span id="eqSaleImgPh" style="font-size:2rem;opacity:.9;">🚜</span>
+                                </div>
+                                <div class="min-w-0 flex-fill">
+                                    <div class="eq-panel__k mb-2">Informations équipement</div>
+                                    <div class="row g-2">
+                                        <div class="col-12">
+                                            <div class="eq-field-label">Nom</div>
+                                            <input type="text" class="form-control eq-input" id="eqSaleFieldNom" readonly>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="eq-field-label">Type</div>
+                                            <input type="text" class="form-control eq-input" id="eqSaleFieldType" readonly>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="eq-field-label">État</div>
+                                            <input type="text" class="form-control eq-input" id="eqSaleFieldStatut" readonly>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="eq-field-label">Marque</div>
+                                            <input type="text" class="form-control eq-input" id="eqSaleFieldMarque" readonly>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="eq-field-label">Modèle</div>
+                                            <input type="text" class="form-control eq-input" id="eqSaleFieldModele" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="eq-field-label">Catégorie</div>
+                                    <input type="text" class="form-control eq-input" id="eqSaleFieldCategorie" readonly>
+                                </div>
+                                <div class="col-6">
+                                    <div class="eq-field-label">Image</div>
+                                    <input type="text" class="form-control eq-input" value="Reprise depuis l’équipement" readonly>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 d-flex align-items-start gap-2 px-3 py-2 rounded-3"
+                                 style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.22);">
+                                <span aria-hidden="true" style="margin-top:.05rem;">ℹ️</span>
+                                <p class="mb-0" style="font-size:0.82rem;color:#065f46;">
+                                    Les informations équipement sont pré-remplies. Vous ne renseignez ici que les <strong>détails de vente</strong>.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="eq-panel">
+                            <div class="eq-panel__k mb-2">Détails de vente</div>
+                            <form method="post" id="eqSaleForm" action="" class="mt-2" novalidate>
+                                <input type="hidden" name="_token" id="eqSaleToken" value="">
+
+                                <div class="mb-3">
+                                    <div class="eq-field-label">Condition</div>
+                                    <div class="d-flex gap-3 flex-wrap">
+                                        <label class="d-flex align-items-center gap-2">
+                                            <input class="eq-radio js-eq-condition-toggle" type="radio" name="eq_vente[condition]" value="NEUF" checked>
+                                            <span>Neuf</span>
+                                        </label>
+                                        <label class="d-flex align-items-center gap-2">
+                                            <input class="eq-radio js-eq-condition-toggle" type="radio" name="eq_vente[condition]" value="OCCASION">
+                                            <span>Occasion</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="mt-2 d-none" id="eqUsedDurationWrap">
+                                    <div class="eq-field-label">Durée d’utilisation (si occasion)</div>
+                                    <div class="row g-2">
+                                        <div class="col-7">
+                                            <input type="text" name="eq_vente[used_value]" class="form-control eq-input" placeholder="Ex : 6" autocomplete="off">
+                                        </div>
+                                        <div class="col-5">
+                                            <select name="eq_vente[used_unit]" class="form-select eq-input">
+                                                <option value="mois">Mois</option>
+                                                <option value="ans">Ans</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-text" style="color:rgba(6,95,70,0.72);">Visible uniquement si vous sélectionnez “Occasion”.</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="eq-field-label">Prix (DT)</div>
+                                    <div class="input-group">
+                                        <span class="input-group-text" style="background:rgba(16,185,129,0.16);border:1px solid rgba(6,95,70,0.18);color:#047857;font-weight:900;">DT</span>
+                                        <input type="text" name="eq_vente[prix]" class="form-control eq-input" placeholder="Saisissez le prix" autocomplete="off">
+                                    </div>
+                                    <div class="form-text" style="color:rgba(6,95,70,0.72);">Montant en dinar tunisien (DT).</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="eq-field-label">Quantité en stock</div>
+                                    <input type="text"
+                                           name="eq_vente[quantite]"
+                                           class="form-control eq-input"
+                                           placeholder="Nombre d’exemplaires disponibles"
+                                           autocomplete="off">
+                                </div>
+
+                                <div class="mb-2">
+                                    <div class="eq-field-label">Garantie</div>
+                                    <div class="d-flex gap-3 flex-wrap">
+                                        <label class="d-flex align-items-center gap-2">
+                                            <input class="eq-radio js-eq-warranty-toggle" type="radio" name="eq_vente[warranty_enabled]" value="0" checked>
+                                            <span>Sans garantie</span>
+                                        </label>
+                                        <label class="d-flex align-items-center gap-2">
+                                            <input class="eq-radio js-eq-warranty-toggle" type="radio" name="eq_vente[warranty_enabled]" value="1">
+                                            <span>Avec garantie</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="mt-2 d-none" id="eqWarrantyDurationWrap">
+                                    <div class="eq-field-label">Durée de garantie</div>
+                                    <input type="text" name="eq_vente[warranty_duration]" class="form-control eq-input" placeholder="Ex : 6 mois / 1 an" autocomplete="off">
+                                    <div class="form-text" style="color:rgba(6,95,70,0.72);">Indiquez une durée (ex. “12 mois”).</div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer eq-sale-footer">
+                    <button type="button" class="eq-btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" form="eqSaleForm" class="eq-btn-primary">Publier l’annonce</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 <script>
 let filtreStatut = 'tous';
@@ -138,5 +329,118 @@ document.getElementById('recherche-equipement').addEventListener('input', functi
     filtreTexte = this.value.trim().toLowerCase();
     applyFilters();
 });
+
+(function () {
+    var modalEl = document.getElementById('modalEqPutForSale');
+    if (!modalEl) return;
+
+    var titleName = document.getElementById('eqSaleTitleName');
+    var fieldNom = document.getElementById('eqSaleFieldNom');
+    var fieldType = document.getElementById('eqSaleFieldType');
+    var fieldMarque = document.getElementById('eqSaleFieldMarque');
+    var fieldModele = document.getElementById('eqSaleFieldModele');
+    var fieldStatut = document.getElementById('eqSaleFieldStatut');
+    var fieldCategorie = document.getElementById('eqSaleFieldCategorie');
+    var img = document.getElementById('eqSaleImg');
+    var imgPh = document.getElementById('eqSaleImgPh');
+
+    var form = document.getElementById('eqSaleForm');
+    var tokenInput = document.getElementById('eqSaleToken');
+    var warrantyWrap = document.getElementById('eqWarrantyDurationWrap');
+    var usedWrap = document.getElementById('eqUsedDurationWrap');
+
+    function setWarrantyVisible(on) {
+        if (!warrantyWrap) return;
+        warrantyWrap.classList.toggle('d-none', !on);
+        if (!on) {
+            var input = warrantyWrap.querySelector('input[name="eq_vente[warranty_duration]"]');
+            if (input) input.value = '';
+        }
+    }
+
+    function setUsedVisible(on) {
+        if (!usedWrap) return;
+        usedWrap.classList.toggle('d-none', !on);
+        if (!on) {
+            var v = usedWrap.querySelector('input[name="eq_vente[used_value]"]');
+            if (v) v.value = '';
+            var u = usedWrap.querySelector('select[name="eq_vente[used_unit]"]');
+            if (u) u.value = 'mois';
+        }
+    }
+
+    document.addEventListener('change', function (e) {
+        var t = e.target;
+        if (!t || !t.classList || !t.classList.contains('js-eq-warranty-toggle')) return;
+        setWarrantyVisible(t.value === '1');
+    });
+
+    document.addEventListener('change', function (e) {
+        var t = e.target;
+        if (!t || !t.classList || !t.classList.contains('js-eq-condition-toggle')) return;
+        setUsedVisible(t.value === 'OCCASION');
+    });
+
+    modalEl.addEventListener('show.bs.modal', function (event) {
+        var btn = event.relatedTarget;
+        if (!btn) return;
+
+        var id = btn.getAttribute('data-eq-id') || '';
+        var nom = btn.getAttribute('data-eq-nom') || 'Équipement';
+        var type = btn.getAttribute('data-eq-type') || '—';
+        var marque = btn.getAttribute('data-eq-marque') || '—';
+        var modele = btn.getAttribute('data-eq-modele') || '';
+        var statut = btn.getAttribute('data-eq-statut') || '—';
+        var categorie = btn.getAttribute('data-eq-categorie') || '—';
+        var image = btn.getAttribute('data-eq-image') || '';
+
+        if (titleName) titleName.textContent = '· ' + nom;
+        if (fieldNom) fieldNom.value = nom;
+        if (fieldType) fieldType.value = type;
+        if (fieldMarque) fieldMarque.value = marque;
+        if (fieldModele) fieldModele.value = modele;
+        if (fieldStatut) fieldStatut.value = statut;
+        if (fieldCategorie) fieldCategorie.value = categorie;
+
+        // set action + token
+        if (form) {
+            form.action = {{ path('boutique_produit_depuis_equipement', { equipementId: 0 })|json_encode|raw }}.replace('/0/', '/' + id + '/');
+        }
+        // CSRF is generated server-side per equipment id to avoid guessing.
+        // We embed a map of tokens in the page.
+        if (tokenInput && window.__EQ_BOUTIQUE_TOKENS__) {
+            tokenInput.value = window.__EQ_BOUTIQUE_TOKENS__[String(id)] || '';
+        }
+
+        // image preview (equipment)
+        if (img && imgPh) {
+            if (image) {
+                img.src = image.startsWith('http') ? image : ({{ asset('')|json_encode|raw }} + image);
+                img.style.display = 'block';
+                imgPh.style.display = 'none';
+                img.onerror = function () {
+                    img.style.display = 'none';
+                    imgPh.style.display = 'block';
+                };
+            } else {
+                img.style.display = 'none';
+                imgPh.style.display = 'block';
+            }
+        }
+
+        // reset warranty UI
+        setWarrantyVisible(false);
+        var off = modalEl.querySelector('input[name="eq_vente[warranty_enabled]"][value="0"]');
+        if (off) off.checked = true;
+
+        // reset condition UI + used duration
+        setUsedVisible(false);
+        var cNew = modalEl.querySelector('input[name="eq_vente[condition]"][value="NEUF"]');
+        if (cNew) cNew.checked = true;
+    });
+})();
+</script>
+<script>
+window.__EQ_BOUTIQUE_TOKENS__ = {{ (equipement_boutique_tokens|default({}))|json_encode|raw }};
 </script>
 {% endblock %}

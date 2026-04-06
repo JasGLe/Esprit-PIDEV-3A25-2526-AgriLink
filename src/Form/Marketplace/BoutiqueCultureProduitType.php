@@ -22,6 +22,7 @@ class BoutiqueCultureProduitType extends AbstractType
     {
         $nomOpts = [
             'label' => 'Nom du produit',
+            'required' => false,
             'constraints' => [new NotBlank(['message' => 'Le nom est obligatoire.'])],
             'attr' => [
                 'class' => 'form-control',
@@ -34,47 +35,68 @@ class BoutiqueCultureProduitType extends AbstractType
             $nomOpts['help'] = 'Lié à la culture : le nom ne peut pas être modifié.';
         }
 
+        $builder->add('nom', TextType::class, $nomOpts);
+
+        if (!$options['is_equipement']) {
+            $builder
+                ->add('category', ChoiceType::class, [
+                    'label' => 'Catégorie (culture)',
+                    'choices' => [
+                        'Légume' => 'LEGUME',
+                        'Fruit' => 'FRUIT',
+                        'Grains' => 'GRAINS',
+                    ],
+                    'placeholder' => 'Choisir…',
+                    'required' => false,
+                    'constraints' => [new NotBlank(['message' => 'Choisissez une catégorie.'])],
+                    'attr' => ['class' => 'form-select'],
+                ])
+                ->add('uniteVente', ChoiceType::class, [
+                    'label' => 'Unité de vente',
+                    'mapped' => false,
+                    'choices' => [
+                        'Kilogramme (kg)' => 'kg',
+                        'Tonne' => 'tonne',
+                        'Quintal' => 'quintal',
+                        'Litre' => 'litre',
+                        'Pièce' => 'piece',
+                    ],
+                    'required' => false,
+                    'constraints' => [new NotBlank(['message' => 'Choisissez une unité de vente.'])],
+                    'attr' => ['class' => 'form-select'],
+                ]);
+        }
+
         $builder
-            ->add('nom', TextType::class, $nomOpts)
-            ->add('category', ChoiceType::class, [
-                'label' => 'Catégorie (culture)',
-                'choices' => [
-                    'Légume' => 'LEGUME',
-                    'Fruit' => 'FRUIT',
-                    'Grains' => 'GRAINS',
-                ],
-                'placeholder' => 'Choisir…',
-                'constraints' => [new NotBlank(['message' => 'Choisissez une catégorie.'])],
-                'attr' => ['class' => 'form-select'],
-            ])
-            ->add('uniteVente', ChoiceType::class, [
-                'label' => 'Unité de vente',
-                'mapped' => false,
-                'choices' => [
-                    'Kilogramme (kg)' => 'kg',
-                    'Tonne' => 'tonne',
-                    'Quintal' => 'quintal',
-                    'Litre' => 'litre',
-                    'Pièce' => 'piece',
-                ],
-                'constraints' => [new NotBlank()],
-                'attr' => ['class' => 'form-select'],
-            ])
             ->add('prixUnitaire', NumberType::class, [
                 'label' => 'Prix par unité (DT)',
-                'html5' => true,
+                'html5' => false,
                 'scale' => 3,
-                'constraints' => [new NotBlank(), new Positive(message: 'Le prix doit être positif.')],
+                'required' => false,
+                'empty_data' => null,
+                'constraints' => [
+                    new NotBlank(['message' => 'Veuillez saisir un prix.']),
+                    new Positive(['message' => 'Le prix doit être supérieur à 0.']),
+                ],
                 'attr' => [
                     'class' => 'form-control',
-                    'step' => '0.001',
-                    'min' => 0,
+                    'inputmode' => 'decimal',
+                    'autocomplete' => 'off',
                 ],
             ])
             ->add('quantite', IntegerType::class, [
                 'label' => 'Quantité en stock',
-                'constraints' => [new NotBlank(), new Positive(message: 'La quantité doit être au moins 1.')],
-                'attr' => ['class' => 'form-control', 'min' => 1],
+                'required' => false,
+                'empty_data' => null,
+                'constraints' => [
+                    new NotBlank(['message' => 'Veuillez saisir la quantité en stock.']),
+                    new Positive(['message' => 'La quantité doit être au moins 1.']),
+                ],
+                'attr' => [
+                    'class' => 'form-control',
+                    'inputmode' => 'numeric',
+                    'autocomplete' => 'off',
+                ],
             ])
             ->add('description', TextareaType::class, [
                 'label' => 'Description (optionnel)',
@@ -86,13 +108,17 @@ class BoutiqueCultureProduitType extends AbstractType
                 ],
             ]);
 
-        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) use ($options): void {
+            if ($options['is_equipement']) {
+                return;
+            }
             $produit = $event->getData();
-            if (!$produit instanceof Produits || !$produit->getCategorie()) {
+            $form = $event->getForm();
+            if (!$produit instanceof Produits || !$produit->getCategorie() || !$form->has('uniteVente')) {
                 return;
             }
             if (preg_match('/ · (.+)$/', $produit->getCategorie(), $m)) {
-                $event->getForm()->get('uniteVente')->setData(trim($m[1]));
+                $form->get('uniteVente')->setData(trim($m[1]));
             }
         });
     }
@@ -102,7 +128,9 @@ class BoutiqueCultureProduitType extends AbstractType
         $resolver->setDefaults([
             'data_class' => Produits::class,
             'lock_nom' => false,
+            'is_equipement' => false,
         ]);
         $resolver->setAllowedTypes('lock_nom', 'bool');
+        $resolver->setAllowedTypes('is_equipement', 'bool');
     }
 }

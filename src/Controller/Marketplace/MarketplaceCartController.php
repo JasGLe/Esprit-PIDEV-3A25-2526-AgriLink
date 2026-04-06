@@ -156,7 +156,8 @@ class MarketplaceCartController extends AbstractController
             $frais = $this->fraisLivraisonPourSousTotal($sousTotal);
             $prixTotalCommande = round($sousTotal + $frais, 3);
 
-            $numCommande = 'MKT-'.gmdate('Ymd').'-'.strtoupper(bin2hex(random_bytes(3)));
+            $datePart = (new \DateTimeImmutable('today'))->format('Ymd');
+            $numCommande = 'MKT-'.$datePart.'-'.strtoupper(bin2hex(random_bytes(3)));
             $status = $mode === self::MODE_PAIEMENT_EN_LIGNE
                 ? 'EN_ATTENTE_PAIEMENT_CB'
                 : 'EN_ATTENTE_LIVRAISON_CASH';
@@ -200,10 +201,11 @@ class MarketplaceCartController extends AbstractController
             $this->entityManager->flush();
             $conn->commit();
 
-            $msg = $mode === self::MODE_PAIEMENT_EN_LIGNE
-                ? sprintf('Commande %s enregistrée. Finalisez le paiement par carte (étape à venir).', $numCommande)
-                : sprintf('Commande %s enregistrée. Paiement à la livraison.', $numCommande);
-            $this->addFlash('success', $msg);
+            $request->getSession()->set('marketplace_order_confirm', [
+                'numCommande' => $numCommande,
+                'commande_id' => $commandeId,
+                'paiement_en_ligne' => $mode === self::MODE_PAIEMENT_EN_LIGNE,
+            ]);
 
             return $this->redirectToRoute('marketplace_index');
         } catch (\Throwable $e) {

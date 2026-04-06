@@ -205,6 +205,48 @@ class ProduitsRepository extends ServiceEntityRepository
         return (int) $v > 0;
     }
 
+    /**
+     * @return int[] equipement ids already listed by this seller in boutique
+     */
+    public function findEquipementIdsAlreadyInBoutiqueByOwner(int $userId): array
+    {
+        $rows = $this->createQueryBuilder('p')
+            ->select('DISTINCT p.equipementId AS eid')
+            ->andWhere('p.idFournisseur = :uid')
+            ->andWhere('p.origine = :origine')
+            ->andWhere('p.equipementId IS NOT NULL')
+            ->setParameter('uid', $userId)
+            ->setParameter('origine', self::ORIGINE_BOUTIQUE_AGRICULTEUR)
+            ->getQuery()
+            ->getScalarResult();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $id = isset($row['eid']) ? (int) $row['eid'] : (isset($row[0]) ? (int) $row[0] : null);
+            if ($id !== null && $id > 0) {
+                $out[] = $id;
+            }
+        }
+
+        return array_values(array_unique($out));
+    }
+
+    public function existsBoutiqueProduitForEquipement(int $userId, int $equipementId): bool
+    {
+        $v = $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->andWhere('p.idFournisseur = :uid')
+            ->andWhere('p.origine = :origine')
+            ->andWhere('p.equipementId = :eid')
+            ->setParameter('uid', $userId)
+            ->setParameter('origine', self::ORIGINE_BOUTIQUE_AGRICULTEUR)
+            ->setParameter('eid', $equipementId)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) $v > 0;
+    }
+
     public function save(Produits $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);

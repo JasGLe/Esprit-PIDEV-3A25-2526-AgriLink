@@ -5,6 +5,7 @@ namespace App\Controller\Equipment;
 use App\Entity\Equipement;
 use App\Form\Equipment\EquipementType;
 use App\Repository\EquipementRepository;
+use App\Repository\Marketplace\ProduitsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -21,7 +22,7 @@ class EquipementController extends AbstractController
     // INDEX — liste tous les équipements de l'agriculteur
     // ════════════════════════════════════════════════════════
     #[Route('/', name: 'index', methods: ['GET'])]
-    public function index(EquipementRepository $repo): Response
+    public function index(EquipementRepository $repo, ProduitsRepository $produitsRepository): Response
     {
         $user = $this->getUser();
 
@@ -30,8 +31,22 @@ class EquipementController extends AbstractController
             ['dateCreation' => 'DESC']
         );
 
+        $equipementIdsEnBoutique = [];
+        if ($user !== null && method_exists($user, 'getId') && $user->getId() !== null) {
+            $equipementIdsEnBoutique = $produitsRepository->findEquipementIdsAlreadyInBoutiqueByOwner((int) $user->getId());
+        }
+
+        $boutiqueTokens = [];
+        foreach ($equipements as $eq) {
+            $boutiqueTokens[(string) $eq->getId()] = $this->container->get('security.csrf.token_manager')
+                ->getToken('boutique_equipement_vente_' . $eq->getId())
+                ->getValue();
+        }
+
         return $this->render('equipment/index.html.twig', [
             'equipements' => $equipements,
+            'equipement_ids_en_boutique' => $equipementIdsEnBoutique,
+            'equipement_boutique_tokens' => $boutiqueTokens,
         ]);
     }
 
