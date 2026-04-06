@@ -19,9 +19,11 @@ class Evenement
     private int $idEvenement;
 
     #[ORM\Column(type: Types::STRING, length: 100)]
-    #[Assert\NotBlank(message: 'Ce champ est obligatoire.')]
+    #[Assert\NotBlank(message: 'Le titre est obligatoire.')]
     #[Assert\Length(
+        min: 3,
         max: 100,
+        minMessage: 'Le titre doit contenir au moins {{ limit }} caractères.',
         maxMessage: 'Le titre ne peut pas dépasser {{ limit }} caractères.'
     )]
     private string $titre;
@@ -41,10 +43,10 @@ class Evenement
     )]
     private string $typeEvenement;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     #[Assert\NotBlank(message: 'Ce champ est obligatoire.')]
     #[Assert\Type(\DateTimeInterface::class)]
-    private \DateTimeInterface $dateEvenement;
+    private ?\DateTimeInterface $dateEvenement = null;
 
     #[ORM\Column(type: Types::STRING, length: 150)]
     #[Assert\NotBlank(message: 'Ce champ est obligatoire.')]
@@ -104,12 +106,12 @@ class Evenement
         return $this;
     }
 
-    public function getDateEvenement(): \DateTimeInterface
+    public function getDateEvenement(): ?\DateTimeInterface
     {
         return $this->dateEvenement;
     }
 
-    public function setDateEvenement(\DateTimeInterface $dateEvenement): static
+    public function setDateEvenement(?\DateTimeInterface $dateEvenement): static
     {
         $this->dateEvenement = $dateEvenement;
 

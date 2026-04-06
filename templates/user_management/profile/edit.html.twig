@@ -184,10 +184,7 @@
                         <p class="mb-0 text-muted" style="font-size:.75rem;">PNG, JPG, WEBP · Max 5 Mo</p>
                     </label>
 
-                    {{ form_widget(form.profilePhoto, {
-                        'attr': {'class': 'd-none', 'id': 'profilePhotoInput', 'accept': 'image/*'}
-                    }) }}
-                    {{ form_errors(form.profilePhoto) }}
+                    <input type="file" name="profile_edit_form[profilePhoto]" id="profilePhotoInput" class="d-none" accept="image/*">
 
                     <div class="d-grid gap-2">
                         <button type="submit" name="photo_only" value="1" class="btn btn-success btn-sm">
@@ -563,6 +560,9 @@
             </button>
         </div>
 
+        {# Mark profilePhoto as rendered to prevent form_end from rendering it #}
+        {{ form_widget(form.profilePhoto, {'attr': {'class': 'd-none', 'disabled': 'disabled'}}) }}
+        
         {{ form_end(form) }}
     </div>
 </div>

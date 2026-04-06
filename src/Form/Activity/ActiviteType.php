@@ -89,6 +89,7 @@ class ActiviteType extends AbstractType
                 ],
                 'attr' => ['class' => 'form-select'],
                 'help' => 'État actuel.',
+                'placeholder' => '-- Choisissez un statut --',
                 'constraints' => [
                     new Assert\NotBlank([
                         'message' => 'Le statut est obligatoire.',

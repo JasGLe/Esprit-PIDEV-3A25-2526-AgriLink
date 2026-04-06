@@ -4,7 +4,6 @@ namespace App\Form\UserManagement;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Email;
@@ -27,13 +26,8 @@ class ForgotPasswordType extends AbstractType
                     new NotBlank(message: 'Veuillez saisir votre adresse email.'),
                     new Email(message: 'Veuillez saisir une adresse email valide.'),
                 ],
-            ])
-            ->add('submit', SubmitType::class, [
-                'label' => 'Envoyer le lien de réinitialisation',
-                'attr' => [
-                    'class' => 'w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500',
-                ],
             ]);
+
     }
 
     public function configureOptions(OptionsResolver $resolver): void

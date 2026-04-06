@@ -1,0 +1,95 @@
+{# Tropical / lime card — data from Produits + vendeurs #}
+{% set vid = p.idFournisseur %}
+{% set vendeur = vid and vendeurs[vid] is defined ? vendeurs[vid] : null %}
+{% set is_owner = is_granted('ROLE_USER') and vid is not null and app.user.id == vid %}
+{% set cat_parts = ' · ' in p.categorie ? p.categorie|split(' · ', 2) : [p.categorie] %}
+{% set is_eq = p.equipementId is not null %}
+{% set cat_code = p.category|default('') %}
+<article class="tropical-card h-100">
+    <div class="tropical-card__inner">
+        <button type="button" class="tropical-card__wishlist" disabled title="Bientôt disponible">
+            <span class="tropical-card__wishlist-txt">Liste d’envies</span>
+            <i class="bi bi-heart"></i>
+        </button>
+
+        <div class="tropical-card__media">
+            {% if p.image and p.image|trim != '' %}
+                <img src="{{ uploads_base_url }}/cultures/{{ p.image }}" alt="{{ p.nom }}" loading="lazy">
+            {% else %}
+                <div class="tropical-card__placeholder">
+                    {% if is_eq %}
+                        <i class="bi bi-tools"></i>
+                    {% else %}
+                        <i class="bi bi-flower2"></i>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="tropical-card__body">
+            <div class="tropical-card__badges mb-1">
+                {% if is_eq %}
+                    <span class="tropical-badge tropical-badge--gold">Équipement</span>
+                {% elseif cat_code == 'FRUIT' %}
+                    <span class="tropical-badge tropical-badge--lime">Fruit</span>
+                {% elseif cat_code == 'GRAINS' %}
+                    <span class="tropical-badge tropical-badge--lime">Graines</span>
+                {% else %}
+                    <span class="tropical-badge tropical-badge--lime">Légume</span>
+                {% endif %}
+            </div>
+
+            <h3 class="tropical-card__title">{{ p.nom }}</h3>
+            <p class="tropical-card__desc">
+                {% if p.description %}
+                    {{ p.description|length > 100 ? p.description|slice(0, 97) ~ '…' : p.description }}
+                {% else %}
+                    {{ cat_parts[0] }}{% if cat_parts[1] is defined %} · {{ cat_parts[1] }}{% endif %}
+                {% endif %}
+            </p>
+
+            <div class="tropical-card__stars" aria-label="Note">
+                {% for i in 1..5 %}
+                    <i class="bi bi-star-fill"></i>
+                {% endfor %}
+                <span class="tropical-card__rating-num">4.9</span>
+            </div>
+
+            {% if vendeur %}
+                <p class="tropical-card__seller small mb-2">
+                    <i class="bi bi-person"></i> {{ vendeur.name }}{% if vendeur.ville %} · {{ vendeur.ville }}{% endif %}
+                </p>
+            {% endif %}
+
+            <div class="tropical-card__price-row">
+                <div>
+                    <span class="tropical-card__price">{{ p.prixUnitaire|number_format(3, ',', ' ') }} DT</span>
+                    {% if cat_parts[1] is defined %}
+                        <span class="tropical-card__unit">/ {{ cat_parts[1] }}</span>
+                    {% endif %}
+                </div>
+                <span class="tropical-card__stock">{{ p.quantite }} en stock</span>
+            </div>
+
+            <div class="tropical-card__links">
+                <a href="#" class="tropical-card__link" onclick="return false;">Voir l’image</a>
+                <a href="#produits" class="tropical-card__link">Plus d’infos</a>
+            </div>
+
+            {% if is_owner %}
+                <button type="button" class="tropical-btn-cart w-100" disabled title="Vous êtes le vendeur de ce produit">
+                    Votre produit
+                </button>
+            {% elseif p.quantite < 1 %}
+                <button type="button" class="tropical-btn-cart w-100" disabled>Rupture de stock</button>
+            {% elseif is_granted('ROLE_USER') %}
+                <form method="post" action="{{ path('marketplace_panier_ajouter', { id: p.id }) }}" class="js-marketplace-panier-form">
+                    <input type="hidden" name="_token" value="{{ csrf_token('panier_ajout') }}">
+                    <button type="submit" class="tropical-btn-cart w-100 js-marketplace-panier-add">Ajouter au panier</button>
+                </form>
+            {% else %}
+                <a href="{{ path('app_login') }}" class="tropical-btn-cart w-100 d-inline-block text-center text-decoration-none">Connexion pour acheter</a>
+            {% endif %}
+        </div>
+    </div>
+</article>

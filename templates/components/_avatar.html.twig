@@ -12,46 +12,53 @@
 } %}
 
 {% set sizeClass = sizes[size|default('medium')] %}
-{% set displayName = user and user.nom ? user.nom : 'Utilisateur' %}
-{% set initials = '?' %}
-
-{% if user and user.nom %}
-    {% set names = user.nom|split(' ')|filter(name => name is not empty) %}
-    {% if names|length > 0 %}
-        {% set initials = names[0]|first|upper ~ (names|length > 1 ? names[1]|first|upper : '') %}
-    {% endif %}
-{% endif %}
 
 <div class="position-relative d-inline-block {{ classes|default('') }}">
-    {% if user and user.photoProfil %}
+    {% if user.photoProfil %}
         {# Handle different path formats in database:
-           - New format: profiles/filename.jpg
-           - Old format 1: agrilink/uploads/profiles/filename.jpg
+           - New format: profiles/filename.jpg → /uploads/profiles/filename.jpg
+           - Old format 1: agrilink/uploads/profiles/filename.jpg → /agrilink/uploads/profiles/filename.jpg
            - Old format 2: /agrilink/uploads/profiles/filename.jpg
         #}
         {% set photoPath = user.photoProfil %}
         {% if photoPath starts with '/agrilink/' %}
-            {# Already has leading slash #}
+            {# Old format with leading slash #}
             {% set finalPath = photoPath %}
         {% elseif photoPath starts with 'agrilink/' %}
-            {# Add leading slash #}
+            {# Old format without leading slash #}
+            {% set finalPath = '/' ~ photoPath %}
+        {% elseif photoPath starts with '/uploads/' %}
+            {# New format with leading slash #}
+            {% set finalPath = photoPath %}
+        {% elseif photoPath starts with 'uploads/' %}
+            {# New format without leading slash #}
             {% set finalPath = '/' ~ photoPath %}
         {% else %}
-            {# Relative path - add base URL #}
-            {% set finalPath = '/agrilink/uploads/' ~ photoPath %}
+            {# Relative path (new format) - add base URL #}
+            {% set finalPath = '/uploads/' ~ photoPath %}
         {% endif %}
         
         <img src="{{ finalPath }}" 
-             alt="{{ displayName }}" 
+             alt="{{ user.nom }}" 
              class="avatar {{ sizeClass }} border border-2 border-gray-200"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
         {# Fallback if image fails to load #}
         <div class="avatar {{ sizeClass }} bg-success text-white fw-semibold d-none">
-            {{ initials }}
+            {% set names = user.nom|split(' ') %}
+            {% if names|length > 0 %}
+                {{ names[0]|first|upper }}{% if names|length > 1 %}{{ names[1]|first|upper }}{% endif %}
+            {% else %}
+                ?
+            {% endif %}
         </div>
     {% else %}
         <div class="avatar {{ sizeClass }} bg-success text-white fw-semibold">
-            {{ initials }}
+            {% set names = user.nom|split(' ') %}
+            {% if names|length > 0 %}
+                {{ names[0]|first|upper }}{% if names|length > 1 %}{{ names[1]|first|upper }}{% endif %}
+            {% else %}
+                ?
+            {% endif %}
         </div>
     {% endif %}
 </div>

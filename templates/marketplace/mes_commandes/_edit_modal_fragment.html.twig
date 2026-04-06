@@ -1,0 +1,67 @@
+<div class="mc-orders-scope mc-order-edit-root" data-mc-order-edit-root>
+    <header class="mc-order-edit-head">
+        <p class="mc-order-edit-kicker">Modifier la livraison</p>
+        <h2 class="mc-order-edit-title">Commande <span class="mc-num">#{{ commande.numCommande }}</span></h2>
+        <p class="mc-order-edit-lead">Mettez à jour l’adresse et les coordonnées&nbsp;; elles seront reflétées sur la commande.</p>
+    </header>
+
+    {{ form_start(form, {
+        action: path('mes_commandes_edit', { id: commande.id }),
+        attr: {
+            class: 'mc-order-edit-form',
+            'data-mc-order-edit-form': '1',
+            novalidate: 'novalidate',
+        }
+    }) }}
+
+    {% if form.vars.submitted and not form.vars.valid %}
+        <div class="mc-order-edit-alert" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2" aria-hidden="true"></i>Vérifiez les champs marqués en erreur.
+        </div>
+    {% endif %}
+
+    <div class="mc-order-edit-grid">
+        <div class="mc-order-edit-field">
+            {{ form_label(form.prenom, null, { label_attr: { class: 'mc-order-edit-label' } }) }}
+            {{ form_widget(form.prenom, { attr: { class: 'form-control mc-order-edit-input' ~ (form.prenom.vars.errors|length ? ' is-invalid' : '') } }) }}
+            {{ form_errors(form.prenom) }}
+        </div>
+        <div class="mc-order-edit-field">
+            {{ form_label(form.nom, null, { label_attr: { class: 'mc-order-edit-label' } }) }}
+            {{ form_widget(form.nom, { attr: { class: 'form-control mc-order-edit-input' ~ (form.nom.vars.errors|length ? ' is-invalid' : '') } }) }}
+            {{ form_errors(form.nom) }}
+        </div>
+        <div class="mc-order-edit-field mc-order-edit-field--full">
+            {{ form_label(form.telephone, null, { label_attr: { class: 'mc-order-edit-label' } }) }}
+            {{ form_widget(form.telephone, { attr: { class: 'form-control mc-order-edit-input' ~ (form.telephone.vars.errors|length ? ' is-invalid' : '') } }) }}
+            {{ form_errors(form.telephone) }}
+        </div>
+        <div class="mc-order-edit-field mc-order-edit-field--full">
+            {{ form_label(form.adresse, null, { label_attr: { class: 'mc-order-edit-label' } }) }}
+            {{ form_widget(form.adresse, { attr: { class: 'form-control mc-order-edit-input' ~ (form.adresse.vars.errors|length ? ' is-invalid' : '') } }) }}
+            {{ form_errors(form.adresse) }}
+        </div>
+        <div class="mc-order-edit-field mc-order-edit-field--full">
+            {{ form_label(form.complement, null, { label_attr: { class: 'mc-order-edit-label' } }) }}
+            {{ form_widget(form.complement, { attr: { class: 'form-control mc-order-edit-input' ~ (form.complement.vars.errors|length ? ' is-invalid' : '') } }) }}
+            {{ form_errors(form.complement) }}
+        </div>
+        <div class="mc-order-edit-field">
+            {{ form_label(form.codePostal, null, { label_attr: { class: 'mc-order-edit-label' } }) }}
+            {{ form_widget(form.codePostal, { attr: { class: 'form-control mc-order-edit-input' ~ (form.codePostal.vars.errors|length ? ' is-invalid' : '') } }) }}
+            {{ form_errors(form.codePostal) }}
+        </div>
+        <div class="mc-order-edit-field">
+            {{ form_label(form.ville, null, { label_attr: { class: 'mc-order-edit-label' } }) }}
+            {{ form_widget(form.ville, { attr: { class: 'form-control mc-order-edit-input' ~ (form.ville.vars.errors|length ? ' is-invalid' : '') } }) }}
+            {{ form_errors(form.ville) }}
+        </div>
+    </div>
+
+    <div class="mc-order-edit-actions">
+        <button type="button" class="btn mc-order-edit-btn-cancel" data-bs-dismiss="modal">Annuler</button>
+        {{ form_widget(form.save, { label: 'Enregistrer', attr: { class: 'btn mc-order-edit-btn-save' } }) }}
+    </div>
+
+    {{ form_end(form) }}
+</div>

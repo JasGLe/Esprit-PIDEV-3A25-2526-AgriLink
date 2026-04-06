@@ -2,325 +2,459 @@
 
 {% block title %}Créer un utilisateur - Administration{% endblock %}
 
-{% block main_content %}
-<div class="container-fluid py-4">
-    {# Page header #}
-    <div class="mb-4">
-        <div class="mb-3">
-            <a href="{{ path('admin_users_list') }}" class="btn btn-sm btn-link text-decoration-none">
-                <svg class="me-1" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-                Retour à la liste
-            </a>
+{% block dashboard_content %}
+<div class="py-2">
+
+    {# Breadcrumb #}
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('admin_users_list') }}" class="text-decoration-none">Utilisateurs</a></li>
+            <li class="breadcrumb-item active">Créer un utilisateur</li>
+        </ol>
+    </nav>
+
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h3 fw-bold mb-1">Créer un utilisateur</h1>
+            <p class="text-muted mb-0">Remplissez le formulaire pour créer un nouveau compte.</p>
         </div>
-        <h1 class="h2 fw-bold">Créer un nouvel utilisateur</h1>
-        <p class="text-muted">Remplissez le formulaire pour créer un nouveau compte utilisateur.</p>
+        <a href="{{ path('admin_users_list') }}" class="btn btn-outline-secondary btn-sm">
+            ← Retour à la liste
+        </a>
     </div>
 
-    {# Flash messages #}
-    {% for label, messages in app.flashes %}
-        {% for message in messages %}
-            <div class="alert {{ label == 'success' ? 'alert-success' : (label == 'error' ? 'alert-danger' : 'alert-info') }} alert-dismissible fade show mb-3" role="alert">
-                <div class="d-flex align-items-center">
-                    {% if label == 'error' %}
-                        <svg class="me-2" style="width: 20px; height: 20px;" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+    {{ form_start(form, {attr: {novalidate: 'novalidate', enctype: 'multipart/form-data'}}) }}
+
+    <div class="row g-4">
+        {# Left column #}
+        <div class="col-lg-8">
+
+            {# Informations de base #}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold">
+                        <svg class="me-2" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
-                    {% endif %}
-                    <span>{{ message }}</span>
+                        Informations de base
+                    </h5>
                 </div>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        {% endfor %}
-    {% endfor %}
-
-    {{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
-        {# Basic Information #}
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h3 class="card-title h5 mb-4">
-                    <svg class="me-2" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                    Informations de base
-                </h3>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        {{ form_label(form.nom, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.nom, {'attr': {'class': 'form-control'}}) }}
-                        {{ form_errors(form.nom) }}
-                    </div>
-                    <div class="col-md-6">
-                        {{ form_label(form.email, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.email, {'attr': {'class': 'form-control'}}) }}
-                        {{ form_errors(form.email) }}
-                    </div>
-                    <div class="col-md-6">
-                        {{ form_label(form.plainPassword.first, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.plainPassword.first, {'attr': {'class': 'form-control'}}) }}
-                        {{ form_errors(form.plainPassword.first) }}
-                    </div>
-                    <div class="col-md-6">
-                        {{ form_label(form.plainPassword.second, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.plainPassword.second, {'attr': {'class': 'form-control'}}) }}
-                        {{ form_errors(form.plainPassword.second) }}
-                    </div>
-                    <div class="col-md-6">
-                        {{ form_label(form.telephone, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.telephone, {'attr': {'class': 'form-control'}}) }}
-                        {{ form_errors(form.telephone) }}
-                    </div>
-                    <div class="col-md-6">
-                        {{ form_label(form.dateNaissance, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.dateNaissance, {'attr': {'class': 'form-control'}}) }}
-                        {{ form_errors(form.dateNaissance) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {# Location #}
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h3 class="card-title h5 mb-4">
-                    <svg class="me-2" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    Localisation
-                </h3>
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        {{ form_label(form.gouvernant, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.gouvernant, {'attr': {'class': 'form-select'}}) }}
-                        {{ form_errors(form.gouvernant) }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form_label(form.ville, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.ville, {'attr': {'class': 'form-control'}}) }}
-                        {{ form_errors(form.ville) }}
-                    </div>
-                    <div class="col-md-4">
-                        {{ form_label(form.codePostale, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.codePostale, {'attr': {'class': 'form-control'}}) }}
-                        {{ form_errors(form.codePostale) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {# Role & Status #}
-        <div class="card shadow-sm mb-4">
-            <div class="card-body">
-                <h3 class="card-title h5 mb-4">
-                    <svg class="me-2" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                    Rôle et statut
-                </h3>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        {{ form_label(form.role, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.role, {'attr': {'class': 'form-select', 'id': 'user_role', 'onchange': 'toggleRoleFields()'}}) }}
-                        {{ form_errors(form.role) }}
-                    </div>
-                    <div class="col-md-6">
-                        {{ form_label(form.profilePhoto, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.profilePhoto, {'attr': {'class': 'form-control'}}) }}
-                        {{ form_errors(form.profilePhoto) }}
-                    </div>
-                    <div class="col-12">
-                        <div class="d-flex gap-4">
-                            <div class="form-check">
-                                {{ form_widget(form.isActive, {'attr': {'class': 'form-check-input'}}) }}
-                                {{ form_label(form.isActive, null, {'label_attr': {'class': 'form-check-label'}}) }}
-                            </div>
-                            <div class="form-check">
-                                {{ form_widget(form.emailVerified, {'attr': {'class': 'form-check-input'}}) }}
-                                {{ form_label(form.emailVerified, null, {'label_attr': {'class': 'form-check-label'}}) }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {# Admin-specific fields #}
-        <div id="admin-fields" class="card shadow-sm mb-4 d-none">
-            <div class="card-body">
-                <h3 class="card-title h5 mb-4">
-                    🛡️ Configuration Administrateur
-                </h3>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        {{ form_label(form.adminNiveau, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.adminNiveau, {'attr': {'class': 'form-select'}}) }}
-                        {{ form_errors(form.adminNiveau) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {# Agriculteur-specific fields #}
-        <div id="agriculteur-fields" class="card shadow-sm mb-4 d-none">
-            <div class="card-body">
-                <h3 class="card-title h5 mb-4">
-                    🌱 Informations Agriculteur
-                </h3>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        {{ form_label(form.agriculteurExpAnnee, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.agriculteurExpAnnee, {'attr': {'class': 'form-control'}}) }}
-                        {{ form_errors(form.agriculteurExpAnnee) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {# AgriPlus-specific fields #}
-        <div id="agriplus-fields" class="card shadow-sm mb-4 d-none">
-            <div class="card-body">
-                <h3 class="card-title h5 mb-4">
-                    ⭐ Abonnement AgriPlus
-                </h3>
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        {{ form_label(form.agriplusAbonnement, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.agriplusAbonnement, {'attr': {'class': 'form-select'}}) }}
-                        {{ form_errors(form.agriplusAbonnement) }}
-                    </div>
-                    <div class="col-md-6">
-                        {{ form_label(form.agriplusDateExpiration, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.agriplusDateExpiration, {'attr': {'class': 'form-control'}}) }}
-                        {{ form_errors(form.agriplusDateExpiration) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {# Fournisseur-specific fields #}
-        <div id="fournisseur-fields" class="card shadow-sm mb-4 d-none">
-            <div class="card-body">
-                <h3 class="card-title h5 mb-4">
-                    🏢 Informations Fournisseur
-                </h3>
-                <div class="row g-3">
-                    <div class="col-12">
-                        {{ form_label(form.fournisseurTypeFournisseur, null, {'label_attr': {'class': 'form-label'}}) }}
-                        {{ form_widget(form.fournisseurTypeFournisseur, {'attr': {'class': 'form-select', 'id': 'fournisseur_type', 'onchange': 'toggleFournisseurFields()'}}) }}
-                        {{ form_errors(form.fournisseurTypeFournisseur) }}
-                    </div>
-                </div>
-
-                {# Personne fields #}
-                <div id="fournisseur-personne-fields" class="mt-4 d-none">
-                    <h4 class="h6 mb-3">Informations personnelles</h4>
+                <div class="card-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            {{ form_label(form.fournisseurCin, null, {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.fournisseurCin, {'attr': {'class': 'form-control'}}) }}
-                            {{ form_errors(form.fournisseurCin) }}
+                            {{ form_label(form.nom, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.nom, {attr: {class: 'form-control', placeholder: 'Nom complet'}}) }}
+                            {{ form_errors(form.nom) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.email, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.email, {attr: {class: 'form-control', placeholder: 'email@exemple.com'}}) }}
+                            {{ form_errors(form.email) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.plainPassword.first, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.plainPassword.first, {attr: {class: 'form-control', placeholder: '••••••••'}}) }}
+                            {{ form_errors(form.plainPassword.first) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.plainPassword.second, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.plainPassword.second, {attr: {class: 'form-control', placeholder: '••••••••'}}) }}
+                            {{ form_errors(form.plainPassword.second) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.telephone, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.telephone, {attr: {class: 'form-control', placeholder: '+216 XX XXX XXX'}}) }}
+                            {{ form_errors(form.telephone) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.dateNaissance, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.dateNaissance, {attr: {class: 'form-control'}}) }}
+                            {{ form_errors(form.dateNaissance) }}
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {# Societe fields #}
-                <div id="fournisseur-societe-fields" class="mt-4 d-none">
-                    <h4 class="h6 mb-3">Informations de la société</h4>
+            {# Localisation #}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold">
+                        <svg class="me-2" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Localisation
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            {{ form_label(form.gouvernant, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.gouvernant, {attr: {class: 'form-select'}}) }}
+                            {{ form_errors(form.gouvernant) }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form_label(form.ville, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.ville, {attr: {class: 'form-control', placeholder: 'Ville'}}) }}
+                            {{ form_errors(form.ville) }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form_label(form.codePostale, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.codePostale, {attr: {class: 'form-control', placeholder: '1000'}}) }}
+                            {{ form_errors(form.codePostale) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Role-specific: Admin #}
+            <div id="admin-fields" class="card border-0 shadow-sm mb-4 d-none">
+                <div class="card-header bg-danger bg-opacity-10 border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold text-danger">🛡️ Configuration Administrateur</h5>
+                </div>
+                <div class="card-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            {{ form_label(form.fournisseurRaisonSocial, null, {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.fournisseurRaisonSocial, {'attr': {'class': 'form-control'}}) }}
-                            {{ form_errors(form.fournisseurRaisonSocial) }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form_label(form.fournisseurNumRegistre, null, {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.fournisseurNumRegistre, {'attr': {'class': 'form-control'}}) }}
-                            {{ form_errors(form.fournisseurNumRegistre) }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form_label(form.fournisseurFormeJuridique, null, {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.fournisseurFormeJuridique, {'attr': {'class': 'form-control'}}) }}
-                            {{ form_errors(form.fournisseurFormeJuridique) }}
-                        </div>
-                        <div class="col-md-6">
-                            {{ form_label(form.fournisseurCapital, null, {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.fournisseurCapital, {'attr': {'class': 'form-control'}}) }}
-                            {{ form_errors(form.fournisseurCapital) }}
+                            {{ form_label(form.adminNiveau, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.adminNiveau, {attr: {class: 'form-select'}}) }}
+                            {{ form_errors(form.adminNiveau) }}
                         </div>
                     </div>
                 </div>
+            </div>
 
-                {# Certifications (common) #}
-                <div class="mt-4">
+            {# Role-specific: Agriculteur #}
+            <div id="agriculteur-fields" class="card border-0 shadow-sm mb-4 d-none">
+                <div class="card-header bg-success bg-opacity-10 border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold text-success">🌱 Informations Agriculteur</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form_label(form.agriculteurExpAnnee, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.agriculteurExpAnnee, {attr: {class: 'form-control', placeholder: '5'}}) }}
+                            {{ form_errors(form.agriculteurExpAnnee) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Role-specific: AgriPlus #}
+            <div id="agriplus-fields" class="card border-0 shadow-sm mb-4 d-none">
+                <div class="card-header bg-warning bg-opacity-10 border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold text-warning">⭐ Abonnement AgriPlus</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form_label(form.agriplusAbonnement, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.agriplusAbonnement, {attr: {class: 'form-select'}}) }}
+                            {{ form_errors(form.agriplusAbonnement) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.agriplusDateExpiration, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.agriplusDateExpiration, {attr: {class: 'form-control'}}) }}
+                            {{ form_errors(form.agriplusDateExpiration) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Role-specific: Fournisseur #}
+            <div id="fournisseur-fields" class="card border-0 shadow-sm mb-4 d-none">
+                <div class="card-header bg-info bg-opacity-10 border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold text-info">🏢 Informations Fournisseur</h5>
+                </div>
+                <div class="card-body p-4">
                     <div class="row g-3">
                         <div class="col-12">
-                            {{ form_label(form.fournisseurCertifications, null, {'label_attr': {'class': 'form-label'}}) }}
-                            {{ form_widget(form.fournisseurCertifications, {'attr': {'class': 'form-control'}}) }}
+                            {{ form_label(form.fournisseurTypeFournisseur, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.fournisseurTypeFournisseur, {attr: {class: 'form-select', id: 'fournisseurTypeFournisseur'}}) }}
+                            {{ form_errors(form.fournisseurTypeFournisseur) }}
+                            <small class="form-text text-muted">Sélectionnez le type de fournisseur pour afficher les champs appropriés</small>
+                        </div>
+                    </div>
+
+                    <div id="fournisseur-personne-fields" class="mt-4 d-none">
+                        <div class="alert alert-info alert-sm d-flex align-items-center mb-3" style="font-size:0.875rem;">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20" class="me-2 flex-shrink-0">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                            </svg>
+                            Fournisseur personne physique sélectionné
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form_label(form.fournisseurCin, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                                {{ form_widget(form.fournisseurCin, {attr: {class: 'form-control', placeholder: '12345678'}}) }}
+                                {{ form_errors(form.fournisseurCin) }}
+                                <small class="form-text text-muted">Carte d'identité nationale (8 chiffres)</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="fournisseur-societe-fields" class="mt-4 d-none">
+                        <div class="alert alert-info alert-sm d-flex align-items-center mb-3" style="font-size:0.875rem;">
+                            <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20" class="me-2 flex-shrink-0">
+                                <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd"/>
+                            </svg>
+                            Fournisseur société sélectionné
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form_label(form.fournisseurRaisonSocial, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                                {{ form_widget(form.fournisseurRaisonSocial, {attr: {class: 'form-control', placeholder: 'Nom de la société'}}) }}
+                                {{ form_errors(form.fournisseurRaisonSocial) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_label(form.fournisseurNumRegistre, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                                {{ form_widget(form.fournisseurNumRegistre, {attr: {class: 'form-control', placeholder: 'A12345678'}}) }}
+                                {{ form_errors(form.fournisseurNumRegistre) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_label(form.fournisseurFormeJuridique, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                                {{ form_widget(form.fournisseurFormeJuridique, {attr: {class: 'form-select'}}) }}
+                                {{ form_errors(form.fournisseurFormeJuridique) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_label(form.fournisseurCapital, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                                {{ form_widget(form.fournisseurCapital, {attr: {class: 'form-control', placeholder: '10000.00'}}) }}
+                                {{ form_errors(form.fournisseurCapital) }}
+                                <small class="form-text text-muted">Capital en TND</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-12">
+                            {{ form_label(form.fournisseurCertifications, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.fournisseurCertifications, {attr: {class: 'form-control', rows: 3, placeholder: 'Listez les certifications séparées par des virgules'}}) }}
                             {{ form_errors(form.fournisseurCertifications) }}
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
 
-        {# Form actions #}
-        <div class="d-flex justify-content-end gap-2">
-            <a href="{{ path('admin_users_list') }}" class="btn btn-outline-secondary">
-                Annuler
-            </a>
-            <button type="submit" class="btn btn-success">
-                <svg class="me-1" style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Créer l'utilisateur
-            </button>
+        {# Right column: Role, Photo, Status #}
+        <div class="col-lg-4">
+
+            {# Rôle et statut #}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold">
+                        <svg class="me-2" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        Rôle et statut
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        {{ form_label(form.role, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                        {{ form_widget(form.role, {attr: {class: 'form-select', id: 'userRole'}}) }}
+                        {{ form_errors(form.role) }}
+                        <small class="form-text text-muted">Sélectionnez le rôle pour afficher les champs spécifiques</small>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form_widget(form.isActive, {attr: {class: 'form-check-input', role: 'switch'}}) }}
+                            {{ form_label(form.isActive, null, {label_attr: {class: 'form-check-label fw-semibold'}}) }}
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <div class="form-check form-switch">
+                            {{ form_widget(form.emailVerified, {attr: {class: 'form-check-input', role: 'switch'}}) }}
+                            {{ form_label(form.emailVerified, null, {label_attr: {class: 'form-check-label fw-semibold'}}) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Photo de profil #}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold">Photo de profil</h5>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 bg-secondary-subtle"
+                         style="width:80px;height:80px;font-size:2rem;" id="avatar-preview-wrap">
+                        <span id="avatar-initial">?</span>
+                        <img id="avatar-preview" src="" alt="" class="rounded-circle d-none" width="80" height="80" style="object-fit:cover;">
+                    </div>
+                    <div>
+                        {{ form_label(form.profilePhoto, null, {label_attr: {class: 'form-label fw-semibold d-block'}}) }}
+                        {{ form_widget(form.profilePhoto, {attr: {class: 'form-control form-control-sm', accept: 'image/jpeg,image/png,image/webp', id: 'profile-photo-input'}}) }}
+                        {{ form_errors(form.profilePhoto) }}
+                        <small class="text-muted d-block mt-1">JPG, PNG ou WEBP · max 2 Mo</small>
+                    </div>
+                </div>
+            </div>
+
+            {# Actions #}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <svg class="me-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Créer l'utilisateur
+                        </button>
+                        <a href="{{ path('admin_users_list') }}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </div>
+            </div>
+
         </div>
+    </div>
+
     {{ form_end(form) }}
 </div>
 
 <script>
+// Toggle role-specific fields based on selected role
 function toggleRoleFields() {
-    const role = document.getElementById('user_role').value;
+    // Find role select by name attribute (more reliable than ID)
+    const roleSelect = document.querySelector('select[name*="[role]"]');
+    if (!roleSelect) {
+        console.error('Role select element not found');
+        console.log('Available selects:', document.querySelectorAll('select'));
+        return;
+    }
+    
+    const role = roleSelect.value;
+    console.log('Selected role:', role); // Debug log
     
     // Hide all role-specific sections
-    document.getElementById('admin-fields').classList.add('d-none');
-    document.getElementById('agriculteur-fields').classList.add('d-none');
-    document.getElementById('agriplus-fields').classList.add('d-none');
-    document.getElementById('fournisseur-fields').classList.add('d-none');
+    const roleSections = ['admin-fields', 'agriculteur-fields', 'agriplus-fields', 'fournisseur-fields'];
+    roleSections.forEach(id => {
+        const element = document.getElementById(id);
+        if (element) {
+            element.classList.add('d-none');
+        }
+    });
     
-    // Show relevant section
-    if (role === 'ADMIN') {
-        document.getElementById('admin-fields').classList.remove('d-none');
-    } else if (role === 'AGRICULTEUR') {
-        document.getElementById('agriculteur-fields').classList.remove('d-none');
-    } else if (role === 'AGRIPLUS') {
-        document.getElementById('agriplus-fields').classList.remove('d-none');
-    } else if (role === 'FOURNISSEUR') {
-        document.getElementById('fournisseur-fields').classList.remove('d-none');
+    // Show the section for the selected role
+    const roleMap = {
+        'ADMIN': 'admin-fields',
+        'AGRICULTEUR': 'agriculteur-fields',
+        'AGRIPLUS': 'agriplus-fields',
+        'FOURNISSEUR': 'fournisseur-fields'
+    };
+    
+    if (roleMap[role]) {
+        const targetElement = document.getElementById(roleMap[role]);
+        if (targetElement) {
+            console.log('Showing section:', roleMap[role]); // Debug log
+            targetElement.classList.remove('d-none');
+            
+            // If fournisseur is selected, also trigger the fournisseur type toggle
+            if (role === 'FOURNISSEUR') {
+                setTimeout(() => toggleFournisseurFields(), 100); // Small delay to ensure DOM is ready
+            }
+        } else {
+            console.error('Target element not found:', roleMap[role]);
+        }
     }
 }
 
+// Toggle fournisseur-specific fields based on type (PERSONNE or SOCIETE)
 function toggleFournisseurFields() {
-    const type = document.getElementById('fournisseur_type').value;
+    // Find fournisseur type select by name attribute
+    const typeSelect = document.querySelector('select[name*="[fournisseurTypeFournisseur]"]');
+    if (!typeSelect) {
+        console.error('Fournisseur type select not found');
+        return;
+    }
     
-    // Hide both
-    document.getElementById('fournisseur-personne-fields').classList.add('d-none');
-    document.getElementById('fournisseur-societe-fields').classList.add('d-none');
+    const type = typeSelect.value;
+    console.log('Selected fournisseur type:', type); // Debug log
     
-    // Show relevant
-    if (type === 'PERSONNE') {
-        document.getElementById('fournisseur-personne-fields').classList.remove('d-none');
-    } else if (type === 'SOCIETE') {
-        document.getElementById('fournisseur-societe-fields').classList.remove('d-none');
+    // Hide both sections
+    const personneFields = document.getElementById('fournisseur-personne-fields');
+    const societeFields = document.getElementById('fournisseur-societe-fields');
+    
+    if (personneFields) personneFields.classList.add('d-none');
+    if (societeFields) societeFields.classList.add('d-none');
+    
+    // Show the appropriate section
+    if (type === 'PERSONNE' && personneFields) {
+        console.log('Showing personne fields');
+        personneFields.classList.remove('d-none');
+    } else if (type === 'SOCIETE' && societeFields) {
+        console.log('Showing societe fields');
+        societeFields.classList.remove('d-none');
     }
 }
 
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('DOM loaded, initializing form'); // Debug log
+    
+    // Initialize on page load
     toggleRoleFields();
-    toggleFournisseurFields();
+    
+    // Add event listeners using name selector (more reliable)
+    const roleSelect = document.querySelector('select[name*="[role]"]');
+    if (roleSelect) {
+        console.log('Role select found, adding listener');
+        console.log('Role select name:', roleSelect.name);
+        console.log('Role select ID:', roleSelect.id);
+        roleSelect.addEventListener('change', function() {
+            console.log('Role changed to:', this.value);
+            toggleRoleFields();
+        });
+    } else {
+        console.error('Role select not found!');
+    }
+    
+    const fournisseurTypeSelect = document.querySelector('select[name*="[fournisseurTypeFournisseur]"]');
+    if (fournisseurTypeSelect) {
+        console.log('Fournisseur type select found, adding listener');
+        console.log('Fournisseur type select name:', fournisseurTypeSelect.name);
+        console.log('Fournisseur type select ID:', fournisseurTypeSelect.id);
+        fournisseurTypeSelect.addEventListener('change', function() {
+            console.log('Fournisseur type changed to:', this.value);
+            toggleFournisseurFields();
+        });
+    } else {
+        console.log('Fournisseur type select not found (may appear when role is selected)');
+    }
+    
+    // Live photo preview
+    const photoInput = document.getElementById('profile-photo-input');
+    const avatarInitial = document.getElementById('avatar-initial');
+    const avatarPreview = document.getElementById('avatar-preview');
+    
+    if (photoInput && avatarPreview && avatarInitial) {
+        photoInput.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file && file.type.match('image.*')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                    avatarPreview.classList.remove('d-none');
+                    avatarInitial.classList.add('d-none');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+    
+    // Update avatar initial when name changes
+    const nameInput = document.querySelector('input[name*="[nom]"]');
+    if (nameInput && avatarInitial) {
+        nameInput.addEventListener('input', function() {
+            const name = this.value.trim();
+            if (name) {
+                const parts = name.split(' ');
+                const initials = parts.map(p => p.charAt(0).toUpperCase()).slice(0, 2).join('');
+                avatarInitial.textContent = initials || '?';
+            } else {
+                avatarInitial.textContent = '?';
+            }
+        });
+    }
 });
 </script>
-{% endblock %}
+{% endblock dashboard_content %}

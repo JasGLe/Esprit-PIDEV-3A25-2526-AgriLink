@@ -1,0 +1,64 @@
+{# Terminaux : Livrée / Annulée = lecture seule. Tout autre statut + choix = popover éditable. #}
+{% set s = status|lower %}
+{% set redirect_target = statut_redirect|default('show') %}
+
+{% if s matches '/annul|cancel/' %}
+    <span class="mc-badge mc-badge--danger"><i class="bi bi-x-circle me-1" aria-hidden="true"></i>Annulée</span>
+
+{% elseif s matches '/livree|livrée|livré|termine|reception|reçue|recue/' %}
+    <span class="mc-badge mc-badge--success"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Livrée</span>
+
+{% elseif dropdown_choices is defined and dropdown_choices|length > 0 and commande_id is defined %}
+    {% if s matches '/prepar/' %}
+        {% set summary_badge = 'mc-badge--prep' %}
+        {% set summary_icon = 'bi-box-seam' %}
+        {% set summary_text = 'En préparation' %}
+    {% elseif s matches '/exped/' %}
+        {% set summary_badge = 'mc-badge--info' %}
+        {% set summary_icon = 'bi-truck' %}
+        {% set summary_text = 'Expédiée' %}
+    {% else %}
+        {% set summary_badge = 'mc-badge--warning' %}
+        {% set summary_icon = 'bi-hourglass-split' %}
+        {% set summary_text = 'En cours' %}
+    {% endif %}
+    <details class="mc-status-details">
+        <summary class="mc-badge {{ summary_badge }} mc-status-details__summary">
+            <i class="bi {{ summary_icon }} me-1" aria-hidden="true"></i>{{ summary_text }}
+            <i class="bi bi-chevron-up ms-1 mc-status-details__caret" aria-hidden="true"></i>
+        </summary>
+        <div class="mc-status-popover mc-status-popover--above" role="region" aria-label="Changer le statut">
+            <div class="mc-status-popover__inner">
+                <header class="mc-status-popover__head">
+                    <span class="mc-status-popover__title">Changer le statut</span>
+                </header>
+                <div class="mc-status-popover__scroller">
+                    <ul class="mc-status-popover__list">
+                        {% for value, label in dropdown_choices %}
+                            <li class="mc-status-popover__item{% if value == 'ANNULEE' %} mc-status-popover__item--danger-zone{% endif %}">
+                                <form method="post" action="{{ path('mes_commandes_statut', { id: commande_id }) }}" class="mc-status-popover__form">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('mes_commandes_statut') }}">
+                                    <input type="hidden" name="_redirect" value="{{ redirect_target }}">
+                                    <button type="submit" name="status" value="{{ value }}" class="mc-status-popover__opt{% if value == 'ANNULEE' %} mc-status-popover__opt--danger{% endif %}">
+                                        <span class="mc-status-popover__opt-label">{{ label }}</span>
+                                        <i class="bi bi-arrow-right-short mc-status-popover__opt-icon" aria-hidden="true"></i>
+                                    </button>
+                                </form>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <span class="mc-status-popover__pointer" aria-hidden="true"></span>
+            </div>
+        </div>
+    </details>
+
+{% else %}
+    {% if s matches '/exped/' %}
+        <span class="mc-badge mc-badge--info"><i class="bi bi-truck me-1" aria-hidden="true"></i>Expédiée</span>
+    {% elseif s matches '/prepar/' %}
+        <span class="mc-badge mc-badge--prep"><i class="bi bi-box-seam me-1" aria-hidden="true"></i>En préparation</span>
+    {% else %}
+        <span class="mc-badge mc-badge--warning"><i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>En cours</span>
+    {% endif %}
+{% endif %}

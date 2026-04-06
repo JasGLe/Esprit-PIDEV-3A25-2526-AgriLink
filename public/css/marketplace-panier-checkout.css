@@ -1,0 +1,398 @@
+/* Panier / checkout — Design moderne aligné avec AgriLink */
+
+.marketplace-panier-checkout {
+    --mpc-primary: #22c55e;
+    --mpc-primary-hover: #16a34a;
+    --mpc-bg: #f9fafb;
+    --mpc-bg-secondary: #ffffff;
+    --mpc-card: #ffffff;
+    --mpc-border: #e5e7eb;
+    --mpc-text: #111827;
+    --mpc-text-secondary: #6b7280;
+    --mpc-text-muted: #9ca3af;
+    --mpc-success: #22c55e;
+    --mpc-warning: #f59e0b;
+    --mpc-danger: #ef4444;
+    --mpc-info: #3b82f6;
+    background: var(--mpc-bg);
+    color: var(--mpc-text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.mpc-page {
+    min-height: 100vh;
+}
+
+.mpc-container {
+    max-width: 1120px;
+}
+
+/* ── Back link ── */
+.mpc-back {
+    color: var(--mpc-primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: color 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mpc-back:hover {
+    color: var(--mpc-primary-hover);
+}
+
+/* ── Empty card ── */
+.mpc-empty-card {
+    background: var(--mpc-card);
+    border: 1px solid var(--mpc-border);
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    color: var(--mpc-text);
+    max-width: 500px;
+}
+
+.mpc-empty-card__icon-wrap {
+    width: 4rem;
+    height: 4rem;
+    background: rgba(34, 197, 94, 0.1);
+    font-size: 2rem;
+    color: var(--mpc-primary);
+}
+
+.mpc-empty-card__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--mpc-text);
+}
+
+.mpc-empty-card__lead {
+    color: var(--mpc-text-secondary);
+}
+
+/* ── Stepper ── */
+.mpc-steps__list {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.5rem;
+    align-items: center;
+}
+
+.mpc-steps__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: var(--mpc-text-muted);
+}
+
+.mpc-steps__item + .mpc-steps__item {
+    padding-left: 1rem;
+    margin-left: 0.75rem;
+    border-left: 1px solid var(--mpc-border);
+}
+
+.mpc-steps__num {
+    font-size: 1rem;
+}
+
+.mpc-steps__item--current {
+    color: var(--mpc-primary);
+}
+
+.mpc-steps__item--current .mpc-steps__num {
+    color: var(--mpc-primary);
+    font-weight: 700;
+}
+
+.mpc-steps__item--done {
+    color: var(--mpc-text-secondary);
+}
+
+.mpc-steps__item--done .mpc-steps__num {
+    color: var(--mpc-primary);
+}
+
+/* ── Checkout card ── */
+.mpc-checkout-card {
+    background: var(--mpc-card);
+    border: 1px solid var(--mpc-border);
+    border-radius: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    color: var(--mpc-text);
+    overflow: hidden;
+}
+
+.mpc-checkout-card__header {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(34, 197, 94, 0.02) 100%);
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--mpc-border);
+}
+
+.mpc-checkout-card__title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--mpc-text);
+    margin: 0;
+}
+
+.mpc-checkout-card__body {
+    padding: 1.5rem;
+}
+
+/* ── Forms ── */
+.mpc-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.mpc-form-label {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--mpc-text);
+    margin-bottom: 0.5rem;
+}
+
+.mpc-form-input,
+.mpc-form-select,
+.mpc-form-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--mpc-border);
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    color: var(--mpc-text);
+    background: var(--mpc-bg);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.mpc-form-input:focus,
+.mpc-form-select:focus,
+.mpc-form-textarea:focus {
+    border-color: var(--mpc-primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.1);
+}
+
+/* ── Buttons ── */
+.mpc-btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.mpc-btn-primary {
+    background: var(--mpc-primary);
+    color: white;
+}
+
+.mpc-btn-primary:hover {
+    background: var(--mpc-primary-hover);
+    color: white;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+    text-decoration: none;
+}
+
+.mpc-btn-secondary {
+    background: var(--mpc-bg);
+    color: var(--mpc-text);
+    border: 1px solid var(--mpc-border);
+}
+
+.mpc-btn-secondary:hover {
+    background: var(--mpc-border);
+    color: var(--mpc-text);
+    text-decoration: none;
+}
+
+.mpc-btn-block {
+    width: 100%;
+}
+
+/* ── Order items ── */
+.mpc-order-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid var(--mpc-border);
+}
+
+.mpc-order-item:last-child {
+    border-bottom: none;
+}
+
+.mpc-order-item__image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 0.75rem;
+    background: var(--mpc-border);
+}
+
+.mpc-order-item__details {
+    flex: 1;
+}
+
+.mpc-order-item__name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--mpc-text);
+    margin-bottom: 0.25rem;
+}
+
+.mpc-order-item__seller {
+    font-size: 0.85rem;
+    color: var(--mpc-text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.mpc-order-item__price {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--mpc-primary);
+}
+
+/* ── Summary ── */
+.mpc-summary {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.05) 0%, rgba(34, 197, 94, 0.02) 100%);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    margin-top: 1.5rem;
+}
+
+.mpc-summary__row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    font-size: 0.95rem;
+}
+
+.mpc-summary__row:last-child {
+    margin-bottom: 0;
+    border-top: 1px solid var(--mpc-border);
+    padding-top: 1rem;
+    margin-top: 1rem;
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: var(--mpc-text);
+}
+
+.mpc-summary__label {
+    color: var(--mpc-text-secondary);
+}
+
+.mpc-summary__value {
+    color: var(--mpc-text);
+    font-weight: 600;
+}
+
+.mpc-summary__total {
+    color: var(--mpc-primary);
+    font-weight: 700;
+}
+
+/* ── Status badge ── */
+.mpc-status-badge {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.mpc-status-pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--mpc-warning);
+}
+
+.mpc-status-completed {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--mpc-success);
+}
+
+.mpc-status-failed {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--mpc-danger);
+}
+
+/* ── Alerts ── */
+.mpc-alert {
+    padding: 1rem;
+    border-radius: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.mpc-alert-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--mpc-info);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.mpc-alert-success {
+    background: rgba(34, 197, 94, 0.1);
+    color: var(--mpc-success);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.mpc-alert-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--mpc-warning);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.mpc-alert-danger {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--mpc-danger);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+    .mpc-steps__item + .mpc-steps__item {
+        padding-left: 0;
+        margin-left: 0;
+        border-left: none;
+    }
+
+    .mpc-order-item {
+        flex-wrap: wrap;
+    }
+
+    .mpc-checkout-card {
+        border-radius: 0.75rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .mpc-checkout-card__body,
+    .mpc-checkout-card__header {
+        padding: 1rem;
+    }
+
+    .mpc-form-input,
+    .mpc-form-select,
+    .mpc-form-textarea {
+        font-size: 16px;
+    }
+
+    .mpc-btn {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.9rem;
+    }
+}
