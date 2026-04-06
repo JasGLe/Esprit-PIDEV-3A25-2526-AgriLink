@@ -38,4 +38,20 @@ class MaintenanceRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    /**
+ * Retourne toutes les maintenances pour une liste d'IDs d'équipements,
+ * triées par date planifiée décroissante.
+ */
+    public function findByEquipementIds(array $ids): array
+{
+    if (empty($ids)) return [];
+
+    return $this->createQueryBuilder('m')
+        ->where('m.equipementId IN (:ids)')
+        ->setParameter('ids', $ids)
+        ->orderBy('m.datePlanifiee', 'DESC')
+        ->getQuery()
+        ->getResult();
+}
 }

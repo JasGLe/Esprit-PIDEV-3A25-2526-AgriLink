@@ -1,0 +1,50 @@
+{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+    <div class="row g-3">
+        <div class="col-12">
+            {{ form_label(form.titre, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+            {{ form_widget(form.titre, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Tomates fraiches bio'}}) }}
+            {{ form_errors(form.titre) }}
+        </div>
+
+        <div class="col-12 col-md-6">
+            {{ form_label(form.type, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+            {{ form_widget(form.type, {'attr': {'class': 'form-control', 'placeholder': 'Ex: Legume, Fruit, Cereale'}}) }}
+            {{ form_errors(form.type) }}
+        </div>
+
+        <div class="col-12 col-md-6">
+            {{ form_label(form.quantite, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+            <div class="input-group">
+                {{ form_widget(form.quantite, {'attr': {'class': 'form-control', 'placeholder': '100'}}) }}
+                <span class="input-group-text">kg</span>
+            </div>
+            {{ form_errors(form.quantite) }}
+        </div>
+
+        <div class="col-12 col-md-6">
+            {{ form_label(form.prixUnitaire, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+            <div class="input-group">
+                {{ form_widget(form.prixUnitaire, {'attr': {'class': 'form-control', 'placeholder': '0.00'}}) }}
+                <span class="input-group-text">TND</span>
+            </div>
+            {{ form_errors(form.prixUnitaire) }}
+        </div>
+
+        <div class="col-12 col-md-6">
+            {{ form_label(form.status, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+            {{ form_widget(form.status, {'attr': {'class': 'form-select'}}) }}
+            {{ form_errors(form.status) }}
+        </div>
+
+        <div class="col-12">
+            {{ form_label(form.photos, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+            {{ form_widget(form.photos, {'attr': {'class': 'form-control', 'placeholder': 'URL de photo ou liste d URLs'}}) }}
+            {{ form_errors(form.photos) }}
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mt-4">
+        <button type="submit" class="btn btn-success">{{ submit_label|default('Enregistrer') }}</button>
+        <a href="{{ path('annonce_index') }}" class="btn btn-outline-secondary">Annuler</a>
+    </div>
+{{ form_end(form) }}

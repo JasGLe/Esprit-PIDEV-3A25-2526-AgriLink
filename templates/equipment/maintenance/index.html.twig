@@ -1,0 +1,222 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block page_title %}Mes Maintenances{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .badge-Planifiée   { background:#0d6efd; color:#fff; }
+    .badge-En-cours    { background:#ffc107; color:#000; }
+    .badge-Terminée    { background:#198754; color:#fff; }
+    .badge-Annulée     { background:#6c757d; color:#fff; }
+    .badge-retard      { background:#dc3545; color:#fff; }
+    .row-retard        { border-left: 4px solid #dc3545; }
+    .sortable          { cursor:pointer; user-select:none; }
+    .sortable:hover    { background:#f8f9fa; }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+    {# ── Header ── #}
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-0">🔧 Mes Maintenances</h2>
+            <span class="text-muted">{{ maintenances|length }} maintenance(s) au total</span>
+        </div>
+        <a href="{{ path('maintenance_new') }}" class="btn btn-success">+ Planifier une maintenance</a>
+    </div>
+
+    {# ── Recherche + Filtres ── #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-5">
+                    <label class="form-label fw-semibold small">Recherche</label>
+                    <input type="text" id="search-input" class="form-control"
+                           placeholder="Équipement, description, technicien...">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold small">Statut</label>
+                    <select id="filter-statut" class="form-select">
+                        <option value="">Tous les statuts</option>
+                        <option value="Planifiée">Planifiée</option>
+                        <option value="En cours">En cours</option>
+                        <option value="Terminée">Terminée</option>
+                        <option value="Annulée">Annulée</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label fw-semibold small">Type</label>
+                    <select id="filter-type" class="form-select">
+                        <option value="">Tous</option>
+                        <option value="Préventive">Préventive</option>
+                        <option value="Corrective">Corrective</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button id="reset-filters" class="btn btn-outline-secondary w-100">
+                        Réinitialiser
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Tableau ── #}
+    {% if maintenances is empty %}
+        <div class="text-center py-5 text-muted">
+            <div style="font-size:4rem">🔧</div>
+            <p class="mt-2">Aucune maintenance planifiée.</p>
+            <a href="{{ path('maintenance_new') }}" class="btn btn-success mt-2">Planifier maintenant</a>
+        </div>
+    {% else %}
+        <div class="card shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="table-maintenances">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="sortable" data-col="0">Équipement ↕</th>
+                            <th class="sortable" data-col="1">Type ↕</th>
+                            <th>Catégorie</th>
+                            <th class="sortable" data-col="3">Date planifiée ↕</th>
+                            <th>Date réelle</th>
+                            <th class="sortable" data-col="5">Statut ↕</th>
+                            <th>Description</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-maintenances">
+                        {% for m in maintenances %}
+                            {% set eq = equipMap[m.equipementId] ?? null %}
+                            {% set enRetard = m.isEnRetard() %}
+                            <tr class="maintenance-row {{ enRetard ? 'row-retard' : '' }}"
+                                data-search="{{ (eq ? eq.nom : '') ~ ' ' ~ m.description ~ ' ' ~ m.statut ~ ' ' ~ m.type|lower }}"
+                                data-statut="{{ m.statut }}"
+                                data-type="{{ m.type }}">
+
+                                <td>
+                                    {% if eq %}
+                                        <a href="{{ path('equipement_show', {id: eq.id}) }}"
+                                           class="text-decoration-none fw-semibold">
+                                            {{ eq.nom }}
+                                        </a>
+                                        <div class="text-muted small">{{ eq.type }}</div>
+                                    {% else %}
+                                        <span class="text-muted">—</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-{{ m.type == 'Préventive' ? 'info text-dark' : 'warning text-dark' }}">
+                                        {{ m.type }}
+                                    </span>
+                                </td>
+
+                                <td>{{ m.categorie }}</td>
+
+                                <td>
+                                    {{ m.datePlanifiee ? m.datePlanifiee|date('d/m/Y') : '—' }}
+                                    {% if enRetard %}
+                                        <span class="badge badge-retard ms-1">En retard</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>{{ m.dateReelle ? m.dateReelle|date('d/m/Y') : '—' }}</td>
+
+                                <td>
+                                    <span class="badge badge-{{ m.statut|replace({' ': '-'}) }}">
+                                        {{ m.statut }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <span title="{{ m.description }}">
+                                        {{ m.description|length > 50
+                                            ? m.description|slice(0, 50) ~ '...'
+                                            : m.description }}
+                                    </span>
+                                </td>
+
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="{{ path('maintenance_show', {id: m.id}) }}"
+                                           class="btn btn-sm btn-outline-primary">Voir</a>
+                                        <a href="{{ path('maintenance_edit', {id: m.id}) }}"
+                                           class="btn btn-sm btn-outline-secondary">✏️</a>
+                                        <form method="post"
+                                              action="{{ path('maintenance_delete', {id: m.id}) }}"
+                                              onsubmit="return confirm('Supprimer cette maintenance ?')">
+                                            <input type="hidden" name="_token"
+                                                   value="{{ csrf_token('delete' ~ m.id) }}">
+                                            <button class="btn btn-sm btn-outline-danger">🗑</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="no-results" class="text-center py-4 text-muted" style="display:none">
+            Aucune maintenance ne correspond à votre recherche.
+        </div>
+    {% endif %}
+
+<script>
+const searchInput   = document.getElementById('search-input');
+const filterStatut  = document.getElementById('filter-statut');
+const filterType    = document.getElementById('filter-type');
+const rows          = document.querySelectorAll('.maintenance-row');
+const noResults     = document.getElementById('no-results');
+
+function applyFilters() {
+    const search = searchInput?.value.toLowerCase() ?? '';
+    const statut = filterStatut?.value ?? '';
+    const type   = filterType?.value ?? '';
+    let visible  = 0;
+
+    rows.forEach(row => {
+        const matchSearch = row.dataset.search.includes(search);
+        const matchStatut = !statut || row.dataset.statut === statut;
+        const matchType   = !type   || row.dataset.type   === type;
+        const show = matchSearch && matchStatut && matchType;
+        row.style.display = show ? '' : 'none';
+        if (show) visible++;
+    });
+
+    if (noResults) noResults.style.display = visible === 0 ? 'block' : 'none';
+}
+
+searchInput?.addEventListener('input', applyFilters);
+filterStatut?.addEventListener('change', applyFilters);
+filterType?.addEventListener('change', applyFilters);
+
+document.getElementById('reset-filters')?.addEventListener('click', () => {
+    searchInput.value = '';
+    filterStatut.value = '';
+    filterType.value = '';
+    applyFilters();
+});
+
+// ── Tri colonnes ──
+document.querySelectorAll('.sortable').forEach(th => {
+    let asc = true;
+    th.addEventListener('click', () => {
+        const col   = parseInt(th.dataset.col);
+        const tbody = document.getElementById('tbody-maintenances');
+        const rowsArr = [...tbody.querySelectorAll('tr')];
+
+        rowsArr.sort((a, b) => {
+            const aVal = a.cells[col]?.innerText.trim() ?? '';
+            const bVal = b.cells[col]?.innerText.trim() ?? '';
+            return asc ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+        });
+
+        rowsArr.forEach(r => tbody.appendChild(r));
+        asc = !asc;
+    });
+});
+</script>
+{% endblock %}
