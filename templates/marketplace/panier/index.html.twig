@@ -1,0 +1,293 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Panier — AgriLink{% endblock %}
+
+{% block body_class %}marketplace-panier-checkout min-vh-100{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ asset('css/marketplace-front.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/marketplace-panier-checkout.css') }}">
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/marketplace-panier-checkout.js') }}" defer></script>
+{% endblock %}
+
+{% block body %}
+<div class="mpc-page">
+    {% for message in app.flashes('error') %}
+        <div class="container mpc-container pt-3">
+            <div class="alert alert-danger alert-dismissible fade show mb-0" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Fermer"></button>
+            </div>
+        </div>
+    {% endfor %}
+    {% if lignes is empty %}
+        <div class="container py-5 mpc-container">
+            <a href="{{ path('marketplace_index') }}" class="mpc-back d-inline-flex align-items-center gap-1 mb-4"><i class="bi bi-arrow-left" aria-hidden="true"></i><span>Retour au marketplace</span></a>
+            <div class="mpc-empty-card text-center py-5 px-4 rounded-4 mx-auto">
+                <span class="mpc-empty-card__icon-wrap d-inline-flex align-items-center justify-content-center rounded-circle mb-3" aria-hidden="true">
+                    <i class="bi bi-bag-heart"></i>
+                </span>
+                <p class="mpc-empty-card__title mb-2">Votre panier est vide</p>
+                <p class="mpc-empty-card__lead mb-4">Ajoutez des produits depuis le marketplace.</p>
+                <a href="{{ path('marketplace_index') }}" class="btn mpc-btn-primary">Explorer le marketplace</a>
+            </div>
+        </div>
+    {% else %}
+        <div
+            class="container py-4 py-lg-5 mpc-container"
+            data-mpc-checkout
+            data-mpc-subtotal="{{ total_panier|default(0) }}"
+            data-mpc-livraison-seuil="{{ livraison_gratuite_sous_total_min|default(99) }}"
+            data-mpc-livraison-frais="{{ frais_livraison_standard|default(7) }}"
+        >
+            <a href="{{ path('marketplace_index') }}" class="mpc-back d-inline-flex align-items-center gap-1 mb-3 mb-lg-4">
+                <i class="bi bi-arrow-left" aria-hidden="true"></i>
+                <span>Retour au marketplace</span>
+            </a>
+
+            <nav class="mpc-steps mb-4" aria-label="Étapes de commande">
+                <ol class="mpc-steps__list mb-0">
+                    <li class="mpc-steps__item mpc-steps__item--current" data-mpc-step-nav="1"><i class="bi bi-1-circle-fill mpc-steps__num" aria-hidden="true"></i><span>Informations</span></li>
+                    <li class="mpc-steps__item mpc-steps__item--muted" data-mpc-step-nav="2"><i class="bi bi-2-circle mpc-steps__num" aria-hidden="true"></i><span>Livraison</span></li>
+                    <li class="mpc-steps__item mpc-steps__item--muted" data-mpc-step-nav="3"><i class="bi bi-3-circle mpc-steps__num" aria-hidden="true"></i><span>Paiement</span></li>
+                </ol>
+            </nav>
+
+            <div class="mpc-checkout-card">
+                <div class="row g-0">
+                    <div class="col-lg-7">
+                        <div class="mpc-checkout-card__form p-4 p-lg-5">
+                            <div id="mpc-step-info">
+                            <form class="mpc-form" action="#" method="post" id="mpc-checkout-form">
+                                <section class="mpc-section" aria-labelledby="mpc-sec-contact">
+                                    <h2 class="mpc-section__title" id="mpc-sec-contact">
+                                        <span class="mpc-section__icon" aria-hidden="true"><i class="bi bi-person-vcard"></i></span>
+                                        Contact
+                                    </h2>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="mpc-label" for="checkout-nom">Nom complet <span class="mpc-req">*</span></label>
+                                            <div class="mpc-input-wrap">
+                                                <i class="bi bi-person mpc-input-wrap__icon" aria-hidden="true"></i>
+                                                <input type="text" class="form-control mpc-input" id="checkout-nom" name="nom" required autocomplete="name" value="{{ app.user.nom|default('')|e('html_attr') }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="mpc-label" for="checkout-tel">Téléphone <span class="mpc-req">*</span></label>
+                                            <div class="mpc-input-wrap">
+                                                <i class="bi bi-telephone mpc-input-wrap__icon" aria-hidden="true"></i>
+                                                <input type="tel" class="form-control mpc-input" id="checkout-tel" name="telephone" required inputmode="numeric" placeholder="8 chiffres ex : 12345678" value="{{ app.user.telephone|default('')|e('html_attr') }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-12 col-md-6">
+                                            <label class="mpc-label" for="checkout-email">Email <span class="mpc-opt">(optionnel)</span></label>
+                                            <div class="mpc-input-wrap">
+                                                <i class="bi bi-envelope mpc-input-wrap__icon" aria-hidden="true"></i>
+                                                <input type="email" class="form-control mpc-input" id="checkout-email" name="email" autocomplete="email" value="{{ app.user.email|default('')|e('html_attr') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section class="mpc-section mpc-section--sep" aria-labelledby="mpc-sec-address">
+                                    <h2 class="mpc-section__title" id="mpc-sec-address">
+                                        <span class="mpc-section__icon" aria-hidden="true"><i class="bi bi-house-door"></i></span>
+                                        Adresse de livraison
+                                    </h2>
+                                    <p class="mpc-section__hint small mb-3"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Prérempli depuis votre profil lorsque l’information existe — modifiable pour cette commande.</p>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="mpc-label" for="checkout-adresse">Adresse <span class="mpc-req">*</span></label>
+                                            <div class="mpc-input-wrap">
+                                                <i class="bi bi-signpost-2 mpc-input-wrap__icon" aria-hidden="true"></i>
+                                                <input type="text" class="form-control mpc-input" id="checkout-adresse" name="adresse" required autocomplete="street-address" placeholder="Numéro et nom de rue" value="">
+                                            </div>
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="mpc-label" for="checkout-complement">Complément <span class="mpc-opt">(optionnel)</span></label>
+                                            <div class="mpc-input-wrap">
+                                                <i class="bi bi-building mpc-input-wrap__icon" aria-hidden="true"></i>
+                                                <input type="text" class="form-control mpc-input" id="checkout-complement" name="complement" autocomplete="address-line2" placeholder="Appartement, étage…" value="">
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-4">
+                                            <label class="mpc-label" for="checkout-cp">Code postal</label>
+                                            <div class="mpc-input-wrap">
+                                                <i class="bi bi-postcard mpc-input-wrap__icon" aria-hidden="true"></i>
+                                                <input type="text" class="form-control mpc-input" id="checkout-cp" name="code_postal" autocomplete="postal-code" value="{{ app.user.codePostale|default('')|e('html_attr') }}">
+                                            </div>
+                                        </div>
+                                        <div class="col-6 col-md-8">
+                                            <label class="mpc-label" for="checkout-ville">Ville <span class="mpc-req">*</span></label>
+                                            <div class="mpc-input-wrap">
+                                                <i class="bi bi-geo-alt mpc-input-wrap__icon" aria-hidden="true"></i>
+                                                <input type="text" class="form-control mpc-input" id="checkout-ville" name="ville" required autocomplete="address-level2" value="{{ app.user.ville|default('')|e('html_attr') }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <button type="button" class="btn mpc-btn-primary mpc-btn-primary--wide w-100 mt-2" id="mpc-btn-to-shipping" disabled title="Renseignez l’adresse de livraison pour continuer">
+                                    Continuer vers la livraison <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
+                                </button>
+                            </form>
+                            </div>
+
+                            <div id="mpc-step-delivery" hidden>
+                                <section class="mpc-section" aria-labelledby="mpc-sec-recap-ship">
+                                    <h2 class="mpc-section__title" id="mpc-sec-recap-ship">
+                                        <span class="mpc-section__icon" aria-hidden="true"><i class="bi bi-check2-square"></i></span>
+                                        Votre commande
+                                    </h2>
+                                    <div class="mpc-order-summary mb-4">
+                                        <div class="mpc-order-summary__block">
+                                            <div class="mpc-order-summary__head">
+                                                <span class="mpc-order-summary__label">Contact</span>
+                                                <button type="button" class="btn btn-link mpc-link-edit p-0 align-baseline" data-mpc-goto-step="1">Modifier</button>
+                                            </div>
+                                            <p class="mpc-order-summary__val mb-0" id="mpc-summary-contact"></p>
+                                        </div>
+                                        <div class="mpc-order-summary__block">
+                                            <div class="mpc-order-summary__head">
+                                                <span class="mpc-order-summary__label">Livrer à</span>
+                                                <button type="button" class="btn btn-link mpc-link-edit p-0 align-baseline" data-mpc-goto-step="1">Modifier</button>
+                                            </div>
+                                            <p class="mpc-order-summary__val mb-0" id="mpc-summary-address"></p>
+                                        </div>
+                                    </div>
+                                </section>
+
+                                <section class="mpc-section mpc-section--sep" aria-labelledby="mpc-sec-delivery-method">
+                                    <h2 class="mpc-section__title" id="mpc-sec-delivery-method">
+                                        <span class="mpc-section__icon" aria-hidden="true"><i class="bi bi-truck"></i></span>
+                                        Méthode de livraison
+                                    </h2>
+                                    <div class="mpc-delivery-option" role="group" aria-label="Livraison standard">
+                                        <div class="mpc-delivery-option__head">
+                                            <span class="mpc-delivery-option__name">Standard</span>
+                                            <span class="mpc-delivery-option__price" id="mpc-delivery-method-price">Gratuit</span>
+                                        </div>
+                                        <p class="mpc-delivery-option__hint mb-0 small">
+                                            <i class="bi bi-truck me-1" aria-hidden="true"></i>Livraison gratuite dès {{ livraison_gratuite_sous_total_min|default(99)|number_format(0, ',', ' ') }}&nbsp;DT d’achat — sinon {{ frais_livraison_standard|default(7)|number_format(0, ',', ' ') }}&nbsp;DT.
+                                        </p>
+                                    </div>
+                                </section>
+
+                                <button type="button" class="btn mpc-btn-primary mpc-btn-primary--wide w-100 mt-3" id="mpc-btn-to-payment">
+                                    Continuer vers le paiement <i class="bi bi-arrow-right ms-2" aria-hidden="true"></i>
+                                </button>
+                                <button type="button" class="btn btn-link mpc-link-back w-100 mt-2 p-0" id="mpc-btn-back-info">
+                                    <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Retour à l’information
+                                </button>
+                            </div>
+
+                            <div id="mpc-step-payment" hidden>
+                                <section class="mpc-section" aria-labelledby="mpc-sec-payment">
+                                    <h2 class="mpc-section__title" id="mpc-sec-payment">
+                                        <span class="mpc-section__icon" aria-hidden="true"><i class="bi bi-credit-card-2-front"></i></span>
+                                        Paiement
+                                    </h2>
+                                    <p class="mpc-section__hint small mb-3">Choisissez comment vous souhaitez payer. Le montant total inclut la livraison.</p>
+
+                                    <form id="mpc-form-commande" class="mpc-form-commande" method="post" action="{{ path('marketplace_panier_commander') }}" novalidate>
+                                        <input type="hidden" name="_token" value="{{ csrf_token('checkout_commander') }}">
+                                        <input type="hidden" name="nom" id="mpc-order-nom" value="">
+                                        <input type="hidden" name="telephone" id="mpc-order-tel" value="">
+                                        <input type="hidden" name="email" id="mpc-order-email" value="">
+                                        <input type="hidden" name="adresse" id="mpc-order-adresse" value="">
+                                        <input type="hidden" name="complement" id="mpc-order-complement" value="">
+                                        <input type="hidden" name="code_postal" id="mpc-order-cp" value="">
+                                        <input type="hidden" name="ville" id="mpc-order-ville" value="">
+
+                                        <div class="mpc-pay-options mb-4" role="radiogroup" aria-label="Mode de paiement">
+                                            <label class="mpc-pay-option">
+                                                <input type="radio" name="mode_paiement" value="en_ligne" class="mpc-pay-option__input" checked>
+                                                <span class="mpc-pay-option__card">
+                                                    <span class="mpc-pay-option__icon" aria-hidden="true"><i class="bi bi-credit-card"></i></span>
+                                                    <span class="mpc-pay-option__text">
+                                                        <span class="mpc-pay-option__title">Paiement en ligne</span>
+                                                        <span class="mpc-pay-option__desc">Carte bancaire (sécurisé)</span>
+                                                    </span>
+                                                </span>
+                                            </label>
+                                            <label class="mpc-pay-option">
+                                                <input type="radio" name="mode_paiement" value="livraison_cash" class="mpc-pay-option__input">
+                                                <span class="mpc-pay-option__card">
+                                                    <span class="mpc-pay-option__icon" aria-hidden="true"><i class="bi bi-cash-stack"></i></span>
+                                                    <span class="mpc-pay-option__text">
+                                                        <span class="mpc-pay-option__title">Paiement à la livraison</span>
+                                                        <span class="mpc-pay-option__desc">Espèces à la réception</span>
+                                                    </span>
+                                                </span>
+                                            </label>
+                                        </div>
+
+                                        <button type="submit" class="btn mpc-btn-primary mpc-btn-primary--wide w-100" id="mpc-btn-commander">
+                                            Commander
+                                        </button>
+                                    </form>
+
+                                    <button type="button" class="btn btn-link mpc-link-back w-100 mt-2 p-0" id="mpc-btn-back-delivery">
+                                        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Retour à la livraison
+                                    </button>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5">
+                        <aside class="mpc-checkout-card__recap p-4 p-lg-5">
+                            <h3 class="mpc-recap__title">
+                                <span class="mpc-section__icon mpc-section__icon--sm" aria-hidden="true"><i class="bi bi-receipt"></i></span>
+                                Récapitulatif
+                            </h3>
+                            <ul class="mpc-recap__lines list-unstyled mb-0">
+                                {% for ligne in lignes %}
+                                    {% set pid = ligne.idProduit %}
+                                    {% set p = pid is not null and produits_panier[pid] is defined ? produits_panier[pid] : null %}
+                                    <li class="mpc-recap__line">
+                                        <div class="mpc-recap__thumb">
+                                            {% if p and p.image and p.image|trim != '' %}
+                                                <img src="{{ uploads_base_url }}/cultures/{{ p.image }}" alt="" loading="lazy" width="56" height="56">
+                                            {% else %}
+                                                <span class="mpc-recap__thumb-ph" aria-hidden="true"><i class="bi bi-basket3"></i></span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="mpc-recap__line-body">
+                                            <span class="mpc-recap__name">{{ ligne.nomProduit }}</span>
+                                            <span class="mpc-recap__qty">Qté : {{ ligne.quantite }}</span>
+                                        </div>
+                                        <span class="mpc-recap__price">{{ ligne.prixTotal|number_format(3, ',', ' ') }} DT</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                            <div class="mpc-recap__divider"></div>
+                            <div class="mpc-recap__row">
+                                <span>Sous-total</span>
+                                <span id="mpc-recap-subtotal-val">{{ total_panier|number_format(3, ',', ' ') }} DT</span>
+                            </div>
+                            <div class="mpc-recap__row mpc-recap__row--muted mpc-recap__row--pending" id="mpc-recap-shipping-row">
+                                <span><i class="bi bi-truck me-1" aria-hidden="true"></i>Livraison</span>
+                                <span id="mpc-recap-shipping-val">—</span>
+                            </div>
+                            <div class="mpc-recap__divider mpc-recap__divider--accent"></div>
+                            <div class="mpc-recap__total-row">
+                                <div class="mpc-recap__total-label-wrap">
+                                    <span class="mpc-recap__total-label" id="mpc-recap-total-label-main">Sous-total</span>
+                                    <span class="mpc-recap__total-sublabel" id="mpc-recap-total-sublabel" hidden></span>
+                                </div>
+                                <span class="mpc-recap__total-val" id="mpc-recap-total-val">{{ total_panier|number_format(3, ',', ' ') }} DT</span>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

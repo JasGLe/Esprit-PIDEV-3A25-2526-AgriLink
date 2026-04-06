@@ -1,0 +1,45 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Commande #{{ commande.numCommande }} — AgriLink{% endblock %}
+{% block page_title %}{% if mes_commandes_mode == 'vendeur' %}Commande client{% else %}Détail commande{% endif %}{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ asset('css/mes-commandes-dashboard.css') }}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="mc-orders-scope">
+    <a href="{{ path('mes_commandes_index') }}" class="mc-link d-inline-flex align-items-center gap-1 mb-3 small"><i class="bi bi-arrow-left" aria-hidden="true"></i> Retour aux commandes</a>
+
+    {% include 'marketplace/mes_commandes/_order_detail_body.html.twig' with { statut_redirect: 'show' } %}
+</div>
+
+{% include 'marketplace/mes_commandes/_order_edit_modal.html.twig' %}
+
+<script>
+(function () {
+    var scope = document.querySelector('.mc-orders-scope');
+    if (!scope) {
+        return;
+    }
+    scope.querySelectorAll('.mc-status-details').forEach(function (el) {
+        el.addEventListener('toggle', function () {
+            if (!el.open) {
+                return;
+            }
+            var root = el.closest('.mc-orders-scope');
+            if (!root) {
+                return;
+            }
+            root.querySelectorAll('.mc-status-details').forEach(function (o) {
+                if (o !== el) {
+                    o.removeAttribute('open');
+                }
+            });
+        });
+    });
+})();
+</script>
+{% endblock %}
