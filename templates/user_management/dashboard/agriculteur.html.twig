@@ -172,28 +172,28 @@
             </div>
         </div>
 
-        {# Commandes en cours #}
+        {# Ma boutique #}
         <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm h-100">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #dbeafe;">
-                                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background: linear-gradient(135deg, rgba(245,158,11,0.20), rgba(249,115,22,0.16));">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#c2410c;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18l-1.5 9a2 2 0 01-2 1.7H6.5a2 2 0 01-2-1.7L3 7zm4-3h10l1 3H6l1-3zM9 11v4m6-4v4" />
                                 </svg>
                             </div>
                         </div>
                         <div class="ms-3 flex-grow-1">
                             <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Commandes</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">--</dd>
+                                <dt class="small fw-medium text-muted text-truncate">Ma boutique</dt>
+                                <dd class="fs-5 fw-semibold mb-0" style="color:#ea580c;">Produits</dd>
                             </dl>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer bg-light p-3">
-                    <a href="#" class="small fw-medium text-primary text-decoration-none">Voir tout →</a>
+                    <a href="{{ path('boutique_index') }}" class="small fw-medium text-decoration-none" style="color:#c2410c;">Ouvrir ma boutique →</a>
                 </div>
             </div>
         </div>

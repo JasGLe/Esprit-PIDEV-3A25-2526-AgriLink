@@ -67,20 +67,37 @@ class ProduitsRepository extends ServiceEntityRepository
             ->setParameter('origine', self::ORIGINE_BOUTIQUE_AGRICULTEUR)
             ->setParameter('actif', true);
 
-        if ($search !== null && $search !== '') {
-            $like = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
-            $term = '%'.$like.'%';
-            $qb->leftJoin(User::class, 'v', Join::WITH, 'v.id = p.idFournisseur')
-                ->andWhere($qb->expr()->orX(
-                    'p.nom LIKE :q',
-                    'p.description LIKE :q',
-                    'p.categorie LIKE :q',
-                    'v.nom LIKE :q',
-                    'v.ville LIKE :q',
-                    'v.email LIKE :q',
-                    'v.fournisseurRaisonSocial LIKE :q'
-                ))
-                ->setParameter('q', $term);
+        if ($search !== null && trim($search) !== '') {
+            $qb->leftJoin(User::class, 'v', Join::WITH, 'v.id = p.idFournisseur');
+
+            // Robust search for header bar: product name, category, or city only.
+            $normalized = preg_replace('/\s+/', ' ', trim($search)) ?? '';
+            $keywords = preg_split('/\s+/', $normalized) ?: [];
+            $keywords = array_values(array_filter($keywords, static fn ($k) => $k !== ''));
+
+            foreach ($keywords as $i => $keyword) {
+                $needle = function_exists('mb_strtolower') ? mb_strtolower($keyword) : strtolower($keyword);
+                $needle = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $needle);
+                $param = 'q'.$i;
+
+                // 1-character input is too broad with LIKE, so keep it exact.
+                if (strlen($needle) < 2) {
+                    $qb->andWhere($qb->expr()->orX(
+                        "LOWER(COALESCE(p.nom, '')) = :$param",
+                        "LOWER(COALESCE(p.category, '')) = :$param",
+                        "LOWER(COALESCE(p.categorie, '')) = :$param",
+                        "LOWER(COALESCE(v.ville, '')) = :$param"
+                    ))->setParameter($param, $needle);
+                    continue;
+                }
+
+                $qb->andWhere($qb->expr()->orX(
+                    "LOWER(COALESCE(p.nom, '')) LIKE :$param",
+                    "LOWER(COALESCE(p.category, '')) LIKE :$param",
+                    "LOWER(COALESCE(p.categorie, '')) LIKE :$param",
+                    "LOWER(COALESCE(v.ville, '')) LIKE :$param"
+                ))->setParameter($param, '%'.$needle.'%');
+            }
         }
 
         $cat = strtolower($cat);
@@ -133,6 +150,48 @@ class ProduitsRepository extends ServiceEntityRepository
         }
 
         return array_values(array_unique($out));
+    }
+
+    /**
+     * @return int[] culture ids already listed by this seller in boutique
+     */
+    public function findCultureIdsAlreadyInBoutiqueByOwner(int $userId): array
+    {
+        $rows = $this->createQueryBuilder('p')
+            ->select('DISTINCT p.cultureId AS cid')
+            ->andWhere('p.idFournisseur = :uid')
+            ->andWhere('p.origine = :origine')
+            ->andWhere('p.cultureId IS NOT NULL')
+            ->setParameter('uid', $userId)
+            ->setParameter('origine', self::ORIGINE_BOUTIQUE_AGRICULTEUR)
+            ->getQuery()
+            ->getScalarResult();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $id = isset($row['cid']) ? (int) $row['cid'] : (isset($row[0]) ? (int) $row[0] : null);
+            if ($id !== null && $id > 0) {
+                $out[] = $id;
+            }
+        }
+
+        return array_values(array_unique($out));
+    }
+
+    public function existsBoutiqueProduitForCulture(int $userId, int $cultureId): bool
+    {
+        $v = $this->createQueryBuilder('p')
+            ->select('COUNT(p.id)')
+            ->andWhere('p.idFournisseur = :uid')
+            ->andWhere('p.origine = :origine')
+            ->andWhere('p.cultureId = :cid')
+            ->setParameter('uid', $userId)
+            ->setParameter('origine', self::ORIGINE_BOUTIQUE_AGRICULTEUR)
+            ->setParameter('cid', $cultureId)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (int) $v > 0;
     }
 
     public function save(Produits $entity, bool $flush = false): void

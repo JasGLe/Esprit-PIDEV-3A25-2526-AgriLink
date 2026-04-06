@@ -117,7 +117,7 @@
                                         <span class="mc-muted">—</span>
                                     {% endif %}
                                 </td>
-                                <td><span class="mc-num">#{{ c.numCommande }}</span></td>
+                                <td><span class="mc-num mc-num--nowrap">#CMD{{ "%03d"|format(c.id) }}</span></td>
                                 <td class="mc-date mc-date--nowrap">{{ c.dateCommande|date('Y-m-d') }}</td>
                                 <td><span class="mc-amount">{{ mv|number_format(3, ',', ' ') }} DT</span></td>
                                 <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { status: c.status, commande_id: c.id, dropdown_choices: statut_choices_seller, statut_redirect: 'index' } %}</td>

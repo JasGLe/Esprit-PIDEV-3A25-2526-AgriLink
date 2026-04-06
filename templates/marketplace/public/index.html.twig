@@ -7,6 +7,11 @@
     {{ parent() }}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ asset('css/marketplace-front.css') }}">
+    <style>
+        body.marketplace-tropical {
+            --tropical-bg-image: url("{{ asset('images/marketplace/marketplace-background.jpg') }}");
+        }
+    </style>
 {% endblock %}
 
 {% block body %}
@@ -169,7 +174,7 @@
                                 id="marketplace-region-select"
                                 class="form-select form-select-sm tropical-select tropical-filter-select tropical-filter-select--fit"
                                 title="Filtre par gouvernorat — modifiable à tout moment"
-                                onchange="this.form.requestSubmit()">
+                                onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
                             <option value="" {{ filter_region == '' ? 'selected' : '' }}>Toutes les régions</option>
                             {% for r in tunisia_regions %}
                                 <option value="{{ r }}" {{ filter_region == r ? 'selected' : '' }}>{{ r }}</option>
@@ -181,7 +186,7 @@
                         <select name="sort"
                                 id="marketplace-sort-select"
                                 class="form-select form-select-sm tropical-select tropical-filter-select tropical-filter-select--fit"
-                                onchange="this.form.requestSubmit()">
+                                onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
                             <option value="price_asc" {{ filter_sort == 'price_asc' ? 'selected' : '' }}>Prix croissant</option>
                             <option value="price_desc" {{ filter_sort == 'price_desc' ? 'selected' : '' }}>Prix décroissant</option>
                         </select>
