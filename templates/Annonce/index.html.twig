@@ -1,29 +1,66 @@
-{% extends 'base.html.twig' %}
-{% block body %}
-<h1>Annonces</h1>
-<a href="{{ path('annonce_new') }}" class="btn btn-primary mb-3">Nouvelle annonce</a>
-<table class="table table-bordered">
-    <thead>
-        <tr><th>Titre</th><th>Type</th><th>Quantité</th><th>Prix</th><th>Statut</th><th>Actions</th></tr>
-    </thead>
-    <tbody>
-    {% for annonce in annonces %}
-        <tr>
-            <td>{{ annonce.titre }}</td>
-            <td>{{ annonce.type }}</td>
-            <td>{{ annonce.quantite }}</td>
-            <td>{{ annonce.prixUnitaire }} TND</td>
-            <td>{{ annonce.status }}</td>
-            <td>
-                <a href="{{ path('annonce_show', {id: annonce.id}) }}" class="btn btn-sm btn-info">Voir</a>
-                <a href="{{ path('annonce_edit', {id: annonce.id}) }}" class="btn btn-sm btn-warning">Modifier</a>
-                <form method="post" action="{{ path('annonce_delete', {id: annonce.id}) }}" style="display:inline">
-                    <input type="hidden" name="_token" value="{{ csrf_token('delete'~annonce.id) }}">
-                    <button class="btn btn-sm btn-danger" onclick="return confirm('Supprimer ?')">Supprimer</button>
-                </form>
-            </td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Annonces - AgriLink{% endblock %}
+{% block page_title %}Annonces{% endblock %}
+
+{% block dashboard_content %}
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fs-4 fw-bold text-dark mb-1">Marche des annonces</h2>
+            <p class="text-muted mb-0">Consultez et gerez les annonces du module.</p>
+        </div>
+        <a href="{{ path('annonce_new') }}" class="btn btn-success">Nouvelle annonce</a>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="px-4 py-3">Titre</th>
+                            <th class="px-4 py-3">Type</th>
+                            <th class="px-4 py-3">Quantite</th>
+                            <th class="px-4 py-3">Prix</th>
+                            <th class="px-4 py-3">Statut</th>
+                            <th class="px-4 py-3 text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for annonce in annonces %}
+                            <tr>
+                                <td class="px-4 py-3">
+                                    <div class="fw-semibold text-dark">{{ annonce.titre }}</div>
+                                    <div class="small text-muted">Reference #{{ annonce.id }}</div>
+                                </td>
+                                <td class="px-4 py-3">{{ annonce.type }}</td>
+                                <td class="px-4 py-3">{{ annonce.quantite }}</td>
+                                <td class="px-4 py-3">{{ annonce.prixUnitaire|number_format(2, '.', ' ') }} TND</td>
+                                <td class="px-4 py-3">
+                                    {% set badge_class = annonce.status == 'ACTIVE' ? 'success' : (annonce.status == 'VENDUE' ? 'secondary' : 'warning text-dark') %}
+                                    <span class="badge bg-{{ badge_class }}">{{ annonce.status }}</span>
+                                </td>
+                                <td class="px-4 py-3 text-end">
+                                    <div class="d-inline-flex flex-wrap justify-content-end gap-2">
+                                        <a href="{{ path('annonce_show', {id: annonce.id}) }}" class="btn btn-sm btn-outline-primary">Voir</a>
+                                        <a href="{{ path('annonce_edit', {id: annonce.id}) }}" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                                        <form method="post" action="{{ path('annonce_delete', {id: annonce.id}) }}" onsubmit="return confirm('Supprimer cette annonce ?');">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ annonce.id) }}">
+                                            <button class="btn btn-sm btn-outline-danger">Supprimer</button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="px-4 py-5 text-center text-muted">
+                                    Aucune annonce disponible pour le moment.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 {% endblock %}

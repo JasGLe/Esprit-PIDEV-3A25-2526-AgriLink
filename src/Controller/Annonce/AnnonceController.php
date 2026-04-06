@@ -18,7 +18,7 @@ class AnnonceController extends AbstractController
     public function index(AnnonceRepository $repo): Response
     {
         return $this->render('Annonce/index.html.twig', [
-            'annonces' => $repo->findAll(),
+            'annonces' => $repo->findBy([], ['id' => 'DESC']),
         ]);
     }
 
@@ -32,7 +32,8 @@ class AnnonceController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $em->persist($annonce);
             $em->flush();
-            $this->addFlash('success', 'Annonce créée avec succès.');
+            $this->addFlash('success', 'Annonce creee avec succes.');
+
             return $this->redirectToRoute('annonce_index');
         }
 
@@ -57,24 +58,26 @@ class AnnonceController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $em->flush();
-            $this->addFlash('success', 'Annonce modifiée.');
+            $this->addFlash('success', 'Annonce mise a jour.');
+
             return $this->redirectToRoute('annonce_index');
         }
 
         return $this->render('Annonce/edit.html.twig', [
             'annonce' => $annonce,
-            'form'    => $form->createView(),
+            'form' => $form->createView(),
         ]);
     }
 
     #[Route('/{id}/delete', name: 'annonce_delete', methods: ['POST'])]
     public function delete(Request $request, Annonce $annonce, EntityManagerInterface $em): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$annonce->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $annonce->getId(), $request->request->get('_token'))) {
             $em->remove($annonce);
             $em->flush();
-            $this->addFlash('success', 'Annonce supprimée.');
+            $this->addFlash('success', 'Annonce supprimee.');
         }
+
         return $this->redirectToRoute('annonce_index');
     }
 }

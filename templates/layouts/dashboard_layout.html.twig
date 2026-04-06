@@ -32,7 +32,7 @@
                     </svg>
                 </button>
             </div>
-            <nav class="flex-fill px-2 py-3 overflow-auto" style="gap: 0.25rem;"">
+            <nav class="flex-fill px-2 py-3 overflow-auto" style="gap: 0.25rem;">
                 {# Same navigation as desktop #}
                 <a href="{{ path('app_dashboard') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') == 'app_dashboard' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -69,6 +69,20 @@
 
               {# ── GESTION AGRICOLE ── #}
                 <hr class="my-2 border-secondary opacity-25">
+                <a href="{{ path('annonce_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'annonce_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                    <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 12h14M5 16h9M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" />
+                    </svg>
+                    <span class="small fw-medium">Annonces</span>
+                </a>
+
+                <a href="{{ path('forum_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'forum_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                    <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8m-8 4h5m-8 6l-3-3V6a2 2 0 012-2h16a2 2 0 012 2v9a2 2 0 01-2 2H7l-3 3z" />
+                    </svg>
+                    <span class="small fw-medium">Forum</span>
+                </a>
+
                 <div class="px-3 py-1 text-muted text-uppercase small fw-semibold" style="letter-spacing: 0.05em; font-size: 0.65rem;">
                     Gestion Agricole
                 </div>
@@ -141,8 +155,8 @@
                         <div class="d-flex align-items-center gap-3">
                             {{ include('components/_avatar.html.twig', {user: app.user, size: 'medium'}) }}
                             <div class="flex-fill text-truncate">
-                                <p class="small fw-medium text-dark mb-0 text-truncate">{{ app.user.displayName }}</p>
-                                <p class="text-muted mb-0 text-truncate" style="font-size: 0.75rem;">{{ app.user.email }}</p>
+                                <p class="small fw-medium text-dark mb-0 text-truncate">{{ app.user ? app.user.displayName : 'Utilisateur' }}</p>
+                                <p class="text-muted mb-0 text-truncate" style="font-size: 0.75rem;">{{ app.user ? app.user.email : 'Session invitee' }}</p>
                             </div>
                         </div>
                         <div class="mt-2">
@@ -202,6 +216,20 @@
 
                        {# ── GESTION AGRICOLE ── #}
                         <hr class="my-2 border-secondary opacity-25">
+                        <a href="{{ path('annonce_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'annonce_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                            <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 12h14M5 16h9M4 6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" />
+                            </svg>
+                            <span class="small fw-medium">Annonces</span>
+                        </a>
+
+                        <a href="{{ path('forum_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'forum_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                            <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8m-8 4h5m-8 6l-3-3V6a2 2 0 012-2h16a2 2 0 012 2v9a2 2 0 01-2 2H7l-3 3z" />
+                            </svg>
+                            <span class="small fw-medium">Forum</span>
+                        </a>
+
                         <div class="px-3 py-1 text-muted text-uppercase small fw-semibold" style="letter-spacing: 0.05em; font-size: 0.65rem;">
                             Gestion Agricole
                         </div>
@@ -301,8 +329,8 @@
                             </button>
                             <ul class="dropdown-menu dropdown-menu-end border-secondary" style="min-width: 12rem;">
                                 <li class="px-3 py-2 border-bottom">
-                                    <p class="small fw-medium text-dark mb-0">{{ app.user.displayName }}</p>
-                                    <p class="text-muted mb-0" style="font-size: 0.75rem;">{{ app.user.email }}</p>
+                                    <p class="small fw-medium text-dark mb-0">{{ app.user ? app.user.displayName : 'Utilisateur' }}</p>
+                                    <p class="text-muted mb-0" style="font-size: 0.75rem;">{{ app.user ? app.user.email : 'Session invitee' }}</p>
                                 </li>
                                 <li><a href="{{ path('app_profile') }}" class="dropdown-item small">Mon profil</a></li>
                                 <li><a href="{{ path('app_profile_edit') }}" class="dropdown-item small">Paramètres</a></li>

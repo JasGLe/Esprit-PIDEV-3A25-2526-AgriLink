@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Entity;
+namespace App\Entity\Forum;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Repository\ForumRepository::class)]
+#[ORM\Entity(repositoryClass: \App\Repository\Forum\ForumRepository::class)]
 #[ORM\Table(name: 'forum')]
 class Forum
 {
@@ -20,11 +20,16 @@ class Forum
     #[ORM\Column(type: Types::STRING, length: 100)]
     private string $categorie;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(name: 'date_creation', type: Types::DATETIME_MUTABLE)]
     private \DateTimeInterface $dateCreation;
 
-    #[ORM\Column(type: Types::INTEGER, nullable: true)]
+    #[ORM\Column(name: 'user_id', type: Types::INTEGER, nullable: true)]
     private ?int $userId = null;
+
+    public function __construct()
+    {
+        $this->dateCreation = new \DateTime();
+    }
 
     public function getId(): int
     {
@@ -39,7 +44,6 @@ class Forum
     public function setTitre(string $titre): static
     {
         $this->titre = $titre;
-
         return $this;
     }
 
@@ -51,7 +55,6 @@ class Forum
     public function setCategorie(string $categorie): static
     {
         $this->categorie = $categorie;
-
         return $this;
     }
 
@@ -63,7 +66,6 @@ class Forum
     public function setDateCreation(\DateTimeInterface $dateCreation): static
     {
         $this->dateCreation = $dateCreation;
-
         return $this;
     }
 
@@ -75,7 +77,6 @@ class Forum
     public function setUserId(?int $userId): static
     {
         $this->userId = $userId;
-
         return $this;
     }
 }

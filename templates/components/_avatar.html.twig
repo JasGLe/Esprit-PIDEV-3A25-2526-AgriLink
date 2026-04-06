@@ -12,9 +12,18 @@
 } %}
 
 {% set sizeClass = sizes[size|default('medium')] %}
+{% set displayName = user and user.nom ? user.nom : 'Utilisateur' %}
+{% set initials = '?' %}
+
+{% if user and user.nom %}
+    {% set names = user.nom|split(' ')|filter(name => name is not empty) %}
+    {% if names|length > 0 %}
+        {% set initials = names[0]|first|upper ~ (names|length > 1 ? names[1]|first|upper : '') %}
+    {% endif %}
+{% endif %}
 
 <div class="position-relative d-inline-block {{ classes|default('') }}">
-    {% if user.photoProfil %}
+    {% if user and user.photoProfil %}
         {# Handle different path formats in database:
            - New format: profiles/filename.jpg
            - Old format 1: agrilink/uploads/profiles/filename.jpg
@@ -33,26 +42,16 @@
         {% endif %}
         
         <img src="{{ finalPath }}" 
-             alt="{{ user.nom }}" 
+             alt="{{ displayName }}" 
              class="avatar {{ sizeClass }} border border-2 border-gray-200"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
         {# Fallback if image fails to load #}
         <div class="avatar {{ sizeClass }} bg-success text-white fw-semibold d-none">
-            {% set names = user.nom|split(' ') %}
-            {% if names|length > 0 %}
-                {{ names[0]|first|upper }}{% if names|length > 1 %}{{ names[1]|first|upper }}{% endif %}
-            {% else %}
-                ?
-            {% endif %}
+            {{ initials }}
         </div>
     {% else %}
         <div class="avatar {{ sizeClass }} bg-success text-white fw-semibold">
-            {% set names = user.nom|split(' ') %}
-            {% if names|length > 0 %}
-                {{ names[0]|first|upper }}{% if names|length > 1 %}{{ names[1]|first|upper }}{% endif %}
-            {% else %}
-                ?
-            {% endif %}
+            {{ initials }}
         </div>
     {% endif %}
 </div>
