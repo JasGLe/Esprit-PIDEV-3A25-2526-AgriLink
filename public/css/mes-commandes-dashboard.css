@@ -1400,3 +1400,45 @@ a.mc-act--more:hover {
 .mc-order-edit-modal__loading {
     color: #9aa0a8;
 }
+
+/* Boutique-like delete confirmation modal (shared UX/UI pattern) */
+.boutique-confirm__content {
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.boutique-confirm__header {
+    background: linear-gradient(90deg, rgba(220, 38, 38, 0.10), rgba(245, 158, 11, 0.06));
+}
+
+.boutique-confirm__title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+}
+
+.boutique-confirm__icon {
+    width: 1.8rem;
+    height: 1.8rem;
+    border-radius: 0.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(220, 38, 38, 0.10);
+}
+
+.boutique-confirm__body {
+    padding: 1rem 1rem 0.75rem;
+}
+
+.boutique-confirm__footer {
+    padding: 0.75rem 1rem 1rem;
+    display: flex;
+    gap: 0.5rem;
+}
+
+.boutique-confirm__btn-confirm,
+.boutique-confirm__btn-cancel {
+    border-radius: 0.6rem;
+}

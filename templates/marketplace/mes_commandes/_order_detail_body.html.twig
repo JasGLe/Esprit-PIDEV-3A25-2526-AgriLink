@@ -5,7 +5,7 @@
 <div class="mc-order-detail-toolbar mc-act-toolbar mc-act-toolbar--detail mc-od-toolbar">
     <button type="button" class="btn btn-sm mc-act mc-act--edit" title="Modifier les coordonnées de livraison" data-bs-toggle="modal" data-bs-target="#mcOrderEditModal" data-mc-order-edit-url="{{ path('mes_commandes_edit_modal', { id: commande.id }) }}"><i class="bi bi-pencil" aria-hidden="true"></i></button>
     {% if commande_deletable %}
-        <form method="post" action="{{ path('mes_commandes_delete', { id: commande.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer définitivement cette commande et toutes ses lignes ?');">
+        <form method="post" action="{{ path('mes_commandes_delete', { id: commande.id }) }}" class="d-inline js-mc-delete-form" data-mc-order-ref="#CMD{{ "%03d"|format(commande.id) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('delete_commande_' ~ commande.id) }}">
             <button type="submit" class="btn btn-sm mc-act mc-act--delete" title="Supprimer la commande"><i class="bi bi-trash" aria-hidden="true"></i></button>
         </form>

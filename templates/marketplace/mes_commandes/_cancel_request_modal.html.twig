@@ -1,0 +1,69 @@
+<div class="modal fade mc-cancel-request-modal" id="mcCancelRequestModal" tabindex="-1" aria-labelledby="mcCancelRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content mc-cancel-request-modal__content border-0 shadow-lg">
+            <div class="modal-header mc-cancel-request-modal__header border-0">
+                <h2 class="modal-title h5 mb-0 mc-cancel-request-modal__title" id="mcCancelRequestModalLabel">
+                    <i class="bi bi-x-circle me-2" aria-hidden="true"></i>Demande d’annulation
+                </h2>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body mc-cancel-request-modal__body">
+                <p class="mb-2">Commande <strong class="js-mc-cancel-order-ref">—</strong>.</p>
+                <p class="mb-2">Votre demande d’annulation sera envoyée pour traitement.</p>
+                <p class="mb-2 mc-muted small">Traitée par : <strong>Admin</strong>, <strong>Fournisseur</strong> ou <strong>Agriculteur</strong>.</p>
+                <p class="mb-0 mc-muted small">Disponible dans les 48h suivant la commande.</p>
+            </div>
+            <div class="modal-footer mc-cancel-request-modal__footer border-0">
+                <button type="button" class="btn mc-order-edit-btn-cancel" data-bs-dismiss="modal">Retour</button>
+                <button type="button" class="btn mc-order-edit-btn-save js-mc-cancel-confirm">Confirmer la demande</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var modalEl = document.getElementById('mcCancelRequestModal');
+    if (!modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+        return;
+    }
+
+    var modal = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static' });
+    var refEl = modalEl.querySelector('.js-mc-cancel-order-ref');
+    var confirmBtn = modalEl.querySelector('.js-mc-cancel-confirm');
+    var pendingForm = null;
+
+    document.addEventListener('submit', function (event) {
+        var form = event.target;
+        if (!(form instanceof HTMLFormElement)) {
+            return;
+        }
+        if (!form.classList.contains('js-mc-cancel-request-form')) {
+            return;
+        }
+        event.preventDefault();
+        pendingForm = form;
+        if (refEl) {
+            refEl.textContent = form.getAttribute('data-mc-order-ref') || 'cette commande';
+        }
+        modal.show();
+    }, true);
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function () {
+            if (!pendingForm) {
+                modal.hide();
+                return;
+            }
+            var form = pendingForm;
+            pendingForm = null;
+            modal.hide();
+            form.submit();
+        });
+    }
+
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        pendingForm = null;
+    });
+})();
+</script>

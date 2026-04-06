@@ -54,12 +54,17 @@ class BoutiqueController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         $this->assertUserOwnsCulture($culture, $user);
+        if ($this->produitsRepository->existsBoutiqueProduitForCulture((int) $user->getId(), (int) $culture->getId())) {
+            $this->addFlash('info', 'Cette culture est déjà en boutique.');
+
+            return $this->redirectToRoute('exploitation_index');
+        }
 
         $produit = new Produits();
         $produit->setNom((string) $culture->getNom());
         $produit->setCategorie('Légume · kg');
-        $produit->setPrixUnitaire(0.001);
-        $produit->setImage($culture->getImage());
+        $produit->setPrixUnitaire(0.0);
+        $produit->setImage($culture->getImage() ?: '');
         $produit->setOrigine(ProduitsRepository::ORIGINE_BOUTIQUE_AGRICULTEUR);
         $produit->setActive(true);
         $produit->setQuantite(1);
@@ -88,11 +93,16 @@ class BoutiqueController extends AbstractController
         }
 
         if ($form->isSubmitted() && $form->isValid()) {
+            if ($this->produitsRepository->existsBoutiqueProduitForCulture((int) $user->getId(), (int) $culture->getId())) {
+                $this->addFlash('info', 'Cette culture est déjà en boutique.');
+
+                return $this->redirectToRoute('exploitation_index');
+            }
             $this->applyCategorieEtUnite($produit, (string) $form->get('uniteVente')->getData());
             $produit->setCultureId($culture->getId());
             $produit->setIdFournisseur((int) $user->getId());
             $produit->setOrigine(ProduitsRepository::ORIGINE_BOUTIQUE_AGRICULTEUR);
-            $produit->setImage($culture->getImage());
+            $produit->setImage($culture->getImage() ?: '');
 
             $this->entityManager->persist($produit);
             $this->entityManager->flush();
