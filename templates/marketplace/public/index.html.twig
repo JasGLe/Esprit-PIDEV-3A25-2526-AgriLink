@@ -40,8 +40,8 @@
                         <input type="hidden" name="cat" value="{{ filter_cat }}">
                         <input type="hidden" name="region" value="{{ filter_region }}">
                         <input type="hidden" name="sort" value="{{ filter_sort }}">
-                        <label class="visually-hidden" for="tropicalNavSearchInput">Rechercher un produit, une ville ou un producteur</label>
-                        <input type="search" name="q" id="tropicalNavSearchInput" class="form-control tropical-nav-search-input" value="{{ filter_q }}" placeholder="Produit, ville ou producteur…" title="Recherchez par nom de produit, ville du vendeur, ou nom du producteur / fournisseur" autocomplete="off" maxlength="120">
+                        <label class="visually-hidden" for="tropicalNavSearchInput">Rechercher par nom ou numéro de produit</label>
+                        <input type="search" name="q" id="tropicalNavSearchInput" class="form-control tropical-nav-search-input" value="{{ filter_q }}" placeholder="Nom du produit ou n° (ID)…" title="Recherche par nom de produit ou par identifiant numérique du produit" autocomplete="off" maxlength="120">
                         <button type="submit" class="tropical-nav-search-btn" id="tropicalNavSearch" title="Rechercher" aria-label="Rechercher">
                             <i class="bi bi-search" aria-hidden="true"></i>
                         </button>
@@ -200,7 +200,7 @@
         </div>
         <p class="small tropical-muted mb-0 tropical-toolbar-meta text-start">
             <i class="bi bi-box-seam me-1 tropical-lime"></i>
-            <strong class="text-white">{{ produits|length }}</strong> produit{{ produits|length > 1 ? 's' : '' }} disponible{{ produits|length > 1 ? 's' : '' }}
+            <strong class="text-white" id="marketplaceLiveCount">{{ produits|length }}</strong> produit{{ produits|length > 1 ? 's' : '' }} disponible{{ produits|length > 1 ? 's' : '' }}
         </p>
     </div>
 </section>
@@ -218,12 +218,20 @@
                 <a href="{{ path('marketplace_index') }}" class="btn tropical-btn-register">Réinitialiser</a>
             </div>
         {% else %}
-            <div class="tropical-products-wrap">
+            <div class="tropical-products-wrap" id="marketplaceProductsWrap">
                 {% for p in produits %}
-                    <div class="tropical-card-shell">
+                    <div class="tropical-card-shell"
+                         data-product-id="{{ p.id }}"
+                         data-product-name="{{ (p.nom|default(''))|lower|e('html_attr') }}"
+                         data-product-search="{{ ((p.nom|default('')) ~ ' #' ~ p.id ~ ' ' ~ p.id)|lower|e('html_attr') }}">
                         {% include 'marketplace/public/_product_card_tropical.html.twig' with { p: p, vendeurs: vendeurs } %}
                     </div>
                 {% endfor %}
+            </div>
+            <div class="tropical-empty text-center py-5 rounded-4 d-none" id="marketplaceLiveEmpty">
+                <i class="bi bi-search display-4 tropical-lime mb-3 d-block"></i>
+                <p class="tropical-muted mb-3">Aucun produit ne correspond à votre recherche.</p>
+                <a href="{{ path('marketplace_index') }}" class="btn tropical-btn-register">Réinitialiser</a>
             </div>
         {% endif %}
     </div>
@@ -332,6 +340,40 @@
     var produits = document.getElementById('produits');
     var nav = document.getElementById('tropicalNav');
     var form = document.getElementById('tropicalNavSearchForm');
+    var input = document.getElementById('tropicalNavSearchInput');
+    var cards = Array.prototype.slice.call(document.querySelectorAll('#marketplaceProductsWrap .tropical-card-shell'));
+    var emptyState = document.getElementById('marketplaceLiveEmpty');
+    var liveCount = document.getElementById('marketplaceLiveCount');
+    var initialCount = cards.length;
+
+    function normalizeText(v) {
+        return String(v || '').toLowerCase().trim().replace(/\s+/g, ' ');
+    }
+
+    function applyLiveFilter(rawQuery) {
+        if (!cards.length) {
+            return;
+        }
+
+        var q = normalizeText(rawQuery);
+        var visible = 0;
+
+        cards.forEach(function (card) {
+            var haystack = normalizeText(card.getAttribute('data-product-search'));
+            var show = q === '' || haystack.indexOf(q) !== -1;
+            card.classList.toggle('d-none', !show);
+            if (show) visible += 1;
+        });
+
+        if (liveCount) {
+            liveCount.textContent = String(visible);
+        }
+
+        if (emptyState) {
+            emptyState.classList.toggle('d-none', visible > 0);
+        }
+    }
+
     function collapseNavIfOpen() {
         if (nav && nav.classList.contains('show') && typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
             bootstrap.Collapse.getOrCreateInstance(nav, { toggle: false }).hide();
@@ -342,8 +384,27 @@
             collapseNavIfOpen();
         });
     }
+    if (input) {
+        input.addEventListener('input', function () {
+            // Live filtering as the user types (including first letter and deletions).
+            applyLiveFilter(input.value);
+        });
+        input.addEventListener('search', function () {
+            applyLiveFilter(input.value);
+        });
+    }
     try {
-        if (produits && new URLSearchParams(window.location.search).get('q')) {
+        var initialQ = new URLSearchParams(window.location.search).get('q') || '';
+        if (cards.length) {
+            applyLiveFilter(initialQ);
+            if (input && initialQ !== '' && input.value !== initialQ) {
+                input.value = initialQ;
+            }
+            if (input && initialQ === '') {
+                if (liveCount) liveCount.textContent = String(initialCount);
+            }
+        }
+        if (produits && initialQ) {
             requestAnimationFrame(function () {
                 produits.scrollIntoView({ behavior: 'smooth', block: 'start' });
             });

@@ -3,9 +3,7 @@
 namespace App\Repository\Marketplace;
 
 use App\Entity\Marketplace\Produits;
-use App\Entity\UserManagement\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\ORM\Query\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -68,35 +66,48 @@ class ProduitsRepository extends ServiceEntityRepository
             ->setParameter('actif', true);
 
         if ($search !== null && trim($search) !== '') {
-            $qb->leftJoin(User::class, 'v', Join::WITH, 'v.id = p.idFournisseur');
-
-            // Robust search for header bar: product name, category, or city only.
+            // Product-only search: name (keywords) and/or numeric product id — not region/city/seller.
             $normalized = preg_replace('/\s+/', ' ', trim($search)) ?? '';
             $keywords = preg_split('/\s+/', $normalized) ?: [];
             $keywords = array_values(array_filter($keywords, static fn ($k) => $k !== ''));
 
             foreach ($keywords as $i => $keyword) {
+                $paramLike = 'q'.$i;
+                $paramId = 'qid'.$i;
+
+                // Whole token is a product id (e.g. "42" or "#019")
+                if (preg_match('/^#?(\d+)$/', $keyword, $m)) {
+                    $pid = (int) $m[1];
+                    if ($pid > 0) {
+                        $needle = function_exists('mb_strtolower') ? mb_strtolower($keyword) : strtolower($keyword);
+                        $needle = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $needle);
+                        $qb->andWhere($qb->expr()->orX(
+                            'p.id = :'.$paramId,
+                            'LOWER(COALESCE(p.nom, \'\')) LIKE :'.$paramLike
+                        ))
+                            ->setParameter($paramId, $pid)
+                            ->setParameter($paramLike, '%'.$needle.'%');
+                        continue;
+                    }
+                }
+
                 $needle = function_exists('mb_strtolower') ? mb_strtolower($keyword) : strtolower($keyword);
                 $needle = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $needle);
-                $param = 'q'.$i;
 
-                // 1-character input is too broad with LIKE, so keep it exact.
-                if (strlen($needle) < 2) {
-                    $qb->andWhere($qb->expr()->orX(
-                        "LOWER(COALESCE(p.nom, '')) = :$param",
-                        "LOWER(COALESCE(p.category, '')) = :$param",
-                        "LOWER(COALESCE(p.categorie, '')) = :$param",
-                        "LOWER(COALESCE(v.ville, '')) = :$param"
-                    ))->setParameter($param, $needle);
+                if ($needle === '') {
                     continue;
                 }
 
-                $qb->andWhere($qb->expr()->orX(
-                    "LOWER(COALESCE(p.nom, '')) LIKE :$param",
-                    "LOWER(COALESCE(p.category, '')) LIKE :$param",
-                    "LOWER(COALESCE(p.categorie, '')) LIKE :$param",
-                    "LOWER(COALESCE(v.ville, '')) LIKE :$param"
-                ))->setParameter($param, '%'.$needle.'%');
+                // Single character: exact full name match is too strict; require prefix on name.
+                if (strlen($needle) < 2) {
+                    $qb->andWhere('LOWER(COALESCE(p.nom, \'\')) = :'.$paramLike)
+                        ->setParameter($paramLike, $needle);
+
+                    continue;
+                }
+
+                $qb->andWhere('LOWER(COALESCE(p.nom, \'\')) LIKE :'.$paramLike)
+                    ->setParameter($paramLike, '%'.$needle.'%');
             }
         }
 
