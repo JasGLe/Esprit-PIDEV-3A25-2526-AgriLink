@@ -5,6 +5,17 @@
 
 {% block dashboard_content %}
     <style>
+    :root {
+        /* Two-shade green system (pro + calming) */
+        --bq-green-700: #166534;   /* deep emerald */
+        --bq-green-600: #15803d;
+        --bq-green-500: #22c55e;
+        --bq-green-200: #bbf7d0;   /* mint */
+        --bq-green-100: #dcfce7;   /* light mint */
+        --bq-surface: rgba(255,255,255,0.78);
+        --bq-border: rgba(22,101,52,0.18);
+        --bq-shadow: 0 10px 24px rgba(22, 163, 74, 0.14);
+    }
     .boutique-page .boutique-media {
     aspect-ratio: 4 / 3;
     max-height: 145px;
@@ -13,28 +24,28 @@
     box-shadow: inset 0 -2px 8px rgba(0,0,0,0.12);
 }
     .boutique-hero {
-        background: linear-gradient(135deg, #bbf7d0 0%, #d9f99d 40%, #fef08a 80%, #bbf7d0 100%);
-        border: 1px solid #86efac;
+        background: linear-gradient(135deg, var(--bq-green-100) 0%, var(--bq-green-200) 100%);
+        border: 1px solid var(--bq-border);
         border-radius: .95rem;
         padding: .9rem 1rem;
         margin-bottom: .95rem;
-        box-shadow: 0 6px 24px rgba(22, 163, 74, 0.18);
+        box-shadow: var(--bq-shadow);
     }
     .boutique-hero__title {
         font-size: 1rem;
         font-weight: 700;
-        color: #14532d;
+        color: var(--bq-green-700);
         margin-bottom: .2rem;
         letter-spacing: -.01em;
     }
     .boutique-hero__lead {
         margin: 0;
         font-size: .84rem;
-        color: #166534;
+        color: rgba(22,101,52,0.92);
         line-height: 1.45;
     }
     .boutique-hero__lead strong {
-        color: #15803d;
+        color: var(--bq-green-600);
         font-weight: 700;
     }
     .boutique-chip {
@@ -47,14 +58,14 @@
         font-weight: 700;
     }
     .boutique-chip--active {
-        color: #14532d;
-        background: #86efac;
-        border: 1px solid #4ade80;
+        color: var(--bq-green-700);
+        background: rgba(34, 197, 94, 0.16);
+        border: 1px solid rgba(34, 197, 94, 0.32);
     }
     .boutique-chip--hidden {
-        color: #78716c;
-        background: #fef08a;
-        border: 1px solid #fde047;
+        color: rgba(22,101,52,0.72);
+        background: rgba(220, 252, 231, 0.70);
+        border: 1px solid rgba(22,101,52,0.16);
     }
     .boutique-actions-top .btn {
         border-radius: .72rem;
@@ -65,44 +76,43 @@
         border-width: 1px;
     }
     .boutique-btn-marketplace {
-        background: linear-gradient(135deg, #4ade80 0%, #22c55e 50%, #16a34a 100%);
-        color: #052e16 !important;
-        border-color: rgba(22, 163, 74, 0.4) !important;
-        box-shadow: 0 4px 14px rgba(22, 163, 74, 0.30);
+        background: linear-gradient(135deg, var(--bq-green-200) 0%, rgba(34,197,94,0.28) 100%);
+        color: var(--bq-green-700) !important;
+        border-color: rgba(22, 163, 74, 0.28) !important;
+        box-shadow: 0 6px 16px rgba(22, 163, 74, 0.18);
     }
     .boutique-btn-marketplace:hover {
-        filter: brightness(1.05);
         transform: translateY(-1px);
-        box-shadow: 0 6px 18px rgba(22, 163, 74, 0.40);
+        box-shadow: 0 10px 20px rgba(22, 163, 74, 0.22);
     }
     .boutique-btn-return {
-        background: #ffffff;
-        color: #15803d !important;
-        border-color: #4ade80 !important;
-        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.12);
+        background: rgba(255,255,255,0.92);
+        color: var(--bq-green-700) !important;
+        border-color: rgba(22, 163, 74, 0.22) !important;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.12);
     }
     .boutique-btn-return:hover {
-        background: #dcfce7;
-        color: #14532d !important;
+        background: var(--bq-green-100);
+        color: var(--bq-green-700) !important;
         transform: translateY(-1px);
     }
     .boutique-page .boutique-card {
-        border: 1px solid #86efac;
+        border: 1px solid var(--bq-border);
         border-radius: 0.9rem;
-        background: linear-gradient(160deg, #ffffff 0%, #f0fdf4 50%, #fefce8 100%);
-        box-shadow: 0 4px 14px rgba(22, 163, 74, 0.10);
+        background: linear-gradient(160deg, rgba(255,255,255,0.92) 0%, rgba(220,252,231,0.55) 100%);
+        box-shadow: 0 8px 18px rgba(22, 163, 74, 0.10);
         transition: transform .18s ease, box-shadow .18s ease;
     }
     .boutique-page .boutique-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 24px rgba(22, 163, 74, 0.18);
-        border-color: #22c55e;
+        box-shadow: 0 14px 28px rgba(22, 163, 74, 0.16);
+        border-color: rgba(22, 163, 74, 0.35);
     }
     .boutique-page .boutique-media {
         aspect-ratio: 4 / 3;
         max-height: 145px;
-        background: linear-gradient(135deg, #bbf7d0 0%, #d9f99d 50%, #fef08a 100%);
-        border-bottom: 1px solid #86efac;
+        background: linear-gradient(135deg, rgba(22,101,52,0.14) 0%, rgba(220,252,231,0.82) 100%);
+        border-bottom: 1px solid rgba(22,101,52,0.14);
     }
     .boutique-page .boutique-card .card-body {
         padding: .72rem .78rem;
@@ -117,6 +127,76 @@
     .boutique-page .boutique-actions .btn {
         padding: .26rem .5rem;
         font-size: .75rem;
+    }
+
+    /* Boutique search + category filter */
+    .boutique-tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+        align-items: center;
+        justify-content: space-between;
+        margin: .2rem 0 1rem;
+    }
+    .boutique-search {
+        flex: 1 1 18rem;
+        min-width: 16rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .55rem .65rem;
+        border-radius: .95rem;
+        background: var(--bq-surface);
+        border: 1px solid var(--bq-border);
+        box-shadow: 0 10px 18px rgba(22,163,74,0.10);
+    }
+    .boutique-search__icon { color: var(--bq-green-700); opacity:.85; }
+    .boutique-search__input {
+        border: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        color: var(--bq-green-700) !important;
+        font-weight: 700;
+        font-size: .9rem;
+        padding: .2rem 0 !important;
+    }
+    .boutique-search__hint { font-size:.72rem; color: rgba(22,101,52,0.88); margin-top:.15rem; }
+    .boutique-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .45rem;
+        align-items: center;
+        justify-content: flex-end;
+        flex: 1 1 22rem;
+    }
+    .boutique-filter__chip {
+        border-radius: 999px;
+        padding: .32rem .7rem;
+        font-size: .74rem;
+        font-weight: 800;
+        border: 1px solid rgba(22,101,52,0.18);
+        background: rgba(255,255,255,0.86);
+        color: var(--bq-green-700);
+        cursor: pointer;
+        user-select: none;
+        transition: all .15s ease;
+    }
+    .boutique-filter__chip:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(22,163,74,0.12); }
+    .boutique-filter__chip.is-active {
+        background: linear-gradient(135deg, rgba(34,197,94,0.22) 0%, var(--bq-green-200) 100%);
+        border-color: rgba(22,101,52,0.26);
+        color: var(--bq-green-700);
+        box-shadow: 0 10px 18px rgba(22,163,74,0.18);
+    }
+    .boutique-empty-live {
+        border: 1px dashed rgba(22,163,74,0.28);
+        background: rgba(240,253,244,0.70);
+        border-radius: .95rem;
+        padding: 2.2rem 1rem;
+        text-align: center;
+        color:#14532d;
+        box-shadow: 0 10px 24px rgba(22,163,74,0.10);
     }
 </style>
 
@@ -145,9 +225,30 @@
         </div>
     </div>
 
-    <p class="small text-muted mb-4">
-        {{ produits|length }} annonce{{ produits|length > 1 ? 's' : '' }} dans votre boutique.
+    <p class="small text-muted mb-3">
+        <span id="boutiqueCount">{{ produits|length }}</span> annonce{{ produits|length > 1 ? 's' : '' }} dans votre boutique.
     </p>
+
+    <div class="boutique-tools">
+        <div class="flex-grow-1">
+            <div class="boutique-search" role="search" aria-label="Recherche boutique">
+                <span class="boutique-search__icon" aria-hidden="true">⌕</span>
+                <input type="search"
+                       id="boutiqueSearchInput"
+                       class="form-control boutique-search__input"
+                       placeholder="Rechercher par nom ou catégorie…"
+                       autocomplete="off">
+            </div>
+            <div class="boutique-search__hint">Recherche: <strong>nom</strong> du produit ou <strong>catégorie</strong>.</div>
+        </div>
+        <div class="boutique-filter" aria-label="Filtre catégorie">
+            <button type="button" class="boutique-filter__chip is-active" data-bcat="all">Tout</button>
+            <button type="button" class="boutique-filter__chip" data-bcat="legume">Légume</button>
+            <button type="button" class="boutique-filter__chip" data-bcat="fruit">Fruit</button>
+            <button type="button" class="boutique-filter__chip" data-bcat="graines">Graines</button>
+            <button type="button" class="boutique-filter__chip" data-bcat="equipement">Équipement</button>
+        </div>
+    </div>
 
     {% if produits is empty %}
         <div class="text-center py-5 rounded-3 border border-dashed border-secondary bg-white shadow-sm">
@@ -161,16 +262,33 @@
             <p class="small text-muted mb-0">Depuis <strong>Mes exploitations</strong>, ouvrez une culture et cliquez sur <strong>Mettre en vente</strong>.</p>
         </div>
     {% else %}
-        <div class="row g-3">
+        <div class="row g-3" id="boutiqueGrid">
             {% for p in produits %}
+                {% set cat_parts = ' · ' in p.categorie ? p.categorie|split(' · ', 2) : [p.categorie] %}
+                {% set cat_label = (cat_parts[0]|default(''))|lower %}
+                {% set cat_key =
+                    (p.equipementId is not null) ? 'equipement'
+                    : (cat_label matches '/fruit/' ? 'fruit'
+                    : (cat_label matches '/grain/' ? 'graines'
+                    : (cat_label matches '/l[ée]gume|legume/' ? 'legume' : 'all'))) %}
                 <div class="col-12 col-sm-6 col-xl-3">
-                    <div class="card boutique-card h-100 overflow-hidden">
+                    <div class="card boutique-card h-100 overflow-hidden boutique-item"
+                         data-bname="{{ (p.nom|default(''))|lower|e('html_attr') }}"
+                         data-bcat="{{ cat_key }}"
+                         data-bcatlabel="{{ (cat_parts[0]|default(''))|lower|e('html_attr') }}">
                         <div class="ratio ratio-4x3 boutique-media d-flex align-items-center justify-content-center">
                             {% if p.image and p.image|trim != '' %}
-                                <img src="{{ uploads_base_url }}/cultures/{{ p.image }}"
+                                {% if p.equipementId is not null %}
+                                    <img src="{{ asset('uploads/equipements/' ~ p.image) }}"
+                                         alt="{{ p.nom }}"
+                                         class="object-fit-cover w-100 h-100"
+                                         onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'fs-1 text-success',textContent:'🛠️'}))">
+                                {% else %}
+                                    <img src="{{ uploads_base_url }}/cultures/{{ p.image }}"
                                      alt="{{ p.nom }}"
                                      class="object-fit-cover w-100 h-100"
                                      onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'fs-1 text-success',textContent:'🌱'}))">
+                                {% endif %}
                             {% else %}
                                <svg style="width:3rem;height:3rem;color:#4ade80;opacity:.85;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 2C9 2 5 5.5 5 9.5c0 2.8 1.5 5.2 4 6.8V19h6v-2.7c2.5-1.6 4-4 4-6.8C19 5.5 15 2 12 2z"/>
@@ -188,7 +306,6 @@
                                 <span class="text-muted">{{ p.quantite }} en stock</span>
                             </div>
                             <h3 class="h6 fw-bold text-dark mb-1">{{ p.nom }}</h3>
-                            {% set cat_parts = ' · ' in p.categorie ? p.categorie|split(' · ', 2) : [p.categorie] %}
                             <p class="small text-muted mb-2">{{ cat_parts[0] }}</p>
                             <p class="fw-bold text-success mb-3">{{ p.prixUnitaire|number_format(3, ',', ' ') }} DT{% if cat_parts[1] is defined %} / {{ cat_parts[1] }}{% endif %}</p>
                             {% if p.description %}
@@ -228,6 +345,11 @@
                     </div>
                 </div>
             {% endfor %}
+        </div>
+        <div id="boutiqueLiveEmpty" class="boutique-empty-live d-none">
+            <div style="font-size:2rem;line-height:1;">🔎</div>
+            <p class="mb-1 fw-bold">Aucun résultat</p>
+            <p class="mb-0 small" style="color:#166534;">Essayez un autre nom ou changez la catégorie.</p>
         </div>
     {% endif %}
     </div>
@@ -339,6 +461,56 @@
         modalEl.addEventListener('hidden.bs.modal', function () {
             bodyEl.innerHTML = '<div class="text-center py-5 text-muted small">Chargement…</div>';
         });
+    })();
+    </script>
+
+    <script>
+    (function () {
+        var input = document.getElementById('boutiqueSearchInput');
+        var chips = Array.prototype.slice.call(document.querySelectorAll('.boutique-filter__chip'));
+        var items = Array.prototype.slice.call(document.querySelectorAll('.boutique-item'));
+        var countEl = document.getElementById('boutiqueCount');
+        var emptyEl = document.getElementById('boutiqueLiveEmpty');
+        var activeCat = 'all';
+
+        function norm(s) {
+            return String(s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+        }
+
+        function apply() {
+            var q = input ? norm(input.value) : '';
+            var visible = 0;
+            items.forEach(function (el) {
+                var name = norm(el.getAttribute('data-bname'));
+                var catLabel = norm(el.getAttribute('data-bcatlabel'));
+                var cat = el.getAttribute('data-bcat') || 'all';
+
+                var matchCat = activeCat === 'all' || cat === activeCat;
+                var matchQ = q === '' || name.indexOf(q) !== -1 || catLabel.indexOf(q) !== -1;
+                var show = matchCat && matchQ;
+                el.closest('.col-12')?.classList.toggle('d-none', !show);
+                if (show) visible += 1;
+            });
+
+            if (countEl) countEl.textContent = String(visible);
+            if (emptyEl) emptyEl.classList.toggle('d-none', visible > 0);
+        }
+
+        if (input) {
+            input.addEventListener('input', apply);
+            input.addEventListener('search', apply);
+        }
+
+        chips.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                chips.forEach(function (b) { b.classList.remove('is-active'); });
+                btn.classList.add('is-active');
+                activeCat = btn.getAttribute('data-bcat') || 'all';
+                apply();
+            });
+        });
+
+        apply();
     })();
     </script>
 

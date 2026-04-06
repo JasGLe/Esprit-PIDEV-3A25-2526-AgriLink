@@ -1,21 +1,22 @@
-<div class="modal fade mc-cancel-request-modal" id="mcCancelRequestModal" tabindex="-1" aria-labelledby="mcCancelRequestModalLabel" aria-hidden="true">
+<div class="modal fade" id="mcCancelRequestModal" tabindex="-1" aria-labelledby="mcCancelRequestModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content mc-cancel-request-modal__content border-0 shadow-lg">
-            <div class="modal-header mc-cancel-request-modal__header border-0">
-                <h2 class="modal-title h5 mb-0 mc-cancel-request-modal__title" id="mcCancelRequestModalLabel">
-                    <i class="bi bi-x-circle me-2" aria-hidden="true"></i>Demande d’annulation
+        <div class="modal-content boutique-confirm__content mc-cancel-request-modal__content border-0 shadow-lg">
+            <div class="modal-header boutique-confirm__header mc-cancel-request-modal__header border-0">
+                <h2 class="modal-title h6 mb-0 boutique-confirm__title mc-cancel-request-modal__title" id="mcCancelRequestModalLabel">
+                    <span class="boutique-confirm__icon mc-cancel-request-modal__icon" aria-hidden="true"><i class="bi bi-x-lg"></i></span>
+                    Demande d’annulation
                 </h2>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
             </div>
-            <div class="modal-body mc-cancel-request-modal__body">
+            <div class="modal-body boutique-confirm__body mc-cancel-request-modal__body">
                 <p class="mb-2">Commande <strong class="js-mc-cancel-order-ref">—</strong>.</p>
                 <p class="mb-2">Votre demande d’annulation sera envoyée pour traitement.</p>
-                <p class="mb-2 mc-muted small">Traitée par : <strong>Admin</strong>, <strong>Fournisseur</strong> ou <strong>Agriculteur</strong>.</p>
-                <p class="mb-0 mc-muted small">Disponible dans les 48h suivant la commande.</p>
+                <p class="mb-2 text-secondary small">Traitée par : <strong>Admin</strong>, <strong>Fournisseur</strong> ou <strong>Agriculteur</strong>.</p>
+                <p class="mb-0 text-secondary small">Disponible dans les 48 h suivant la commande.</p>
             </div>
-            <div class="modal-footer mc-cancel-request-modal__footer border-0">
-                <button type="button" class="btn mc-order-edit-btn-cancel" data-bs-dismiss="modal">Retour</button>
-                <button type="button" class="btn mc-order-edit-btn-save js-mc-cancel-confirm">Confirmer la demande</button>
+            <div class="modal-footer boutique-confirm__footer mc-cancel-request-modal__footer border-0">
+                <button type="button" class="btn btn-sm btn-outline-secondary boutique-confirm__btn-cancel" data-bs-dismiss="modal">Retour</button>
+                <button type="button" class="btn btn-sm btn-danger boutique-confirm__btn-confirm js-mc-cancel-confirm"><i class="bi bi-x-lg me-1" aria-hidden="true"></i>Confirmer la demande</button>
             </div>
         </div>
     </div>

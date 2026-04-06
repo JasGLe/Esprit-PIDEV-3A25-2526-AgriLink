@@ -7,6 +7,8 @@
    @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Montserrat:wght@500;600;700&display=swap");
 
    :root {
+       /* Même teinte que Mes commandes (.mc-lime) pour les n° de commande */
+       --mes-commandes-lime: #c8f542;
        /* Electric lime (CTA, active pills) — like reference mockups */
        --lime: #dfff00;
        --lime-hover: #e8ff4d;
@@ -77,6 +79,21 @@
    body.marketplace-tropical > * {
        position: relative;
        z-index: 1;
+    }
+
+   /* Modales Bootstrap : hors du z-index:1 global (sinon elles passent sous le header / le panier). */
+   body.marketplace-tropical > .modal {
+       z-index: 12000 !important;
+   }
+   body.marketplace-tropical > .modal-backdrop {
+       z-index: 11990 !important;
+   }
+
+   /* Identique au rendu « N° commande » dans Mes commandes (.mc-num + --mc-lime) */
+   .mc-num--marketplace {
+       color: var(--mes-commandes-lime);
+       font-weight: 700;
+       font-family: ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
    }
    
    /* Sticky header + panier dropdown must stack above later sections (toolbar, etc.) */
