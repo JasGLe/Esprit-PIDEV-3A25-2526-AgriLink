@@ -23,8 +23,8 @@ class Produits
     #[ORM\Column(name: 'prixUnitaire', type: Types::FLOAT)]
     private float $prixUnitaire;
 
-    #[ORM\Column(type: Types::STRING, length: 50)]
-    private string $image;
+    #[ORM\Column(type: Types::STRING, length: 50, nullable: true)]
+    private ?string $image = null;
 
     #[ORM\Column(type: Types::STRING, length: 50)]
     private string $origine;
@@ -91,12 +91,12 @@ class Produits
         return $this;
     }
 
-    public function getImage(): string
+    public function getImage(): ?string
     {
         return $this->image;
     }
 
-    public function setImage(string $image): static
+    public function setImage(?string $image): static
     {
         $this->image = $image;
 

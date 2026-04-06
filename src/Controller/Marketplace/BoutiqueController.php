@@ -59,7 +59,7 @@ class BoutiqueController extends AbstractController
         $produit->setNom((string) $culture->getNom());
         $produit->setCategorie('Légume · kg');
         $produit->setPrixUnitaire(0.001);
-        $produit->setImage($culture->getImage() ?? '');
+        $produit->setImage($culture->getImage());
         $produit->setOrigine(ProduitsRepository::ORIGINE_BOUTIQUE_AGRICULTEUR);
         $produit->setActive(true);
         $produit->setQuantite(1);
@@ -92,11 +92,7 @@ class BoutiqueController extends AbstractController
             $produit->setCultureId($culture->getId());
             $produit->setIdFournisseur((int) $user->getId());
             $produit->setOrigine(ProduitsRepository::ORIGINE_BOUTIQUE_AGRICULTEUR);
-            if ($culture->getImage()) {
-                $produit->setImage($culture->getImage());
-            } else {
-                $produit->setImage('');
-            }
+            $produit->setImage($culture->getImage());
 
             $this->entityManager->persist($produit);
             $this->entityManager->flush();
