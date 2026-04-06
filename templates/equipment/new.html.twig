@@ -1,6 +1,6 @@
-{% extends 'base.html.twig' %}
+{% extends 'layouts/dashboard_layout.html.twig' %}
 
-{% block title %}Ajouter un équipement — AgriLink{% endblock %}
+{% block page_title %}Ajouter un équipement{% endblock %}
 
 {% block stylesheets %}
 <style>
@@ -9,8 +9,7 @@
 </style>
 {% endblock %}
 
-{% block body %}
-<div class="container py-4" style="max-width: 860px">
+{% block dashboard_content %}
 
     {# ── Breadcrumb ── #}
     <nav aria-label="breadcrumb" class="mb-3">
@@ -186,7 +185,6 @@
         </div>
 
     {{ form_end(form) }}
-</div>
 
 <script>
 const categorieSelect = document.getElementById('equipement_categorie');

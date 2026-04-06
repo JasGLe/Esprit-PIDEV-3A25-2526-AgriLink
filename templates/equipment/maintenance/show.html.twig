@@ -1,5 +1,5 @@
-{% extends 'base.html.twig' %}
-{% block title %}Maintenance #{{ maintenance.id }} — AgriLink{% endblock %}
+{% extends 'layouts/dashboard_layout.html.twig' %}
+{% block page_title %}Maintenance #{{ maintenance.id }}{% endblock %}
 
 {% block stylesheets %}
 <style>
@@ -8,33 +8,24 @@
 </style>
 {% endblock %}
 
-{% block body %}
-<div class="container py-4" style="max-width:860px">
-
-    {% for type, messages in app.flashes %}
-        {% for message in messages %}
-            <div class="alert alert-{{ type == 'success' ? 'success' : 'danger' }} alert-dismissible fade show">
-                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endfor %}
+{% block dashboard_content %}
 
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ path('maintenance_index') }}">Maintenances</a></li>
-            <li class="breadcrumb-item active">Maintenance #{{ maintenance.id }}</li>
+            <li class="breadcrumb-item active">Maintenance sur l equipement </li>
         </ol>
     </nav>
 
     <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
         <div>
-            <h2 class="fw-bold mb-1">Maintenance #{{ maintenance.id }}</h2>
-            {% if equipement %}
+            <h2 class="fw-bold mb-1">Maintenance {% if equipement %}
                 <span class="text-muted">Équipement : </span>
                 <a href="{{ path('equipement_show', {id: equipement.id}) }}" class="fw-semibold">
                     {{ equipement.nom }}
                 </a>
-            {% endif %}
+            {% endif %}</h2>
+            
         </div>
         <div class="d-flex gap-2">
             <a href="{{ path('maintenance_edit', {id: maintenance.id}) }}" class="btn btn-outline-primary">✏️ Modifier</a>
@@ -107,5 +98,4 @@
     </div>
 
     <a href="{{ path('maintenance_index') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
-</div>
 {% endblock %}

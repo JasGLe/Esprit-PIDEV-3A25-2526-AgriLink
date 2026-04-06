@@ -1,6 +1,6 @@
-{% extends 'base.html.twig' %}
+{% extends 'layouts/dashboard_layout.html.twig' %}
 
-{% block title %}{{ equipement.nom }} — AgriLink{% endblock %}
+{% block page_title %}{{ equipement.nom }}{% endblock %}
 
 {% block stylesheets %}
 <style>
@@ -10,16 +10,7 @@
 </style>
 {% endblock %}
 
-{% block body %}
-<div class="container py-4" style="max-width: 860px">
-
-    {% for type, messages in app.flashes %}
-        {% for message in messages %}
-            <div class="alert alert-{{ type == 'success' ? 'success' : 'danger' }} alert-dismissible fade show">
-                {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        {% endfor %}
-    {% endfor %}
+{% block dashboard_content %}
 
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
@@ -215,5 +206,4 @@
 
     <a href="{{ path('equipement_index') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
 
-</div>
 {% endblock %}

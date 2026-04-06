@@ -1,8 +1,7 @@
-{% extends 'base.html.twig' %}
-{% block title %}Planifier une maintenance — AgriLink{% endblock %}
+{% extends 'layouts/dashboard_layout.html.twig' %}
+{% block page_title %}Planifier une maintenance{% endblock %}
 
-{% block body %}
-<div class="container py-4" style="max-width:760px">
+{% block dashboard_content %}
 
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb">
@@ -87,5 +86,4 @@
     </div>
 
     {{ form_end(form) }}
-</div>
 {% endblock %}
