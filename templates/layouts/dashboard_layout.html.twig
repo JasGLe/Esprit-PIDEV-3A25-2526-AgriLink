@@ -67,6 +67,26 @@
                     <span class="small fw-medium">Événements</span>
                 </a>
 
+                {# ── FORUM & COMMUNAUTÉ ── #}
+                <hr class="my-2 border-secondary opacity-25">
+                <div class="px-3 py-1 text-muted text-uppercase small fw-semibold" style="letter-spacing: 0.05em; font-size: 0.65rem;">
+                    Forum & Communauté
+                </div>
+
+                <a href="{{ path('forum_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'forum_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                    <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="small fw-medium">Forum</span>
+                </a>
+
+                <a href="{{ path('annonce_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'annonce_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                    <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a6 6 0 001-11.933M5.228 6.228A10 10 0 0119.5 12c0 5.477-4.507 9.969-10.05 9.969C6.872 21.969 2.5 17.61 2.5 12c0-2.718.78-5.274 2.228-7.45" />
+                    </svg>
+                    <span class="small fw-medium">Annonces</span>
+                </a>
+
               {# ── GESTION AGRICOLE ── #}
                 <hr class="my-2 border-secondary opacity-25">
                 <div class="px-3 py-1 text-muted text-uppercase small fw-semibold" style="letter-spacing: 0.05em; font-size: 0.65rem;">
@@ -223,6 +243,26 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                             <span class="small fw-medium">Événements</span>
+                        </a>
+
+                        {# ── FORUM & COMMUNAUTÉ ── #}
+                        <hr class="my-2 border-secondary opacity-25">
+                        <div class="px-3 py-1 text-muted text-uppercase small fw-semibold" style="letter-spacing: 0.05em; font-size: 0.65rem;">
+                            Forum & Communauté
+                        </div>
+
+                        <a href="{{ path('forum_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'forum_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                            <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span class="small fw-medium">Forum</span>
+                        </a>
+
+                        <a href="{{ path('annonce_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'annonce_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                            <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a6 6 0 001-11.933M5.228 6.228A10 10 0 0119.5 12c0 5.477-4.507 9.969-10.05 9.969C6.872 21.969 2.5 17.61 2.5 12c0-2.718.78-5.274 2.228-7.45" />
+                            </svg>
+                            <span class="small fw-medium">Annonces</span>
                         </a>
 
                        {# ── GESTION AGRICOLE ── #}
