@@ -4,9 +4,11 @@ namespace App\Controller\Marketplace;
 
 use App\Entity\Marketplace\Commandes;
 use App\Entity\UserManagement\User;
+use App\Form\Marketplace\CommandeLivraisonEditType;
 use App\Repository\Marketplace\CommandesRepository;
 use App\Repository\Marketplace\LigneCommandeRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -60,6 +62,7 @@ class MesCommandesController extends AbstractController
                 'count_annulations_attente' => 0,
                 'statut_choices_seller' => null,
                 'statut_choices_by_commande' => $this->acheteurStatutChoicesByCommandes($commandes),
+                'deletable_commande_ids' => $this->buildDeletableCommandeIds($commandes, $user, 'acheteur'),
             ]);
         }
 
@@ -85,6 +88,7 @@ class MesCommandesController extends AbstractController
                 'count_annulations_attente' => $this->countAnnulationsEnAttente($commandes),
                 'statut_choices_seller' => self::STATUTS_VENDEUR_ACTION,
                 'statut_choices_by_commande' => [],
+                'deletable_commande_ids' => $this->buildDeletableCommandeIds($commandes, $user, 'vendeur'),
             ]);
         }
 
@@ -101,7 +105,126 @@ class MesCommandesController extends AbstractController
             'count_annulations_attente' => 0,
             'statut_choices_seller' => null,
             'statut_choices_by_commande' => $this->acheteurStatutChoicesByCommandes($commandes),
+            'deletable_commande_ids' => $this->buildDeletableCommandeIds($commandes, $user, 'acheteur'),
         ]);
+    }
+
+    #[Route('/{id}/edit-modal', name: 'edit_modal', requirements: ['id' => '\\d+'], methods: ['GET'])]
+    public function editModal(int $id): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if ($this->isMarcheAcheteur()) {
+            $commande = $this->findOwnedCommandeAcheteur($id, $user);
+        } elseif ($this->isGranted('ROLE_AGRICULTEUR')) {
+            $commande = $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
+        } else {
+            $commande = $this->findOwnedCommandeAcheteur($id, $user);
+        }
+
+        $form = $this->createForm(CommandeLivraisonEditType::class, $commande);
+
+        return $this->render('marketplace/mes_commandes/_edit_modal_fragment.html.twig', [
+            'commande' => $commande,
+            'form' => $form,
+        ]);
+    }
+
+    #[Route('/{id}/edit', name: 'edit', requirements: ['id' => '\\d+'], methods: ['GET', 'POST'])]
+    public function edit(Request $request, int $id): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if ($this->isMarcheAcheteur()) {
+            $commande = $this->findOwnedCommandeAcheteur($id, $user);
+        } elseif ($this->isGranted('ROLE_AGRICULTEUR')) {
+            $commande = $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
+        } else {
+            $commande = $this->findOwnedCommandeAcheteur($id, $user);
+        }
+
+        $form = $this->createForm(CommandeLivraisonEditType::class, $commande);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted()) {
+            if ($form->isValid()) {
+                $this->commandesRepository->save($commande, true);
+                if ($this->wantsOrderEditAjaxResponse($request)) {
+                    return new JsonResponse([
+                        'ok' => true,
+                        'message' => 'Coordonnées de livraison mises à jour.',
+                    ]);
+                }
+                $this->addFlash('success', 'Coordonnées de livraison mises à jour.');
+
+                return $this->redirectToRoute('mes_commandes_show', ['id' => $id]);
+            }
+            if ($this->wantsOrderEditAjaxResponse($request)) {
+                return new Response(
+                    $this->renderView('marketplace/mes_commandes/_edit_modal_fragment.html.twig', [
+                        'commande' => $commande,
+                        'form' => $form,
+                    ]),
+                    Response::HTTP_UNPROCESSABLE_ENTITY
+                );
+            }
+        }
+
+        return $this->render('marketplace/mes_commandes/edit.html.twig', [
+            'commande' => $commande,
+            'form' => $form,
+            'mes_commandes_mode' => $this->resolveMesCommandesListMode(),
+        ]);
+    }
+
+    #[Route('/{id}/delete', name: 'delete', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function delete(Request $request, int $id): Response
+    {
+        if (!$this->isCsrfTokenValid('delete_commande_'.$id, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if ($this->isMarcheAcheteur()) {
+            $commande = $this->findOwnedCommandeAcheteur($id, $user);
+            $mode = 'acheteur';
+        } elseif ($this->isGranted('ROLE_AGRICULTEUR')) {
+            $commande = $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
+            $mode = 'vendeur';
+        } else {
+            $commande = $this->findOwnedCommandeAcheteur($id, $user);
+            $mode = 'acheteur';
+        }
+
+        if (!$this->commandeMayBeDeleted($commande, $user, $mode)) {
+            $this->addFlash('error', 'Cette commande ne peut pas être supprimée (livrée, ou panier multi-producteurs).');
+
+            return $this->redirectToRoute('mes_commandes_index');
+        }
+
+        foreach ($this->ligneCommandeRepository->findBy(['idCommande' => $commande->getId()]) as $ligne) {
+            $this->ligneCommandeRepository->remove($ligne, false);
+        }
+        $this->commandesRepository->remove($commande, true);
+        $this->addFlash('success', 'La commande a été supprimée.');
+
+        return $this->redirectToRoute('mes_commandes_index');
+    }
+
+    #[Route('/{id}/detail-modal', name: 'detail_modal', requirements: ['id' => '\\d+'], methods: ['GET'])]
+    public function detailModal(int $id): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        return $this->render('marketplace/mes_commandes/_detail_modal_fragment.html.twig', array_merge(
+            $this->buildOrderDetailVars($id, $user),
+            ['statut_redirect' => 'index']
+        ));
     }
 
     #[Route('/{id}', name: 'show', requirements: ['id' => '\\d+'], methods: ['GET'])]
@@ -110,49 +233,7 @@ class MesCommandesController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        if ($this->isMarcheAcheteur()) {
-            $commande = $this->findOwnedCommandeAcheteur($id, $user);
-            $lignes = $this->ligneCommandeRepository->findBy(['idCommande' => $commande->getId()], ['id' => 'ASC']);
-
-            return $this->render('marketplace/mes_commandes/show.html.twig', [
-                'mes_commandes_mode' => 'acheteur',
-                'commande' => $commande,
-                'lignes' => $lignes,
-                'montant_vendeur' => null,
-                'has_autres_vendeurs' => false,
-                'statut_choices' => $this->acheteurStatutChoices($commande),
-            ]);
-        }
-
-        if ($this->isGranted('ROLE_AGRICULTEUR')) {
-            $sellerId = (int) $user->getId();
-            $commande = $this->findAccessibleCommandeVendeur($id, $sellerId);
-            $lignes = $this->ligneCommandeRepository->findByCommandeAndFournisseur($commande->getId(), $sellerId);
-            $montantVendeur = $this->ligneCommandeRepository->sumMontantForFournisseurOnCommande($commande->getId(), $sellerId);
-            $toutesLignes = $this->ligneCommandeRepository->findBy(['idCommande' => $commande->getId()], ['id' => 'ASC']);
-            $hasAutres = \count($toutesLignes) > \count($lignes);
-
-            return $this->render('marketplace/mes_commandes/show.html.twig', [
-                'mes_commandes_mode' => 'vendeur',
-                'commande' => $commande,
-                'lignes' => $lignes,
-                'montant_vendeur' => $montantVendeur,
-                'has_autres_vendeurs' => $hasAutres,
-                'statut_choices' => self::STATUTS_VENDEUR_ACTION,
-            ]);
-        }
-
-        $commande = $this->findOwnedCommandeAcheteur($id, $user);
-        $lignes = $this->ligneCommandeRepository->findBy(['idCommande' => $commande->getId()], ['id' => 'ASC']);
-
-        return $this->render('marketplace/mes_commandes/show.html.twig', [
-            'mes_commandes_mode' => 'acheteur',
-            'commande' => $commande,
-            'lignes' => $lignes,
-            'montant_vendeur' => null,
-            'has_autres_vendeurs' => false,
-            'statut_choices' => $this->acheteurStatutChoices($commande),
-        ]);
+        return $this->render('marketplace/mes_commandes/show.html.twig', $this->buildOrderDetailVars($id, $user));
     }
 
     #[Route('/{id}/statut', name: 'statut', requirements: ['id' => '\\d+'], methods: ['POST'])]
@@ -350,5 +431,129 @@ class MesCommandesController extends AbstractController
         }
 
         return $this->redirectToRoute('mes_commandes_show', ['id' => $id]);
+    }
+
+    /**
+     * @param list<Commandes> $commandes
+     *
+     * @return array<int, true>
+     */
+    private function buildDeletableCommandeIds(array $commandes, User $user, string $mode): array
+    {
+        $out = [];
+        foreach ($commandes as $c) {
+            if ($this->commandeMayBeDeleted($c, $user, $mode)) {
+                $out[$c->getId()] = true;
+            }
+        }
+
+        return $out;
+    }
+
+    private function commandeMayBeDeleted(Commandes $commande, User $user, string $mode): bool
+    {
+        if ($this->categorizeStatus($commande->getStatus()) === 'livree') {
+            return false;
+        }
+        if ($mode === 'vendeur') {
+            return $this->sellerOwnsAllLignes($commande, (int) $user->getId());
+        }
+
+        return true;
+    }
+
+    private function sellerOwnsAllLignes(Commandes $commande, int $sellerUserId): bool
+    {
+        $lignes = $this->ligneCommandeRepository->findBy(['idCommande' => $commande->getId()]);
+        if ($lignes === []) {
+            return false;
+        }
+        foreach ($lignes as $l) {
+            if ($l->getIdFournisseur() !== $sellerUserId) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function resolveMesCommandesListMode(): string
+    {
+        if ($this->isMarcheAcheteur()) {
+            return 'acheteur';
+        }
+        if ($this->isGranted('ROLE_AGRICULTEUR')) {
+            return 'vendeur';
+        }
+
+        return 'acheteur';
+    }
+
+    private function wantsOrderEditAjaxResponse(Request $request): bool
+    {
+        $accept = (string) $request->headers->get('Accept');
+
+        return $request->isXmlHttpRequest() || str_contains($accept, 'application/json');
+    }
+
+    /**
+     * @return array{
+     *     mes_commandes_mode: string,
+     *     commande: Commandes,
+     *     lignes: list<\App\Entity\Marketplace\LigneCommande>,
+     *     montant_vendeur: float|null,
+     *     has_autres_vendeurs: bool,
+     *     statut_choices: array<string, string>,
+     *     commande_deletable: bool
+     * }
+     */
+    private function buildOrderDetailVars(int $id, User $user): array
+    {
+        if ($this->isMarcheAcheteur()) {
+            $commande = $this->findOwnedCommandeAcheteur($id, $user);
+            $lignes = $this->ligneCommandeRepository->findBy(['idCommande' => $commande->getId()], ['id' => 'ASC']);
+
+            return [
+                'mes_commandes_mode' => 'acheteur',
+                'commande' => $commande,
+                'lignes' => $lignes,
+                'montant_vendeur' => null,
+                'has_autres_vendeurs' => false,
+                'statut_choices' => $this->acheteurStatutChoices($commande),
+                'commande_deletable' => $this->commandeMayBeDeleted($commande, $user, 'acheteur'),
+            ];
+        }
+
+        if ($this->isGranted('ROLE_AGRICULTEUR')) {
+            $sellerId = (int) $user->getId();
+            $commande = $this->findAccessibleCommandeVendeur($id, $sellerId);
+            $lignes = $this->ligneCommandeRepository->findByCommandeAndFournisseur($commande->getId(), $sellerId);
+            $montantVendeur = $this->ligneCommandeRepository->sumMontantForFournisseurOnCommande($commande->getId(), $sellerId);
+            $toutesLignes = $this->ligneCommandeRepository->findBy(['idCommande' => $commande->getId()], ['id' => 'ASC']);
+            $hasAutres = \count($toutesLignes) > \count($lignes);
+
+            return [
+                'mes_commandes_mode' => 'vendeur',
+                'commande' => $commande,
+                'lignes' => $lignes,
+                'montant_vendeur' => $montantVendeur,
+                'has_autres_vendeurs' => $hasAutres,
+                'statut_choices' => self::STATUTS_VENDEUR_ACTION,
+                'commande_deletable' => $this->commandeMayBeDeleted($commande, $user, 'vendeur'),
+            ];
+        }
+
+        $commande = $this->findOwnedCommandeAcheteur($id, $user);
+        $lignes = $this->ligneCommandeRepository->findBy(['idCommande' => $commande->getId()], ['id' => 'ASC']);
+
+        return [
+            'mes_commandes_mode' => 'acheteur',
+            'commande' => $commande,
+            'lignes' => $lignes,
+            'montant_vendeur' => null,
+            'has_autres_vendeurs' => false,
+            'statut_choices' => $this->acheteurStatutChoices($commande),
+            'commande_deletable' => $this->commandeMayBeDeleted($commande, $user, 'acheteur'),
+        ];
     }
 }

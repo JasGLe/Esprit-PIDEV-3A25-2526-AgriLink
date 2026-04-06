@@ -122,12 +122,7 @@
                                 <td><span class="mc-amount">{{ mv|number_format(3, ',', ' ') }} DT</span></td>
                                 <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { status: c.status, commande_id: c.id, dropdown_choices: statut_choices_seller, statut_redirect: 'index' } %}</td>
                                 <td class="text-end mc-actions-cell">
-                                    <div class="mc-act-toolbar">
-                                        <a href="{{ path('mes_commandes_show', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--view" title="Détails"><i class="bi bi-search" aria-hidden="true"></i></a>
-                                        <a href="{{ path('mes_commandes_pdf', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--pdf"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Export PDF</a>
-                                        <a href="{{ path('mes_commandes_show', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--edit" title="Fiche commande"><i class="bi bi-pencil" aria-hidden="true"></i></a>
-                                        <a href="{{ path('mes_commandes_show', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--more" title="Fiche commande"><i class="bi bi-chevron-right" aria-hidden="true"></i></a>
-                                    </div>
+                                    {% include 'marketplace/mes_commandes/_actions_toolbar.html.twig' with { commande: c } %}
                                 </td>
                             </tr>
                         {% else %}
@@ -145,12 +140,7 @@
                                 <td><span class="mc-amount">{{ c.prixTotal|number_format(3, ',', ' ') }} DT</span></td>
                                 <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { status: c.status, commande_id: c.id, dropdown_choices: statut_choices_by_commande[c.id]|default({}), statut_redirect: 'index' } %}</td>
                                 <td class="text-end mc-actions-cell">
-                                    <div class="mc-act-toolbar">
-                                        <a href="{{ path('mes_commandes_show', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--view" title="Détails"><i class="bi bi-search" aria-hidden="true"></i></a>
-                                        <a href="{{ path('mes_commandes_pdf', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--pdf"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Export PDF</a>
-                                        <a href="{{ path('mes_commandes_show', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--edit" title="Fiche commande"><i class="bi bi-pencil" aria-hidden="true"></i></a>
-                                        <a href="{{ path('mes_commandes_show', { id: c.id }) }}" class="btn btn-sm mc-act mc-act--cancel" title="Fiche commande"><i class="bi bi-x-circle me-1" aria-hidden="true"></i>Statut / annulation</a>
-                                    </div>
+                                    {% include 'marketplace/mes_commandes/_actions_toolbar.html.twig' with { commande: c } %}
                                 </td>
                             </tr>
                         {% else %}
@@ -166,19 +156,89 @@
         </div>
     </div>
 </div>
+
+<div class="modal fade mc-order-detail-modal" id="mcOrderDetailModal" tabindex="-1" aria-labelledby="mcOrderDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content mc-order-detail-modal__content border-0 shadow-lg">
+            <div class="modal-header mc-order-detail-modal__header border-0">
+                <h2 class="modal-title h5 mb-0 mc-order-detail-modal__title" id="mcOrderDetailModalLabel">Détail de la commande</h2>
+                <button type="button" class="btn-close btn-close-white mc-order-detail-modal__close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body mc-order-detail-modal__body p-0" id="mcOrderDetailModalBody">
+                <div class="mc-order-detail-modal__loading p-4 text-center mc-muted">Chargement…</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'marketplace/mes_commandes/_order_edit_modal.html.twig' %}
+
 <script>
 (function () {
-    document.querySelectorAll('.mc-orders-scope .mc-status-details').forEach(function (el) {
-        el.addEventListener('toggle', function () {
-            if (!el.open) {
+    function bindMcStatusDetails(scope) {
+        var root = scope || document;
+        root.querySelectorAll('.mc-status-details').forEach(function (el) {
+            if (el.dataset.mcStatusBound === '1') {
                 return;
             }
-            document.querySelectorAll('.mc-orders-scope .mc-status-details').forEach(function (o) {
-                if (o !== el) {
-                    o.removeAttribute('open');
+            el.dataset.mcStatusBound = '1';
+            el.addEventListener('toggle', function () {
+                if (!el.open) {
+                    return;
                 }
+                var scopeRoot = el.closest('.mc-orders-scope');
+                if (!scopeRoot) {
+                    return;
+                }
+                scopeRoot.querySelectorAll('.mc-status-details').forEach(function (o) {
+                    if (o !== el) {
+                        o.removeAttribute('open');
+                    }
+                });
             });
         });
+    }
+
+    var listScope = document.querySelector('.mc-orders-scope');
+    if (listScope) {
+        bindMcStatusDetails(listScope);
+    }
+
+    var modalEl = document.getElementById('mcOrderDetailModal');
+    var bodyEl = document.getElementById('mcOrderDetailModalBody');
+    if (!modalEl || !bodyEl) {
+        return;
+    }
+
+    modalEl.addEventListener('show.bs.modal', function (event) {
+        var btn = event.relatedTarget;
+        var url = btn && btn.getAttribute('data-mc-order-detail-url');
+        if (!url) {
+            return;
+        }
+        bodyEl.innerHTML = '<div class="mc-order-detail-modal__loading p-4 text-center mc-muted">Chargement…</div>';
+        fetch(url, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+        })
+            .then(function (r) {
+                if (!r.ok) {
+                    throw new Error('load');
+                }
+                return r.text();
+            })
+            .then(function (html) {
+                bodyEl.innerHTML = html;
+                var inner = bodyEl.querySelector('[data-mc-order-modal-root]');
+                bindMcStatusDetails(inner || bodyEl);
+            })
+            .catch(function () {
+                bodyEl.innerHTML = '<div class="p-4 text-center mc-order-detail-modal__err">Impossible de charger le détail de la commande.</div>';
+            });
+    });
+
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        bodyEl.innerHTML = '<div class="mc-order-detail-modal__loading p-4 text-center mc-muted">Chargement…</div>';
     });
 })();
 </script>

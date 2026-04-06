@@ -287,10 +287,15 @@ class UserRepository extends ServiceEntityRepository
      */
     public function findUserIdsByVille(string $ville): array
     {
+        $norm = mb_strtolower(trim($ville));
+        if ($norm === '') {
+            return [];
+        }
+
         $rows = $this->createQueryBuilder('u')
             ->select('u.id')
-            ->where('u.ville = :v')
-            ->setParameter('v', $ville)
+            ->where('LOWER(TRIM(u.ville)) = :v')
+            ->setParameter('v', $norm)
             ->getQuery()
             ->getScalarResult();
 

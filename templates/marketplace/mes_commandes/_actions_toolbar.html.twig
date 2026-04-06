@@ -1,0 +1,18 @@
+{% set del_map = deletable_commande_ids|default({}) %}
+{% set can_delete = del_map[commande.id] ?? false %}
+{% set del_title_disabled = mes_commandes_mode == 'vendeur'
+    ? 'Suppression impossible (commande livrée ou multi-producteurs)'
+    : 'Suppression impossible (commande livrée)' %}
+<div class="mc-act-toolbar">
+    <button type="button" class="btn btn-sm mc-act mc-act--view" title="Voir les détails" data-bs-toggle="modal" data-bs-target="#mcOrderDetailModal" data-mc-order-detail-url="{{ path('mes_commandes_detail_modal', { id: commande.id }) }}"><i class="bi bi-search" aria-hidden="true"></i></button>
+    <button type="button" class="btn btn-sm mc-act mc-act--edit" title="Modifier les coordonnées de livraison" data-bs-toggle="modal" data-bs-target="#mcOrderEditModal" data-mc-order-edit-url="{{ path('mes_commandes_edit_modal', { id: commande.id }) }}"><i class="bi bi-pencil" aria-hidden="true"></i></button>
+    {% if can_delete %}
+        <form method="post" action="{{ path('mes_commandes_delete', { id: commande.id }) }}" class="d-inline" onsubmit="return confirm('Supprimer définitivement cette commande et toutes ses lignes ?');">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete_commande_' ~ commande.id) }}">
+            <button type="submit" class="btn btn-sm mc-act mc-act--delete" title="Supprimer la commande"><i class="bi bi-trash" aria-hidden="true"></i></button>
+        </form>
+    {% else %}
+        <button type="button" class="btn btn-sm mc-act mc-act--delete" disabled title="{{ del_title_disabled }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+    {% endif %}
+    <a href="{{ path('mes_commandes_pdf', { id: commande.id }) }}" class="btn btn-sm mc-act mc-act--pdf"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Export PDF</a>
+</div>

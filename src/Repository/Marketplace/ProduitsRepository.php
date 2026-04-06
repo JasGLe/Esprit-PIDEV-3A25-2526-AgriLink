@@ -3,7 +3,9 @@
 namespace App\Repository\Marketplace;
 
 use App\Entity\Marketplace\Produits;
+use App\Entity\UserManagement\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -66,12 +68,19 @@ class ProduitsRepository extends ServiceEntityRepository
             ->setParameter('actif', true);
 
         if ($search !== null && $search !== '') {
-            $qb->andWhere($qb->expr()->orX(
-                'p.nom LIKE :q',
-                'p.description LIKE :q',
-                'p.categorie LIKE :q'
-            ))
-                ->setParameter('q', '%'.$search.'%');
+            $like = str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search);
+            $term = '%'.$like.'%';
+            $qb->leftJoin(User::class, 'v', Join::WITH, 'v.id = p.idFournisseur')
+                ->andWhere($qb->expr()->orX(
+                    'p.nom LIKE :q',
+                    'p.description LIKE :q',
+                    'p.categorie LIKE :q',
+                    'v.nom LIKE :q',
+                    'v.ville LIKE :q',
+                    'v.email LIKE :q',
+                    'v.fournisseurRaisonSocial LIKE :q'
+                ))
+                ->setParameter('q', $term);
         }
 
         $cat = strtolower($cat);

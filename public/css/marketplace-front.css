@@ -105,6 +105,30 @@ body.marketplace-tropical > .tropical-header {
     border-bottom: 1px solid rgba(142, 184, 45, 0.22);
 }
 
+/* Liens centrés dans la barre : même espace flexible à gauche et à droite du menu (la zone droite est large) */
+@media (min-width: 992px) {
+    body.marketplace-tropical #tropicalNav.navbar-collapse {
+        display: grid !important;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        flex-grow: 1;
+        column-gap: 0.75rem;
+    }
+
+    body.marketplace-tropical #tropicalNav .navbar-nav {
+        grid-column: 2;
+        justify-self: center;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+
+    body.marketplace-tropical #tropicalNav .tropical-nav-end {
+        grid-column: 3;
+        justify-self: end;
+        margin-left: 0 !important;
+    }
+}
+
 .tropical-brand {
     font-family: var(--font-display);
     font-weight: 700;
@@ -164,12 +188,78 @@ body.marketplace-tropical > .tropical-header {
     align-items: center;
 }
 
+.tropical-nav-search-form {
+    display: flex;
+    align-items: center;
+    gap: 0.28rem;
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: min(100%, 22rem);
+}
+
+@media (min-width: 576px) {
+    .tropical-nav-search-form {
+        max-width: min(100%, 26rem);
+    }
+}
+
+@media (min-width: 992px) {
+    .tropical-nav-search-form {
+        max-width: min(100%, 30rem);
+    }
+}
+
+.tropical-nav-search-input {
+    flex: 1 1 auto;
+    min-width: 11rem;
+    width: auto;
+    min-height: 2.65rem;
+    height: 2.65rem;
+    padding: 0.5rem 1.25rem;
+    line-height: 1.35;
+    font-size: 0.9375rem;
+    color: #e8ece9 !important;
+    background: rgba(12, 28, 18, 0.75) !important;
+    border: 1px solid rgba(142, 184, 45, 0.35) !important;
+    border-radius: 999px;
+}
+
+.tropical-nav-search-input::placeholder {
+    color: rgba(232, 236, 233, 0.5);
+    font-size: 0.875rem;
+}
+
+.tropical-nav-search-input:focus {
+    border-color: var(--lime) !important;
+    box-shadow: 0 0 0 2px rgba(223, 255, 0, 0.15);
+    outline: none;
+}
+
+@media (min-width: 576px) {
+    .tropical-nav-search-input {
+        min-width: 14rem;
+        padding-left: 1.45rem;
+        padding-right: 1.45rem;
+    }
+}
+
+@media (min-width: 992px) {
+    .tropical-nav-search-input {
+        min-width: 16rem;
+        padding-left: 1.6rem;
+        padding-right: 1.6rem;
+    }
+}
+
 .tropical-nav-search-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 2.35rem;
-    height: 2.35rem;
+    flex-shrink: 0;
+    width: 2.65rem;
+    height: 2.65rem;
+    min-width: 2.65rem;
+    min-height: 2.65rem;
     padding: 0;
     border: 1px solid rgba(142, 184, 45, 0.45);
     border-radius: 50%;
@@ -187,7 +277,7 @@ body.marketplace-tropical > .tropical-header {
 }
 
 .tropical-nav-search-btn i {
-    font-size: 1.05rem;
+    font-size: 1.15rem;
 }
 
 .tropical-nav-cart {
@@ -283,10 +373,10 @@ body.marketplace-tropical > .tropical-header {
     font-size: 1.2rem;
 }
 
-/* ── Hero (compact — minimal vertical space) ── */
+/* ── Hero (room to breathe above the filter bar) ── */
 .tropical-hero {
-    padding-top: 0;
-    padding-bottom: 0;
+    padding-top: clamp(1.85rem, 4.5vw, 3rem);
+    padding-bottom: clamp(1.85rem, 4.5vw, 3rem);
 }
 
 .tropical-hero__kicker {
@@ -315,6 +405,16 @@ body.marketplace-tropical > .tropical-header {
     max-width: 40rem;
 }
 
+.tropical-hero__lead--spaced {
+    margin-top: 0.35rem;
+}
+
+@media (min-width: 992px) {
+    .tropical-hero__lead--spaced {
+        margin-top: 0.5rem;
+    }
+}
+
 /* ── Toolbar (compact / “thin” bar) ── */
 .tropical-toolbar {
     background: rgba(12, 30, 20, 0.72);
@@ -322,14 +422,37 @@ body.marketplace-tropical > .tropical-header {
     border-bottom: 1px solid rgba(142, 184, 45, 0.15);
 }
 
-.tropical-toolbar--compact .tropical-filter-label {
+.tropical-toolbar--compact .tropical-filter-label:not(.tropical-filter-label--inline) {
     margin-bottom: 0.1rem;
 }
 
 .tropical-toolbar-meta {
     font-size: 0.72rem;
-    padding-top: 0.25rem;
+    padding-top: 0.35rem;
     line-height: 1.3;
+}
+
+/* Filtres : formulaire + lien Réinitialiser aligné à droite (sous le tri) */
+.tropical-toolbar-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.tropical-toolbar-reset-wrap {
+    width: 100%;
+    max-width: 100%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+@media (max-width: 1199.98px) {
+    .tropical-toolbar-controls {
+        width: 100%;
+        align-items: stretch;
+    }
 }
 
 .tropical-page-gutter {
@@ -373,6 +496,74 @@ body.marketplace-tropical > .tropical-header {
     line-height: 1.2;
 }
 
+.tropical-filter-form--inline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem 1rem;
+    margin: 0;
+}
+
+.tropical-filter-field {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.tropical-filter-label--inline {
+    display: inline-block;
+    margin-bottom: 0 !important;
+    flex-shrink: 0;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #c8f06a;
+    text-shadow: 0 0 12px rgba(200, 240, 106, 0.25);
+    line-height: 1.2;
+}
+
+.tropical-filter-select {
+    flex: 0 1 auto;
+}
+
+/* Largeur proche du libellé sélectionné (évite la barre trop large) */
+.tropical-filter-select--fit {
+    width: auto;
+    min-width: 8.5rem;
+    max-width: min(13.5rem, 78vw);
+    padding-inline-start: 0.5rem !important;
+    padding-inline-end: 1.75rem !important;
+}
+
+@supports (field-sizing: content) {
+    .tropical-filter-select--fit {
+        field-sizing: content;
+        min-width: 7.25rem;
+    }
+}
+
+.tropical-filter-submit.d-none {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+}
+
+select.tropical-select optgroup {
+    background: var(--bg-deep-mid);
+    color: var(--lime-border);
+    font-weight: 700;
+    font-size: 0.68rem;
+}
+
 .tropical-select,
 .tropical-input {
     background: rgba(20, 40, 28, 0.65) !important;
@@ -385,15 +576,28 @@ body.marketplace-tropical > .tropical-header {
     min-height: 0;
 }
 
+/* Liste native plus sombre (Chrome, Edge, Safari récents) */
+.tropical-select {
+    color-scheme: dark;
+    background-color: rgba(28, 48, 36, 0.92) !important;
+}
+
 .tropical-select:focus,
 .tropical-input:focus {
     border-color: var(--lime) !important;
     box-shadow: 0 0 0 0.2rem rgba(223, 255, 0, 0.12) !important;
 }
 
-.tropical-select option {
-    background: var(--bg-deep-mid);
-    color: var(--text);
+.tropical-select option,
+.tropical-select optgroup {
+    background-color: #1a2e22;
+    color: #e8ece9;
+}
+
+.tropical-select option:checked,
+.tropical-select option:hover {
+    background-color: rgba(142, 184, 45, 0.35);
+    color: #fff;
 }
 
 .tropical-btn-lime-solid {
@@ -428,6 +632,23 @@ body.marketplace-tropical > .tropical-header {
 
 .tropical-link-reset:hover {
     color: var(--lime);
+}
+
+.tropical-link-reset--orange {
+    color: #fb923c !important;
+    font-weight: 600;
+    text-decoration: none;
+    transition: color 0.2s, text-decoration 0.2s;
+}
+
+.tropical-link-reset--orange:hover {
+    color: #fdba74 !important;
+    text-decoration: underline;
+}
+
+.tropical-link-reset--orange i {
+    margin-right: 0.2rem;
+    vertical-align: -0.05em;
 }
 
 /* ── Section titles ── */
@@ -741,6 +962,20 @@ a.tropical-btn-cart {
     font-size: 4rem;
     color: rgba(142, 184, 45, 0.55);
     background: rgba(12, 28, 18, 0.5);
+}
+
+.tropical-about__frame--photo {
+    display: block;
+    padding: 0;
+    overflow: hidden;
+}
+
+.tropical-about__frame-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
 }
 
 /* ── Stats ── */

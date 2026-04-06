@@ -36,9 +36,16 @@
                 </ul>
                 <div class="d-flex flex-wrap align-items-center gap-2 gap-lg-3 ms-lg-3 tropical-nav-end">
                     {# Ordre : recherche (gauche du groupe) → panier (libellé + badge) → compte → tableau de bord #}
-                    <button type="button" class="tropical-nav-search-btn" id="tropicalNavSearch" title="Rechercher" aria-label="Rechercher">
-                        <i class="bi bi-search"></i>
-                    </button>
+                    <form method="get" action="{{ path('marketplace_index') }}" class="tropical-nav-search-form" id="tropicalNavSearchForm" role="search">
+                        <input type="hidden" name="cat" value="{{ filter_cat }}">
+                        <input type="hidden" name="region" value="{{ filter_region }}">
+                        <input type="hidden" name="sort" value="{{ filter_sort }}">
+                        <label class="visually-hidden" for="tropicalNavSearchInput">Rechercher un produit, une ville ou un producteur</label>
+                        <input type="search" name="q" id="tropicalNavSearchInput" class="form-control tropical-nav-search-input" value="{{ filter_q }}" placeholder="Produit, ville ou producteur…" title="Recherchez par nom de produit, ville du vendeur, ou nom du producteur / fournisseur" autocomplete="off" maxlength="120">
+                        <button type="submit" class="tropical-nav-search-btn" id="tropicalNavSearch" title="Rechercher" aria-label="Rechercher">
+                            <i class="bi bi-search" aria-hidden="true"></i>
+                        </button>
+                    </form>
                     {% if is_granted('ROLE_USER') %}
                         <div class="dropdown tropical-cart-dropdown-wrap">
                             <button type="button" class="tropical-nav-cart tropical-nav-cart--trigger tropical-cart-dropdown-toggle text-decoration-none border-0 bg-transparent p-0" id="marketplaceCartDropdown" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside" aria-expanded="false" title="Aperçu du panier" aria-haspopup="true" data-cart-apercu-url="{{ path('marketplace_panier_apercu') }}">
@@ -132,12 +139,12 @@
 
 {# ── Hero (centered headline, reference copy style) ── #}
 <section id="hero" class="tropical-hero text-center">
-    <div class="container px-2 px-md-3 py-2 py-lg-2">
-        <p class="tropical-hero__kicker mb-2 mb-lg-1">AgriLink · Le marché agricole</p>
-        <h1 class="tropical-hero__title mx-auto mb-2 mb-lg-2">
+    <div class="container px-2 px-md-3 py-0">
+        <p class="tropical-hero__kicker mb-2 mb-lg-2">AgriLink · Le marché agricole</p>
+        <h1 class="tropical-hero__title mx-auto mb-2 mb-lg-3">
             Créez un intérieur tropical chez vous avec des produits frais et locaux.
         </h1>
-        <p class="tropical-hero__lead mx-auto mb-0">
+        <p class="tropical-hero__lead mx-auto mb-0 tropical-hero__lead--spaced">
             Parcourez les annonces publiées par les agriculteurs tunisiens : fruits, légumes, graines et équipements — livrés directement depuis la ferme.
         </p>
     </div>
@@ -155,38 +162,45 @@
                 <a href="{{ path('marketplace_index', qp|merge({cat: 'graines'})) }}" class="tropical-pill {{ filter_cat == 'graines' ? 'is-active' : '' }}"><i class="bi bi-globe2"></i> Graines</a>
                 <a href="{{ path('marketplace_index', qp|merge({cat: 'equipement'})) }}" class="tropical-pill {{ filter_cat == 'equipement' ? 'is-active' : '' }}"><i class="bi bi-truck-front"></i> Équipements</a>
             </div>
-            <form method="get" action="{{ path('marketplace_index') }}" class="row g-1 align-items-end tropical-filter-form">
-                <input type="hidden" name="cat" value="{{ filter_cat }}">
-                <div class="col-6 col-md-3 col-xl-2">
-                    <label class="tropical-filter-label">Région</label>
-                    <select name="region" class="form-select form-select-sm tropical-select" onchange="this.form.submit()">
-                        <option value="">Toutes les régions</option>
-                        {% for v in villes_region %}
-                            <option value="{{ v }}" {{ filter_region == v ? 'selected' : '' }}>{{ v }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-                <div class="col-6 col-md-3 col-xl-2">
-                    <label class="tropical-filter-label">Trier</label>
-                    <select name="sort" class="form-select form-select-sm tropical-select" onchange="this.form.submit()">
-                        <option value="price_asc" {{ filter_sort == 'price_asc' ? 'selected' : '' }}>Prix croissant</option>
-                        <option value="price_desc" {{ filter_sort == 'price_desc' ? 'selected' : '' }}>Prix décroissant</option>
-                        <option value="recent" {{ filter_sort == 'recent' ? 'selected' : '' }}>Plus récents</option>
-                    </select>
-                </div>
-                <div class="col-12 col-md-6 col-xl-4">
-                    <label class="tropical-filter-label">Recherche</label>
-                    <div class="input-group">
-                        <input type="search" name="q" value="{{ filter_q }}" id="marketplace-search-input" class="form-control tropical-input" placeholder="Produits, origines…" autocomplete="off">
-                        <button class="btn tropical-btn-lime-solid" type="submit"><i class="bi bi-search"></i></button>
+            <div class="tropical-toolbar-controls">
+                <form method="get" action="{{ path('marketplace_index') }}" class="tropical-filter-form tropical-filter-form--inline" id="marketplace-filter-form">
+                    <input type="hidden" name="cat" value="{{ filter_cat }}">
+                    {% if filter_q != '' %}
+                        <input type="hidden" name="q" value="{{ filter_q }}">
+                    {% endif %}
+                    <div class="tropical-filter-field">
+                        <label class="tropical-filter-label tropical-filter-label--inline" for="marketplace-region-select">Région</label>
+                        <select name="region"
+                                id="marketplace-region-select"
+                                class="form-select form-select-sm tropical-select tropical-filter-select tropical-filter-select--fit"
+                                title="Filtre par gouvernorat — modifiable à tout moment"
+                                onchange="this.form.requestSubmit()">
+                            <option value="" {{ filter_region == '' ? 'selected' : '' }}>Toutes les régions</option>
+                            {% for r in tunisia_regions %}
+                                <option value="{{ r }}" {{ filter_region == r ? 'selected' : '' }}>{{ r }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
+                    <div class="tropical-filter-field">
+                        <label class="tropical-filter-label tropical-filter-label--inline" for="marketplace-sort-select">Tri</label>
+                        <select name="sort"
+                                id="marketplace-sort-select"
+                                class="form-select form-select-sm tropical-select tropical-filter-select tropical-filter-select--fit"
+                                onchange="this.form.requestSubmit()">
+                            <option value="price_asc" {{ filter_sort == 'price_asc' ? 'selected' : '' }}>Prix croissant</option>
+                            <option value="price_desc" {{ filter_sort == 'price_desc' ? 'selected' : '' }}>Prix décroissant</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-sm tropical-filter-submit d-none" tabindex="-1" aria-hidden="true">Appliquer</button>
+                </form>
+                <div class="tropical-toolbar-reset-wrap">
+                    <a href="{{ path('marketplace_index') }}" class="tropical-link-reset tropical-link-reset--orange"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Réinitialiser</a>
                 </div>
-            </form>
+            </div>
         </div>
         <p class="small tropical-muted mb-0 tropical-toolbar-meta text-start">
             <i class="bi bi-box-seam me-1 tropical-lime"></i>
             <strong class="text-white">{{ produits|length }}</strong> produit{{ produits|length > 1 ? 's' : '' }} disponible{{ produits|length > 1 ? 's' : '' }}
-            <a href="{{ path('marketplace_index') }}" class="tropical-link-reset ms-2"><i class="bi bi-arrow-counterclockwise"></i> Réinitialiser</a>
         </p>
     </div>
 </section>
@@ -231,8 +245,8 @@
             <div class="col-lg-6 text-center">
                 <div class="tropical-about__visual mx-auto">
                     <div class="tropical-about__glow"></div>
-                    <div class="tropical-about__frame">
-                        <i class="bi bi-flower2"></i>
+                    <div class="tropical-about__frame tropical-about__frame--photo">
+                        <img src="{{ asset('images/marketplace/about-section.jpg') }}" alt="AgriLink — agriculture et produits locaux" class="tropical-about__frame-img" width="640" height="640" loading="lazy" decoding="async">
                     </div>
                 </div>
             </div>
@@ -315,18 +329,26 @@
 
 <script>
 (function () {
-    var btn = document.getElementById('tropicalNavSearch');
-    var input = document.getElementById('marketplace-search-input');
     var produits = document.getElementById('produits');
-    if (!btn) return;
-    btn.addEventListener('click', function () {
-        if (produits) produits.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        setTimeout(function () { if (input) { input.focus({ preventScroll: true }); } }, 350);
-        var nav = document.getElementById('tropicalNav');
+    var nav = document.getElementById('tropicalNav');
+    var form = document.getElementById('tropicalNavSearchForm');
+    function collapseNavIfOpen() {
         if (nav && nav.classList.contains('show') && typeof bootstrap !== 'undefined' && bootstrap.Collapse) {
             bootstrap.Collapse.getOrCreateInstance(nav, { toggle: false }).hide();
         }
-    });
+    }
+    if (form) {
+        form.addEventListener('submit', function () {
+            collapseNavIfOpen();
+        });
+    }
+    try {
+        if (produits && new URLSearchParams(window.location.search).get('q')) {
+            requestAnimationFrame(function () {
+                produits.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        }
+    } catch (e) { /* ignore */ }
 })();
 (function () {
     var panelEl = document.getElementById('marketplaceCartPanel');
