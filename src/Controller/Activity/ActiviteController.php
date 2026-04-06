@@ -64,6 +64,14 @@ class ActiviteController extends AbstractController
         $this->assertModuleAccess();
 
         $activite = new Activite();
+        $dateParam = trim((string) $request->query->get('date', ''));
+        if ($dateParam !== '') {
+            $selectedDate = \DateTimeImmutable::createFromFormat('Y-m-d', $dateParam);
+            if ($selectedDate instanceof \DateTimeImmutable) {
+                $activite->setDateDebut($selectedDate->setTime(9, 0));
+            }
+        }
+
         $form = $this->createForm(ActiviteType::class, $activite, [
             'is_admin' => $this->isGranted('ROLE_ADMIN'),
         ]);

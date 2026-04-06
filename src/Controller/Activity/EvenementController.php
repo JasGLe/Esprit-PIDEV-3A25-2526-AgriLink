@@ -59,6 +59,14 @@ class EvenementController extends AbstractController
         $this->assertModuleAccess();
 
         $evenement = new Evenement();
+        $dateParam = trim((string) $request->query->get('date', ''));
+        if ($dateParam !== '') {
+            $selectedDate = \DateTimeImmutable::createFromFormat('Y-m-d', $dateParam);
+            if ($selectedDate instanceof \DateTimeImmutable) {
+                $evenement->setDateEvenement($selectedDate->setTime(9, 0));
+            }
+        }
+
         $form = $this->createForm(EvenementType::class, $evenement, [
             'is_admin' => $this->isGranted('ROLE_ADMIN'),
         ]);
