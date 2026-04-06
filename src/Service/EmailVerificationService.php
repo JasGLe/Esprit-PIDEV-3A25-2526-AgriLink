@@ -19,7 +19,8 @@ class EmailVerificationService
         private EntityManagerInterface $entityManager,
         private MailerInterface $mailer,
         private Environment $twig,
-        private string $mailerFrom = 'noreply@agrilink.com'
+        private string $mailerFrom = 'noreply@agrilink.com',
+        private string $appUrl = 'http://localhost'
     ) {
     }
 
@@ -55,7 +56,8 @@ class EmailVerificationService
         $htmlContent = $this->twig->render('emails/verification_code.html.twig', [
             'user' => $user,
             'code' => $code,
-            'expirationMinutes' => self::EXPIRATION_MINUTES, // Changed to minutes
+            'expirationMinutes' => self::EXPIRATION_MINUTES,
+            'appUrl' => $this->appUrl,
         ]);
 
         $email = (new Email())

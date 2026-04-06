@@ -19,7 +19,7 @@
             <div class="d-flex align-items-center gap-4 flex-wrap">
                 <div class="flex-shrink-0">
                     {% if user.photoProfil %}
-                        <img src="{{ asset('uploads/' ~ user.photoProfil) }}" alt="{{ user.displayName }}"
+                        <img src="{{ asset('agrilink/uploads/' ~ user.photoProfil) }}" alt="{{ user.displayName }}"
                              class="rounded-circle" width="72" height="72" style="object-fit:cover;">
                     {% else %}
                         <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
@@ -303,7 +303,7 @@
                 </div>
                 <div class="card-body p-4 text-center">
                     {% if user.photoProfil %}
-                        <img src="{{ asset('uploads/' ~ user.photoProfil) }}" alt="{{ user.displayName }}"
+                        <img src="{{ asset('agrilink/uploads/' ~ user.photoProfil) }}" alt="{{ user.displayName }}"
                              class="rounded-circle mb-3" width="80" height="80" style="object-fit:cover;" id="avatar-preview">
                         <div id="avatar-placeholder" class="d-none"></div>
                     {% else %}
@@ -313,13 +313,23 @@
                         </div>
                         <img id="avatar-preview" src="" alt="" class="rounded-circle mb-3 d-none" width="80" height="80" style="object-fit:cover;">
                     {% endif %}
-                    {{ form_label(form.profilePhoto, null, {label_attr: {class: 'form-label fw-semibold d-block'}}) }}
+                    {{ form_label(form.profilePhoto, null, {label_attr: {class: 'form-label fw-semibold d-block mt-3'}}) }}
                     {{ form_widget(form.profilePhoto, {attr: {class: 'form-control form-control-sm', accept: 'image/jpeg,image/png,image/webp', id: 'profile-photo-input'}}) }}
                     {{ form_errors(form.profilePhoto) }}
+                    <div class="mt-2 d-flex gap-2 justify-content-center">
+                        {% if user.photoProfil %}
+                            <small class="text-muted d-block">Photo actuelle : <strong>{{ user.photoProfil|split('/')|last }}</strong></small>
+                        {% endif %}
+                    </div>
                     {% if user.photoProfil %}
-                        <small class="text-muted d-block mt-1">Photo actuelle : {{ user.photoProfil|split('/')|last }}</small>
+                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="delete-avatar-btn">
+                            <svg class="me-1" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                            Supprimer la photo
+                        </button>
                     {% endif %}
-                    <small class="text-muted d-block mt-1">JPG, PNG ou WEBP · max 2 Mo</small>
+                    <small class="text-muted d-block mt-2">JPG, PNG ou WEBP · max 2 Mo</small>
                 </div>
             </div>
 
@@ -334,19 +344,6 @@
                             Enregistrer les modifications
                         </button>
                         <a href="{{ path('admin_users_list') }}" class="btn btn-outline-secondary">Annuler</a>
-                        {% if user.id != app.user.id %}
-                            <hr class="my-1">
-                            <form method="POST" action="{{ path('admin_users_delete', {id: user.id}) }}"
-                                  onsubmit="return confirm('Supprimer définitivement cet utilisateur ? Cette action est irréversible.');">
-                                <input type="hidden" name="_token" value="{{ csrf_token('delete-user-' ~ user.id) }}">
-                                <button type="submit" class="btn btn-outline-danger w-100">
-                                    <svg class="me-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                    </svg>
-                                    Supprimer l'utilisateur
-                                </button>
-                            </form>
-                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -355,6 +352,31 @@
     </div>
 
     {{ form_end(form) }}
+
+    {# Hidden form for deleting photo (outside main form) #}
+    <form id="delete-photo-form" method="POST" action="{{ path('admin_users_delete_photo', {id: user.id}) }}" style="display: none;">
+        <input type="hidden" name="_token" value="{{ csrf_token('delete-photo-' ~ user.id) }}">
+    </form>
+
+    {# Delete form (outside main form to avoid nested forms) #}
+    {% if user.id != app.user.id %}
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body p-4">
+                <h5 class="text-danger mb-3">Zone de danger</h5>
+                <p class="text-muted mb-3">Supprimer définitivement cet utilisateur. Cette action est irréversible.</p>
+                <form method="POST" action="{{ path('admin_users_delete', {id: user.id}) }}"
+                      onsubmit="return confirm('Supprimer définitivement cet utilisateur ? Cette action est irréversible.');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete-user-' ~ user.id) }}">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <svg class="me-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Supprimer l'utilisateur
+                    </button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
 </div>
 
 <script>
@@ -457,6 +479,7 @@ document.addEventListener('DOMContentLoaded', function () {
     toggleFournisseurTypeFields();
     
     // Live photo preview
+    // Photo upload preview
     const input = document.getElementById('profile-photo-input');
     if (input) {
         input.addEventListener('change', function () {
@@ -471,6 +494,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     img.classList.remove('d-none');
                 };
                 reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Delete avatar button
+    const deleteAvatarBtn = document.getElementById('delete-avatar-btn');
+    if (deleteAvatarBtn) {
+        deleteAvatarBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (confirm('Supprimer la photo de profil ? Cette action est irréversible.')) {
+                document.getElementById('delete-photo-form').submit();
             }
         });
     }
