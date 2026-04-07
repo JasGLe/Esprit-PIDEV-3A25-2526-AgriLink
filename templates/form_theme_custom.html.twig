@@ -1,1 +1,33 @@
 {% use 'activity/form_theme_custom.html.twig' %}
+{# templates/form_theme_custom.html.twig #}
+
+{% block form_errors %}
+    {% if errors|length > 0 %}
+        {% for error in errors %}
+            <div class="invalid-feedback d-block">
+                {{ error.message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endblock %}
+
+{% block form_widget_simple %}
+    {% set attr = attr|merge({'class': (attr.class ?? '') ~ ' form-control' ~ (errors|length > 0 ? ' is-invalid' : '')}) %}
+    {{ parent() }}
+{% endblock %}
+
+{% block choice_widget_collapsed %}
+    {% set attr = attr|merge({'class': (attr.class ?? '') ~ ' form-select' ~ (errors|length > 0 ? ' is-invalid' : '')}) %}
+    {{ parent() }}
+{% endblock %}
+
+{% block textarea_widget %}
+    {% set attr = attr|merge({'class': (attr.class ?? '') ~ ' form-control' ~ (errors|length > 0 ? ' is-invalid' : '')}) %}
+    {{ parent() }}
+{% endblock %}
+
+{# Entiers en saisie texte : pas de contraintes navigateur sur <input type="number"> (validation serveur Symfony). #}
+{% block integer_widget %}
+    {%- set type = 'text' -%}
+    {{- block('form_widget_simple') -}}
+{% endblock %}

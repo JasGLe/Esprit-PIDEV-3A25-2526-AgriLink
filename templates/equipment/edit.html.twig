@@ -1,0 +1,140 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block page_title %}Modifier un équipement{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .section-vehicule { border-left: 4px solid #ffc107; }
+    .form-label       { font-weight: 500; }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('equipement_index') }}">Équipements</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('equipement_show', {id: equipement.id}) }}">{{ equipement.nom }}</a></li>
+            <li class="breadcrumb-item active">Modifier</li>
+        </ol>
+    </nav>
+
+    <h2 class="fw-bold mb-4">✏️ Modifier : {{ equipement.nom }}</h2>
+
+    {%- set allErrors = [] -%}
+    {%- for field in form -%}
+        {%- for error in field.vars.errors -%}
+            {%- set allErrors = allErrors|merge([field.vars.label ~ ' : ' ~ error.message]) -%}
+        {%- endfor -%}
+    {%- endfor -%}
+    {%- for error in form.vars.errors -%}
+        {%- set allErrors = allErrors|merge([error.message]) -%}
+    {%- endfor -%}
+
+    {% if allErrors|length > 0 %}
+    <div class="alert alert-danger border-0 shadow-sm mb-4">
+        <div class="fw-semibold mb-2">Veuillez corriger les erreurs suivantes :</div>
+        <ul class="mb-0">
+            {% for msg in allErrors %}
+                <li>{{ msg }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endif %}
+
+    {{ form_start(form, {attr: {novalidate: 'novalidate', enctype: 'multipart/form-data'}}) }}
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header fw-semibold bg-white">Informations générales</div>
+            <div class="card-body row g-3">
+                <div class="col-md-6">{{ form_label(form.nom) }}{{ form_widget(form.nom) }}{{ form_errors(form.nom) }}</div>
+                <div class="col-md-6">{{ form_label(form.categorie) }}{{ form_widget(form.categorie) }}{{ form_errors(form.categorie) }}</div>
+                <div class="col-md-6">{{ form_label(form.type) }}{{ form_widget(form.type) }}{{ form_errors(form.type) }}</div>
+                <div class="col-md-6">{{ form_label(form.statut) }}{{ form_widget(form.statut) }}{{ form_errors(form.statut) }}</div>
+                <div class="col-md-6">{{ form_label(form.marque) }}{{ form_widget(form.marque) }}{{ form_errors(form.marque) }}</div>
+                <div class="col-md-6">{{ form_label(form.modele) }}{{ form_widget(form.modele) }}{{ form_errors(form.modele) }}</div>
+                <div class="col-md-6">{{ form_label(form.dateAcquisition) }}{{ form_widget(form.dateAcquisition) }}{{ form_errors(form.dateAcquisition) }}</div>
+                <div class="col-12">{{ form_label(form.description) }}{{ form_widget(form.description) }}{{ form_errors(form.description) }}</div>
+
+                {# Image actuelle #}
+                <div class="col-md-6">
+                    {{ form_label(form.imageFile) }}
+                    {% if equipement.imageUrl %}
+                        <div class="mb-2">
+                            <img src="{{ asset(equipement.imageUrl) }}"
+                                 alt="Photo actuelle"
+                                 style="height:80px; border-radius:6px; object-fit:cover">
+                            <small class="d-block text-muted mt-1">Photo actuelle — laisser vide pour ne pas changer</small>
+                        </div>
+                    {% endif %}
+                    {{ form_widget(form.imageFile) }}
+                    {{ form_errors(form.imageFile) }}
+                </div>
+            </div>
+        </div>
+
+        {# Section véhicule #}
+        <div id="section-vehicule"
+             class="card shadow-sm mb-4 section-vehicule"
+             style="display: {{ equipement.isVehicule() ? 'block' : 'none' }}">
+            <div class="card-header fw-semibold bg-white">
+                🚗 Détails véhicule
+            </div>
+            <div class="card-body row g-3">
+                <div class="col-md-6">{{ form_label(form.kilometrageActuel) }}{{ form_widget(form.kilometrageActuel) }}{{ form_errors(form.kilometrageActuel) }}</div>
+                <div class="col-md-6">{{ form_label(form.seuilKmMaintenance) }}{{ form_widget(form.seuilKmMaintenance) }}{{ form_errors(form.seuilKmMaintenance) }}</div>
+                <div class="col-md-6">{{ form_label(form.heuresUtilisation) }}{{ form_widget(form.heuresUtilisation) }}{{ form_errors(form.heuresUtilisation) }}</div>
+                <div class="col-md-6">{{ form_label(form.seuilHeuresMaintenance) }}{{ form_widget(form.seuilHeuresMaintenance) }}{{ form_errors(form.seuilHeuresMaintenance) }}</div>
+                <div class="col-md-6">{{ form_label(form.kilometrageDerniereMaintenance) }}{{ form_widget(form.kilometrageDerniereMaintenance) }}{{ form_errors(form.kilometrageDerniereMaintenance) }}</div>
+                <div class="col-md-6">{{ form_label(form.heuresDerniereMaintenance) }}{{ form_widget(form.heuresDerniereMaintenance) }}{{ form_errors(form.heuresDerniereMaintenance) }}</div>
+            </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+            <div class="card-header fw-semibold bg-white">🔧 Maintenance</div>
+            <div class="card-body row g-3">
+                <div class="col-md-6">{{ form_label(form.seuilJoursMaintenance) }}{{ form_widget(form.seuilJoursMaintenance) }}{{ form_errors(form.seuilJoursMaintenance) }}</div>
+                <div class="col-md-6">{{ form_label(form.dateDerniereMaintenance) }}{{ form_widget(form.dateDerniereMaintenance) }}{{ form_errors(form.dateDerniereMaintenance) }}</div>
+            </div>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary px-4">💾 Enregistrer les modifications</button>
+            <a href="{{ path('equipement_show', {id: equipement.id}) }}" class="btn btn-outline-secondary">Annuler</a>
+        </div>
+
+    {{ form_end(form) }}
+
+<script>
+const categorieSelect = document.getElementById('equipement_categorie');
+const typeSelect      = document.getElementById('equipement_type');
+const sectionVehicule = document.getElementById('section-vehicule');
+
+// On garde la valeur actuelle du type pour la resélectionner après rechargement
+const currentType = "{{ equipement.type|e('js') }}";
+
+function updateForm(resetType = true) {
+    const isVehicule = categorieSelect.value === 'Véhicule Motorisé';
+    sectionVehicule.style.display = isVehicule ? 'block' : 'none';
+
+    fetch(`/equipement/api/types?categorie=${encodeURIComponent(categorieSelect.value)}`)
+        .then(r => r.json())
+        .then(types => {
+            typeSelect.innerHTML = '<option value="">-- Choisir un type --</option>';
+            types.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t;
+                opt.textContent = t;
+                // En mode édition, on resélectionne le type existant
+                if (!resetType && t === currentType) opt.selected = true;
+                typeSelect.appendChild(opt);
+            });
+        });
+}
+
+categorieSelect.addEventListener('change', () => updateForm(true));
+
+// Au chargement : on remet le bon type sans le réinitialiser
+updateForm(false);
+</script>
+{% endblock %}

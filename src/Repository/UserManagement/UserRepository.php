@@ -281,4 +281,34 @@ class UserRepository extends ServiceEntityRepository
             'withFailedAttempts' => (int) $withFailedAttempts,
         ];
     }
+
+    /**
+     * @return int[] User ids matching the provided city (case-insensitive).
+     */
+    public function findUserIdsByVille(string $ville): array
+    {
+        $needle = trim($ville);
+        if ($needle === '') {
+            return [];
+        }
+
+        $needle = function_exists('mb_strtolower') ? mb_strtolower($needle) : strtolower($needle);
+
+        $rows = $this->createQueryBuilder('u')
+            ->select('u.id AS id')
+            ->andWhere('LOWER(COALESCE(u.ville, \'\')) = :ville')
+            ->setParameter('ville', $needle)
+            ->getQuery()
+            ->getScalarResult();
+
+        $ids = [];
+        foreach ($rows as $row) {
+            $id = isset($row['id']) ? (int) $row['id'] : 0;
+            if ($id > 0) {
+                $ids[] = $id;
+            }
+        }
+
+        return array_values(array_unique($ids));
+    }
 }

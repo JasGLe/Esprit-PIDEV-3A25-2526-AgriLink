@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; color: #333; }
+        .header { background: #198754; color: white; padding: 20px; margin-bottom: 20px; }
+        .header h1 { font-size: 20px; margin-bottom: 4px; }
+        .header p { font-size: 11px; opacity: .85; }
+        .section-title { font-size: 14px; font-weight: bold; color: #198754;
+                         border-bottom: 2px solid #198754; padding-bottom: 4px; margin: 20px 0 12px; }
+        .kpi-row { display: flex; gap: 12px; margin-bottom: 20px; }
+        .kpi-box { flex: 1; border: 1px solid #dee2e6; border-radius: 8px; padding: 12px; text-align: center; }
+        .kpi-number { font-size: 24px; font-weight: bold; }
+        .kpi-label { font-size: 10px; color: #6c757d; margin-top: 2px; }
+        .kpi-green  { border-left: 4px solid #198754; }
+        .kpi-blue   { border-left: 4px solid #0d6efd; }
+        .kpi-yellow { border-left: 4px solid #ffc107; }
+        .kpi-red    { border-left: 4px solid #dc3545; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
+        th { background: #f8f9fa; padding: 8px; text-align: left; border: 1px solid #dee2e6; font-size: 11px; }
+        td { padding: 7px 8px; border: 1px solid #dee2e6; font-size: 11px; }
+        tr:nth-child(even) td { background: #f8f9fa; }
+        .footer { margin-top: 30px; text-align: center; font-size: 10px; color: #aaa; }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; }
+        .badge-success { background: #d1e7dd; color: #0f5132; }
+        .badge-danger  { background: #f8d7da; color: #842029; }
+        .badge-warning { background: #fff3cd; color: #664d03; }
+        .badge-secondary { background: #e2e3e5; color: #41464b; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📊 Rapport Équipements & Maintenances</h1>
+    <p>Généré le {{ "now"|date("d/m/Y à H:i") }}</p>
+</div>
+
+{# KPIs #}
+<div class="kpi-row">
+    <div class="kpi-box kpi-green">
+        <div class="kpi-number" style="color:#198754">{{ totalEquipements }}</div>
+        <div class="kpi-label">Équipements</div>
+    </div>
+    <div class="kpi-box kpi-blue">
+        <div class="kpi-number" style="color:#0d6efd">{{ totalMaintenances }}</div>
+        <div class="kpi-label">Maintenances</div>
+    </div>
+    <div class="kpi-box kpi-yellow">
+        <div class="kpi-number" style="color:#ffc107">{{ equipParStatut['En maintenance'] ?? 0 }}</div>
+        <div class="kpi-label">En maintenance</div>
+    </div>
+    <div class="kpi-box kpi-red">
+        <div class="kpi-number" style="color:#dc3545">{{ mainEnRetard }}</div>
+        <div class="kpi-label">En retard</div>
+    </div>
+</div>
+
+{# Équipements par statut #}
+<div class="section-title">Équipements par statut</div>
+<table>
+    <thead><tr><th>Statut</th><th>Nombre</th></tr></thead>
+    <tbody>
+        {% for statut, nb in equipParStatut %}
+        <tr>
+            <td>
+                <span class="badge badge-{{ statut == 'Actif' ? 'success' : (statut == 'En panne' ? 'danger' : (statut == 'En maintenance' ? 'warning' : 'secondary')) }}">
+                    {{ statut }}
+                </span>
+            </td>
+            <td>{{ nb }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{# Équipements par type #}
+<div class="section-title">Équipements par type</div>
+<table>
+    <thead><tr><th>Type</th><th>Nombre</th></tr></thead>
+    <tbody>
+        {% for type, nb in equipParType %}
+        <tr><td>{{ type }}</td><td>{{ nb }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{# Maintenances par statut #}
+<div class="section-title">Maintenances par statut</div>
+<table>
+    <thead><tr><th>Statut</th><th>Nombre</th></tr></thead>
+    <tbody>
+        {% for statut, nb in mainParStatut %}
+        <tr><td>{{ statut }}</td><td>{{ nb }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{# Maintenances par type #}
+<div class="section-title">Maintenances par type</div>
+<table>
+    <thead><tr><th>Type</th><th>Nombre</th></tr></thead>
+    <tbody>
+        {% for type, nb in mainParType %}
+        <tr><td>{{ type }}</td><td>{{ nb }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{# Évolution mensuelle #}
+<div class="section-title">Évolution mensuelle (12 derniers mois)</div>
+<table>
+    <thead><tr><th>Mois</th><th>Nb maintenances</th></tr></thead>
+    <tbody>
+        {% for mois, nb in mainParMois %}
+        <tr><td>{{ mois }}</td><td>{{ nb }}</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<div class="footer">AgriLink — Rapport généré automatiquement</div>
+</body>
+</html>

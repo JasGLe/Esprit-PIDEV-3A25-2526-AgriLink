@@ -67,4 +67,48 @@ class LigneCommandeRepository extends ServiceEntityRepository
 
         return (float) $v;
     }
+
+    /**
+     * Pour l’admin : vendeurs distincts par commande (ids utilisateur sur les lignes).
+     *
+     * @param list<int> $commandeIds
+     *
+     * @return array<int, list<int>> id commande => ids fournisseur triés uniques
+     */
+    public function findDistinctFournisseurIdsGroupedByCommande(array $commandeIds): array
+    {
+        if ($commandeIds === []) {
+            return [];
+        }
+
+        $rows = $this->createQueryBuilder('lc')
+            ->select('lc.idCommande AS cid', 'lc.idFournisseur AS fid')
+            ->where('lc.idCommande IN (:ids)')
+            ->andWhere('lc.idFournisseur IS NOT NULL')
+            ->setParameter('ids', $commandeIds)
+            ->getQuery()
+            ->getArrayResult();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $cid = (int) $row['cid'];
+            $fid = (int) $row['fid'];
+            if (!isset($out[$cid])) {
+                $out[$cid] = [];
+            }
+            $out[$cid][$fid] = true;
+        }
+
+        foreach ($commandeIds as $cid) {
+            if (!isset($out[$cid])) {
+                $out[$cid] = [];
+            } else {
+                $ids = array_keys($out[$cid]);
+                sort($ids);
+                $out[$cid] = $ids;
+            }
+        }
+
+        return $out;
+    }
 }

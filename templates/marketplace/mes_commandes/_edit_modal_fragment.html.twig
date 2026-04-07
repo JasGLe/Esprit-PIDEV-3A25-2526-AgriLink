@@ -1,7 +1,7 @@
 <div class="mc-orders-scope mc-order-edit-root" data-mc-order-edit-root>
     <header class="mc-order-edit-head">
         <p class="mc-order-edit-kicker">Modifier la livraison</p>
-        <h2 class="mc-order-edit-title">Commande <span class="mc-num">#{{ commande.numCommande }}</span></h2>
+        <h2 class="mc-order-edit-title">Commande <span class="mc-num">{% if mes_commandes_mode|default('acheteur') == 'vendeur' or mes_commandes_mode|default('acheteur') == 'admin' or app.user.isAgriPlus %}#CMD{{ "%03d"|format(commande.id) }}{% else %}#{{ commande.numCommande }}{% endif %}</span></h2>
         <p class="mc-order-edit-lead">Mettez à jour l’adresse et les coordonnées&nbsp;; elles seront reflétées sur la commande.</p>
     </header>
 

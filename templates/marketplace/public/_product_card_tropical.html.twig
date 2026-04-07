@@ -14,7 +14,11 @@
 
         <div class="tropical-card__media">
             {% if p.image and p.image|trim != '' %}
-                <img src="{{ uploads_base_url }}/cultures/{{ p.image }}" alt="{{ p.nom }}" loading="lazy">
+                {% if is_eq %}
+                    <img src="{{ asset('uploads/equipements/' ~ p.image) }}" alt="{{ p.nom }}" loading="lazy">
+                {% else %}
+                    <img src="{{ uploads_base_url }}/cultures/{{ p.image }}" alt="{{ p.nom }}" loading="lazy">
+                {% endif %}
             {% else %}
                 <div class="tropical-card__placeholder">
                     {% if is_eq %}
