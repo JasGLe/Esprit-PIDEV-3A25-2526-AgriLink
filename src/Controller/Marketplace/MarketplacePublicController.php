@@ -93,6 +93,15 @@ class MarketplacePublicController extends AbstractController
             unset($queryParams['q']);
         }
 
+        $session = $request->getSession();
+        $orderConfirm = $session->get('marketplace_order_confirm');
+        if ($orderConfirm !== null) {
+            $session->remove('marketplace_order_confirm');
+        }
+        if (!\is_array($orderConfirm) || empty($orderConfirm['numCommande'])) {
+            $orderConfirm = null;
+        }
+
         return $this->render('marketplace/public/index.html.twig', [
             'produits' => $produits,
             'vendeurs' => $vendeurs,
@@ -103,6 +112,7 @@ class MarketplacePublicController extends AbstractController
             'filter_q' => trim($request->query->getString('q', '')),
             'query_params' => $queryParams,
             'panier_count' => $panierCount,
+            'order_confirm' => $orderConfirm,
         ]);
     }
 }

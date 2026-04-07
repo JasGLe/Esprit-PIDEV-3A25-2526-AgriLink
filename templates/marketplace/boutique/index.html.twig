@@ -4,52 +4,296 @@
 {% block page_title %}Ma Boutique{% endblock %}
 
 {% block dashboard_content %}
-    <div class="mb-4">
+    <style>
+    :root {
+        /* Two-shade green system (pro + calming) */
+        --bq-green-700: #166534;   /* deep emerald */
+        --bq-green-600: #15803d;
+        --bq-green-500: #22c55e;
+        --bq-green-200: #bbf7d0;   /* mint */
+        --bq-green-100: #dcfce7;   /* light mint */
+        --bq-surface: rgba(255,255,255,0.78);
+        --bq-border: rgba(22,101,52,0.18);
+        --bq-shadow: 0 10px 24px rgba(22, 163, 74, 0.14);
+    }
+    .boutique-page .boutique-media {
+    aspect-ratio: 4 / 3;
+    max-height: 145px;
+    background: linear-gradient(145deg, #1a4731 0%, #166534 30%, #15803d 60%, #3f6212 100%);
+    border-bottom: 1px solid #166534;
+    box-shadow: inset 0 -2px 8px rgba(0,0,0,0.12);
+}
+    .boutique-hero {
+        background: linear-gradient(135deg, var(--bq-green-100) 0%, var(--bq-green-200) 100%);
+        border: 1px solid var(--bq-border);
+        border-radius: .95rem;
+        padding: .9rem 1rem;
+        margin-bottom: .95rem;
+        box-shadow: var(--bq-shadow);
+    }
+    .boutique-hero__title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--bq-green-700);
+        margin-bottom: .2rem;
+        letter-spacing: -.01em;
+    }
+    .boutique-hero__lead {
+        margin: 0;
+        font-size: .84rem;
+        color: rgba(22,101,52,0.92);
+        line-height: 1.45;
+    }
+    .boutique-hero__lead strong {
+        color: var(--bq-green-600);
+        font-weight: 700;
+    }
+    .boutique-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        border-radius: 999px;
+        padding: .2rem .55rem;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+    .boutique-chip--active {
+        color: var(--bq-green-700);
+        background: rgba(34, 197, 94, 0.16);
+        border: 1px solid rgba(34, 197, 94, 0.32);
+    }
+    .boutique-chip--hidden {
+        color: rgba(22,101,52,0.72);
+        background: rgba(220, 252, 231, 0.70);
+        border: 1px solid rgba(22,101,52,0.16);
+    }
+    .boutique-actions-top .btn {
+        border-radius: .72rem;
+        font-size: .78rem;
+        font-weight: 700;
+        padding: .48rem .8rem;
+        transition: all .18s ease;
+        border-width: 1px;
+    }
+    .boutique-btn-marketplace {
+        background: linear-gradient(135deg, var(--bq-green-200) 0%, rgba(34,197,94,0.28) 100%);
+        color: var(--bq-green-700) !important;
+        border-color: rgba(22, 163, 74, 0.28) !important;
+        box-shadow: 0 6px 16px rgba(22, 163, 74, 0.18);
+    }
+    .boutique-btn-marketplace:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(22, 163, 74, 0.22);
+    }
+    .boutique-btn-return {
+        background: rgba(255,255,255,0.92);
+        color: var(--bq-green-700) !important;
+        border-color: rgba(22, 163, 74, 0.22) !important;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.12);
+    }
+    .boutique-btn-return:hover {
+        background: var(--bq-green-100);
+        color: var(--bq-green-700) !important;
+        transform: translateY(-1px);
+    }
+    .boutique-page .boutique-card {
+        border: 1px solid var(--bq-border);
+        border-radius: 0.9rem;
+        background: linear-gradient(160deg, rgba(255,255,255,0.92) 0%, rgba(220,252,231,0.55) 100%);
+        box-shadow: 0 8px 18px rgba(22, 163, 74, 0.10);
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .boutique-page .boutique-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(22, 163, 74, 0.16);
+        border-color: rgba(22, 163, 74, 0.35);
+    }
+    .boutique-page .boutique-media {
+        aspect-ratio: 4 / 3;
+        max-height: 145px;
+        background: linear-gradient(135deg, rgba(22,101,52,0.14) 0%, rgba(220,252,231,0.82) 100%);
+        border-bottom: 1px solid rgba(22,101,52,0.14);
+    }
+    .boutique-page .boutique-card .card-body {
+        padding: .72rem .78rem;
+    }
+    .boutique-page .boutique-card .h6 {
+        font-size: 1rem;
+        margin-bottom: .15rem;
+    }
+    .boutique-page .boutique-card .small {
+        font-size: .78rem !important;
+    }
+    .boutique-page .boutique-actions .btn {
+        padding: .26rem .5rem;
+        font-size: .75rem;
+    }
+
+    /* Boutique search + category filter */
+    .boutique-tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+        align-items: center;
+        justify-content: space-between;
+        margin: .2rem 0 1rem;
+    }
+    .boutique-search {
+        flex: 1 1 18rem;
+        min-width: 16rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .55rem .65rem;
+        border-radius: .95rem;
+        background: var(--bq-surface);
+        border: 1px solid var(--bq-border);
+        box-shadow: 0 10px 18px rgba(22,163,74,0.10);
+    }
+    .boutique-search__icon { color: var(--bq-green-700); opacity:.85; }
+    .boutique-search__input {
+        border: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        color: var(--bq-green-700) !important;
+        font-weight: 700;
+        font-size: .9rem;
+        padding: .2rem 0 !important;
+    }
+    .boutique-search__hint { font-size:.72rem; color: rgba(22,101,52,0.88); margin-top:.15rem; }
+    .boutique-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .45rem;
+        align-items: center;
+        justify-content: flex-end;
+        flex: 1 1 22rem;
+    }
+    .boutique-filter__chip {
+        border-radius: 999px;
+        padding: .32rem .7rem;
+        font-size: .74rem;
+        font-weight: 800;
+        border: 1px solid rgba(22,101,52,0.18);
+        background: rgba(255,255,255,0.86);
+        color: var(--bq-green-700);
+        cursor: pointer;
+        user-select: none;
+        transition: all .15s ease;
+    }
+    .boutique-filter__chip:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(22,163,74,0.12); }
+    .boutique-filter__chip.is-active {
+        background: linear-gradient(135deg, rgba(34,197,94,0.22) 0%, var(--bq-green-200) 100%);
+        border-color: rgba(22,101,52,0.26);
+        color: var(--bq-green-700);
+        box-shadow: 0 10px 18px rgba(22,163,74,0.18);
+    }
+    .boutique-empty-live {
+        border: 1px dashed rgba(22,163,74,0.28);
+        background: rgba(240,253,244,0.70);
+        border-radius: .95rem;
+        padding: 2.2rem 1rem;
+        text-align: center;
+        color:#14532d;
+        box-shadow: 0 10px 24px rgba(22,163,74,0.10);
+    }
+</style>
+
+    <div class="boutique-page">
+    <div class="boutique-hero">
         <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
             <div>
-                <p class="text-muted small mb-0">Gérez vos annonces ici. <strong>Actif</strong> = visible sur le <a href="{{ path('marketplace_index') }}" class="text-success text-decoration-none fw-medium">Marketplace</a> public ; <strong>Masqué</strong> = réservé à votre espace.</p>
+                <h2 class="boutique-hero__title">Gérez vos produits en toute simplicité</h2>
+                <p class="boutique-hero__lead mb-2">Retrouvez ici toutes vos annonces boutique, mettez-les à jour rapidement et contrôlez leur visibilité.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="boutique-chip boutique-chip--active">● Actif : visible sur le Marketplace</span>
+                    <span class="boutique-chip boutique-chip--hidden">● Masqué : visible uniquement dans votre espace</span>
+                </div>
             </div>
-            <div class="d-flex flex-wrap gap-2">
-                <a href="{{ path('marketplace_index') }}" class="btn btn-outline-warning btn-sm fw-semibold text-dark border-warning">
+            <div class="d-flex flex-wrap gap-2 boutique-actions-top">
+                <a href="{{ path('marketplace_index') }}" class="btn boutique-btn-marketplace">
                     <svg style="width:1rem;height:1rem;" class="me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
-                    Voir le marketplace public
+                    Voir Marketplace
                 </a>
-                <a href="{{ path('exploitation_index') }}" class="btn btn-outline-success btn-sm fw-medium">
-                    ← Retour aux exploitations
+                <a href="{{ path('exploitation_index') }}" class="btn boutique-btn-return">
+                    ← Retour
                 </a>
             </div>
         </div>
     </div>
 
-    <p class="small text-muted mb-4">
-        {{ produits|length }} annonce{{ produits|length > 1 ? 's' : '' }} dans votre boutique.
+    <p class="small text-muted mb-3">
+        <span id="boutiqueCount">{{ produits|length }}</span> annonce{{ produits|length > 1 ? 's' : '' }} dans votre boutique.
     </p>
+
+    <div class="boutique-tools">
+        <div class="flex-grow-1">
+            <div class="boutique-search" role="search" aria-label="Recherche boutique">
+                <span class="boutique-search__icon" aria-hidden="true">⌕</span>
+                <input type="search"
+                       id="boutiqueSearchInput"
+                       class="form-control boutique-search__input"
+                       placeholder="Rechercher par nom ou catégorie…"
+                       autocomplete="off">
+            </div>
+            <div class="boutique-search__hint">Recherche: <strong>nom</strong> du produit ou <strong>catégorie</strong>.</div>
+        </div>
+        <div class="boutique-filter" aria-label="Filtre catégorie">
+            <button type="button" class="boutique-filter__chip is-active" data-bcat="all">Tout</button>
+            <button type="button" class="boutique-filter__chip" data-bcat="legume">Légume</button>
+            <button type="button" class="boutique-filter__chip" data-bcat="fruit">Fruit</button>
+            <button type="button" class="boutique-filter__chip" data-bcat="graines">Graines</button>
+            <button type="button" class="boutique-filter__chip" data-bcat="equipement">Équipement</button>
+        </div>
+    </div>
 
     {% if produits is empty %}
         <div class="text-center py-5 rounded-3 border border-dashed border-secondary bg-white shadow-sm">
             <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width:4rem;height:4rem;background:rgba(34,197,94,0.12);">
                 <svg style="width:2rem;height:2rem;color:#16a34a;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                </svg>
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3C9 3 5 6 5 10c0 2.5 1.5 4.5 3 6l1 5h6l1-5c1.5-1.5 3-3.5 3-6 0-4-4-7-7-7z"/>
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 21h6M12 3v2M7.5 6.5l1 1M16.5 6.5l-1 1"/>
+</svg>
             </div>
             <p class="text-muted mb-3">Aucune annonce pour le moment.</p>
             <p class="small text-muted mb-0">Depuis <strong>Mes exploitations</strong>, ouvrez une culture et cliquez sur <strong>Mettre en vente</strong>.</p>
         </div>
     {% else %}
-        <div class="row g-4">
+        <div class="row g-3" id="boutiqueGrid">
             {% for p in produits %}
-                <div class="col-12 col-sm-6 col-xl-4">
-                    <div class="card border-0 shadow-sm h-100 overflow-hidden">
-                        <div class="ratio ratio-4x3 bg-light d-flex align-items-center justify-content-center">
+                {% set cat_parts = ' · ' in p.categorie ? p.categorie|split(' · ', 2) : [p.categorie] %}
+                {% set cat_label = (cat_parts[0]|default(''))|lower %}
+                {% set cat_key =
+                    (p.equipementId is not null) ? 'equipement'
+                    : (cat_label matches '/fruit/' ? 'fruit'
+                    : (cat_label matches '/grain/' ? 'graines'
+                    : (cat_label matches '/l[ée]gume|legume/' ? 'legume' : 'all'))) %}
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="card boutique-card h-100 overflow-hidden boutique-item"
+                         data-bname="{{ (p.nom|default(''))|lower|e('html_attr') }}"
+                         data-bcat="{{ cat_key }}"
+                         data-bcatlabel="{{ (cat_parts[0]|default(''))|lower|e('html_attr') }}">
+                        <div class="ratio ratio-4x3 boutique-media d-flex align-items-center justify-content-center">
                             {% if p.image and p.image|trim != '' %}
-                                <img src="{{ uploads_base_url }}/cultures/{{ p.image }}"
+                                {% if p.equipementId is not null %}
+                                    <img src="{{ asset('uploads/equipements/' ~ p.image) }}"
+                                         alt="{{ p.nom }}"
+                                         class="object-fit-cover w-100 h-100"
+                                         onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'fs-1 text-success',textContent:'🛠️'}))">
+                                {% else %}
+                                    <img src="{{ uploads_base_url }}/cultures/{{ p.image }}"
                                      alt="{{ p.nom }}"
                                      class="object-fit-cover w-100 h-100"
                                      onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'fs-1 text-success',textContent:'🌱'}))">
+                                {% endif %}
                             {% else %}
-                                <span class="fs-1 text-success">🌱</span>
+                               <svg style="width:3rem;height:3rem;color:#4ade80;opacity:.85;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 2C9 2 5 5.5 5 9.5c0 2.8 1.5 5.2 4 6.8V19h6v-2.7c2.5-1.6 4-4 4-6.8C19 5.5 15 2 12 2z"/>
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19h6M12 2v4M7 7l1.5 1.5M17 7l-1.5 1.5"/>
+</svg>
                             {% endif %}
                         </div>
                         <div class="card-body d-flex flex-column">
@@ -62,13 +306,12 @@
                                 <span class="text-muted">{{ p.quantite }} en stock</span>
                             </div>
                             <h3 class="h6 fw-bold text-dark mb-1">{{ p.nom }}</h3>
-                            {% set cat_parts = ' · ' in p.categorie ? p.categorie|split(' · ', 2) : [p.categorie] %}
                             <p class="small text-muted mb-2">{{ cat_parts[0] }}</p>
                             <p class="fw-bold text-success mb-3">{{ p.prixUnitaire|number_format(3, ',', ' ') }} DT{% if cat_parts[1] is defined %} / {{ cat_parts[1] }}{% endif %}</p>
                             {% if p.description %}
                                 <p class="small text-muted flex-grow-1 mb-3">{{ p.description|length > 120 ? p.description|slice(0, 117) ~ '…' : p.description }}</p>
                             {% endif %}
-                            <div class="d-flex flex-wrap gap-2 mt-auto">
+                            <div class="d-flex flex-wrap gap-1 mt-auto boutique-actions">
                                 <form action="{{ path('boutique_produit_basculer', {id: p.id}) }}" method="post" class="d-inline">
                                     <input type="hidden" name="_token" value="{{ csrf_token('boutique_visible' ~ p.id) }}">
                                     <button type="submit" class="btn btn-sm btn-outline-secondary">
@@ -89,7 +332,7 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </button>
-                                <form action="{{ path('boutique_produit_supprimer', {id: p.id}) }}" method="post" class="d-inline" onsubmit="return confirm('Supprimer cette annonce ?');">
+                                <form action="{{ path('boutique_produit_supprimer', {id: p.id}) }}" method="post" class="d-inline js-boutique-delete-form" data-boutique-product="{{ p.nom|e('html_attr') }}">
                                     <input type="hidden" name="_token" value="{{ csrf_token('boutique_supprimer' ~ p.id) }}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
                                         <svg style="width:0.9rem;height:0.9rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -103,7 +346,13 @@
                 </div>
             {% endfor %}
         </div>
+        <div id="boutiqueLiveEmpty" class="boutique-empty-live d-none">
+            <div style="font-size:2rem;line-height:1;">🔎</div>
+            <p class="mb-1 fw-bold">Aucun résultat</p>
+            <p class="mb-0 small" style="color:#166534;">Essayez un autre nom ou changez la catégorie.</p>
+        </div>
     {% endif %}
+    </div>
 
     {# Modal modifier l’annonce (reste sur /boutique) #}
     <div class="modal fade" id="modalEditBoutiqueAnnonce" tabindex="-1" aria-labelledby="modalEditBoutiqueAnnonceLabel" aria-hidden="true">
@@ -111,6 +360,28 @@
             <div class="modal-content border-0 bg-transparent shadow-none">
                 <div id="modalEditBoutiqueAnnonceBody" class="p-0">
                     <div class="text-center py-5 text-muted small">Chargement…</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalBoutiqueDeleteConfirm" tabindex="-1" aria-labelledby="modalBoutiqueDeleteConfirmLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content boutique-confirm__content border-0 shadow-lg">
+                <div class="modal-header boutique-confirm__header border-0">
+                    <h2 class="modal-title h6 mb-0 boutique-confirm__title" id="modalBoutiqueDeleteConfirmLabel">
+                        <span class="boutique-confirm__icon" aria-hidden="true">🗑️</span>
+                        Supprimer l’annonce
+                    </h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body boutique-confirm__body">
+                    <p class="mb-0">Cette action est définitive.</p>
+                    <p class="mb-0 text-muted small">Annonce : <strong class="js-boutique-delete-name">—</strong></p>
+                </div>
+                <div class="modal-footer boutique-confirm__footer border-0">
+                    <button type="button" class="btn btn-sm btn-outline-secondary boutique-confirm__btn-cancel" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-sm btn-danger boutique-confirm__btn-confirm js-boutique-delete-confirm">Supprimer</button>
                 </div>
             </div>
         </div>
@@ -189,6 +460,106 @@
 
         modalEl.addEventListener('hidden.bs.modal', function () {
             bodyEl.innerHTML = '<div class="text-center py-5 text-muted small">Chargement…</div>';
+        });
+    })();
+    </script>
+
+    <script>
+    (function () {
+        var input = document.getElementById('boutiqueSearchInput');
+        var chips = Array.prototype.slice.call(document.querySelectorAll('.boutique-filter__chip'));
+        var items = Array.prototype.slice.call(document.querySelectorAll('.boutique-item'));
+        var countEl = document.getElementById('boutiqueCount');
+        var emptyEl = document.getElementById('boutiqueLiveEmpty');
+        var activeCat = 'all';
+
+        function norm(s) {
+            return String(s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+        }
+
+        function apply() {
+            var q = input ? norm(input.value) : '';
+            var visible = 0;
+            items.forEach(function (el) {
+                var name = norm(el.getAttribute('data-bname'));
+                var catLabel = norm(el.getAttribute('data-bcatlabel'));
+                var cat = el.getAttribute('data-bcat') || 'all';
+
+                var matchCat = activeCat === 'all' || cat === activeCat;
+                var matchQ = q === '' || name.indexOf(q) !== -1 || catLabel.indexOf(q) !== -1;
+                var show = matchCat && matchQ;
+                el.closest('.col-12')?.classList.toggle('d-none', !show);
+                if (show) visible += 1;
+            });
+
+            if (countEl) countEl.textContent = String(visible);
+            if (emptyEl) emptyEl.classList.toggle('d-none', visible > 0);
+        }
+
+        if (input) {
+            input.addEventListener('input', apply);
+            input.addEventListener('search', apply);
+        }
+
+        chips.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                chips.forEach(function (b) { b.classList.remove('is-active'); });
+                btn.classList.add('is-active');
+                activeCat = btn.getAttribute('data-bcat') || 'all';
+                apply();
+            });
+        });
+
+        apply();
+    })();
+    </script>
+
+    <style>
+        .boutique-confirm__content { border-radius: 1rem; overflow: hidden; }
+        .boutique-confirm__header { background: linear-gradient(90deg, rgba(220,38,38,0.10), rgba(245,158,11,0.06)); }
+        .boutique-confirm__title { display:flex; align-items:center; gap:.5rem; font-weight:700; }
+        .boutique-confirm__icon { width:1.8rem; height:1.8rem; border-radius:.6rem; display:inline-flex; align-items:center; justify-content:center; background:rgba(220,38,38,0.10); }
+        .boutique-confirm__body { padding: 1rem 1rem 0.75rem; }
+        .boutique-confirm__footer { padding: 0.75rem 1rem 1rem; display:flex; gap:.5rem; }
+        .boutique-confirm__btn-confirm { border-radius: .6rem; }
+        .boutique-confirm__btn-cancel { border-radius: .6rem; }
+    </style>
+
+    <script>
+    (function () {
+        const modalEl = document.getElementById('modalBoutiqueDeleteConfirm');
+        if (!modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static' });
+        const nameEl = modalEl.querySelector('.js-boutique-delete-name');
+        const confirmBtn = modalEl.querySelector('.js-boutique-delete-confirm');
+        let pendingForm = null;
+
+        document.addEventListener('submit', function (event) {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement)) return;
+            if (!form.classList.contains('js-boutique-delete-form')) return;
+
+            event.preventDefault();
+            pendingForm = form;
+            if (nameEl) {
+                nameEl.textContent = form.getAttribute('data-boutique-product') || 'cette annonce';
+            }
+            modal.show();
+        }, true);
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function () {
+                if (!pendingForm) { modal.hide(); return; }
+                const form = pendingForm;
+                pendingForm = null;
+                modal.hide();
+                form.submit();
+            });
+        }
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            pendingForm = null;
         });
     })();
     </script>

@@ -253,7 +253,11 @@
                                     <li class="mpc-recap__line">
                                         <div class="mpc-recap__thumb">
                                             {% if p and p.image and p.image|trim != '' %}
-                                                <img src="{{ uploads_base_url }}/cultures/{{ p.image }}" alt="" loading="lazy" width="56" height="56">
+                                                {% if p.equipementId is not null %}
+                                                    <img src="{{ asset('uploads/equipements/' ~ p.image) }}" alt="" loading="lazy" width="56" height="56">
+                                                {% else %}
+                                                    <img src="{{ uploads_base_url }}/cultures/{{ p.image }}" alt="" loading="lazy" width="56" height="56">
+                                                {% endif %}
                                             {% else %}
                                                 <span class="mpc-recap__thumb-ph" aria-hidden="true"><i class="bi bi-basket3"></i></span>
                                             {% endif %}

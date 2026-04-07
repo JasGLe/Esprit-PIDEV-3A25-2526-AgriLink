@@ -1,0 +1,63 @@
+<div class="modal fade" id="mcDeleteConfirmModal" tabindex="-1" aria-labelledby="mcDeleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content boutique-confirm__content border-0 shadow-lg">
+            <div class="modal-header boutique-confirm__header border-0">
+                <h2 class="modal-title h6 mb-0 boutique-confirm__title" id="mcDeleteConfirmModalLabel">
+                    <span class="boutique-confirm__icon" aria-hidden="true">🗑️</span>
+                    Supprimer la commande
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body boutique-confirm__body">
+                <p class="mb-1">Cette action est définitive et ne peut pas être annulée.</p>
+                
+            </div>
+            <div class="modal-footer boutique-confirm__footer border-0">
+                <button type="button" class="btn btn-sm btn-outline-secondary boutique-confirm__btn-cancel" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-sm btn-danger boutique-confirm__btn-confirm js-mc-delete-confirm">Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var modalEl = document.getElementById('mcDeleteConfirmModal');
+    if (!modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
+
+    var modal = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static' });
+    var orderRefEl = modalEl.querySelector('.js-mc-delete-order-ref');
+    var confirmBtn = modalEl.querySelector('.js-mc-delete-confirm');
+    var pendingForm = null;
+
+    document.addEventListener('submit', function (event) {
+        var form = event.target;
+        if (!(form instanceof HTMLFormElement)) return;
+        if (!form.classList.contains('js-mc-delete-form')) return;
+
+        event.preventDefault();
+        pendingForm = form;
+        if (orderRefEl) {
+            orderRefEl.textContent = form.getAttribute('data-mc-order-ref') || 'cette commande';
+        }
+        modal.show();
+    }, true);
+
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', function () {
+            if (!pendingForm) {
+                modal.hide();
+                return;
+            }
+            var form = pendingForm;
+            pendingForm = null;
+            modal.hide();
+            form.submit();
+        });
+    }
+
+    modalEl.addEventListener('hidden.bs.modal', function () {
+        pendingForm = null;
+    });
+})();
+</script>

@@ -96,9 +96,9 @@
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span class="small fw-medium">Mes Exploitations</span>
+                    <span class="small fw-medium">Exploitations agricoles</span>
                 </a>
-                <a href="#" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'carte' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                {# <a href="#" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'carte' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                     </svg>
@@ -108,9 +108,9 @@
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
-                    <span class="small fw-medium">Statistiques Agricoles</span>
-                </a>
-                 <a href="{{ path('equipement_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'equipement_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                    <span class="small fw-medium">Statistiques Agricoles</span> #}
+                {# </a> #}
+                <a href="{{ path('equipement_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'equipement_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                     </svg>
@@ -143,19 +143,21 @@
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span class="small fw-medium">Marketplace Public</span>
+                    <span class="small fw-medium">Marketplace</span>
                 </a>
+                {% if app.user.isFournisseur or app.user.isAgriculteur %}
                 <a href="{{ path('boutique_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'boutique_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                     </svg>
                     <span class="small fw-medium">Ma Boutique</span>
                 </a>
+                {% endif %}
                 <a href="{{ path('mes_commandes_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'mes_commandes_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                     </svg>
-                    <span class="small fw-medium">Mes Commandes</span>
+                    <span class="small fw-medium">{% if is_granted('ROLE_ADMIN') %}Gestion des commandes{% else %}Mes commandes{% endif %}</span>
                 </a>
                 {# ── FIN MARKETPLACE ── #}
 
@@ -294,11 +296,11 @@
                         </div>
                         <a href="{{ path('exploitation_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'exploitation' or app.request.attributes.get('_route') starts with 'parcelle' or app.request.attributes.get('_route') starts with 'culture' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22V12m0 0C12 7 7 4 3 5c0 5 3 9 9 7m0 0c0-5 5-8 9-7-1 5-4 8-9 7"/>
                             </svg>
-                            <span class="small fw-medium">Mes Exploitations</span>
+                            <span class="small fw-medium">Exploitations agricoles</span>
                         </a>
-                        <a href="#" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'carte' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        {# <a href="#" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'carte' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                             </svg>
@@ -309,7 +311,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
                             <span class="small fw-medium">Statistiques Agricoles</span>
-                        </a>
+                        </a> #}
                         <a href="{{ path('equipement_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'equipement_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
@@ -339,19 +341,21 @@
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            <span class="small fw-medium">Marketplace Public</span>
+                            <span class="small fw-medium">Marketplace</span>
                         </a>
+                        {% if app.user.isFournisseur or app.user.isAgriculteur %}
                         <a href="{{ path('boutique_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'boutique_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                             </svg>
                             <span class="small fw-medium">Ma Boutique</span>
                         </a>
+                        {% endif %}
                         <a href="{{ path('mes_commandes_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'mes_commandes_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                             </svg>
-                            <span class="small fw-medium">Mes Commandes</span>
+                            <span class="small fw-medium">{% if is_granted('ROLE_ADMIN') %}Gestion des commandes{% else %}Mes commandes{% endif %}</span>
                         </a>
                         {# ── FIN MARKETPLACE ── #}
 

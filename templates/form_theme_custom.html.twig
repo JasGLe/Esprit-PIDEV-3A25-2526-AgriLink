@@ -25,3 +25,9 @@
     {% set attr = attr|merge({'class': (attr.class ?? '') ~ ' form-control' ~ (errors|length > 0 ? ' is-invalid' : '')}) %}
     {{ parent() }}
 {% endblock %}
+
+{# Entiers en saisie texte : pas de contraintes navigateur sur <input type="number"> (validation serveur Symfony). #}
+{% block integer_widget %}
+    {%- set type = 'text' -%}
+    {{- block('form_widget_simple') -}}
+{% endblock %}
