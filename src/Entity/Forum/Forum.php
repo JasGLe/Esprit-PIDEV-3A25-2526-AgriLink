@@ -4,6 +4,7 @@ namespace App\Entity\Forum;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: \App\Repository\Forum\ForumRepository::class)]
 #[ORM\Table(name: 'forum')]
@@ -15,10 +16,22 @@ class Forum
     private int $id;
 
     #[ORM\Column(type: Types::STRING, length: 150)]
+    #[Assert\NotBlank(message: 'Le titre du sujet est obligatoire.')]
+    #[Assert\Length(
+        min: 2,
+        max: 150,
+        minMessage: 'Le titre doit contenir au moins {{ limit }} caracteres.',
+        maxMessage: 'Le titre ne doit pas depasser {{ limit }} caracteres.'
+    )]
     private string $titre;
 
     #[ORM\Column(type: Types::STRING, length: 100)]
-    private string $categorie;
+    #[Assert\NotBlank(message: 'La categorie est obligatoire.')]
+    #[Assert\Choice(
+        choices: ['Agriculture generale', 'Agriculture générale', 'Elevage', 'Élevage', 'Cultures', 'Equipements', 'Équipements', 'Meteo', 'Météo', 'Autre'],
+        message: 'La categorie selectionnee est invalide.'
+    )]
+    private string $categorie = '';
 
     #[ORM\Column(name: 'date_creation', type: Types::DATETIME_MUTABLE)]
     private \DateTimeInterface $dateCreation;
@@ -41,9 +54,10 @@ class Forum
         return $this->titre;
     }
 
-    public function setTitre(string $titre): static
+    public function setTitre(?string $titre): static
     {
-        $this->titre = $titre;
+        $this->titre = $titre ?? '';
+
         return $this;
     }
 
@@ -52,9 +66,10 @@ class Forum
         return $this->categorie;
     }
 
-    public function setCategorie(string $categorie): static
+    public function setCategorie(?string $categorie): static
     {
-        $this->categorie = $categorie;
+        $this->categorie = $categorie ?? '';
+
         return $this;
     }
 
@@ -66,6 +81,7 @@ class Forum
     public function setDateCreation(\DateTimeInterface $dateCreation): static
     {
         $this->dateCreation = $dateCreation;
+
         return $this;
     }
 
@@ -77,6 +93,7 @@ class Forum
     public function setUserId(?int $userId): static
     {
         $this->userId = $userId;
+
         return $this;
     }
 }

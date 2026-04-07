@@ -11,6 +11,36 @@
         <a href="{{ path('forum_new') }}" class="btn btn-success">Nouveau sujet</a>
     </div>
 
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-lg-6">
+                    <label for="forum-search" class="form-label fw-semibold small text-dark">Recherche</label>
+                    <input
+                        id="forum-search"
+                        type="text"
+                        name="q"
+                        value="{{ filters.q|default('') }}"
+                        class="form-control"
+                        placeholder="Rechercher par titre ou categorie"
+                    >
+                </div>
+                <div class="col-12 col-md-4 col-lg-3">
+                    <label for="forum-sort" class="form-label fw-semibold small text-dark">Tri</label>
+                    <select id="forum-sort" name="sort" class="form-select">
+                        <option value="recent" {{ (filters.sort|default('recent')) == 'recent' ? 'selected' : '' }}>Plus recents</option>
+                        <option value="az" {{ (filters.sort|default('recent')) == 'az' ? 'selected' : '' }}>Titre A-Z</option>
+                        <option value="za" {{ (filters.sort|default('recent')) == 'za' ? 'selected' : '' }}>Titre Z-A</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-8 col-lg-3 d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-outline-success">Rechercher</button>
+                    <a href="{{ path('forum_index') }}" class="btn btn-outline-secondary">Reinitialiser</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="row g-4">
         {% for forum in forums %}
             <div class="col-12 col-xl-6">
