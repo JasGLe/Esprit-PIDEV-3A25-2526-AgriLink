@@ -18,6 +18,7 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
         bind:
             string $uploadsBaseDir: '%env(UPLOADS_BASE_DIR)%'
+            string $appUrl: '%env(APP_URL)%'
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     App\:
@@ -30,8 +31,18 @@ services:
     # FileUploader service with explicit parameters
     App\Service\FileUploader:
         arguments:
-            $uploadsBaseDir: '%uploads_base_dir%'
-            $uploadsBaseUrl: '%uploads_base_url%'
+            $uploadsBaseDir: '%env(UPLOADS_BASE_DIR)%'
+            $uploadsBaseUrl: '%env(UPLOADS_BASE_URL)%'
+
+    # OAuthService with credentials from environment
+    App\Service\OAuthService:
+        arguments:
+            $googleClientId: '%env(GOOGLE_CLIENT_ID)%'
+            $googleClientSecret: '%env(GOOGLE_CLIENT_SECRET)%'
+            $googleRedirectUri: '%env(GOOGLE_REDIRECT_URI)%'
+            $facebookAppId: '%env(FACEBOOK_APP_ID)%'
+            $facebookAppSecret: '%env(FACEBOOK_APP_SECRET)%'
+            $facebookRedirectUri: '%env(FACEBOOK_REDIRECT_URI)%'
 
     # Login event listeners
     App\EventListener\LoginSuccessListener:

@@ -10,14 +10,16 @@ use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\IsTrue;
 use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\LessThanOrEqual;
 use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\Regex;
 
 class RegistrationAgriPlusType extends AbstractType
 {
@@ -61,6 +63,10 @@ class RegistrationAgriPlusType extends AbstractType
                     'class' => $inputClass,
                 ],
                 'label_attr' => ['class' => $labelClass],
+                'constraints' => [
+                    new NotBlank(message: 'Le nom est obligatoire.'),
+                    new Length(max: 100, maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.'),
+                ],
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Adresse email',
@@ -69,6 +75,11 @@ class RegistrationAgriPlusType extends AbstractType
                     'class' => $inputClass,
                 ],
                 'label_attr' => ['class' => $labelClass],
+                'constraints' => [
+                    new NotBlank(message: "L'adresse email est obligatoire."),
+                    new Email(message: "L'adresse email '{{ value }}' n'est pas valide."),
+                    new Length(max: 150, maxMessage: "L'email ne peut pas dépasser {{ limit }} caractères."),
+                ],
             ])
             ->add('plainPassword', RepeatedType::class, [
                 'type' => PasswordType::class,
@@ -100,10 +111,15 @@ class RegistrationAgriPlusType extends AbstractType
                 'label' => 'Téléphone',
                 'required' => false,
                 'attr' => [
-                    'placeholder' => '+216 XX XXX XXX',
+                    'placeholder' => '55123456',
                     'class' => $inputClass,
+                    'inputmode' => 'numeric',
+                    'maxlength' => 15,
                 ],
                 'label_attr' => ['class' => $labelClass],
+                'constraints' => [
+                    new Regex(pattern: '/^\d{8,15}$/', message: 'Le numéro de téléphone doit contenir entre 8 et 15 chiffres.'),
+                ],
             ])
             ->add('dateNaissance', DateType::class, [
                 'label' => 'Date de naissance',
@@ -113,6 +129,12 @@ class RegistrationAgriPlusType extends AbstractType
                     'class' => $inputClass,
                 ],
                 'label_attr' => ['class' => $labelClass],
+                'constraints' => [
+                    new LessThanOrEqual(
+                        value: new \DateTimeImmutable('-18 years'),
+                        message: 'Vous devez avoir au moins 18 ans.'
+                    ),
+                ],
             ])
             ->add('gouvernant', ChoiceType::class, [
                 'label' => 'Gouvernorat',
@@ -139,8 +161,12 @@ class RegistrationAgriPlusType extends AbstractType
                 'attr' => [
                     'placeholder' => 'Ex: 1000',
                     'class' => $inputClass,
+                    'maxlength' => 4,
                 ],
                 'label_attr' => ['class' => $labelClass],
+                'constraints' => [
+                    new Regex(pattern: '/^\d{4}$/', message: 'Le code postal doit contenir exactement 4 chiffres.'),
+                ],
             ])
             ->add('agriplusAbonnement', ChoiceType::class, [
                 'label' => 'Plan d\'abonnement',

@@ -16,26 +16,26 @@
 <div class="position-relative d-inline-block {{ classes|default('') }}">
     {% if user.photoProfil %}
         {# Handle different path formats in database:
-           - New format: profiles/filename.jpg → /uploads/profiles/filename.jpg
+           - New format: profiles/filename.jpg → /agrilink/uploads/profiles/filename.jpg
            - Old format 1: agrilink/uploads/profiles/filename.jpg → /agrilink/uploads/profiles/filename.jpg
            - Old format 2: /agrilink/uploads/profiles/filename.jpg
         #}
         {% set photoPath = user.photoProfil %}
         {% if photoPath starts with '/agrilink/' %}
-            {# Old format with leading slash #}
+            {# Already has full path with agrilink #}
             {% set finalPath = photoPath %}
         {% elseif photoPath starts with 'agrilink/' %}
-            {# Old format without leading slash #}
+            {# Has agrilink path without leading slash #}
             {% set finalPath = '/' ~ photoPath %}
         {% elseif photoPath starts with '/uploads/' %}
-            {# New format with leading slash #}
-            {% set finalPath = photoPath %}
+            {# Old uploads format - add agrilink prefix #}
+            {% set finalPath = '/agrilink' ~ photoPath %}
         {% elseif photoPath starts with 'uploads/' %}
-            {# New format without leading slash #}
-            {% set finalPath = '/' ~ photoPath %}
+            {# Old uploads format without leading slash - add agrilink prefix #}
+            {% set finalPath = '/agrilink/' ~ photoPath %}
         {% else %}
-            {# Relative path (new format) - add base URL #}
-            {% set finalPath = '/uploads/' ~ photoPath %}
+            {# Relative path (new format: profiles/filename.jpg) - add full base URL #}
+            {% set finalPath = '/agrilink/uploads/' ~ photoPath %}
         {% endif %}
         
         <img src="{{ finalPath }}" 

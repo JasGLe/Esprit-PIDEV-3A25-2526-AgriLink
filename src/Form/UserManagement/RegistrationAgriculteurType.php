@@ -11,13 +11,14 @@ use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\IsTrue;
 use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\LessThanOrEqual;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Range;
 use Symfony\Component\Validator\Constraints\Regex;
@@ -81,6 +82,8 @@ class RegistrationAgriculteurType extends AbstractType
                 'label_attr' => ['class' => self::LABEL_CLASS],
                 'constraints' => [
                     new NotBlank(message: "L'email est obligatoire."),
+                    new Email(message: "L'adresse email '{{ value }}' n'est pas valide."),
+                    new Length(max: 150, maxMessage: "L'email ne peut pas dépasser {{ limit }} caractères."),
                 ],
             ])
             ->add('plainPassword', RepeatedType::class, [
@@ -116,12 +119,14 @@ class RegistrationAgriculteurType extends AbstractType
                 'label' => 'Téléphone',
                 'required' => false,
                 'attr' => [
-                    'placeholder' => '+216 XX XXX XXX',
+                    'placeholder' => '55123456',
                     'class' => self::INPUT_CLASS,
+                    'inputmode' => 'numeric',
+                    'maxlength' => 15,
                 ],
                 'label_attr' => ['class' => self::LABEL_CLASS],
                 'constraints' => [
-                    new Regex(pattern: '/^[0-9\s\+\-\(\)]+$/', message: "Le numéro de téléphone n'est pas valide."),
+                    new Regex(pattern: '/^\d{8,15}$/', message: 'Le numéro de téléphone doit contenir entre 8 et 15 chiffres.'),
                 ],
             ])
             // Location Information
@@ -133,6 +138,12 @@ class RegistrationAgriculteurType extends AbstractType
                     'class' => self::INPUT_CLASS,
                 ],
                 'label_attr' => ['class' => self::LABEL_CLASS],
+                'constraints' => [
+                    new LessThanOrEqual(
+                        value: new \DateTimeImmutable('-18 years'),
+                        message: 'Vous devez avoir au moins 18 ans.'
+                    ),
+                ],
             ])
             ->add('gouvernant', ChoiceType::class, [
                 'label' => 'Gouvernorat',

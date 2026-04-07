@@ -234,7 +234,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                                 </svg>
                                 {{ form_widget(registrationForm.telephone, {
-                                    'attr': {'class': 'reg-input', 'placeholder': '+216 XX XXX XXX'}
+                                    'attr': {'class': 'reg-input', 'placeholder': '55123456'}
                                 }) }}
                             </div>
                             {{ form_errors(registrationForm.telephone) }}
@@ -775,6 +775,39 @@
 
 /* Utility */
 .text-green { color: #1a7a4a !important; }
+
+/* ── Field validation states (JS-driven only) ─────────── */
+@keyframes reg-shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
+@keyframes reg-slide-down {
+    from { opacity: 0; transform: translateY(-5px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.reg-input.is-valid {
+    border-color: #1a7a4a;
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%231a7a4a' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right .75rem center;
+    background-size: 1rem;
+    box-shadow: 0 0 0 2.5px rgba(26,122,74,.15);
+    transition: border-color .15s, box-shadow .15s;
+}
+.reg-input.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 2.5px rgba(220,53,69,.15);
+    animation: reg-shake .4s;
+    transition: border-color .15s, box-shadow .15s;
+}
+.reg-feedback {
+    font-size: .73rem;
+    color: #dc3545;
+    margin-top: .3rem;
+    animation: reg-slide-down .2s ease;
+}
 </style>
 
 <script>
@@ -865,6 +898,125 @@ document.addEventListener('DOMContentLoaded', function () {
             matchLabel.className = 'pwd-match-label mt-1 nomatch';
         }
     }
+
+    /* ── Numbers-only enforcement ──────────────────────────── */
+    document.querySelectorAll('[name*="[telephone]"], [name*="[codePostale]"]').forEach(function(inp) {
+        inp.setAttribute('inputmode', 'numeric');
+        inp.addEventListener('keydown', function(e) {
+            if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
+                 'Tab','Enter','Home','End'].includes(e.key) || e.ctrlKey || e.metaKey) return;
+            if (!/^\d$/.test(e.key)) e.preventDefault();
+        });
+        inp.addEventListener('input', function() {
+            const pos = this.selectionStart;
+            const clean = this.value.replace(/\D/g, '');
+            if (this.value !== clean) { this.value = clean; this.setSelectionRange(pos, pos); }
+        });
+    });
+
+    /* ── Real-time field validation ────────────────────────── */
+    const RULES = {
+        nom:         { required: true, min: 2, max: 100 },
+        email:       { required: true, email: true },
+        telephone:   { min: 8, max: 15, msg: '8 à 15 chiffres (ex : 55123456)' },
+        codePostale: { pattern: /^\d{4}$/, msg: '4 chiffres exacts (ex : 1000)' },
+    };
+
+    function getErr(id, val) {
+        const key = Object.keys(RULES).find(function(k) { return id.endsWith('_' + k); });
+        if (!key) return null;
+        const r = RULES[key];
+        const v = val.trim();
+        if (r.required && !v) return 'Ce champ est obligatoire.';
+        if (!v) return null;
+        if (r.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))
+            return "Format d'email invalide (ex : nom@exemple.com).";
+        if (r.min && v.length < r.min) return 'Minimum ' + r.min + ' caractères.';
+        if (r.max && v.length > r.max) return 'Maximum ' + r.max + ' caractères.';
+        if (r.pattern && !r.pattern.test(v)) return r.msg || 'Format invalide.';
+        return null;
+    }
+
+    // Find the server-error element for a given input (searches up to column div)
+    function findErrEl(inp) {
+        let p = inp.parentElement;
+        while (p && p !== document.body) {
+            if (p.matches('[class*="col-"]')) {
+                return p.querySelector('.invalid-feedback:not(.reg-feedback)')
+                    || p.querySelector('.reg-err')
+                    || null;
+            }
+            p = p.parentElement;
+        }
+        return null;
+    }
+
+    function applyState(inp, err) {
+        const wrap = inp.closest('.reg-input-wrap') || inp.parentElement;
+
+        // Create/reuse persistent feedback element (lives after the wrap)
+        let fb = wrap.nextElementSibling;
+        if (!fb || !fb.classList.contains('reg-feedback')) {
+            fb = document.createElement('div');
+            fb.className = 'reg-feedback';
+            wrap.insertAdjacentElement('afterend', fb);
+        }
+
+        // Hide any server-rendered Symfony error
+        const serverErr = findErrEl(inp);
+        if (serverErr) serverErr.style.display = 'none';
+
+        if (err) {
+            const alreadyInvalid = inp.classList.contains('is-invalid');
+            inp.classList.remove('is-valid');
+            inp.classList.add('is-invalid');
+            // Re-trigger shake only on first transition to invalid
+            if (!alreadyInvalid) {
+                inp.classList.remove('is-invalid');
+                void inp.offsetWidth;
+                inp.classList.add('is-invalid');
+            }
+            // Re-trigger slide-down only when message text changes
+            if (fb.textContent !== err) {
+                fb.style.animation = 'none';
+                void fb.offsetWidth;
+                fb.style.animation = '';
+                fb.textContent = err;
+            }
+        } else if (inp.value.trim()) {
+            inp.classList.remove('is-invalid');
+            inp.classList.add('is-valid');
+            fb.textContent = '';
+        } else {
+            inp.classList.remove('is-valid', 'is-invalid');
+            fb.textContent = '';
+        }
+    }
+
+    function serverErrVisible(inp) {
+        const el = findErrEl(inp);
+        return el && el.textContent.trim() && el.style.display !== 'none';
+    }
+
+    document.querySelectorAll('.reg-input').forEach(function(inp) {
+        if (inp.tagName === 'SELECT' || inp.type === 'checkbox' || inp.type === 'date') return;
+
+        // Pre-mark as dirty if a server error is already showing
+        let dirty = serverErrVisible(inp);
+
+        inp.addEventListener('blur', function() {
+            dirty = true;
+            applyState(this, getErr(this.id, this.value));
+        });
+
+        inp.addEventListener('input', function() {
+            // Trigger immediately if: already touched, or server error visible, or already invalid
+            if (dirty || serverErrVisible(this) || this.classList.contains('is-invalid')) {
+                dirty = true;
+                applyState(this, getErr(this.id, this.value));
+            }
+        });
+    });
 });
 </script>
 {% endblock %}

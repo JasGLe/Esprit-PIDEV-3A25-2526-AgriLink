@@ -18,7 +18,8 @@ class TwoFactorService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private MailerInterface $mailer,
-        private Environment $twig
+        private Environment $twig,
+        private string $appUrl = 'http://localhost'
     ) {
     }
 
@@ -57,6 +58,7 @@ class TwoFactorService
             'user' => $user,
             'code' => $code,
             'expiration_minutes' => self::OTP_EXPIRATION_MINUTES,
+            'appUrl' => $this->appUrl,
         ]);
 
         $email = (new Email())

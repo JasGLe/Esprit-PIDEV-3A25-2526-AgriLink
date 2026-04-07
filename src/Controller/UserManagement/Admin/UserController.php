@@ -81,7 +81,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/create', name: 'create', methods: ['GET', 'POST'])]
-    public function create(Request $request, ?FileUploader $fileUploader = null): Response
+    public function create(Request $request, FileUploader $fileUploader): Response
     {
         $user = new User();
         
@@ -99,12 +99,10 @@ class UserController extends AbstractController
             }
 
             // Handle profile photo upload
-            if ($fileUploader) {
-                $photoFile = $form->get('profilePhoto')->getData();
-                if ($photoFile) {
-                    $photoFilename = $fileUploader->upload($photoFile, 'avatars');
-                    $user->setPhotoProfil($photoFilename);
-                }
+            $photoFile = $form->get('profilePhoto')->getData();
+            if ($photoFile) {
+                $photoFilename = $fileUploader->upload($photoFile, 'profiles');
+                $user->setPhotoProfil($photoFilename);
             }
 
             // Set email as verified by admin
@@ -124,7 +122,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(User $user, Request $request, ?FileUploader $fileUploader = null): Response
+    public function edit(User $user, Request $request, FileUploader $fileUploader): Response
     {
         $form = $this->createForm(AdminUserType::class, $user, [
             'is_edit' => true,
@@ -140,12 +138,11 @@ class UserController extends AbstractController
             }
 
             // Handle profile photo upload
-            if ($fileUploader) {
-                $photoFile = $form->get('profilePhoto')->getData();
-                if ($photoFile) {
-                    $photoFilename = $fileUploader->upload($photoFile, 'avatars');
-                    $user->setPhotoProfil($photoFilename);
-                }
+            $photoFile = $form->get('profilePhoto')->getData();
+            if ($photoFile) {
+                $oldPhoto = $user->getPhotoProfil();
+                $photoFilename = $fileUploader->upload($photoFile, 'profiles', $oldPhoto);
+                $user->setPhotoProfil($photoFilename);
             }
 
             $this->entityManager->flush();
@@ -215,4 +212,34 @@ class UserController extends AbstractController
 
         return $this->redirectToRoute('admin_users_list');
     }
+
+    #[Route('/{id}/delete-photo', name: 'delete_photo', methods: ['POST'])]
+    public function deletePhoto(User $user, Request $request): Response
+    {
+        // CSRF protection
+        $submittedToken = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('delete-photo-' . $user->getId(), $submittedToken)) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_users_edit', ['id' => $user->getId()]);
+        }
+
+        if ($user->getPhotoProfil()) {
+            // Delete the file from the filesystem
+            $photoPath = $this->getParameter('kernel.project_dir') . '/public/uploads/' . $user->getPhotoProfil();
+            if (file_exists($photoPath)) {
+                unlink($photoPath);
+            }
+            
+            // Clear the photo reference in the database
+            $user->setPhotoProfil(null);
+            $this->entityManager->flush();
+
+            $this->addFlash('success', 'Photo de profil supprimée avec succès.');
+        } else {
+            $this->addFlash('info', 'Aucune photo de profil à supprimer.');
+        }
+
+        return $this->redirectToRoute('admin_users_edit', ['id' => $user->getId()]);
+    }
 }
+

@@ -30,7 +30,9 @@ class PasswordResetService
         #[Autowire('%env(MAILER_FROM_EMAIL)%')]
         private readonly string $senderEmail,
         #[Autowire('%env(MAILER_FROM_NAME)%')]
-        private readonly string $senderName
+        private readonly string $senderName,
+        #[Autowire('%env(APP_URL)%')]
+        private readonly string $appUrl
     ) {
     }
 
@@ -74,6 +76,7 @@ class PasswordResetService
         $htmlContent = $this->twig->render('emails/password_reset.html.twig', [
             'user' => $user,
             'reset_url' => $resetUrl,
+            'appUrl' => $this->appUrl,
         ]);
 
         $email = (new Email())

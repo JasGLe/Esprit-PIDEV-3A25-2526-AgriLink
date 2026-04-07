@@ -12,6 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
@@ -128,7 +129,8 @@ class ProfileController extends AbstractController
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
         MailerInterface $mailer,
-        SecurityEventService $securityEventService
+        SecurityEventService $securityEventService,
+        #[Autowire('%env(APP_URL)%')] string $appUrl
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
@@ -164,6 +166,7 @@ class ProfileController extends AbstractController
                     ->context([
                         'user' => $user,
                         'date' => new \DateTime(),
+                        'appUrl' => $appUrl,
                     ]);
 
                 $mailer->send($email);

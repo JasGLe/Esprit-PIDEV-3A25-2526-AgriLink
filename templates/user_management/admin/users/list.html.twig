@@ -478,7 +478,7 @@
                                 <td>
                                     <div class="d-flex align-items-center">
                                         {% if user.photoProfil %}
-                                            <img src="{{ asset('uploads/' ~ user.photoProfil) }}" alt="{{ user.displayName }}" class="user-avatar me-3">
+                                            <img src="{{ asset('agrilink/uploads/' ~ user.photoProfil) }}" alt="{{ user.displayName }}" class="user-avatar me-3">
                                         {% else %}
                                             {% set colors = ['#667eea,#764ba2', '#11998e,#38ef7d', '#f093fb,#f5576c', '#ffa751,#ffe259', '#4facfe,#00f2fe'] %}
                                             {% set colorIndex = user.id % 5 %}
