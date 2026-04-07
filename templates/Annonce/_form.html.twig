@@ -1,4 +1,5 @@
-{{ form_start(form, {'attr': {'novalidate': 'novalidate'}}) }}
+{{ form_start(form, {'attr': {'novalidate': 'novalidate', 'data-turbo': 'false'}}) }}
+
     <div class="row g-3">
         <div class="col-12">
             {{ form_label(form.titre, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
@@ -47,4 +48,5 @@
         <button type="submit" class="btn btn-success">{{ submit_label|default('Enregistrer') }}</button>
         <a href="{{ path('annonce_index') }}" class="btn btn-outline-secondary">Annuler</a>
     </div>
+
 {{ form_end(form) }}

@@ -1,33 +1,41 @@
-{% extends 'layouts/dashboard_layout.html.twig' %}
-{% block title %}Nouveau sujet - AgriLink{% endblock %}
-{% block page_title %}Nouveau sujet{% endblock %}
+{% extends 'base.html.twig' %}
 
-{% block dashboard_content %}
-    <div class="row g-4">
-        <div class="col-12 col-xl-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4 p-lg-5">
-                    <h2 class="fs-4 fw-bold text-dark mb-1">Creer un sujet</h2>
-                    <p class="text-muted mb-4">Lancez une discussion visible depuis le tableau de bord.</p>
-                    {% include 'Forum/_form.html.twig' with {
-                        form: form,
-                        submit_label: 'Publier le sujet'
-                    } only %}
+{% block title %}Nouvelle annonce{% endblock %}
+
+{% block body %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h2 class="h4 mb-0">Publier une nouvelle annonce</h2>
                 </div>
-            </div>
-        </div>
+                <div class="card-body">
+                    {% for message in app.flashes('success') %}
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                    
+                    {% for message in app.flashes('danger') %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                    
+                    {% for message in app.flashes('warning') %}
+                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
 
-        <div class="col-12 col-xl-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body p-4">
-                    <h3 class="fs-6 fw-bold text-dark mb-3">Conseils</h3>
-                    <ul class="list-unstyled d-flex flex-column gap-3 mb-0 text-muted small">
-                        <li>Choisissez un titre clair pour faciliter la recherche.</li>
-                        <li>Rangez le sujet dans la bonne categorie.</li>
-                        <li>Le fil de discussion conservera ensuite les messages postes.</li>
-                    </ul>
+                    {{ include('Annonce/_form.html.twig', {'submit_label': 'Publier l\'annonce'}) }}
                 </div>
             </div>
         </div>
     </div>
+</div>
 {% endblock %}
