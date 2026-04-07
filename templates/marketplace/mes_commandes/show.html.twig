@@ -1,7 +1,7 @@
 {% extends 'layouts/dashboard_layout.html.twig' %}
 
-{% block title %}Commande #{{ commande.numCommande }} — AgriLink{% endblock %}
-{% block page_title %}{% if mes_commandes_mode == 'vendeur' %}Commande client{% else %}Détail commande{% endif %}{% endblock %}
+{% block title %}Commande {% if mes_commandes_mode == 'vendeur' or mes_commandes_mode == 'admin' or app.user.isAgriPlus %}#CMD{{ "%03d"|format(commande.id) }}{% else %}#{{ commande.numCommande }}{% endif %} — AgriLink{% endblock %}
+{% block page_title %}{% if mes_commandes_mode == 'vendeur' %}Commande client{% elseif mes_commandes_mode == 'admin' %}Gestion de la commande{% else %}Détail commande{% endif %}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -18,6 +18,9 @@
 
 {% include 'marketplace/mes_commandes/_order_edit_modal.html.twig' %}
 {% include 'marketplace/mes_commandes/_delete_confirm_modal.html.twig' %}
+{% if mes_commandes_mode == 'acheteur' %}
+    {% include 'marketplace/mes_commandes/_cancel_request_modal.html.twig' %}
+{% endif %}
 
 <script>
 (function () {

@@ -135,7 +135,7 @@ class CancellationRequests
 
     public function getStatus(): string
     {
-        return $this->status;
+        return (string) $this->status;
     }
 
     public function setStatus(string $status): static

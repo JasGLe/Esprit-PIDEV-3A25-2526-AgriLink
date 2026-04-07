@@ -1,0 +1,249 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block page_title %}Statistiques Équipements{% endblock %}
+
+{% block stylesheets %}
+<style>
+    .stat-card       { border-radius: 12px; border: none; }
+    .stat-number     { font-size: 2.2rem; font-weight: 700; }
+    .stat-label      { font-size: .85rem; color: #6c757d; }
+    .chart-container { position: relative; height: 260px; }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+{# ── Header ── #}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+    <div>
+        <h2 class="fw-bold mb-0">📊 Statistiques</h2>
+        <span class="text-muted">Vue d'ensemble de vos équipements et maintenances</span>
+    </div>
+</div>
+
+{# ── KPI Cards ── #}
+<div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card shadow-sm h-100 border-start border-success border-4">
+            <div class="card-body">
+                <div class="stat-number text-success">{{ totalEquipements }}</div>
+                <div class="stat-label">Équipements total</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card shadow-sm h-100 border-start border-primary border-4">
+            <div class="card-body">
+                <div class="stat-number text-primary">{{ totalMaintenances }}</div>
+                <div class="stat-label">Maintenances total</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card shadow-sm h-100 border-start border-warning border-4">
+            <div class="card-body">
+                <div class="stat-number text-warning">{{ equipParStatut['En maintenance'] ?? 0 }}</div>
+                <div class="stat-label">En maintenance</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="card stat-card shadow-sm h-100 border-start border-danger border-4">
+            <div class="card-body">
+                <div class="stat-number text-danger">{{ mainEnRetard }}</div>
+                <div class="stat-label">Maintenances en retard</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Graphiques ligne 1 ── #}
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">🚜 Équipements par statut</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="chartEquipStatut"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">📦 Par catégorie</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="chartEquipCategorie"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">🔧 Maintenances par type</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="chartMainType"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Graphiques ligne 2 ── #}
+<div class="row g-4 mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">📊 Équipements par type</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="chartEquipType"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold">📋 Maintenances par statut</div>
+            <div class="card-body">
+                <div class="chart-container">
+                    <canvas id="chartMainStatut"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# ── Line chart ── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-white fw-semibold">📈 Évolution des maintenances (12 derniers mois)</div>
+    <div class="card-body">
+        <div class="chart-container" style="height:300px">
+            <canvas id="chartMainMois"></canvas>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const COLORS = {
+    green:  '#198754',
+    blue:   '#0d6efd',
+    yellow: '#ffc107',
+    red:    '#dc3545',
+    gray:   '#6c757d',
+    teal:   '#20c997',
+    orange: '#fd7e14',
+    purple: '#6f42c1',
+};
+
+new Chart(document.getElementById('chartEquipStatut'), {
+    type: 'pie',
+    data: {
+        labels: {{ equipParStatutLabels|json_encode|raw }},
+        datasets: [{
+            data: {{ equipParStatutValeurs|json_encode|raw }},
+            backgroundColor: [COLORS.green, COLORS.red, COLORS.yellow, COLORS.gray],
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+new Chart(document.getElementById('chartEquipCategorie'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ equipParCategorieLabels|json_encode|raw }},
+        datasets: [{
+            data: {{ equipParCategorieValeurs|json_encode|raw }},
+            backgroundColor: [COLORS.blue, COLORS.teal],
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+new Chart(document.getElementById('chartMainType'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ mainParTypeLabels|json_encode|raw }},
+        datasets: [{
+            data: {{ mainParTypeValeurs|json_encode|raw }},
+            backgroundColor: [COLORS.blue, COLORS.orange],
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom' } }
+    }
+});
+
+new Chart(document.getElementById('chartEquipType'), {
+    type: 'bar',
+    data: {
+        labels: {{ equipParTypeLabels|json_encode|raw }},
+        datasets: [{
+            label: 'Nb équipements',
+            data: {{ equipParTypeValeurs|json_encode|raw }},
+            backgroundColor: COLORS.green,
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+});
+
+new Chart(document.getElementById('chartMainStatut'), {
+    type: 'bar',
+    data: {
+        labels: {{ mainParStatutLabels|json_encode|raw }},
+        datasets: [{
+            label: 'Nb maintenances',
+            data: {{ mainParStatutValeurs|json_encode|raw }},
+            backgroundColor: [COLORS.blue, COLORS.yellow, COLORS.green, COLORS.gray],
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+});
+
+new Chart(document.getElementById('chartMainMois'), {
+    type: 'line',
+    data: {
+        labels: {{ mainParMoisLabels|json_encode|raw }},
+        datasets: [{
+            label: 'Maintenances planifiées',
+            data: {{ mainParMoisValeurs|json_encode|raw }},
+            borderColor: COLORS.green,
+            backgroundColor: 'rgba(25,135,84,0.1)',
+            borderWidth: 2,
+            pointRadius: 4,
+            fill: true,
+            tension: 0.3,
+        }]
+    },
+    options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+    }
+});
+</script>
+{% endblock %}

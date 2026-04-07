@@ -128,6 +128,7 @@
         </div>
     </div>
 {% endfor %}
+{# Confirmation de commande : modale (numéro = valeur enregistrée en base, identique à « Mes commandes ») #}
 {% for message in app.flashes('error') %}
     <div class="container-fluid px-2 px-md-3 tropical-page-gutter pt-2">
         <div class="alert alert-danger alert-dismissible fade show mb-0 tropical-flash" role="alert">
@@ -334,6 +335,62 @@
         </div>
     </div>
 </footer>
+
+{% if order_confirm %}
+<div class="modal fade" id="marketplaceOrderConfirmModal" tabindex="-1" aria-labelledby="marketplaceOrderConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg overflow-hidden" style="border-radius:1rem;">
+            <div class="modal-header border-0 text-white py-3" style="background:linear-gradient(135deg,#14532d,#22c55e);">
+                <h2 class="modal-title fs-6 fw-bold mb-0 d-flex align-items-center gap-2" id="marketplaceOrderConfirmTitle">
+                    <i class="bi bi-check-circle-fill" aria-hidden="true"></i>
+                    Commande enregistrée
+                </h2>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body px-4 py-4">
+                <p class="text-secondary small mb-3">Merci ! Votre commande a bien été prise en compte.</p>
+                <p class="mb-1 small text-uppercase fw-semibold text-muted" style="letter-spacing:0.04em;">Numéro de commande</p>
+                <p class="mb-4">
+                    <span class="mc-num--marketplace fs-5 d-inline-block">{% if app.user.isAgriPlus %}#CMD{{ "%03d"|format(order_confirm.commande_id) }}{% else %}#{{ order_confirm.numCommande }}{% endif %}</span>
+                </p>
+                <p class="small text-muted mb-2">
+                    {% if order_confirm.paiement_en_ligne|default(false) %}
+                        Prochaine étape : finaliser le paiement par carte (à venir).
+                    {% else %}
+                        Mode de paiement : <strong>à la livraison</strong>.
+                    {% endif %}
+                </p>
+                <p class="small text-muted mb-0 fst-italic" id="marketplaceOrderConfirmAutoHint">Fermeture automatique dans quelques secondes…</p>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4 pt-0 gap-2">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
+                <a href="{{ path('mes_commandes_index') }}" class="btn btn-success">Voir mes commandes</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var el = document.getElementById('marketplaceOrderConfirmModal');
+    if (!el || typeof bootstrap === 'undefined') return;
+    var modal = bootstrap.Modal.getOrCreateInstance(el, { backdrop: true, keyboard: true });
+    var autoMs = 5000;
+    var hideTimer = null;
+    function clearAutoHide() {
+        if (hideTimer !== null) {
+            clearTimeout(hideTimer);
+            hideTimer = null;
+        }
+    }
+    el.addEventListener('hide.bs.modal', clearAutoHide);
+    modal.show();
+    hideTimer = setTimeout(function () {
+        hideTimer = null;
+        modal.hide();
+    }, autoMs);
+});
+</script>
+{% endif %}
 
 <script>
 (function () {

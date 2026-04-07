@@ -80,4 +80,18 @@ class CommandesRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Toutes les commandes marketplace (administration).
+     *
+     * @return list<Commandes>
+     */
+    public function findAllMarketplaceCommandes(): array
+    {
+        return $this->createQueryBuilder('c')
+            ->orderBy('c.dateCommande', 'DESC')
+            ->addOrderBy('c.id', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
 }

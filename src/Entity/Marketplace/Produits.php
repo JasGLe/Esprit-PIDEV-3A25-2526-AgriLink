@@ -98,6 +98,33 @@ class Produits
 
     public function setImage(?string $image): static
     {
+        if ($image === null || $image === '') {
+            $this->image = $image;
+
+            return $this;
+        }
+
+        // DB column is VARCHAR(50): keep filename safe and preserve extension when possible.
+        $maxLen = 50;
+        $len = function_exists('mb_strlen') ? mb_strlen($image) : strlen($image);
+        if ($len > $maxLen) {
+            $dotPos = strrpos($image, '.');
+            if ($dotPos !== false && $dotPos > 0 && $dotPos < strlen($image) - 1) {
+                $ext = substr($image, $dotPos + 1);
+                $extLen = function_exists('mb_strlen') ? mb_strlen($ext) : strlen($ext);
+                $baseMax = $maxLen - $extLen - 1;
+                if ($baseMax > 0) {
+                    $base = substr($image, 0, $dotPos);
+                    $base = function_exists('mb_substr') ? mb_substr($base, 0, $baseMax) : substr($base, 0, $baseMax);
+                    $image = $base.'.'.$ext;
+                } else {
+                    $image = function_exists('mb_substr') ? mb_substr($image, 0, $maxLen) : substr($image, 0, $maxLen);
+                }
+            } else {
+                $image = function_exists('mb_substr') ? mb_substr($image, 0, $maxLen) : substr($image, 0, $maxLen);
+            }
+        }
+
         $this->image = $image;
 
         return $this;

@@ -2,11 +2,14 @@
 
 namespace App\Controller\Marketplace;
 
+use App\Entity\CancellationRequests;
 use App\Entity\Marketplace\Commandes;
 use App\Entity\UserManagement\User;
 use App\Form\Marketplace\CommandeLivraisonEditType;
+use App\Repository\CancellationRequestsRepository;
 use App\Repository\Marketplace\CommandesRepository;
 use App\Repository\Marketplace\LigneCommandeRepository;
+use App\Repository\UserManagement\UserRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,7 +31,7 @@ class MesCommandesController extends AbstractController
         'ANNULEE' => 'Annulée',
     ];
 
-    /** Choix proposés au vendeur : uniquement la suite logistique (sans les 2 statuts d’attente paiement initial). */
+    /** Vendeur et admin : suite logistique uniquement (pas les statuts « en attente paiement »). */
     private const STATUTS_VENDEUR_ACTION = [
         'EN_PREPARATION' => 'En préparation',
         'EXPEDIEE' => 'Expédiée',
@@ -39,6 +42,8 @@ class MesCommandesController extends AbstractController
     public function __construct(
         private readonly CommandesRepository $commandesRepository,
         private readonly LigneCommandeRepository $ligneCommandeRepository,
+        private readonly UserRepository $userRepository,
+        private readonly CancellationRequestsRepository $cancellationRequestsRepository,
     ) {
     }
 
@@ -48,9 +53,34 @@ class MesCommandesController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $commandes = $this->commandesRepository->findAllMarketplaceCommandes();
+            $counts = $this->countBuckets($commandes);
+            $commandeIds = $this->commandeIdsList($commandes);
+            $pendingMap = $this->cancellationRequestsRepository->findPendingCommandeIdMap($commandeIds);
+
+            return $this->render('marketplace/mes_commandes/index.html.twig', [
+                'mes_commandes_mode' => 'admin',
+                'commandes' => $commandes,
+                'montants_vendeur' => [],
+                'vendeurs_par_commande' => $this->buildVendeurLabelsForCommandesAdmin($commandes),
+                'count_total' => $counts['total'],
+                'count_en_cours' => $counts['en_cours'],
+                'count_livrees' => $counts['livrees'],
+                'count_annulations_attente' => $this->cancellationRequestsRepository->countPendingForCommandeIds($commandeIds),
+                'pending_cancellation_map' => $pendingMap,
+                'buyer_cancel_eligible_map' => [],
+                'statut_choices_seller' => null,
+                'statut_choices_by_commande' => $this->adminStatutChoicesByCommandes($commandes),
+                'deletable_commande_ids' => $this->buildDeletableCommandeIds($commandes, $user, 'admin'),
+            ]);
+        }
+
         if ($this->isMarcheAcheteur()) {
             $commandes = $this->commandesRepository->findForMarketplaceClient($user);
             $counts = $this->countBuckets($commandes);
+            $commandeIds = $this->commandeIdsList($commandes);
+            $pendingMap = $this->cancellationRequestsRepository->findPendingCommandeIdMap($commandeIds);
 
             return $this->render('marketplace/mes_commandes/index.html.twig', [
                 'mes_commandes_mode' => 'acheteur',
@@ -60,13 +90,15 @@ class MesCommandesController extends AbstractController
                 'count_en_cours' => $counts['en_cours'],
                 'count_livrees' => $counts['livrees'],
                 'count_annulations_attente' => 0,
+                'pending_cancellation_map' => $pendingMap,
+                'buyer_cancel_eligible_map' => $this->buildBuyerCancelEligibleMap($commandes, $pendingMap),
                 'statut_choices_seller' => null,
                 'statut_choices_by_commande' => $this->acheteurStatutChoicesByCommandes($commandes),
                 'deletable_commande_ids' => $this->buildDeletableCommandeIds($commandes, $user, 'acheteur'),
             ]);
         }
 
-        if ($this->isGranted('ROLE_AGRICULTEUR')) {
+        if ($this->isMesCommandesVendeurContext()) {
             $sellerId = (int) $user->getId();
             $commandes = $this->commandesRepository->findForMarketplaceVendeur($sellerId);
             $counts = $this->countBuckets($commandes);
@@ -78,6 +110,9 @@ class MesCommandesController extends AbstractController
                 );
             }
 
+            $commandeIds = $this->commandeIdsList($commandes);
+            $pendingMap = $this->cancellationRequestsRepository->findPendingCommandeIdMap($commandeIds);
+
             return $this->render('marketplace/mes_commandes/index.html.twig', [
                 'mes_commandes_mode' => 'vendeur',
                 'commandes' => $commandes,
@@ -85,7 +120,9 @@ class MesCommandesController extends AbstractController
                 'count_total' => $counts['total'],
                 'count_en_cours' => $counts['en_cours'],
                 'count_livrees' => $counts['livrees'],
-                'count_annulations_attente' => $this->countAnnulationsEnAttente($commandes),
+                'count_annulations_attente' => $this->cancellationRequestsRepository->countPendingForCommandeIds($commandeIds),
+                'pending_cancellation_map' => $pendingMap,
+                'buyer_cancel_eligible_map' => [],
                 'statut_choices_seller' => self::STATUTS_VENDEUR_ACTION,
                 'statut_choices_by_commande' => [],
                 'deletable_commande_ids' => $this->buildDeletableCommandeIds($commandes, $user, 'vendeur'),
@@ -95,6 +132,9 @@ class MesCommandesController extends AbstractController
         $commandes = $this->commandesRepository->findForMarketplaceClient($user);
         $counts = $this->countBuckets($commandes);
 
+        $commandeIds = $this->commandeIdsList($commandes);
+        $pendingMap = $this->cancellationRequestsRepository->findPendingCommandeIdMap($commandeIds);
+
         return $this->render('marketplace/mes_commandes/index.html.twig', [
             'mes_commandes_mode' => 'acheteur',
             'commandes' => $commandes,
@@ -103,6 +143,8 @@ class MesCommandesController extends AbstractController
             'count_en_cours' => $counts['en_cours'],
             'count_livrees' => $counts['livrees'],
             'count_annulations_attente' => 0,
+            'pending_cancellation_map' => $pendingMap,
+            'buyer_cancel_eligible_map' => $this->buildBuyerCancelEligibleMap($commandes, $pendingMap),
             'statut_choices_seller' => null,
             'statut_choices_by_commande' => $this->acheteurStatutChoicesByCommandes($commandes),
             'deletable_commande_ids' => $this->buildDeletableCommandeIds($commandes, $user, 'acheteur'),
@@ -115,9 +157,11 @@ class MesCommandesController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        if ($this->isMarcheAcheteur()) {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $commande = $this->findCommandeAdmin($id);
+        } elseif ($this->isMarcheAcheteur()) {
             $commande = $this->findOwnedCommandeAcheteur($id, $user);
-        } elseif ($this->isGranted('ROLE_AGRICULTEUR')) {
+        } elseif ($this->isMesCommandesVendeurContext()) {
             $commande = $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
         } else {
             $commande = $this->findOwnedCommandeAcheteur($id, $user);
@@ -128,6 +172,7 @@ class MesCommandesController extends AbstractController
         return $this->render('marketplace/mes_commandes/_edit_modal_fragment.html.twig', [
             'commande' => $commande,
             'form' => $form,
+            'mes_commandes_mode' => $this->resolveMesCommandesListMode(),
         ]);
     }
 
@@ -137,9 +182,11 @@ class MesCommandesController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        if ($this->isMarcheAcheteur()) {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $commande = $this->findCommandeAdmin($id);
+        } elseif ($this->isMarcheAcheteur()) {
             $commande = $this->findOwnedCommandeAcheteur($id, $user);
-        } elseif ($this->isGranted('ROLE_AGRICULTEUR')) {
+        } elseif ($this->isMesCommandesVendeurContext()) {
             $commande = $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
         } else {
             $commande = $this->findOwnedCommandeAcheteur($id, $user);
@@ -166,6 +213,7 @@ class MesCommandesController extends AbstractController
                     $this->renderView('marketplace/mes_commandes/_edit_modal_fragment.html.twig', [
                         'commande' => $commande,
                         'form' => $form,
+                        'mes_commandes_mode' => $this->resolveMesCommandesListMode(),
                     ]),
                     Response::HTTP_UNPROCESSABLE_ENTITY
                 );
@@ -189,10 +237,13 @@ class MesCommandesController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        if ($this->isMarcheAcheteur()) {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $commande = $this->findCommandeAdmin($id);
+            $mode = 'admin';
+        } elseif ($this->isMarcheAcheteur()) {
             $commande = $this->findOwnedCommandeAcheteur($id, $user);
             $mode = 'acheteur';
-        } elseif ($this->isGranted('ROLE_AGRICULTEUR')) {
+        } elseif ($this->isMesCommandesVendeurContext()) {
             $commande = $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
             $mode = 'vendeur';
         } else {
@@ -201,7 +252,12 @@ class MesCommandesController extends AbstractController
         }
 
         if (!$this->commandeMayBeDeleted($commande, $user, $mode)) {
-            $this->addFlash('error', 'Cette commande ne peut pas être supprimée (livrée, ou panier multi-producteurs).');
+            $this->addFlash(
+                'error',
+                $mode === 'admin'
+                    ? 'La suppression n’est possible que pour une commande livrée ou annulée.'
+                    : 'Cette commande ne peut pas être supprimée (livrée, ou panier multi-producteurs).'
+            );
 
             return $this->redirectToRoute('mes_commandes_index');
         }
@@ -211,6 +267,89 @@ class MesCommandesController extends AbstractController
         }
         $this->commandesRepository->remove($commande, true);
         $this->addFlash('success', 'La commande a été supprimée.');
+
+        return $this->redirectToRoute('mes_commandes_index');
+    }
+
+    #[Route('/{id}/demande-annulation', name: 'cancel_request', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function cancelRequest(Request $request, int $id): Response
+    {
+        if (!$this->isCsrfTokenValid('cancel_request_'.$id, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $commande = $this->findOwnedCommandeAcheteur($id, $user);
+
+        $pendingMap = $this->cancellationRequestsRepository->findPendingCommandeIdMap([$id]);
+        if (!$this->buyerMayRequestCancellation($commande, isset($pendingMap[$id]))) {
+            $this->addFlash('error', 'Une demande d’annulation n’est pas possible (délai de 48 h dépassé, commande non éligible ou demande déjà en cours).');
+
+            return $this->redirectToRoute('mes_commandes_index');
+        }
+
+        $req = new CancellationRequests();
+        $req->setCommandeId($commande->getId());
+        $req->setNumCommande($commande->getNumCommande());
+        $req->setRequestedByUserId((int) $user->getId());
+        $req->setRequestedByEmail($user->getEmail());
+        $req->setRequestedByName(trim((string) $user->getNom()));
+        $req->setRequestedAt(new \DateTimeImmutable());
+        $req->setStatus(CancellationRequestsRepository::STATUS_PENDING);
+        $this->cancellationRequestsRepository->save($req, true);
+        $this->addFlash('success', 'Votre demande d’annulation a été envoyée. Un administrateur ou le vendeur pourra l’accepter ou la refuser.');
+
+        return $this->redirectToRoute('mes_commandes_index');
+    }
+
+    #[Route('/{id}/annulation/accepter', name: 'cancel_approve', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function cancelApprove(Request $request, int $id): Response
+    {
+        if (!$this->isCsrfTokenValid('cancel_approve_'.$id, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $commande = $this->resolveCommandeForCancellationModeration($user, $id);
+
+        $cr = $this->cancellationRequestsRepository->findOnePendingByCommandeId($commande->getId());
+        if ($cr === null) {
+            $this->addFlash('error', 'Aucune demande d’annulation en attente pour cette commande.');
+
+            return $this->redirectToRoute('mes_commandes_index');
+        }
+
+        $this->applyCancellationApproval($commande, $cr, $user);
+        $this->addFlash('success', 'La commande a été annulée (statut : Annulée).');
+
+        return $this->redirectToRoute('mes_commandes_index');
+    }
+
+    #[Route('/{id}/annulation/refuser', name: 'cancel_reject', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function cancelReject(Request $request, int $id): Response
+    {
+        if (!$this->isCsrfTokenValid('cancel_reject_'.$id, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        /** @var User $user */
+        $user = $this->getUser();
+        $commande = $this->resolveCommandeForCancellationModeration($user, $id);
+
+        $cr = $this->cancellationRequestsRepository->findOnePendingByCommandeId($commande->getId());
+        if ($cr === null) {
+            $this->addFlash('error', 'Aucune demande d’annulation en attente pour cette commande.');
+
+            return $this->redirectToRoute('mes_commandes_index');
+        }
+
+        $cr->setStatus(CancellationRequestsRepository::STATUS_REJECTED);
+        $cr->setHandledByUserId((int) $user->getId());
+        $cr->setHandledAt(new \DateTimeImmutable());
+        $this->cancellationRequestsRepository->save($cr, true);
+        $this->addFlash('success', 'La demande d’annulation a été refusée. La commande reste inchangée.');
 
         return $this->redirectToRoute('mes_commandes_index');
     }
@@ -247,10 +386,13 @@ class MesCommandesController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        if ($this->isMarcheAcheteur()) {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $commande = $this->findCommandeAdmin($id);
+            $allowed = array_keys(self::STATUTS_VENDEUR_ACTION);
+        } elseif ($this->isMarcheAcheteur()) {
             $commande = $this->findOwnedCommandeAcheteur($id, $user);
             $allowed = array_keys($this->acheteurStatutChoices($commande));
-        } elseif ($this->isGranted('ROLE_AGRICULTEUR')) {
+        } elseif ($this->isMesCommandesVendeurContext()) {
             $commande = $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
             $allowed = array_keys(self::STATUTS_VENDEUR_ACTION);
         } else {
@@ -271,6 +413,9 @@ class MesCommandesController extends AbstractController
         }
 
         $commande->setStatus($new);
+        if ($new === 'ANNULEE') {
+            $this->closePendingCancellationAsApproved($commande, $user);
+        }
         $this->commandesRepository->save($commande, true);
         $this->addFlash('success', 'Statut de la commande mis à jour.');
 
@@ -283,9 +428,11 @@ class MesCommandesController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
 
-        if ($this->isMarcheAcheteur()) {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $this->findCommandeAdmin($id);
+        } elseif ($this->isMarcheAcheteur()) {
             $this->findOwnedCommandeAcheteur($id, $user);
-        } elseif ($this->isGranted('ROLE_AGRICULTEUR')) {
+        } elseif ($this->isMesCommandesVendeurContext()) {
             $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
         } else {
             $this->findOwnedCommandeAcheteur($id, $user);
@@ -299,6 +446,15 @@ class MesCommandesController extends AbstractController
     private function isMarcheAcheteur(): bool
     {
         return $this->isGranted('ROLE_AGRIPLUS');
+    }
+
+    /**
+     * Commandes « Mes commandes » en tant que vendeur (lignes dont id_fournisseur = utilisateur).
+     * AgriPlus est traité comme acheteur marketplace avant cette branche (voir index / resolveMesCommandesListMode).
+     */
+    private function isMesCommandesVendeurContext(): bool
+    {
+        return $this->isGranted('ROLE_AGRICULTEUR') || $this->isGranted('ROLE_FOURNISSEUR');
     }
 
     /**
@@ -324,22 +480,6 @@ class MesCommandesController extends AbstractController
             'en_cours' => $enCours,
             'livrees' => $livrees,
         ];
-    }
-
-    /**
-     * @param list<Commandes> $commandes
-     */
-    private function countAnnulationsEnAttente(array $commandes): int
-    {
-        $n = 0;
-        foreach ($commandes as $c) {
-            $s = strtolower($c->getStatus());
-            if (str_contains($s, 'annulation') && str_contains($s, 'attente')) {
-                ++$n;
-            }
-        }
-
-        return $n;
     }
 
     private function findOwnedCommandeAcheteur(int $id, User $user): Commandes
@@ -372,6 +512,37 @@ class MesCommandesController extends AbstractController
     }
 
     /**
+     * Admin ou vendeur (agriculteur / fournisseur avec au moins une ligne sur la commande).
+     */
+    private function resolveCommandeForCancellationModeration(User $user, int $id): Commandes
+    {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return $this->findCommandeAdmin($id);
+        }
+        if ($this->isMesCommandesVendeurContext()) {
+            return $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
+        }
+
+        throw $this->createAccessDeniedException();
+    }
+
+    /**
+     * Acceptation d’une demande d’annulation : commande → ANNULEE en base + demande marquée approuvée.
+     */
+    private function applyCancellationApproval(Commandes $commande, CancellationRequests $cr, User $user): void
+    {
+        $commande->setStatus('ANNULEE');
+        $cr->setStatus(CancellationRequestsRepository::STATUS_APPROVED);
+        $cr->setHandledByUserId((int) $user->getId());
+        $cr->setHandledAt(new \DateTimeImmutable());
+
+        $em = $this->commandesRepository->getEntityManager();
+        $em->persist($commande);
+        $em->persist($cr);
+        $em->flush();
+    }
+
+    /**
      * @return 'livree'|'annulee'|'encours'
      */
     private function categorizeStatus(string $status): string
@@ -388,25 +559,101 @@ class MesCommandesController extends AbstractController
     }
 
     /**
+     * @param list<Commandes> $commandes
+     *
+     * @return list<int>
+     */
+    private function commandeIdsList(array $commandes): array
+    {
+        return array_map(static fn (Commandes $c) => $c->getId(), $commandes);
+    }
+
+    /**
+     * @param list<Commandes>     $commandes
+     * @param array<int, true>    $pendingMap
+     *
+     * @return array<int, bool>
+     */
+    private function buildBuyerCancelEligibleMap(array $commandes, array $pendingMap): array
+    {
+        $out = [];
+        foreach ($commandes as $c) {
+            $id = $c->getId();
+            $out[$id] = $this->buyerMayRequestCancellation($c, isset($pendingMap[$id]));
+        }
+
+        return $out;
+    }
+
+    private function buyerMayRequestCancellation(Commandes $commande, bool $hasPendingRequest): bool
+    {
+        if ($hasPendingRequest) {
+            return false;
+        }
+        if (!$this->isWithinBuyerCancellationWindow($commande)) {
+            return false;
+        }
+        if ($this->categorizeStatus($commande->getStatus()) !== 'encours') {
+            return false;
+        }
+        $st = strtoupper($commande->getStatus());
+        if (str_contains($st, 'EXPEDI')) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function isWithinBuyerCancellationWindow(Commandes $commande): bool
+    {
+        $start = \DateTimeImmutable::createFromInterface($commande->getDateCommande());
+        $deadline = $start->modify('+48 hours');
+
+        return new \DateTimeImmutable() <= $deadline;
+    }
+
+    private function closePendingCancellationAsApproved(Commandes $commande, User $user): void
+    {
+        $cr = $this->cancellationRequestsRepository->findOnePendingByCommandeId($commande->getId());
+        if ($cr === null) {
+            return;
+        }
+        $cr->setStatus(CancellationRequestsRepository::STATUS_APPROVED);
+        $cr->setHandledByUserId((int) $user->getId());
+        $cr->setHandledAt(new \DateTimeImmutable());
+        $this->cancellationRequestsRepository->save($cr, false);
+    }
+
+    /**
+     * @return array{
+     *     cancellation_request_pending: bool,
+     *     show_buyer_cancel_request: bool,
+     *     show_cancellation_moderation: bool,
+     *     buyer_cancel_order_ref: string
+     * }
+     */
+    private function cancellationContextForCommande(Commandes $commande, string $mode): array
+    {
+        $pending = $this->cancellationRequestsRepository->findOnePendingByCommandeId($commande->getId()) !== null;
+        $showModeration = $pending && \in_array($mode, ['admin', 'vendeur'], true);
+        $showBuyerCancel = $mode === 'acheteur' && $this->buyerMayRequestCancellation($commande, $pending);
+
+        return [
+            'cancellation_request_pending' => $pending,
+            'show_buyer_cancel_request' => $showBuyerCancel,
+            'show_cancellation_moderation' => $showModeration,
+            'buyer_cancel_order_ref' => '#CMD'.str_pad((string) $commande->getId(), 3, '0', STR_PAD_LEFT),
+        ];
+    }
+
+    /**
+     * L’acheteur ne modifie plus le statut ici : annulation = demande sous 48 h, validée par admin ou vendeur.
+     *
      * @return array<string, string>
      */
     private function acheteurStatutChoices(Commandes $commande): array
     {
-        $s = strtolower($commande->getStatus());
-        if (str_contains($s, 'annul')) {
-            return [];
-        }
-        if (str_contains($s, 'livree') || str_contains($s, 'exped') || str_contains($s, 'livrée') || str_contains($s, 'livré')) {
-            return [];
-        }
-
-        $cur = $commande->getStatus();
-        $label = self::STATUTS_COMMANDE_MARCHE[$cur] ?? ucfirst(strtolower(str_replace('_', ' ', $cur)));
-
-        return [
-            $cur => 'Conserver : '.$label,
-            'ANNULEE' => 'Annuler la commande',
-        ];
+        return [];
     }
 
     /**
@@ -452,7 +699,13 @@ class MesCommandesController extends AbstractController
 
     private function commandeMayBeDeleted(Commandes $commande, User $user, string $mode): bool
     {
-        if ($this->categorizeStatus($commande->getStatus()) === 'livree') {
+        $cat = $this->categorizeStatus($commande->getStatus());
+
+        if ($mode === 'admin') {
+            return $cat === 'livree' || $cat === 'annulee';
+        }
+
+        if ($cat === 'livree') {
             return false;
         }
         if ($mode === 'vendeur') {
@@ -460,6 +713,67 @@ class MesCommandesController extends AbstractController
         }
 
         return true;
+    }
+
+    /**
+     * Libellés vendeurs (noms utilisateurs) pour la liste admin, sans montants.
+     *
+     * @param list<Commandes> $commandes
+     *
+     * @return array<int, string>
+     */
+    private function buildVendeurLabelsForCommandesAdmin(array $commandes): array
+    {
+        if ($commandes === []) {
+            return [];
+        }
+
+        $byId = [];
+        foreach ($commandes as $c) {
+            $byId[$c->getId()] = $c;
+        }
+
+        $commandeIds = array_keys($byId);
+        $grouped = $this->ligneCommandeRepository->findDistinctFournisseurIdsGroupedByCommande($commandeIds);
+
+        foreach ($byId as $cid => $commande) {
+            if (($grouped[$cid] ?? []) === [] && $commande->getIdFournisseur() !== null) {
+                $grouped[$cid] = [(int) $commande->getIdFournisseur()];
+            }
+        }
+
+        $allFids = [];
+        foreach ($grouped as $fids) {
+            foreach ($fids as $fid) {
+                $allFids[$fid] = true;
+            }
+        }
+
+        $nameByUserId = [];
+        if ($allFids !== []) {
+            $users = $this->userRepository->findBy(['id' => array_keys($allFids)]);
+            foreach ($users as $u) {
+                $uid = (int) $u->getId();
+                $label = trim((string) $u->getNom());
+                $nameByUserId[$uid] = $label !== '' ? $label : ('#'.$uid);
+            }
+        }
+
+        $out = [];
+        foreach (array_keys($byId) as $cid) {
+            $fids = $grouped[$cid] ?? [];
+            if ($fids === []) {
+                $out[$cid] = '—';
+                continue;
+            }
+            $labels = [];
+            foreach ($fids as $fid) {
+                $labels[] = $nameByUserId[$fid] ?? ('#'.$fid);
+            }
+            $out[$cid] = implode(', ', array_unique($labels));
+        }
+
+        return $out;
     }
 
     private function sellerOwnsAllLignes(Commandes $commande, int $sellerUserId): bool
@@ -479,10 +793,13 @@ class MesCommandesController extends AbstractController
 
     private function resolveMesCommandesListMode(): string
     {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            return 'admin';
+        }
         if ($this->isMarcheAcheteur()) {
             return 'acheteur';
         }
-        if ($this->isGranted('ROLE_AGRICULTEUR')) {
+        if ($this->isMesCommandesVendeurContext()) {
             return 'vendeur';
         }
 
@@ -509,11 +826,27 @@ class MesCommandesController extends AbstractController
      */
     private function buildOrderDetailVars(int $id, User $user): array
     {
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $commande = $this->findCommandeAdmin($id);
+            $lignes = $this->ligneCommandeRepository->findBy(['idCommande' => $commande->getId()], ['id' => 'ASC']);
+
+            return array_merge([
+                'mes_commandes_mode' => 'admin',
+                'commande' => $commande,
+                'lignes' => $lignes,
+                'montant_vendeur' => null,
+                'has_autres_vendeurs' => false,
+                'statut_choices' => self::STATUTS_VENDEUR_ACTION,
+                'commande_deletable' => $this->commandeMayBeDeleted($commande, $user, 'admin'),
+                'force_statut_edit' => true,
+            ], $this->cancellationContextForCommande($commande, 'admin'));
+        }
+
         if ($this->isMarcheAcheteur()) {
             $commande = $this->findOwnedCommandeAcheteur($id, $user);
             $lignes = $this->ligneCommandeRepository->findBy(['idCommande' => $commande->getId()], ['id' => 'ASC']);
 
-            return [
+            return array_merge([
                 'mes_commandes_mode' => 'acheteur',
                 'commande' => $commande,
                 'lignes' => $lignes,
@@ -521,10 +854,11 @@ class MesCommandesController extends AbstractController
                 'has_autres_vendeurs' => false,
                 'statut_choices' => $this->acheteurStatutChoices($commande),
                 'commande_deletable' => $this->commandeMayBeDeleted($commande, $user, 'acheteur'),
-            ];
+                'force_statut_edit' => false,
+            ], $this->cancellationContextForCommande($commande, 'acheteur'));
         }
 
-        if ($this->isGranted('ROLE_AGRICULTEUR')) {
+        if ($this->isMesCommandesVendeurContext()) {
             $sellerId = (int) $user->getId();
             $commande = $this->findAccessibleCommandeVendeur($id, $sellerId);
             $lignes = $this->ligneCommandeRepository->findByCommandeAndFournisseur($commande->getId(), $sellerId);
@@ -532,7 +866,7 @@ class MesCommandesController extends AbstractController
             $toutesLignes = $this->ligneCommandeRepository->findBy(['idCommande' => $commande->getId()], ['id' => 'ASC']);
             $hasAutres = \count($toutesLignes) > \count($lignes);
 
-            return [
+            return array_merge([
                 'mes_commandes_mode' => 'vendeur',
                 'commande' => $commande,
                 'lignes' => $lignes,
@@ -540,13 +874,14 @@ class MesCommandesController extends AbstractController
                 'has_autres_vendeurs' => $hasAutres,
                 'statut_choices' => self::STATUTS_VENDEUR_ACTION,
                 'commande_deletable' => $this->commandeMayBeDeleted($commande, $user, 'vendeur'),
-            ];
+                'force_statut_edit' => false,
+            ], $this->cancellationContextForCommande($commande, 'vendeur'));
         }
 
         $commande = $this->findOwnedCommandeAcheteur($id, $user);
         $lignes = $this->ligneCommandeRepository->findBy(['idCommande' => $commande->getId()], ['id' => 'ASC']);
 
-        return [
+        return array_merge([
             'mes_commandes_mode' => 'acheteur',
             'commande' => $commande,
             'lignes' => $lignes,
@@ -554,6 +889,33 @@ class MesCommandesController extends AbstractController
             'has_autres_vendeurs' => false,
             'statut_choices' => $this->acheteurStatutChoices($commande),
             'commande_deletable' => $this->commandeMayBeDeleted($commande, $user, 'acheteur'),
-        ];
+            'force_statut_edit' => false,
+        ], $this->cancellationContextForCommande($commande, 'acheteur'));
+    }
+
+    private function findCommandeAdmin(int $id): Commandes
+    {
+        $commande = $this->commandesRepository->find($id);
+        if (!$commande instanceof Commandes) {
+            throw $this->createNotFoundException();
+        }
+
+        return $commande;
+    }
+
+    /**
+     * @param list<Commandes> $commandes
+     *
+     * @return array<int, array<string, string>>
+     */
+    private function adminStatutChoicesByCommandes(array $commandes): array
+    {
+        $all = self::STATUTS_VENDEUR_ACTION;
+        $out = [];
+        foreach ($commandes as $c) {
+            $out[$c->getId()] = $all;
+        }
+
+        return $out;
     }
 }

@@ -16,6 +16,12 @@ use Doctrine\Persistence\ManagerRegistry;
  */
 class AnnonceRepository extends ServiceEntityRepository
 {
+    private const SORTS = [
+        'recent' => ['a.id', 'DESC'],
+        'az' => ['a.titre', 'ASC'],
+        'za' => ['a.titre', 'DESC'],
+    ];
+
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Annonce::class);
@@ -37,5 +43,28 @@ class AnnonceRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    /**
+     * @return Annonce[]
+     */
+    public function findForIndex(?string $search, string $sort): array
+    {
+        $qb = $this->createQueryBuilder('a');
+
+        $search = trim((string) $search);
+        if ($search !== '') {
+            $qb
+                ->andWhere('LOWER(a.titre) LIKE :search OR LOWER(a.type) LIKE :search OR LOWER(a.status) LIKE :search')
+                ->setParameter('search', '%' . mb_strtolower($search) . '%');
+        }
+
+        [$field, $direction] = self::SORTS[$sort] ?? self::SORTS['recent'];
+
+        return $qb
+            ->orderBy($field, $direction)
+            ->addOrderBy('a.id', 'DESC')
+            ->getQuery()
+            ->getResult();
     }
 }

@@ -45,7 +45,7 @@
     {{ form_start(form, {
         action: path('boutique_produit_modifier', {id: produit.id}),
         attr: {
-            class: cancel_is_modal|default(false) ? 'needs-validation boutique-edit-form d-flex flex-column flex-grow-1 min-vh-0 overflow-hidden' : 'needs-validation',
+            class: cancel_is_modal|default(false) ? 'boutique-edit-form d-flex flex-column flex-grow-1 min-vh-0 overflow-hidden' : 'boutique-produit-edit-form',
             novalidate: 'novalidate'
         }
     }) }}
@@ -69,11 +69,18 @@
                         {{ form_errors(form.nom) }}
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label mb-0 pb-1" style="font-size:0.75rem;font-weight:600;color:#374151;" for="{{ form.category.vars.id }}">Catégorie</label>
-                        {{ form_widget(form.category, {attr: {
-                            class: 'form-select form-select-sm'
-                        }}) }}
-                        {{ form_errors(form.category) }}
+                        <label class="form-label mb-0 pb-1" style="font-size:0.75rem;font-weight:600;color:#374151;">Catégorie</label>
+                        {% if not is_equipement|default(false) %}
+                            {{ form_widget(form.category, {attr: {
+                                class: 'form-select form-select-sm'
+                            }}) }}
+                            {{ form_errors(form.category) }}
+                        {% else %}
+                            <div class="form-control form-control-sm d-flex align-items-center fw-semibold"
+                                 style="background-color:#f1f5f9;border-color:#e2e8f0;color:#0f172a;cursor:default;">
+                                Équipement
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -81,6 +88,7 @@
             <div class="{{ cancel_is_modal|default(false) ? 'p-2' : 'p-3' }} rounded-3 bg-white border" style="border-color:#e8edf5!important;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
                 <p class="text-uppercase fw-bold text-secondary mb-2" style="font-size:0.62rem;letter-spacing:0.06em;">Prix &amp; stock</p>
                 <div class="row g-2">
+                    {% if not is_equipement|default(false) %}
                     <div class="col-12 col-md-4">
                         <label class="form-label mb-0 pb-1" style="font-size:0.75rem;font-weight:600;color:#374151;" for="{{ form.uniteVente.vars.id }}">Unité</label>
                         {{ form_widget(form.uniteVente, {attr: {
@@ -88,23 +96,23 @@
                         }}) }}
                         {{ form_errors(form.uniteVente) }}
                     </div>
-                    <div class="col-12 col-md-4">
+                    {% endif %}
+                    <div class="col-12 {{ is_equipement|default(false) ? 'col-md-6' : 'col-md-4' }}">
                         <label class="form-label mb-0 pb-1" style="font-size:0.75rem;font-weight:600;color:#374151;" for="{{ form.prixUnitaire.vars.id }}">Prix</label>
                         <div class="input-group input-group-sm" style="border-radius:0.375rem;overflow:hidden;border:1px solid #e5e7eb;">
                             {{ form_widget(form.prixUnitaire, {attr: {
                                 class: 'form-control border-0',
-                                placeholder: '0.000', step: '0.001', min: '0'
+                                placeholder: '0.000'
                             }}) }}
                             <span class="input-group-text border-0 fw-bold px-2 py-0"
                                   style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:0.7rem;">DT</span>
                         </div>
                         {{ form_errors(form.prixUnitaire) }}
                     </div>
-                    <div class="col-12 col-md-4">
+                    <div class="col-12 {{ is_equipement|default(false) ? 'col-md-6' : 'col-md-4' }}">
                         <label class="form-label mb-0 pb-1" style="font-size:0.75rem;font-weight:600;color:#374151;" for="{{ form.quantite.vars.id }}">Quantité</label>
                         {{ form_widget(form.quantite, {attr: {
-                            class: 'form-control form-control-sm',
-                            min: '1'
+                            class: 'form-control form-control-sm'
                         }}) }}
                         {{ form_errors(form.quantite) }}
                     </div>

@@ -1,7 +1,7 @@
 {% extends 'layouts/dashboard_layout.html.twig' %}
 
-{% block title %}Mes commandes — AgriLink{% endblock %}
-{% block page_title %}Mes commandes{% endblock %}
+{% block title %}{% if mes_commandes_mode == 'admin' %}Gestion des commandes — AgriLink{% else %}Mes commandes — AgriLink{% endif %}{% endblock %}
+{% block page_title %}{% if mes_commandes_mode == 'admin' %}Gestion des commandes{% else %}Mes commandes{% endif %}{% endblock %}
 
 {% block stylesheets %}
     {{ parent() }}
@@ -14,13 +14,15 @@
     <div class="mc-orders-head d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
         <div class="flex-grow-1 min-w-0">
             <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
-                <h2 class="mc-orders-title mb-0">Mes commandes</h2>
-                {% if mes_commandes_mode == 'vendeur' and count_annulations_attente > 0 %}
+                <h2 class="mc-orders-title mb-0">{% if mes_commandes_mode == 'admin' %}Gestion des commandes{% else %}Mes commandes{% endif %}</h2>
+                {% if (mes_commandes_mode == 'vendeur' or mes_commandes_mode == 'admin') and count_annulations_attente > 0 %}
                     <span class="mc-alert-pill"><i class="bi bi-exclamation-triangle-fill me-1" aria-hidden="true"></i>{{ count_annulations_attente }} annulation{{ count_annulations_attente > 1 ? 's' : '' }} en attente</span>
                 {% endif %}
             </div>
-            {% if mes_commandes_mode == 'vendeur' %}
-                <p class="mc-orders-sub mb-0 small">Consultez les commandes clients contenant vos produits (tous acheteurs marketplace).</p>
+            {% if mes_commandes_mode == 'admin' %}
+                <p class="mc-orders-sub mb-0 small">Vue globale : toutes les commandes passées sur le marketplace, quel que soit le client ou le vendeur.</p>
+            {% elseif mes_commandes_mode == 'vendeur' %}
+                <p class="mc-orders-sub mb-0 small">Consultez les commandes clients contenant vos produits .</p>
             {% else %}
                 <p class="mc-orders-sub mb-0 small">Vos achats marketplace (liés à l’email de votre compte : {{ app.user.email }})</p>
             {% endif %}
@@ -65,13 +67,17 @@
             <table class="table mc-table mb-0">
                 <thead>
                     <tr>
-                        {% if mes_commandes_mode == 'vendeur' %}
+                        {% if mes_commandes_mode == 'vendeur' or mes_commandes_mode == 'admin' %}
                             <th>Client</th>
                             <th>Contact</th>
                         {% endif %}
                         <th>N° commande</th>
                         <th>Date</th>
-                        <th>Montant</th>
+                        {% if mes_commandes_mode == 'admin' %}
+                            <th>Vendeur(s)</th>
+                        {% else %}
+                            <th>Montant</th>
+                        {% endif %}
                         <th>Statut</th>
                         <th class="text-end">Actions</th>
                     </tr>
@@ -120,8 +126,20 @@
                                 <td><span class="mc-num mc-num--nowrap">#CMD{{ "%03d"|format(c.id) }}</span></td>
                                 <td class="mc-date mc-date--nowrap">{{ c.dateCommande|date('Y-m-d') }}</td>
                                 <td><span class="mc-amount">{{ mv|number_format(3, ',', ' ') }} DT</span></td>
-                                <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { status: c.status, commande_id: c.id, dropdown_choices: statut_choices_seller, statut_redirect: 'index' } %}</td>
+                                <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { mes_commandes_mode: mes_commandes_mode, status: c.status, commande_id: c.id, dropdown_choices: statut_choices_seller, statut_redirect: 'index', cancellation_request_pending: pending_cancellation_map[c.id]|default(false) } %}</td>
                                 <td class="text-end mc-actions-cell">
+                                    {% if pending_cancellation_map[c.id]|default(false) %}
+                                        <div class="d-flex flex-wrap justify-content-end gap-1 mb-2">
+                                            <form method="post" action="{{ path('mes_commandes_cancel_approve', { id: c.id }) }}" class="d-inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('cancel_approve_' ~ c.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-success">Accepter l’annulation</button>
+                                            </form>
+                                            <form method="post" action="{{ path('mes_commandes_cancel_reject', { id: c.id }) }}" class="d-inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('cancel_reject_' ~ c.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary">Refuser</button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
                                     {% include 'marketplace/mes_commandes/_actions_toolbar.html.twig' with { commande: c } %}
                                 </td>
                             </tr>
@@ -132,13 +150,76 @@
                                 </td>
                             </tr>
                         {% endfor %}
+                    {% elseif mes_commandes_mode == 'admin' %}
+                        {% for c in commandes %}
+                            {% set client_nom = [c.prenom, c.nom]|filter(v => v)|join(' ')|trim %}
+                            {% if client_nom is empty %}
+                                {% set client_nom = 'Client' %}
+                                {% set client_initial = '?' %}
+                            {% else %}
+                                {% set client_initial = client_nom|slice(0, 1)|upper %}
+                            {% endif %}
+                            <tr>
+                                <td>
+                                    <div class="mc-client-cell d-flex align-items-center gap-2">
+                                        <span class="mc-avatar" aria-hidden="true">{{ client_initial }}</span>
+                                        <span class="mc-client-name">{{ client_nom }}</span>
+                                    </div>
+                                </td>
+                                <td class="mc-contact-cell">
+                                    {% if c.telephone or c.email %}
+<div class="mc-contact-stack">
+    {% if c.telephone %}
+        <div class="mc-contact-item">
+            <i class="bi bi-telephone mc-muted" aria-hidden="true"></i>
+            <span>{{ c.telephone }}</span>
+        </div>
+    {% endif %}
+    {% if c.email %}
+        <div class="mc-contact-item">
+            <i class="bi bi-envelope mc-muted" aria-hidden="true"></i>
+            <span>{{ c.email }}</span>
+        </div>
+    {% endif %}
+</div>
+                                    {% else %}
+                                        <span class="mc-muted">—</span>
+                                    {% endif %}
+                                </td>
+                                <td><span class="mc-num mc-num--nowrap">#CMD{{ "%03d"|format(c.id) }}</span></td>
+                                <td class="mc-date mc-date--nowrap">{{ c.dateCommande|date('Y-m-d') }}</td>
+                                <td class="mc-seller-cell"><span class="mc-seller-name">{{ vendeurs_par_commande[c.id]|default('—') }}</span></td>
+                                <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { mes_commandes_mode: mes_commandes_mode, status: c.status, commande_id: c.id, dropdown_choices: statut_choices_by_commande[c.id]|default({}), statut_redirect: 'index', force_statut_edit: true, cancellation_request_pending: pending_cancellation_map[c.id]|default(false) } %}</td>
+                                <td class="text-end mc-actions-cell">
+                                    {% if pending_cancellation_map[c.id]|default(false) %}
+                                        <div class="d-flex flex-wrap justify-content-end gap-1 mb-2">
+                                            <form method="post" action="{{ path('mes_commandes_cancel_approve', { id: c.id }) }}" class="d-inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('cancel_approve_' ~ c.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-success">Accepter l’annulation</button>
+                                            </form>
+                                            <form method="post" action="{{ path('mes_commandes_cancel_reject', { id: c.id }) }}" class="d-inline">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('cancel_reject_' ~ c.id) }}">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary">Refuser</button>
+                                            </form>
+                                        </div>
+                                    {% endif %}
+                                    {% include 'marketplace/mes_commandes/_actions_toolbar.html.twig' with { commande: c } %}
+                                </td>
+                            </tr>
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-5 mc-empty">
+                                    Aucune commande marketplace enregistrée.
+                                </td>
+                            </tr>
+                        {% endfor %}
                     {% else %}
                         {% for c in commandes %}
                             <tr>
-                                <td><span class="mc-num">#{{ c.numCommande }}</span></td>
+                                <td><span class="mc-num">{% if app.user.isAgriPlus %}#CMD{{ "%03d"|format(c.id) }}{% else %}#{{ c.numCommande }}{% endif %}</span></td>
                                 <td class="mc-date mc-date--nowrap">{{ c.dateCommande|date('Y-m-d') }}</td>
                                 <td><span class="mc-amount">{{ c.prixTotal|number_format(3, ',', ' ') }} DT</span></td>
-                                <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { status: c.status, commande_id: c.id, dropdown_choices: statut_choices_by_commande[c.id]|default({}), statut_redirect: 'index' } %}</td>
+                                <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { mes_commandes_mode: mes_commandes_mode, status: c.status, commande_id: c.id, dropdown_choices: statut_choices_by_commande[c.id]|default({}), statut_redirect: 'index', cancellation_request_pending: pending_cancellation_map[c.id]|default(false), show_buyer_cancel_request: buyer_cancel_eligible_map[c.id]|default(false), buyer_cancel_order_ref: '#CMD' ~ ('%03d'|format(c.id)) } %}</td>
                                 <td class="text-end mc-actions-cell">
                                     {% include 'marketplace/mes_commandes/_actions_toolbar.html.twig' with { commande: c } %}
                                 </td>
@@ -173,6 +254,9 @@
 
 {% include 'marketplace/mes_commandes/_order_edit_modal.html.twig' %}
 {% include 'marketplace/mes_commandes/_delete_confirm_modal.html.twig' %}
+{% if mes_commandes_mode == 'acheteur' %}
+    {% include 'marketplace/mes_commandes/_cancel_request_modal.html.twig' %}
+{% endif %}
 
 <script>
 (function () {
