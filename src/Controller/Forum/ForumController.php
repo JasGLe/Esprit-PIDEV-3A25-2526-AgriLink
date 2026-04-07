@@ -3,12 +3,11 @@
 namespace App\Controller\Forum;
 
 use App\Entity\Forum\Forum;
-use App\Entity\Message;
+use App\Entity\Forum\Message;
 use App\Entity\UserManagement\User;
 use App\Form\Forum\ForumType;
 use App\Repository\Forum\ForumRepository;
-use App\Repository\MessageRepository;
-use App\Repository\UserManagement\UserRepository;
+use App\Repository\Forum\MessageRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormError;
@@ -79,20 +78,9 @@ class ForumController extends AbstractController
     }
 
     #[Route('/{id}', name: 'forum_show', methods: ['GET'])]
-    public function show(Forum $forum, MessageRepository $messageRepository, UserRepository $userRepository): Response
+    public function show(Forum $forum, MessageRepository $messageRepository): Response
     {
-        $messages = $messageRepository->findBy(['forumId' => $forum->getId()], ['dateEnvoi' => 'ASC']);
-        $userIds = array_values(array_unique(array_filter(
-            array_map(static fn (Message $message): ?int => $message->getUserId(), $messages),
-            static fn (?int $userId): bool => $userId !== null
-        )));
-
-        $usersById = [];
-        if ($userIds !== []) {
-            foreach ($userRepository->findBy(['id' => $userIds]) as $user) {
-                $usersById[$user->getId()] = $user;
-            }
-        }
+        $messages = $messageRepository->findBy(['forum' => $forum], ['dateEnvoi' => 'ASC']);
 
         $currentUser = $this->getUser();
         $currentUserId = $currentUser instanceof User ? $currentUser->getId() : null;
@@ -101,16 +89,16 @@ class ForumController extends AbstractController
             'forum' => $forum,
             'messageCount' => count($messages),
             'messages' => array_map(
-                static function (Message $message) use ($usersById, $currentUserId): array {
-                    $author = $message->getUserId() !== null ? ($usersById[$message->getUserId()] ?? null) : null;
+                static function (Message $message) use ($currentUserId): array {
+                    $author = $message->getUser();
 
                     return [
                         'id' => $message->getId(),
                         'content' => $message->getContenu(),
                         'sentAt' => $message->getDateEnvoi(),
-                        'isOwn' => $currentUserId !== null && $message->getUserId() === $currentUserId,
-                        'authorName' => $author instanceof User ? $author->getDisplayName() : 'Utilisateur',
-                        'authorInitials' => $author instanceof User ? $author->getInitials() : 'U',
+                        'isOwn' => $currentUserId !== null && $author->getId() === $currentUserId,
+                        'authorName' => $author->getDisplayName(),
+                        'authorInitials' => $author->getInitials(),
                     ];
                 },
                 $messages
@@ -147,13 +135,13 @@ class ForumController extends AbstractController
         }
 
         $message = new Message();
-        $message->setForumId($forum->getId());
+        $message->setForum($forum);
         $message->setContenu($content);
         $message->setDateEnvoi(new \DateTimeImmutable());
 
         $user = $this->getUser();
         if ($user instanceof User) {
-            $message->setUserId($user->getId());
+            $message->setUser($user);
         }
 
         $em->persist($message);
