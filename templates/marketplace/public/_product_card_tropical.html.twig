@@ -15,7 +15,7 @@
         <div class="tropical-card__media">
             {% if p.image and p.image|trim != '' %}
                 {% if is_eq %}
-                    <img src="{{ asset('uploads/equipements/' ~ p.image) }}" alt="{{ p.nom }}" loading="lazy">
+                    <img src="{{ uploads_base_url }}/{{ p.image }}" alt="{{ p.nom }}" loading="lazy">
                 {% else %}
                     <img src="{{ uploads_base_url }}/cultures/{{ p.image }}" alt="{{ p.nom }}" loading="lazy">
                 {% endif %}

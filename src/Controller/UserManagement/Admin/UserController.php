@@ -214,7 +214,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/{id}/delete-photo', name: 'delete_photo', methods: ['POST'])]
-    public function deletePhoto(User $user, Request $request): Response
+    public function deletePhoto(User $user, Request $request, FileUploader $fileUploader): Response
     {
         // CSRF protection
         $submittedToken = $request->request->get('_token');
@@ -224,11 +224,8 @@ class UserController extends AbstractController
         }
 
         if ($user->getPhotoProfil()) {
-            // Delete the file from the filesystem
-            $photoPath = $this->getParameter('kernel.project_dir') . '/public/uploads/' . $user->getPhotoProfil();
-            if (file_exists($photoPath)) {
-                unlink($photoPath);
-            }
+            // Delete the file using FileUploader service (handles all platform paths correctly)
+            $fileUploader->deleteFile($user->getPhotoProfil());
             
             // Clear the photo reference in the database
             $user->setPhotoProfil(null);

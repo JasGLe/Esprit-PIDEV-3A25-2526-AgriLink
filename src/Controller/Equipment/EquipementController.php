@@ -6,6 +6,7 @@ use App\Entity\Equipement;
 use App\Form\Equipment\EquipementType;
 use App\Repository\EquipementRepository;
 use App\Repository\Marketplace\ProduitsRepository;
+use App\Service\FileUploader;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -57,7 +58,7 @@ class EquipementController extends AbstractController
     public function new(
         Request $request,
         EntityManagerInterface $em,
-        SluggerInterface $slugger
+        FileUploader $fileUploader
     ): Response {
         $equipement = new Equipement();
         $form = $this->createForm(EquipementType::class, $equipement);
@@ -65,24 +66,14 @@ class EquipementController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            // ── Upload image ─────────────────────────────────────────────────
+            // ── Upload image using FileUploader service ──────────────────────────
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {
-                $originalFilename = pathinfo(
-                    $imageFile->getClientOriginalName(),
-                    PATHINFO_FILENAME
-                );
-                $safeFilename = $slugger->slug($originalFilename);
-                $newFilename  = $safeFilename . '_' . uniqid() . '.' . $imageFile->guessExtension();
-
                 try {
-                    $imageFile->move(
-                        $this->getParameter('equipements_directory'),
-                        $newFilename
-                    );
-                    $equipement->setImageUrl('uploads/equipements/' . $newFilename);
+                    $imagePath = $fileUploader->upload($imageFile, 'equipements');
+                    $equipement->setImageUrl($imagePath);
                 } catch (FileException $e) {
-                    $this->addFlash('danger', 'Erreur lors de l\'upload de l\'image.');
+                    $this->addFlash('danger', 'Erreur lors de l\'upload de l\'image: ' . $e->getMessage());
                 }
             }
 
@@ -135,7 +126,7 @@ class EquipementController extends AbstractController
         Request $request,
         Equipement $equipement,
         EntityManagerInterface $em,
-        SluggerInterface $slugger
+        FileUploader $fileUploader
     ): Response {
         $this->denyAccessUnlessOwner($equipement);
 
@@ -144,24 +135,18 @@ class EquipementController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
 
-            // ── Upload image (optionnel en édition) ──────────────────────────
+            // ── Upload image (optionnel en édition) using FileUploader service ──
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {
-                $originalFilename = pathinfo(
-                    $imageFile->getClientOriginalName(),
-                    PATHINFO_FILENAME
-                );
-                $safeFilename = $slugger->slug($originalFilename);
-                $newFilename  = $safeFilename . '_' . uniqid() . '.' . $imageFile->guessExtension();
-
                 try {
-                    $imageFile->move(
-                        $this->getParameter('equipements_directory'),
-                        $newFilename
+                    $imagePath = $fileUploader->upload(
+                        $imageFile,
+                        'equipements',
+                        $equipement->getImageUrl()
                     );
-                    $equipement->setImageUrl('uploads/equipements/' . $newFilename);
+                    $equipement->setImageUrl($imagePath);
                 } catch (FileException $e) {
-                    $this->addFlash('danger', 'Erreur lors de l\'upload de l\'image.');
+                    $this->addFlash('danger', 'Erreur lors de l\'upload de l\'image: ' . $e->getMessage());
                 }
             }
 

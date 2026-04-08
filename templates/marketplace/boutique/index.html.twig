@@ -279,7 +279,7 @@
                         <div class="ratio ratio-4x3 boutique-media d-flex align-items-center justify-content-center">
                             {% if p.image and p.image|trim != '' %}
                                 {% if p.equipementId is not null %}
-                                    <img src="{{ asset('uploads/equipements/' ~ p.image) }}"
+                                    <img src="{{ uploads_base_url }}/{{ p.image }}"
                                          alt="{{ p.nom }}"
                                          class="object-fit-cover w-100 h-100"
                                          onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'fs-1 text-success',textContent:'🛠️'}))">

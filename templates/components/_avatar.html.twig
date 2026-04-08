@@ -15,30 +15,17 @@
 
 <div class="position-relative d-inline-block {{ classes|default('') }}">
     {% if user.photoProfil %}
-        {# Handle different path formats in database:
-           - New format: profiles/filename.jpg → /agrilink/uploads/profiles/filename.jpg
-           - Old format 1: agrilink/uploads/profiles/filename.jpg → /agrilink/uploads/profiles/filename.jpg
-           - Old format 2: /agrilink/uploads/profiles/filename.jpg
+        {# 
+           Image URL construction:
+           - photoProfil stores relative path: profiles/filename.jpg
+           - uploads_base_url is set from .env: /agrilink/uploads (MAMP), /uploads (standard), etc.
+           - Result URL is: {uploads_base_url}/profiles/filename.jpg
+           
+           This works consistently across all platforms:
+           - MAMP: /agrilink/uploads/profiles/filename.jpg
+           - XAMPP/WAMP: /agrilink/uploads/profiles/filename.jpg (or /uploads/profiles/filename.jpg if configured differently)
         #}
-        {% set photoPath = user.photoProfil %}
-        {% if photoPath starts with '/agrilink/' %}
-            {# Already has full path with agrilink #}
-            {% set finalPath = photoPath %}
-        {% elseif photoPath starts with 'agrilink/' %}
-            {# Has agrilink path without leading slash #}
-            {% set finalPath = '/' ~ photoPath %}
-        {% elseif photoPath starts with '/uploads/' %}
-            {# Old uploads format - add agrilink prefix #}
-            {% set finalPath = '/agrilink' ~ photoPath %}
-        {% elseif photoPath starts with 'uploads/' %}
-            {# Old uploads format without leading slash - add agrilink prefix #}
-            {% set finalPath = '/agrilink/' ~ photoPath %}
-        {% else %}
-            {# Relative path (new format: profiles/filename.jpg) - add full base URL #}
-            {% set finalPath = '/agrilink/uploads/' ~ photoPath %}
-        {% endif %}
-        
-        <img src="{{ finalPath }}" 
+        <img src="{{ uploads_base_url }}/{{ user.photoProfil }}" 
              alt="{{ user.nom }}" 
              class="avatar {{ sizeClass }} border border-2 border-gray-200"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">

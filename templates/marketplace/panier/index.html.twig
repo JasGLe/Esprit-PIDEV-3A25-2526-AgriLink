@@ -254,7 +254,7 @@
                                         <div class="mpc-recap__thumb">
                                             {% if p and p.image and p.image|trim != '' %}
                                                 {% if p.equipementId is not null %}
-                                                    <img src="{{ asset('uploads/equipements/' ~ p.image) }}" alt="" loading="lazy" width="56" height="56">
+                                                    <img src="{{ uploads_base_url }}/{{ p.image }}" alt="" loading="lazy" width="56" height="56">
                                                 {% else %}
                                                     <img src="{{ uploads_base_url }}/cultures/{{ p.image }}" alt="" loading="lazy" width="56" height="56">
                                                 {% endif %}

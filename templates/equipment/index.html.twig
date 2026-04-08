@@ -88,7 +88,7 @@
 
                         {# Image #}
                         {% if eq.imageUrl %}
-                            <img src="{{ asset(eq.imageUrl) }}" alt="{{ eq.nom }}" class="img-equipement">
+                            <img src="{{ uploads_base_url }}/{{ eq.imageUrl }}" alt="{{ eq.nom }}" class="img-equipement">
                         {% else %}
                             <div class="img-placeholder">🚜</div>
                         {% endif %}
