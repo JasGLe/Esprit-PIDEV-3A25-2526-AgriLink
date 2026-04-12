@@ -105,6 +105,7 @@
                 {% set msg = error.messageKey %}
                 {% set isLocked   = 'verrouillé' in msg %}
                 {% set isInactive = 'désactivé'  in msg %}
+                {% set isBanned   = 'banni' in msg %}
 
                 <div class="alert {{ isLocked ? 'alert-warning' : (isInactive ? 'alert-warning' : 'alert-danger') }} alert-auth d-flex align-items-start gap-2 mb-4"
                      role="alert">
@@ -155,6 +156,7 @@
             {# Login form #}
             <form action="{{ path('app_login') }}" method="post" id="loginForm" novalidate>
                 <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+                <input type="hidden" name="g-recaptcha-response" id="recaptchaResponse">
 
                 {# Email #}
                 <div class="mb-3 auth-input-group">
@@ -313,6 +315,26 @@ document.addEventListener('DOMContentLoaded', function () {
         return null;
     }
 });
+
+// reCAPTCHA v3
+const RECAPTCHA_SITE_KEY = '{{ recaptcha_site_key is defined ? recaptcha_site_key : "" }}';
+if (RECAPTCHA_SITE_KEY && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_V3_SITE_KEY') {
+    const script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js?render=' + RECAPTCHA_SITE_KEY;
+    document.head.appendChild(script);
+    script.onload = function() {
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const form = this;
+            grecaptcha.ready(function() {
+                grecaptcha.execute(RECAPTCHA_SITE_KEY, {action: 'login'}).then(function(token) {
+                    document.getElementById('recaptchaResponse').value = token;
+                    form.submit();
+                });
+            });
+        });
+    };
+}
 
 function togglePassword(btn) {
     const input = document.getElementById('password');

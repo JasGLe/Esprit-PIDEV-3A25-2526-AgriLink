@@ -24,6 +24,10 @@ class SecurityEvent
     public const EVENT_SESSION_REVOKED = 'SESSION_REVOKED';
     public const EVENT_LOGOUT = 'LOGOUT';
     public const EVENT_SUSPICIOUS_ACTIVITY = 'SUSPICIOUS_ACTIVITY';
+    public const EVENT_ACCOUNT_BANNED = 'ACCOUNT_BANNED';
+    public const EVENT_ACCOUNT_UNBANNED = 'ACCOUNT_UNBANNED';
+    public const EVENT_BACKUP_CODE_USED = 'BACKUP_CODE_USED';
+    public const EVENT_EMAIL_CHANGE_REQUESTED = 'EMAIL_CHANGE_REQUESTED';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]

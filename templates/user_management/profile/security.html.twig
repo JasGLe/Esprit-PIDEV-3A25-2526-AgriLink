@@ -323,7 +323,11 @@
                         'OAUTH_REGISTER'     : 'Inscription via OAuth',
                         'SESSION_REVOKED'    : 'Session révoquée',
                         'LOGOUT'             : 'Déconnexion',
-                        'SUSPICIOUS_ACTIVITY': 'Activité suspecte détectée'
+                        'SUSPICIOUS_ACTIVITY': 'Activité suspecte détectée',
+                        'ACCOUNT_BANNED'     : 'Compte banni',
+                        'ACCOUNT_UNBANNED'   : 'Compte débanni',
+                        'BACKUP_CODE_USED'   : 'Code de secours utilisé',
+                        'EMAIL_CHANGE_REQUESTED': 'Changement d\'email demandé'
                     } %}
                     <ul class="list-unstyled mb-0">
                     {% for event in recentEvents %}
@@ -512,6 +516,40 @@
             </div>
         </div>
 
+        {# ── Backup codes (Feature 7) ── #}
+        {% if app.user.twoFactorEnabled %}
+        <div class="sec-card">
+            <div class="sec-card-header">
+                <div class="sec-icon bg-success bg-opacity-10">
+                    <svg fill="none" stroke="#198754" viewBox="0 0 24 24" width="18" height="18">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                </div>
+                <div class="flex-fill">
+                    <span class="fw-semibold d-block" style="font-size:.9rem;">Codes de secours</span>
+                    <span class="text-muted" style="font-size:.75rem;">Alternative si vous n'avez pas accès à votre email</span>
+                </div>
+                <span class="badge {{ backupCodesRemaining > 2 ? 'bg-success-subtle text-success' : (backupCodesRemaining > 0 ? 'bg-warning-subtle text-warning' : 'bg-danger-subtle text-danger') }}" style="font-size:.7rem;">
+                    {{ backupCodesRemaining }} restant(s)
+                </span>
+            </div>
+            <div class="sec-card-body">
+                <p class="text-muted mb-3" style="font-size:.8125rem;">
+                    Les codes de secours vous permettent de vous connecter si vous n'avez pas accès à votre email pour la 2FA.
+                </p>
+                <a href="{{ path('app_profile_backup_codes') }}"
+                   class="btn btn-outline-success btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    Voir les codes de secours
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
         {# ── Quick actions ── #}
         <div class="sec-card">
             <div class="sec-card-header">
@@ -533,6 +571,26 @@
                         </svg>
                         Changer le mot de passe
                     </a>
+                    <a href="{{ path('app_profile_login_history') }}"
+                       class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 text-start">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Historique de connexion
+                    </a>
+                    <form method="post" action="{{ path('app_profile_revoke_all_sessions') }}" class="d-grid">
+                        <input type="hidden" name="_token" value="{{ csrf_token('revoke_all_sessions') }}">
+                        <button type="submit"
+                                class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 text-start"
+                                onclick="return confirm('Déconnecter tous les appareils ? Vous devrez vous reconnecter partout.')">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                            Déconnecter tous les appareils
+                        </button>
+                    </form>
                     <a href="{{ path('app_profile_edit') }}"
                        class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 text-start">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">

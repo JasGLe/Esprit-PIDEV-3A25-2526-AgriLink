@@ -65,7 +65,14 @@ class EmailVerificationController extends AbstractController
 
             // Verify the code
             if ($this->emailVerificationService->verifyCode($user, $code)) {
-                $this->addFlash('success', 'Votre adresse email a été vérifiée avec succès !');
+                // Feature 4: If there's a pending email, finalize the email change
+                if ($user->getPendingEmail()) {
+                    $user->setEmail($user->getPendingEmail());
+                    $user->setPendingEmail(null);
+                    $this->addFlash('success', 'Votre nouvelle adresse email a été vérifiée et mise à jour avec succès !');
+                } else {
+                    $this->addFlash('success', 'Votre adresse email a été vérifiée avec succès !');
+                }
 
                 // Clear resend attempts from session
                 $request->getSession()->remove(self::SESSION_RESEND_ATTEMPTS_KEY);

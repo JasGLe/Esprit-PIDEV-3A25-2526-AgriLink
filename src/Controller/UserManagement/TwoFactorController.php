@@ -3,6 +3,8 @@
 namespace App\Controller\UserManagement;
 
 use App\Entity\UserManagement\User;
+use App\Service\BackupCodeService;
+use App\Service\SecurityEventService;
 use App\Service\TwoFactorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,7 +22,9 @@ class TwoFactorController extends AbstractController
         private TwoFactorService $twoFactorService,
         private EntityManagerInterface $entityManager,
         private TokenStorageInterface $tokenStorage,
-        private EventDispatcherInterface $eventDispatcher
+        private EventDispatcherInterface $eventDispatcher,
+        private BackupCodeService $backupCodeService,
+        private SecurityEventService $securityEventService
     ) {
     }
 
@@ -61,8 +65,12 @@ class TwoFactorController extends AbstractController
                 $error = 'Le code a expiré. Veuillez demander un nouveau code.';
             } elseif ($this->twoFactorService->getRemainingAttempts($user) <= 0) {
                 $error = 'Nombre maximum de tentatives atteint. Veuillez demander un nouveau code.';
-            } elseif ($this->twoFactorService->verifyOtp($user, $code)) {
-                // Success! Complete the login
+            } elseif ($this->twoFactorService->verifyOtp($user, $code) || $this->backupCodeService->verify($user, $code)) {
+                // Success! Complete the login (OTP or backup code)
+                if ($this->backupCodeService->getRemainingCount($user) < 8) {
+                    // A backup code was used (count decreased)
+                    $this->securityEventService->logBackupCodeUsed($user);
+                }
                 $success = true;
                 $session->remove('_2fa_pending_user');
                 
@@ -108,6 +116,8 @@ class TwoFactorController extends AbstractController
         $canResend = $this->twoFactorService->canResendOtp($user);
         $cooldownSeconds = $this->twoFactorService->getRemainingCooldown($user);
 
+        $backupCodesRemaining = $this->backupCodeService->getRemainingCount($user);
+
         return $this->render('user_management/security/verify_2fa.html.twig', [
             'error' => $error,
             'user' => $user,
@@ -116,6 +126,7 @@ class TwoFactorController extends AbstractController
             'max_attempts' => $this->twoFactorService->getMaxAttempts(),
             'can_resend' => $canResend,
             'cooldown_seconds' => $cooldownSeconds,
+            'backup_codes_remaining' => $backupCodesRemaining,
         ]);
     }
 

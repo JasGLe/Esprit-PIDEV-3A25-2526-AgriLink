@@ -6,13 +6,17 @@ use App\Entity\UserManagement\User;
 use App\Form\UserManagement\AdminUserType;
 use App\Repository\UserManagement\UserRepository;
 use App\Service\FileUploader;
+use App\Service\SecurityEventService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Twig\Environment;
 
 #[Route('/admin/users', name: 'admin_users_')]
 #[IsGranted('ROLE_ADMIN')]
@@ -237,6 +241,74 @@ class UserController extends AbstractController
         }
 
         return $this->redirectToRoute('admin_users_edit', ['id' => $user->getId()]);
+    }
+
+    #[Route('/{id}/ban', name: 'ban', methods: ['POST'])]
+    public function ban(
+        User $user,
+        Request $request,
+        SecurityEventService $securityEventService,
+        MailerInterface $mailer,
+        Environment $twig
+    ): Response {
+        $submittedToken = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('ban-user-' . $user->getId(), $submittedToken)) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_users_list');
+        }
+
+        if ($user === $this->getUser()) {
+            $this->addFlash('error', 'Vous ne pouvez pas bannir votre propre compte.');
+            return $this->redirectToRoute('admin_users_list');
+        }
+
+        $reason = $request->request->get('ban_reason', 'Violation des conditions d\'utilisation');
+        $user->ban($reason);
+        $this->entityManager->flush();
+
+        $securityEventService->logAccountBanned($user, $reason);
+
+        // Send ban notification email
+        try {
+            $htmlContent = $twig->render('emails/account_banned.html.twig', [
+                'user' => $user,
+                'reason' => $reason,
+                'bannedAt' => $user->getBannedAt(),
+            ]);
+
+            $email = (new Email())
+                ->from('noreply@agrilink.com')
+                ->to($user->getEmail())
+                ->subject('AgriLink - Votre compte a été suspendu')
+                ->html($htmlContent);
+
+            $mailer->send($email);
+        } catch (\Exception $e) {
+        }
+
+        $this->addFlash('success', sprintf('L\'utilisateur "%s" a été banni.', $user->getDisplayName()));
+        return $this->redirectToRoute('admin_users_list');
+    }
+
+    #[Route('/{id}/unban', name: 'unban', methods: ['POST'])]
+    public function unban(
+        User $user,
+        Request $request,
+        SecurityEventService $securityEventService
+    ): Response {
+        $submittedToken = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('unban-user-' . $user->getId(), $submittedToken)) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_users_list');
+        }
+
+        $user->unban();
+        $this->entityManager->flush();
+
+        $securityEventService->logAccountUnbanned($user);
+
+        $this->addFlash('success', sprintf('L\'utilisateur "%s" a été débanni.', $user->getDisplayName()));
+        return $this->redirectToRoute('admin_users_list');
     }
 }
 

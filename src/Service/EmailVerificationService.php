@@ -70,6 +70,27 @@ class EmailVerificationService
     }
 
     /**
+     * Send verification email to a specific address (for pending email change)
+     */
+    public function sendVerificationEmailTo(User $user, string $toEmail, string $code): void
+    {
+        $htmlContent = $this->twig->render('emails/verification_code.html.twig', [
+            'user' => $user,
+            'code' => $code,
+            'expirationMinutes' => self::EXPIRATION_MINUTES,
+            'appUrl' => $this->appUrl,
+        ]);
+
+        $email = (new Email())
+            ->from($this->mailerFrom)
+            ->to($toEmail)
+            ->subject('AgriLink - Vérification de votre nouvelle adresse email')
+            ->html($htmlContent);
+
+        $this->mailer->send($email);
+    }
+
+    /**
      * Verify the code provided by the user
      */
     public function verifyCode(User $user, string $code): bool
