@@ -185,6 +185,7 @@
             </div>
 
             {{ form_start(registrationForm, {'attr': {'id': 'agriplus-form', 'novalidate': 'novalidate'}}) }}
+                <input type="hidden" name="g-recaptcha-response" id="recaptchaResponse">
 
                 {# Hidden subscription radio buttons #}
                 <div class="d-none" id="subscription-wrapper">
@@ -810,6 +811,7 @@
 }
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/@zxcvbn-ts/core@3/dist/zxcvbn-ts.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -864,6 +866,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function scorePassword(p) {
         if (!p) return 0;
+        // Use zxcvbn if available
+        if (typeof zxcvbnts !== 'undefined' && zxcvbnts.core) {
+            var result = zxcvbnts.core.zxcvbn(p);
+            return Math.max(1, result.score); // 1-4
+        }
         let s = 0;
         if (p.length >= 6)  s++;
         if (p.length >= 10) s++;
@@ -1018,5 +1025,28 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 });
+
+// ── reCAPTCHA v3 ─────────────────────────────────────────
+(function () {
+    var siteKey = '{{ recaptcha_site_key is defined ? recaptcha_site_key : "" }}';
+    if (!siteKey || siteKey === 'YOUR_RECAPTCHA_V3_SITE_KEY') return;
+    var script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js?render=' + siteKey;
+    document.head.appendChild(script);
+    var form = document.getElementById('agriplus-form');
+    if (form) {
+        form.addEventListener('submit', function (e) {
+            var tokenField = document.getElementById('recaptchaResponse');
+            if (tokenField && tokenField.value) return;
+            e.preventDefault();
+            grecaptcha.ready(function () {
+                grecaptcha.execute(siteKey, { action: 'register' }).then(function (token) {
+                    tokenField.value = token;
+                    form.submit();
+                });
+            });
+        });
+    }
+})();
 </script>
 {% endblock %}

@@ -156,14 +156,12 @@
             <form id="otp-form" action="{{ path('app_2fa_verify') }}" method="post">
                 <div class="d-flex flex-column align-items-center mb-4">
                     <label for="otp_code" class="form-label fw-semibold mb-3 text-center" style="font-size:.9rem;">
-                        Entrez le code à 6 chiffres
+                        Entrez le code à 6 chiffres{% if backup_codes_remaining is defined and backup_codes_remaining > 0 %} ou un code de secours{% endif %}
                     </label>
                     <input type="text"
                            id="otp_code"
                            name="otp_code"
-                           maxlength="6"
-                           pattern="[0-9]{6}"
-                           inputmode="numeric"
+                           maxlength="8"
                            autocomplete="one-time-code"
                            required
                            class="otp-input"
@@ -209,6 +207,18 @@
                     Retour à la connexion
                 </a>
             </div>
+
+            {# Backup code #}
+            {% if backup_codes_remaining is defined and backup_codes_remaining > 0 %}
+                <div class="text-center mt-3 pt-3 border-top">
+                    <p class="text-muted mb-1" style="font-size:.775rem;">
+                        Vous pouvez aussi utiliser un <strong>code de secours</strong> à la place du code OTP.
+                    </p>
+                    <p class="text-muted mb-0" style="font-size:.72rem;">
+                        {{ backup_codes_remaining }} code{{ backup_codes_remaining > 1 ? 's' : '' }} de secours restant{{ backup_codes_remaining > 1 ? 's' : '' }}
+                    </p>
+                </div>
+            {% endif %}
 
             {# Help #}
             <div class="text-center text-muted mt-4 pt-3 border-top" style="font-size:.775rem;">
@@ -261,20 +271,39 @@ if (cooldownSeconds   > 0) setInterval(updateCooldown,  1000);
 
 // — OTP input UX —
 document.getElementById('otp_code').addEventListener('input', function () {
-    this.value = this.value.replace(/\D/g, '');
-    const len = this.value.length;
+    const val = this.value;
     const fb  = document.getElementById('otp-feedback');
+    const isDigitsOnly = /^\d+$/.test(val);
+    const isAlphanumeric = /^[A-Za-z0-9]+$/.test(val);
 
-    if (len > 0 && len < 6) {
+    // If typing digits only (OTP mode), strip non-digits
+    if (isDigitsOnly || val === '') {
+        this.value = val.replace(/\D/g, '');
+    }
+
+    const len = this.value.length;
+
+    if (isDigitsOnly && len > 0 && len < 6) {
         this.classList.remove('is-valid', 'is-invalid');
         fb.textContent = `${6 - len} chiffre${6-len>1?'s':''} restant${6-len>1?'s':''}`;
         fb.className = 'form-text mt-2 text-center text-muted';
-    } else if (len === 6) {
+    } else if (isDigitsOnly && len === 6) {
         this.classList.add('is-valid');
         this.classList.remove('is-invalid');
-        fb.textContent = '✓ Code complet';
+        fb.textContent = '\u2713 Code complet';
         fb.className = 'form-text mt-2 text-center text-success';
         setTimeout(() => document.getElementById('otp-form').submit(), 150);
+    } else if (isAlphanumeric && len === 8) {
+        // Backup code (8 alphanumeric chars)
+        this.classList.add('is-valid');
+        this.classList.remove('is-invalid');
+        fb.textContent = '\u2713 Code de secours détecté';
+        fb.className = 'form-text mt-2 text-center text-success';
+        setTimeout(() => document.getElementById('otp-form').submit(), 150);
+    } else if (isAlphanumeric && len > 0) {
+        this.classList.remove('is-valid', 'is-invalid');
+        fb.textContent = 'Code de secours (8 caractères)';
+        fb.className = 'form-text mt-2 text-center text-muted';
     } else {
         this.classList.remove('is-valid', 'is-invalid');
         fb.textContent = '';
