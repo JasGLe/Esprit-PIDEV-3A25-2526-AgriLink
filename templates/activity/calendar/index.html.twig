@@ -4,10 +4,7 @@
 {% block page_title %}Calendrier Agricole{% endblock %}
 
 {% block stylesheets %}
-    {# Calendar Pro CSS - Modern, professional styling #}
     <link href="/css/calendar-pro.css" rel="stylesheet" />
-    
-    {# FullCalendar CSS #}
     <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.10/index.global.min.css" rel="stylesheet" />
 {% endblock %}
 
@@ -16,38 +13,27 @@
     <div class="calendar-header mb-4">
         <div>
             <h1 class="h3 fw-bold text-dark mb-1">Calendrier Agricole</h1>
-            <p class="text-muted mb-0">Planifiez et gérez vos activités et événements</p>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{{ path('activite_new') }}" class="btn btn-success">
-                <i class="bi bi-plus-circle me-2"></i>Nouvelle Activité
-            </a>
-            <a href="{{ path('evenement_new') }}" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-2"></i>Nouvel Événement
-            </a>
+            <p class="text-muted mb-0">Planifiez et gerez vos activites et evenements</p>
         </div>
     </div>
 
-    {# Legend #}
     <div class="calendar-legend">
         <div class="legend-item">
             <div class="legend-dot activite"></div>
-            <span class="small fw-medium">Activités</span>
+            <span class="small fw-medium">Activites</span>
         </div>
         <div class="legend-item">
             <div class="legend-dot evenement"></div>
-            <span class="small fw-medium">Événements</span>
+            <span class="small fw-medium">Evenements</span>
         </div>
     </div>
 
-    {# Calendar #}
-    <div class="card border-0 shadow-sm">
+    <div class="card border-0 shadow-sm calendar-shell">
         <div class="card-body p-4">
             <div id="calendar"></div>
         </div>
     </div>
 
-    {# Modal for viewing day events #}
     <div class="modal fade" id="dayEventsModal" tabindex="-1" aria-labelledby="dayEventsModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg">
@@ -65,15 +51,11 @@
                 </div>
                 <div class="modal-footer border-top">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
-                    <div id="quickAddButtons"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    {# FullCalendar JS #}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.10/index.global.min.js"></script>
-
-    {# Calendar Pro JS - Advanced calendar functionality #}
     <script src="/js/calendar-pro.js"></script>
 {% endblock %}
