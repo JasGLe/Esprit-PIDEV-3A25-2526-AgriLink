@@ -36,6 +36,10 @@ class CalendarController extends AbstractController
 
     /**
      * Get events for FullCalendar (JSON API)
+     * 
+     * IMPORTANT CONSTRAINT: Events are displayed ONLY on their start date.
+     * Multi-day activities/events appear only on the start date, not repeated.
+     * 
      * @param Request $request
      * @return JsonResponse
      */
@@ -57,14 +61,16 @@ class CalendarController extends AbstractController
         $events = [];
 
         // Get activities for the date range
+        // Display ONLY on start date, not repeated on end date
         $activites = $this->activiteRepository->findBetweenDates($startDate, $endDate);
         foreach ($activites as $activite) {
             if ($activite->getDateDebut()) {
                 $events[] = [
                     'id' => 'activite_' . $activite->getId(),
                     'title' => $activite->getTitre(),
+                    // CONSTRAINT: Only use start date, ignore end date for display
+                    // This ensures multi-day events appear only once (on start date)
                     'start' => $activite->getDateDebut()->format('Y-m-d\TH:i:s'),
-                    'end' => $activite->getDateFin() ? $activite->getDateFin()->format('Y-m-d\TH:i:s') : $activite->getDateDebut()->format('Y-m-d\TH:i:s'),
                     'backgroundColor' => '#22c55e', // Green for activities
                     'borderColor' => '#16a34a',
                     'extendedProps' => [
@@ -78,12 +84,14 @@ class CalendarController extends AbstractController
         }
 
         // Get events for the date range
+        // Display ONLY on start date, not repeated
         $evenements = $this->evenementRepository->findBetweenDates($startDate, $endDate);
         foreach ($evenements as $evenement) {
             if ($evenement->getDateEvenement()) {
                 $events[] = [
                     'id' => 'evenement_' . $evenement->getId(),
                     'title' => $evenement->getTitre(),
+                    // CONSTRAINT: Only use event date for display
                     'start' => $evenement->getDateEvenement()->format('Y-m-d\TH:i:s'),
                     'backgroundColor' => '#3b82f6', // Blue for events
                     'borderColor' => '#1d4ed8',
