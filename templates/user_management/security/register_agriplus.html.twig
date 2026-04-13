@@ -1032,21 +1032,30 @@ document.addEventListener('DOMContentLoaded', function () {
     if (!siteKey || siteKey === 'YOUR_RECAPTCHA_V3_SITE_KEY') return;
     var script = document.createElement('script');
     script.src = 'https://www.google.com/recaptcha/api.js?render=' + siteKey;
-    document.head.appendChild(script);
-    var form = document.getElementById('agriplus-form');
-    if (form) {
-        form.addEventListener('submit', function (e) {
-            var tokenField = document.getElementById('recaptchaResponse');
-            if (tokenField && tokenField.value) return;
-            e.preventDefault();
-            grecaptcha.ready(function () {
-                grecaptcha.execute(siteKey, { action: 'register' }).then(function (token) {
-                    tokenField.value = token;
-                    form.submit();
+    script.onload = function() {
+        var form = document.getElementById('agriplus-form');
+        if (form) {
+            var isSubmitting = false;
+            form.addEventListener('submit', function (e) {
+                var tokenField = document.getElementById('recaptchaResponse');
+                if (tokenField && tokenField.value) {
+                    return true;
+                }
+                if (isSubmitting) {
+                    return true;
+                }
+                e.preventDefault();
+                isSubmitting = true;
+                grecaptcha.ready(function () {
+                    grecaptcha.execute(siteKey, { action: 'register' }).then(function (token) {
+                        tokenField.value = token;
+                        form.submit();
+                    });
                 });
             });
-        });
-    }
+        }
+    };
+    document.head.appendChild(script);
 })();
 </script>
 {% endblock %}
