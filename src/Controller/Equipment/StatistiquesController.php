@@ -4,6 +4,8 @@ namespace App\Controller\Equipment;
 
 use App\Repository\EquipementRepository;
 use App\Repository\MaintenanceRepository;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -25,21 +27,55 @@ class StatistiquesController extends AbstractController
         return $this->render('equipment/statistiques/index.html.twig', $stats);
     }
 
+    #[Route('/pdf', name: 'pdf', methods: ['GET'])]
+    public function pdf(
+        EquipementRepository  $equipRepo,
+        MaintenanceRepository $mainRepo
+    ): Response {
+        $userId        = $this->getUser()->getId();
+        $equipements   = $equipRepo->findBy(['userlog' => $userId]);
+        $equipementIds = array_map(fn($e) => $e->getId(), $equipements);
+
+        $stats = $this->buildStats($userId, $equipementIds, $equipRepo, $mainRepo);
+
+        $html = $this->renderView('equipment/statistiques/pdf.html.twig', $stats);
+
+        $options = new Options();
+        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('isHtml5ParserEnabled', true);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $filename = 'rapport-equipements-' . date('Y-m-d') . '.pdf';
+
+        return new Response(
+            $dompdf->output(),
+            Response::HTTP_OK,
+            [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            ]
+        );
+    }
+
     private function buildStats(
         int $userId,
         array $equipementIds,
         EquipementRepository $equipRepo,
         MaintenanceRepository $mainRepo
     ): array {
-        $equipParStatut      = $equipRepo->countByStatut($userId);
-        $equipParCategorie   = $equipRepo->countByCategorie($userId);
-        $equipParType        = $equipRepo->countByType($userId);
-        $mainParStatut       = $mainRepo->countByStatutForUser($equipementIds);
-        $mainParType         = $mainRepo->countByTypeForUser($equipementIds);
-        $mainParMois         = $mainRepo->countByMoisForUser($equipementIds);
+        $equipParStatut    = $equipRepo->countByStatut($userId);
+        $equipParCategorie = $equipRepo->countByCategorie($userId);
+        $equipParType      = $equipRepo->countByType($userId);
+        $mainParStatut     = empty($equipementIds) ? [] : $mainRepo->countByStatutForUser($equipementIds);
+        $mainParType       = empty($equipementIds) ? [] : $mainRepo->countByTypeForUser($equipementIds);
+        $mainParMois       = empty($equipementIds) ? [] : $mainRepo->countByMoisForUser($equipementIds);
+        $mainEnRetard      = empty($equipementIds) ? 0 : $mainRepo->countEnRetardForUser($equipementIds);
 
         return [
-            // Équipements
             'totalEquipements'         => count($equipementIds),
             'equipParStatut'           => $equipParStatut,
             'equipParStatutLabels'     => array_keys($equipParStatut),
@@ -50,8 +86,6 @@ class StatistiquesController extends AbstractController
             'equipParType'             => $equipParType,
             'equipParTypeLabels'       => array_keys($equipParType),
             'equipParTypeValeurs'      => array_values($equipParType),
-
-            // Maintenances
             'totalMaintenances'        => array_sum($mainParStatut),
             'mainParStatut'            => $mainParStatut,
             'mainParStatutLabels'      => array_keys($mainParStatut),
@@ -62,7 +96,7 @@ class StatistiquesController extends AbstractController
             'mainParMois'              => $mainParMois,
             'mainParMoisLabels'        => array_keys($mainParMois),
             'mainParMoisValeurs'       => array_values($mainParMois),
-            'mainEnRetard'             => $mainRepo->countEnRetardForUser($equipementIds),
+            'mainEnRetard'             => $mainEnRetard,
         ];
     }
 }
