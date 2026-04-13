@@ -55,17 +55,23 @@ class TwoFactorController extends AbstractController
         // Handle POST (OTP verification)
         if ($request->isMethod('POST')) {
             $code = $request->request->get('otp_code', '');
+            $rawCode = trim($code);
             
-            // Clean up the code (remove spaces, dashes)
-            $code = preg_replace('/[^0-9]/', '', $code);
-            
-            if (empty($code)) {
+            if (empty($rawCode)) {
                 $error = 'Veuillez entrer le code de vérification.';
             } elseif ($this->twoFactorService->isOtpExpired($user)) {
                 $error = 'Le code a expiré. Veuillez demander un nouveau code.';
             } elseif ($this->twoFactorService->getRemainingAttempts($user) <= 0) {
                 $error = 'Nombre maximum de tentatives atteint. Veuillez demander un nouveau code.';
-            } elseif ($this->twoFactorService->verifyOtp($user, $code) || $this->backupCodeService->verify($user, $code)) {
+            } else {
+                // Try OTP first (6 numeric digits)
+                $cleanedOtp = preg_replace('/[^0-9]/', '', $rawCode);
+                $isOtpValid = $this->twoFactorService->verifyOtp($user, $cleanedOtp);
+                
+                // Try backup code (8 alphanumeric characters, no cleaning needed)
+                $isBackupValid = $this->backupCodeService->verify($user, $rawCode);
+                
+                if ($isOtpValid || $isBackupValid) {
                 // Success! Complete the login (OTP or backup code)
                 if ($this->backupCodeService->getRemainingCount($user) < 8) {
                     // A backup code was used (count decreased)
@@ -131,7 +137,7 @@ class TwoFactorController extends AbstractController
     }
 
     #[Route('/2fa/resend', name: 'app_2fa_resend', methods: ['POST'])]
-    public function resend(Request $request): Response
+    function resend(Request $request): Response
     {
         $session = $request->getSession();
         $userId = $session->get('_2fa_pending_user');
