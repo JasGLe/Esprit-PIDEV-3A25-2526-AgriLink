@@ -330,7 +330,7 @@
         {% embed 'components/_card.html.twig' %}
             {% block card_title %}Calendrier agricole{% endblock %}
             {% block card_content %}
-                {% if weatherForecast and weatherForecast|length > 0 %}
+                {% if weatherForecast is defined and weatherForecast|length > 0 %}
                 <div class="mb-4">
                     <div class="small fw-medium text-muted mb-2">Prévisions 5 jours</div>
                     <div class="d-flex gap-2" style="overflow-x: auto;">
