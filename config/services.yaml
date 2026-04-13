@@ -10,6 +10,7 @@ parameters:
     uploads_base_dir: '%kernel.project_dir%/public/uploads'
     uploads_base_url: '/uploads'
     equipements_directory: '%env(UPLOADS_BASE_DIR)%/equipements'
+    mapbox_token: '%env(MAPBOX_TOKEN)%'
 
 services:
     # default configuration for services in *this* file
@@ -21,6 +22,7 @@ services:
             string $appUrl: '%env(APP_URL)%'
             string $recaptchaSiteKey: '%env(RECAPTCHA_SITE_KEY)%'
             string $recaptchaSecretKey: '%env(RECAPTCHA_SECRET_KEY)%'
+            string $mapboxToken: '%env(MAPBOX_TOKEN)%'
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     App\:
