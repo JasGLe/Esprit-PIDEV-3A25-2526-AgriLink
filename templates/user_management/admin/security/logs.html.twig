@@ -120,6 +120,18 @@
         <p class="text-muted mb-0 small">Surveillance, analyse et contrôle de la sécurité de la plateforme</p>
     </div>
     <div class="d-flex flex-wrap align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportSecurityPDF()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            Export PDF
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-success" onclick="exportSecurityExcel()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            Export Excel
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" onclick="exportSecurityCharts()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Graphiques PNG
+        </button>
         {% if accountStats.lockedNow > 0 %}
         <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill">
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1" style="vertical-align:-2px;">
@@ -548,7 +560,7 @@
 {{ parent() }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-(function () {
+document.addEventListener('DOMContentLoaded', function () {
     'use strict';
 
     // ── Security Score Gauge ──────────────────────────────────────────
@@ -679,6 +691,61 @@
             }
         }
     });
-})();
+});
+
+// ── Export Functions ─────────────────────────────────────────────────
+function exportSecurityPDF() { window.print(); }
+
+function exportSecurityExcel() {
+    const rows = [
+        ['Rapport Sécurité AgriLink - ' + new Date().toLocaleDateString('fr-FR')],
+        [],
+        ['=== STATISTIQUES 30 DERNIERS JOURS ==='],
+        ['Événement', 'Valeur'],
+        ['Connexions réussies', {{ stats30d.loginSuccess }}],
+        ['Connexions échouées', {{ stats30d.loginFailed }}],
+        ['2FA réussi', {{ stats30d.twoFaSuccess }}],
+        ['Comptes verrouillés', {{ stats30d.accountLocked }}],
+        ['Mots de passe changés', {{ stats30d.passwordChanged }}],
+        ['Score de sécurité', '{{ _score }}%'],
+        [],
+        ['=== STATISTIQUES 24H ==='],
+        ['Connexions réussies (24h)', {{ stats24h.loginSuccess }}],
+        ['Connexions échouées (24h)', {{ stats24h.loginFailed }}],
+        [],
+        ['=== APERÇU COMPTES ==='],
+        ['Total comptes', {{ accountStats.total }}],
+        ['Comptes actifs', {{ accountStats.active }}],
+        ['Emails vérifiés', {{ accountStats.verified }}],
+        ['2FA activé', {{ accountStats.twoFactorEnabled }}],
+        ['Comptes verrouillés actuellement', {{ accountStats.lockedNow }}],
+    ];
+    const csv = rows.map(r => r.join(';')).join('\n');
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'securite-agrilink-' + new Date().toISOString().slice(0,10) + '.csv';
+    link.click();
+}
+
+function exportSecurityCharts() {
+    ['scoreGauge', 'eventDistChart', 'loginActivityChart'].forEach(function(id) {
+        const c = document.getElementById(id);
+        if (c) {
+            const a = document.createElement('a');
+            a.download = 'securite-' + id + '-' + new Date().toISOString().slice(0,10) + '.png';
+            a.href = c.toDataURL('image/png');
+            a.click();
+        }
+    });
+}
 </script>
+<style>
+@media print {
+    #desktop-sidebar, .d-lg-none, button, .btn, .nav-pills { display: none !important; }
+    .dashboard-main-content { margin-left: 0 !important; }
+    .dashboard-main { padding-top: 0 !important; }
+    .chart-card, .sec-kpi-card { break-inside: avoid; }
+}
+</style>
 {% endblock %}

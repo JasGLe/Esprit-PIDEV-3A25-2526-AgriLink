@@ -9,303 +9,540 @@
     </span>
 {% endblock %}
 
+{% block stylesheets %}
+<style>
+.stat-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    transition: box-shadow 0.2s;
+    overflow: hidden;
+}
+.stat-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.07); }
+.stat-icon {
+    width: 52px; height: 52px; border-radius: 0.65rem;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.admin-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+.admin-card-header {
+    padding: 1.25rem 1.5rem 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+}
+.admin-card-header h3 { font-size: 0.95rem; font-weight: 700; color: #111827; margin-bottom: 0.15rem; }
+.admin-card-header p  { font-size: 0.78rem; color: #9ca3af; margin-bottom: 0; }
+.admin-card-body { padding: 1.25rem 1.5rem; }
+.badge-status {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 0.3rem 0.65rem; border-radius: 2rem; font-size: 0.72rem; font-weight: 600;
+}
+.status-active   { background: rgba(25,135,84,0.1); color: #198754; }
+.status-verified { background: rgba(13,110,253,0.1); color: #0d6efd; }
+.chart-card {
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 0.75rem; padding: 1.5rem;
+}
+.chart-card-title { font-size: 0.95rem; font-weight: 700; color: #111827; margin-bottom: 0.2rem; }
+.chart-card-sub   { font-size: 0.78rem; color: #9ca3af; margin-bottom: 1.25rem; }
+</style>
+{% endblock %}
+
 {% block dashboard_content %}
-    {# Welcome section with improved typography #}
-    <div class="mb-5">
-        <div class="d-flex justify-content-between align-items-start">
-            <div>
-                <h2 class="display-6 fw-bold text-dark mb-2">Bienvenue, {{ app.user.displayName }} 👋</h2>
-                <p class="fs-6 text-muted mb-0">Tableau de bord de gestion de la plateforme AgriLink. Synthèse et actions rapides ci-dessous.</p>
-            </div>
-        </div>
+{# ── Welcome ── #}
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+    <div>
+        <h2 class="h3 fw-bold text-dark mb-1">Bienvenue, {{ app.user.displayName }} 👋</h2>
+        <p class="text-muted small mb-0">Tableau de bord de gestion de la plateforme AgriLink.</p>
     </div>
-
-    {# Key Statistics Cards - Enhanced Design #}
-    <div class="row g-4 mb-5">
-        {# Total Users Card #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-start">
-                        <div class="stat-icon bg-danger-subtle">
-                            <svg class="text-danger" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                            </svg>
-                        </div>
-                        <div class="ms-4 flex-grow-1">
-                            <p class="text-muted small text-uppercase fw-semibold letter-spacing mb-1" style="letter-spacing: 0.5px;">Total Utilisateurs</p>
-                            <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.total ?? 0 }}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light border-0 p-3 d-flex justify-content-between align-items-center">
-                    <span class="text-muted small">Tous les comptes actifs</span>
-                    <a href="{{ path('admin_users_list') }}" class="text-danger text-decoration-none fw-medium small" style="font-size: 0.9rem;">
-                        Gérer →
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        {# Agriculteurs Card #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-start">
-                        <div class="stat-icon bg-success-subtle">
-                            <svg class="text-success" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0110.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <div class="ms-4 flex-grow-1">
-                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Agriculteurs</p>
-                            <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light border-0 p-3">
-                    <span class="badge badge-status status-active">
-                        Actifs ce mois
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        {# Fournisseurs Card #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-start">
-                        <div class="stat-icon bg-primary-subtle">
-                            <svg class="text-primary" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                            </svg>
-                        </div>
-                        <div class="ms-4 flex-grow-1">
-                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Fournisseurs</p>
-                            <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light border-0 p-3">
-                    <span class="badge badge-status status-verified">
-                        Vérifiés
-                    </span>
-                </div>
-            </div>
-        </div>
-
-        {# AgriPlus Subscribers Card #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="stat-card">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-start">
-                        <div class="stat-icon" style="background-color: rgba(245, 158, 11, 0.1);">
-                            <svg style="color: #f59e0b;" width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                            </svg>
-                        </div>
-                        <div class="ms-4 flex-grow-1">
-                            <p class="text-muted small text-uppercase fw-semibold mb-1" style="letter-spacing: 0.5px;">Abonnés AgriPlus</p>
-                            <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</h3>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light border-0 p-3">
-                    <span class="badge badge-status" style="background-color: rgba(245, 158, 11, 0.1); color: #b45309;">
-                        Premium actifs
-                    </span>
-                </div>
-            </div>
-        </div>
+    <div class="d-flex align-items-center gap-2">
+        <a href="{{ path('admin_security_logs') }}" class="btn btn-sm btn-outline-danger">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+            Centre de Sécurité
+        </a>
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#exportModal">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Exporter un rapport
+        </button>
     </div>
+</div>
 
-    {# Admin Actions & Recent Activity Section #}
-    <div class="row g-4">
-        {# Quick Actions Card #}
-        <div class="col-12 col-lg-6">
-            <div class="admin-card">
-                <div class="admin-card-header">
-                    <h3>⚡ Actions Rapides</h3>
-                    <p>Accès rapide aux fonctions d'administration</p>
-                </div>
-                <div class="admin-card-body">
-                    <div class="d-flex flex-column gap-3">
-                        {# User Management #}
-                        <a href="{{ path('admin_users_list') }}" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none transition hover-bg-light" style="transition: all 0.2s ease-in-out;">
-                            <div class="d-flex align-items-center justify-content-center rounded-2 p-3" style="background-color: rgba(239, 68, 68, 0.1); width: 48px; height: 48px; flex-shrink: 0;">
-                                <svg style="color: #ef4444;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                                </svg>
-                            </div>
-                            <div class="ms-3">
-                                <p class="small fw-bold text-dark mb-1">Gérer les utilisateurs</p>
-                                <p class="text-muted mb-0" style="font-size: 0.8rem;">Ajouter, modifier ou supprimer des comptes</p>
-                            </div>
-                            <svg class="ms-auto" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #d1d5db;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </a>
-
-                        {# Reports #}
-                        <a href="#" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none transition hover-bg-light" style="transition: all 0.2s ease-in-out;">
-                            <div class="d-flex align-items-center justify-content-center rounded-2 p-3" style="background-color: rgba(59, 130, 246, 0.1); width: 48px; height: 48px; flex-shrink: 0;">
-                                <svg style="color: #3b82f6;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
-                            </div>
-                            <div class="ms-3">
-                                <p class="small fw-bold text-dark mb-1">Générer un rapport</p>
-                                <p class="text-muted mb-0" style="font-size: 0.8rem;">Exporter les statistiques et données</p>
-                            </div>
-                            <svg class="ms-auto" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #d1d5db;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </a>
-
-                        {# System Notifications #}
-                        <a href="#" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none transition hover-bg-light" style="transition: all 0.2s ease-in-out;">
-                            <div class="d-flex align-items-center justify-content-center rounded-2 p-3" style="background-color: rgba(168, 85, 247, 0.1); width: 48px; height: 48px; flex-shrink: 0;">
-                                <svg style="color: #a855f7;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                                </svg>
-                            </div>
-                            <div class="ms-3">
-                                <p class="small fw-bold text-dark mb-1">Notifications système</p>
-                                <p class="text-muted mb-0" style="font-size: 0.8rem;">Envoyer une annonce globale</p>
-                            </div>
-                            <svg class="ms-auto" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #d1d5db;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </a>
+{# ── KPI Cards ── #}
+<div class="row g-4 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="stat-icon bg-danger-subtle">
+                        <svg class="text-danger" width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        {# Recent Registrations #}
-        <div class="col-12 col-lg-6">
-            <div class="admin-card h-100">
-                <div class="admin-card-header d-flex align-items-start justify-content-between">
                     <div>
-                        <h3>Nouvelles inscriptions</h3>
-                        <p>7 derniers jours</p>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
+                        <p class="text-muted small text-uppercase fw-semibold mb-1" style="font-size:0.7rem;letter-spacing:0.5px;">Total Utilisateurs</p>
+                        <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.total ?? 0 }}</h3>
                         {% if growthRate > 0 %}
-                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size:0.7rem;">
-                                +{{ growthRate|round(1) }}%
-                            </span>
+                            <small class="text-success fw-semibold">↑ +{{ growthRate|round(1) }}% ce mois</small>
                         {% elseif growthRate < 0 %}
-                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1" style="font-size:0.7rem;">
-                                {{ growthRate|round(1) }}%
-                            </span>
+                            <small class="text-danger fw-semibold">↓ {{ growthRate|round(1) }}% ce mois</small>
                         {% endif %}
-                        <span class="badge bg-light text-muted border rounded-pill px-2 py-1" style="font-size:0.7rem;">
-                            {{ recentUsers|length }} nouveau(x)
-                        </span>
                     </div>
                 </div>
-
-                {# Role distribution mini-bars #}
-                <div class="px-4 py-3 border-bottom" style="background:#fafafa;">
-                    <div class="row g-2">
-                        {% set total = stats.total > 0 ? stats.total : 1 %}
-                        <div class="col-4">
-                            <div class="d-flex justify-content-between mb-1">
-                                <small class="text-muted" style="font-size:0.7rem;">Agriculteurs</small>
-                                <small class="fw-semibold text-success" style="font-size:0.7rem;">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</small>
-                            </div>
-                            <div class="progress" style="height:5px; border-radius:3px;">
-                                <div class="progress-bar bg-success" style="width:{{ ((stats.by_role.ROLE_AGRICULTEUR ?? 0) / total * 100)|round }}%"></div>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="d-flex justify-content-between mb-1">
-                                <small class="text-muted" style="font-size:0.7rem;">Fournisseurs</small>
-                                <small class="fw-semibold text-primary" style="font-size:0.7rem;">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</small>
-                            </div>
-                            <div class="progress" style="height:5px; border-radius:3px;">
-                                <div class="progress-bar bg-primary" style="width:{{ ((stats.by_role.ROLE_FOURNISSEUR ?? 0) / total * 100)|round }}%"></div>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="d-flex justify-content-between mb-1">
-                                <small class="text-muted" style="font-size:0.7rem;">AgriPlus</small>
-                                <small class="fw-semibold" style="font-size:0.7rem; color:#f59e0b;">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</small>
-                            </div>
-                            <div class="progress" style="height:5px; border-radius:3px;">
-                                <div class="progress-bar" style="background:#f59e0b; width:{{ ((stats.by_role.ROLE_AGRIPLUS ?? 0) / total * 100)|round }}%"></div>
-                            </div>
-                        </div>
+            </div>
+            <div class="card-footer bg-light border-0 p-3 d-flex justify-content-between">
+                <span class="text-muted small">Tous les comptes</span>
+                <a href="{{ path('admin_users_list') }}" class="text-danger text-decoration-none fw-medium small">Gérer →</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="stat-icon bg-success-subtle">
+                        <svg class="text-success" width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-muted small text-uppercase fw-semibold mb-1" style="font-size:0.7rem;letter-spacing:0.5px;">Agriculteurs</p>
+                        <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</h3>
+                        <small class="text-muted">{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRICULTEUR ?? 0) / stats.total * 100)|round(1) : 0 }}% du total</small>
                     </div>
                 </div>
+            </div>
+            <div class="card-footer bg-light border-0 p-3">
+                <span class="badge-status status-active">Actifs ce mois</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="stat-icon bg-primary-subtle">
+                        <svg class="text-primary" width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-muted small text-uppercase fw-semibold mb-1" style="font-size:0.7rem;letter-spacing:0.5px;">Fournisseurs</p>
+                        <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</h3>
+                        <small class="text-muted">{{ stats.total > 0 ? ((stats.by_role.ROLE_FOURNISSEUR ?? 0) / stats.total * 100)|round(1) : 0 }}% du total</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-light border-0 p-3">
+                <span class="badge-status status-verified">Vérifiés</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="stat-card">
+            <div class="card-body p-4">
+                <div class="d-flex align-items-start gap-3">
+                    <div class="stat-icon" style="background:rgba(245,158,11,0.1);">
+                        <svg style="color:#f59e0b;" width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-muted small text-uppercase fw-semibold mb-1" style="font-size:0.7rem;letter-spacing:0.5px;">Abonnés AgriPlus</p>
+                        <h3 class="h4 mb-0 fw-bold text-dark">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</h3>
+                        <small class="text-muted">{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRIPLUS ?? 0) / stats.total * 100)|round(1) : 0 }}% du total</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer bg-light border-0 p-3">
+                <span class="badge-status" style="background:rgba(245,158,11,0.1);color:#b45309;">Premium actifs</span>
+            </div>
+        </div>
+    </div>
+</div>
 
-                <div class="admin-card-body p-0">
-                    {% if recentUsers|length > 0 %}
-                        <ul class="list-unstyled mb-0">
-                            {% for user in recentUsers %}
-                                {% set userRole = 'ROLE_USER' %}
-                                {% if 'ROLE_ADMIN' in user.roles %}{% set userRole = 'ROLE_ADMIN' %}
-                                {% elseif 'ROLE_AGRIPLUS' in user.roles %}{% set userRole = 'ROLE_AGRIPLUS' %}
-                                {% elseif 'ROLE_FOURNISSEUR' in user.roles %}{% set userRole = 'ROLE_FOURNISSEUR' %}
-                                {% elseif 'ROLE_AGRICULTEUR' in user.roles %}{% set userRole = 'ROLE_AGRICULTEUR' %}
-                                {% endif %}
+{# ── Charts Row ── #}
+<div class="row g-4 mb-4">
+    {# Role Distribution Donut #}
+    <div class="col-12 col-lg-5">
+        <div class="chart-card h-100">
+            <div class="chart-card-title">Répartition des utilisateurs</div>
+            <div class="chart-card-sub">Distribution par rôle sur la plateforme</div>
+            <div style="position:relative;height:230px;">
+                <canvas id="roleDistChart"></canvas>
+            </div>
+            <div class="row g-1 mt-3">
+                <div class="col-6"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#198754;margin-right:5px;vertical-align:middle;"></span><small class="text-muted">Agriculteurs ({{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }})</small></div>
+                <div class="col-6"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#0d6efd;margin-right:5px;vertical-align:middle;"></span><small class="text-muted">Fournisseurs ({{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }})</small></div>
+                <div class="col-6"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#f59e0b;margin-right:5px;vertical-align:middle;"></span><small class="text-muted">AgriPlus ({{ stats.by_role.ROLE_AGRIPLUS ?? 0 }})</small></div>
+                <div class="col-6"><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:#6c757d;margin-right:5px;vertical-align:middle;"></span><small class="text-muted">Utilisateurs ({{ stats.by_role.ROLE_USER ?? 0 }})</small></div>
+            </div>
+        </div>
+    </div>
 
-                                {% set roleColor = {
-                                    'ROLE_AGRICULTEUR': '#198754',
-                                    'ROLE_FOURNISSEUR': '#0d6efd',
-                                    'ROLE_AGRIPLUS':    '#f59e0b',
-                                    'ROLE_ADMIN':       '#dc3545',
-                                    'ROLE_USER':        '#6c757d'
-                                } %}
-                                {% set roleLabel = {
-                                    'ROLE_AGRICULTEUR': 'Agriculteur',
-                                    'ROLE_FOURNISSEUR': 'Fournisseur',
-                                    'ROLE_AGRIPLUS':    'AgriPlus',
-                                    'ROLE_ADMIN':       'Admin',
-                                    'ROLE_USER':        'Utilisateur'
-                                } %}
+    {# Security Overview Bar #}
+    <div class="col-12 col-lg-7">
+        <div class="chart-card h-100">
+            <div class="chart-card-title">Aperçu de sécurité — 30 derniers jours</div>
+            <div class="chart-card-sub">Activité de connexion et événements de sécurité</div>
+            <div style="position:relative;height:270px;">
+                <canvas id="securityOverviewChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
 
-                                <li class="d-flex align-items-center gap-3 px-4 py-3 border-bottom {{ loop.last ? 'border-0' : '' }}" style="transition:background .15s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
-                                    {# Role dot #}
-                                    <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center fw-bold text-white" style="width:34px;height:34px;font-size:0.75rem;background:{{ roleColor[userRole] ?? '#6c757d' }};">
-                                        {{ user.displayName|slice(0,1)|upper }}
-                                    </div>
-                                    {# Name only #}
-                                    <div class="flex-fill text-truncate">
-                                        <span class="small fw-semibold text-dark">{{ user.displayName }}</span>
-                                    </div>
-                                    {# Role badge #}
-                                    <span class="badge rounded-pill flex-shrink-0" style="font-size:0.65rem;background:{{ roleColor[userRole] ?? '#6c757d' }}1a;color:{{ roleColor[userRole] ?? '#6c757d' }};border:1px solid {{ roleColor[userRole] ?? '#6c757d' }}33;">
-                                        {{ roleLabel[userRole] ?? 'Utilisateur' }}
-                                    </span>
-                                    {# Date #}
-                                    <small class="text-muted flex-shrink-0" style="font-size:0.7rem;">
-                                        {{ user.createdAt ? user.createdAt|date('d/m') : '' }}
-                                    </small>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    {% else %}
-                        <div class="d-flex flex-column align-items-center justify-content-center py-5 text-muted">
-                            <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="mb-2 opacity-40">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
-                            </svg>
-                            <p class="small mb-0 fw-medium">Aucune inscription récente</p>
-                            <p class="text-muted" style="font-size:0.75rem;">Les 7 derniers jours</p>
-                        </div>
+{# ── Actions & Recent Users ── #}
+<div class="row g-4 mb-4">
+    {# Quick Actions #}
+    <div class="col-12 col-lg-5">
+        <div class="admin-card h-100">
+            <div class="admin-card-header">
+                <h3>⚡ Actions Rapides</h3>
+                <p>Accès rapide aux fonctions d'administration</p>
+            </div>
+            <div class="admin-card-body d-flex flex-column gap-3">
+                <a href="{{ path('admin_users_list') }}" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none" style="transition:all 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
+                    <div class="d-flex align-items-center justify-content-center rounded-2" style="background:rgba(239,68,68,0.1);width:44px;height:44px;flex-shrink:0;">
+                        <svg style="color:#ef4444;" width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                    </div>
+                    <div class="ms-3 flex-fill">
+                        <p class="small fw-bold text-dark mb-0">Gérer les utilisateurs</p>
+                        <p class="text-muted mb-0" style="font-size:0.78rem;">Ajouter, modifier ou supprimer des comptes</p>
+                    </div>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#d1d5db;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="{{ path('admin_security_logs') }}" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none" style="transition:all 0.2s;" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
+                    <div class="d-flex align-items-center justify-content-center rounded-2" style="background:rgba(220,53,69,0.1);width:44px;height:44px;flex-shrink:0;">
+                        <svg style="color:#dc3545;" width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                    </div>
+                    <div class="ms-3 flex-fill">
+                        <p class="small fw-bold text-dark mb-0">Centre de Sécurité</p>
+                        <p class="text-muted mb-0" style="font-size:0.78rem;">Surveillance et alertes de sécurité</p>
+                    </div>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#d1d5db;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <button type="button" class="d-flex align-items-center p-3 rounded-3 border border-light text-decoration-none w-100 text-start" style="background:none;transition:all 0.2s;cursor:pointer;" data-bs-toggle="modal" data-bs-target="#exportModal" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
+                    <div class="d-flex align-items-center justify-content-center rounded-2" style="background:rgba(59,130,246,0.1);width:44px;height:44px;flex-shrink:0;">
+                        <svg style="color:#3b82f6;" width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <div class="ms-3 flex-fill">
+                        <p class="small fw-bold text-dark mb-0">Générer un rapport</p>
+                        <p class="text-muted mb-0" style="font-size:0.78rem;">Exporter les statistiques en PDF ou Excel</p>
+                    </div>
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#d1d5db;flex-shrink:0;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# Recent Registrations #}
+    <div class="col-12 col-lg-7">
+        <div class="admin-card h-100">
+            <div class="admin-card-header d-flex align-items-start justify-content-between">
+                <div>
+                    <h3>Nouvelles inscriptions</h3>
+                    <p>7 derniers jours</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    {% if growthRate > 0 %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1" style="font-size:0.7rem;">+{{ growthRate|round(1) }}%</span>
+                    {% elseif growthRate < 0 %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1" style="font-size:0.7rem;">{{ growthRate|round(1) }}%</span>
                     {% endif %}
+                    <span class="badge bg-light text-muted border rounded-pill px-2 py-1" style="font-size:0.7rem;">{{ recentUsers|length }} nouveau(x)</span>
                 </div>
-
+            </div>
+            {# Role distribution mini-bars #}
+            <div class="px-4 py-3 border-bottom" style="background:#fafafa;">
+                <div class="row g-2">
+                    {% set total = stats.total > 0 ? stats.total : 1 %}
+                    <div class="col-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted" style="font-size:0.7rem;">Agriculteurs</small>
+                            <small class="fw-semibold text-success" style="font-size:0.7rem;">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</small>
+                        </div>
+                        <div class="progress" style="height:5px;border-radius:3px;"><div class="progress-bar bg-success" style="width:{{ ((stats.by_role.ROLE_AGRICULTEUR ?? 0) / total * 100)|round }}%"></div></div>
+                    </div>
+                    <div class="col-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted" style="font-size:0.7rem;">Fournisseurs</small>
+                            <small class="fw-semibold text-primary" style="font-size:0.7rem;">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</small>
+                        </div>
+                        <div class="progress" style="height:5px;border-radius:3px;"><div class="progress-bar bg-primary" style="width:{{ ((stats.by_role.ROLE_FOURNISSEUR ?? 0) / total * 100)|round }}%"></div></div>
+                    </div>
+                    <div class="col-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted" style="font-size:0.7rem;">AgriPlus</small>
+                            <small class="fw-semibold" style="font-size:0.7rem;color:#f59e0b;">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</small>
+                        </div>
+                        <div class="progress" style="height:5px;border-radius:3px;"><div class="progress-bar" style="background:#f59e0b;width:{{ ((stats.by_role.ROLE_AGRIPLUS ?? 0) / total * 100)|round }}%"></div></div>
+                    </div>
+                </div>
+            </div>
+            <div class="admin-card-body p-0">
                 {% if recentUsers|length > 0 %}
-                <div class="px-4 py-3 border-top" style="background:#fafafa;">
-                    <a href="{{ path('admin_users_list') }}" class="small text-success text-decoration-none fw-medium">
-                        Voir tous les utilisateurs →
-                    </a>
-                </div>
+                    <ul class="list-unstyled mb-0">
+                        {% for user in recentUsers %}
+                            {% set userRole = 'ROLE_USER' %}
+                            {% if 'ROLE_ADMIN' in user.roles %}{% set userRole = 'ROLE_ADMIN' %}
+                            {% elseif 'ROLE_AGRIPLUS' in user.roles %}{% set userRole = 'ROLE_AGRIPLUS' %}
+                            {% elseif 'ROLE_FOURNISSEUR' in user.roles %}{% set userRole = 'ROLE_FOURNISSEUR' %}
+                            {% elseif 'ROLE_AGRICULTEUR' in user.roles %}{% set userRole = 'ROLE_AGRICULTEUR' %}
+                            {% endif %}
+                            {% set roleColor = {'ROLE_AGRICULTEUR':'#198754','ROLE_FOURNISSEUR':'#0d6efd','ROLE_AGRIPLUS':'#f59e0b','ROLE_ADMIN':'#dc3545','ROLE_USER':'#6c757d'} %}
+                            {% set roleLabel = {'ROLE_AGRICULTEUR':'Agriculteur','ROLE_FOURNISSEUR':'Fournisseur','ROLE_AGRIPLUS':'AgriPlus','ROLE_ADMIN':'Admin','ROLE_USER':'Utilisateur'} %}
+                            <li class="d-flex align-items-center gap-3 px-4 py-3 border-bottom {{ loop.last ? 'border-0' : '' }}" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background=''">
+                                <div class="rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center fw-bold text-white" style="width:34px;height:34px;font-size:0.75rem;background:{{ roleColor[userRole] ?? '#6c757d' }};"> {{ user.displayName|slice(0,1)|upper }}</div>
+                                <div class="flex-fill text-truncate"><span class="small fw-semibold text-dark">{{ user.displayName }}</span></div>
+                                <span class="badge rounded-pill flex-shrink-0" style="font-size:0.65rem;background:{{ roleColor[userRole] ?? '#6c757d' }}1a;color:{{ roleColor[userRole] ?? '#6c757d' }};border:1px solid {{ roleColor[userRole] ?? '#6c757d' }}33;">{{ roleLabel[userRole] ?? 'Utilisateur' }}</span>
+                                <small class="text-muted flex-shrink-0" style="font-size:0.7rem;">{{ user.createdAt ? user.createdAt|date('d/m') : '' }}</small>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="d-flex flex-column align-items-center justify-content-center py-5 text-muted">
+                        <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="mb-2 opacity-40"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                        <p class="small mb-0 fw-medium">Aucune inscription récente</p>
+                        <p class="text-muted" style="font-size:0.75rem;">Les 7 derniers jours</p>
+                    </div>
                 {% endif %}
             </div>
+            {% if recentUsers|length > 0 %}
+            <div class="px-4 py-3 border-top" style="background:#fafafa;">
+                <a href="{{ path('admin_users_list') }}" class="small text-success text-decoration-none fw-medium">Voir tous les utilisateurs →</a>
+            </div>
+            {% endif %}
         </div>
     </div>
+</div>
+
+{# ── Export Modal ── #}
+<div class="modal fade" id="exportModal" tabindex="-1" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="exportModalLabel">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2 text-primary"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Générer un rapport
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                {# Stats Preview #}
+                <div class="p-3 rounded-3 mb-4" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                    <h6 class="fw-bold text-dark mb-3">Aperçu du rapport — Plateforme AgriLink</h6>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3 text-center">
+                            <div class="fw-bold fs-4 text-danger">{{ stats.total ?? 0 }}</div>
+                            <div class="text-muted small">Total utilisateurs</div>
+                        </div>
+                        <div class="col-6 col-md-3 text-center">
+                            <div class="fw-bold fs-4 text-success">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</div>
+                            <div class="text-muted small">Agriculteurs</div>
+                        </div>
+                        <div class="col-6 col-md-3 text-center">
+                            <div class="fw-bold fs-4 text-primary">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</div>
+                            <div class="text-muted small">Fournisseurs</div>
+                        </div>
+                        <div class="col-6 col-md-3 text-center">
+                            <div class="fw-bold fs-4" style="color:#f59e0b;">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</div>
+                            <div class="text-muted small">AgriPlus</div>
+                        </div>
+                    </div>
+                    <hr class="my-3">
+                    <div class="row g-3">
+                        <div class="col-6 col-md-3 text-center">
+                            <div class="fw-bold fs-5 text-dark">{{ securityStats.loginSuccess ?? 0 }}</div>
+                            <div class="text-muted small">Connexions réussies (30j)</div>
+                        </div>
+                        <div class="col-6 col-md-3 text-center">
+                            <div class="fw-bold fs-5 {{ (securityStats.loginFailed ?? 0) > 5 ? 'text-warning' : 'text-dark' }}">{{ securityStats.loginFailed ?? 0 }}</div>
+                            <div class="text-muted small">Échecs connexion (30j)</div>
+                        </div>
+                        <div class="col-6 col-md-3 text-center">
+                            <div class="fw-bold fs-5 {{ (securityStats.accountLocked ?? 0) > 0 ? 'text-danger' : 'text-dark' }}">{{ securityStats.accountLocked ?? 0 }}</div>
+                            <div class="text-muted small">Comptes verrouillés (30j)</div>
+                        </div>
+                        <div class="col-6 col-md-3 text-center">
+                            <div class="fw-bold fs-5 text-dark">{{ recentUsers|length }}</div>
+                            <div class="text-muted small">Inscriptions (7 derniers j.)</div>
+                        </div>
+                    </div>
+                </div>
+                <p class="text-muted small mb-4">Choisissez le format d'export. Le rapport inclut les statistiques utilisateurs, les données de sécurité et les inscriptions récentes.</p>
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 rounded-3 border h-100 text-center" style="cursor:pointer;" onclick="exportPDF()" onmouseover="this.style.borderColor='#dc3545'" onmouseout="this.style.borderColor=''">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mx-auto mb-2" style="width:48px;height:48px;background:rgba(220,53,69,0.1);">
+                                <svg style="color:#dc3545;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                            </div>
+                            <div class="fw-semibold text-dark small">Export PDF</div>
+                            <div class="text-muted" style="font-size:0.73rem;">Rapport imprimable avec graphiques</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 rounded-3 border h-100 text-center" style="cursor:pointer;" onclick="exportExcel()" onmouseover="this.style.borderColor='#198754'" onmouseout="this.style.borderColor=''">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mx-auto mb-2" style="width:48px;height:48px;background:rgba(25,135,84,0.1);">
+                                <svg style="color:#198754;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            </div>
+                            <div class="fw-semibold text-dark small">Export Excel / CSV</div>
+                            <div class="text-muted" style="font-size:0.73rem;">Données brutes tabulaires</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 rounded-3 border h-100 text-center" style="cursor:pointer;" onclick="exportChartsPNG()" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor=''">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle mx-auto mb-2" style="width:48px;height:48px;background:rgba(59,130,246,0.1);">
+                                <svg style="color:#3b82f6;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            <div class="fw-semibold text-dark small">Graphiques PNG</div>
+                            <div class="text-muted" style="font-size:0.73rem;">Images des graphiques pour audit</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // ── Role Distribution Donut ──────────────────────────────────────
+    const roleCtx = document.getElementById('roleDistChart');
+    if (roleCtx) {
+        window._roleDistChart = new Chart(roleCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Agriculteurs', 'Fournisseurs', 'AgriPlus', 'Utilisateurs'],
+                datasets: [{
+                    data: [
+                        {{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }},
+                        {{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }},
+                        {{ stats.by_role.ROLE_AGRIPLUS ?? 0 }},
+                        {{ stats.by_role.ROLE_USER ?? 0 }}
+                    ],
+                    backgroundColor: ['#198754', '#0d6efd', '#f59e0b', '#6c757d'],
+                    borderWidth: 2,
+                    borderColor: '#fff',
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} utilisateurs` } }
+                }
+            }
+        });
+    }
+
+    // ── Security Overview Bar ────────────────────────────────────────
+    const secCtx = document.getElementById('securityOverviewChart');
+    if (secCtx) {
+        window._securityChart = new Chart(secCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Connexions réussies', 'Connexions échouées', 'Verrouillages', 'Changements mdp', '2FA réussi'],
+                datasets: [{
+                    label: '30 derniers jours',
+                    data: [
+                        {{ securityStats.loginSuccess ?? 0 }},
+                        {{ securityStats.loginFailed ?? 0 }},
+                        {{ securityStats.accountLocked ?? 0 }},
+                        {{ securityStats.passwordChanged ?? 0 }},
+                        {{ securityStats.twoFaSuccess ?? 0 }}
+                    ],
+                    backgroundColor: [
+                        'rgba(25,135,84,0.7)',
+                        'rgba(220,53,69,0.7)',
+                        'rgba(253,126,20,0.7)',
+                        'rgba(13,202,240,0.7)',
+                        'rgba(111,66,193,0.7)'
+                    ],
+                    borderColor: ['#198754','#dc3545','#fd7e14','#0dcaf0','#6f42c1'],
+                    borderWidth: 1,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} événements` } }
+                }
+            }
+        });
+    }
+});
+
+// ── Export functions ─────────────────────────────────────────────────────
+function exportPDF() {
+    window.print();
+}
+
+function exportExcel() {
+    const date = new Date().toLocaleDateString('fr-FR');
+    const rows = [
+        ['Rapport AgriLink - ' + date],
+        [],
+        ['=== STATISTIQUES UTILISATEURS ==='],
+        ['Catégorie', 'Nombre', 'Pourcentage'],
+        ['Total Utilisateurs', {{ stats.total ?? 0 }}, '100%'],
+        ['Agriculteurs', {{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}, '{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRICULTEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%'],
+        ['Fournisseurs', {{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}, '{{ stats.total > 0 ? ((stats.by_role.ROLE_FOURNISSEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%'],
+        ['AgriPlus', {{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}, '{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRIPLUS ?? 0) / stats.total * 100)|round(1) : 0 }}%'],
+        ['Utilisateurs standard', {{ stats.by_role.ROLE_USER ?? 0 }}, '{{ stats.total > 0 ? ((stats.by_role.ROLE_USER ?? 0) / stats.total * 100)|round(1) : 0 }}%'],
+        [],
+        ['=== SÉCURITÉ (30 DERNIERS JOURS) ==='],
+        ['Événement', 'Nombre'],
+        ['Connexions réussies', {{ securityStats.loginSuccess ?? 0 }}],
+        ['Connexions échouées', {{ securityStats.loginFailed ?? 0 }}],
+        ['Comptes verrouillés', {{ securityStats.accountLocked ?? 0 }}],
+        ['Changements de mot de passe', {{ securityStats.passwordChanged ?? 0 }}],
+        ['2FA réussi', {{ securityStats.twoFaSuccess ?? 0 }}],
+        [],
+        ['=== CROISSANCE ==='],
+        ['Indicateur', 'Valeur'],
+        ['Taux de croissance (30j)', '{{ growthRate|round(1) }}%'],
+        ['Nouvelles inscriptions (7j)', {{ recentUsers|length }}],
+    ];
+    const csvContent = rows.map(r => r.join(';')).join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'rapport-agrilink-' + new Date().toISOString().slice(0,10) + '.csv';
+    link.click();
+}
+
+function exportChartsPNG() {
+    const charts = [
+        { id: 'roleDistChart', name: 'repartition-roles' },
+        { id: 'securityOverviewChart', name: 'apercu-securite' }
+    ];
+    charts.forEach(function(c) {
+        const canvas = document.getElementById(c.id);
+        if (canvas) {
+            const link = document.createElement('a');
+            link.download = 'agrilink-' + c.name + '-' + new Date().toISOString().slice(0,10) + '.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+    });
+}
+</script>
+<style>
+@media print {
+    #desktop-sidebar, .mobile-header, .d-lg-none, button, .btn, #exportModal { display: none !important; }
+    .dashboard-main-content { margin-left: 0 !important; }
+    .dashboard-main { padding-top: 0 !important; }
+    body { background: white !important; }
+    .stat-card, .chart-card, .admin-card { break-inside: avoid; box-shadow: none !important; border: 1px solid #ccc !important; }
+}
+</style>
 {% endblock %}
