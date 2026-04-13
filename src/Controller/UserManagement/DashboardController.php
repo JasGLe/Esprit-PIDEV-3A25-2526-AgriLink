@@ -5,13 +5,25 @@ namespace App\Controller\UserManagement;
 use App\Entity\UserManagement\User;
 use App\Repository\Activity\EvenementRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpClient\HttpClient;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[IsGranted('ROLE_USER')]
 class DashboardController extends AbstractController
 {
+    public function __construct(
+        private readonly HttpClientInterface $httpClient,
+        #[Autowire('%env(OPENWEATHER_API_KEY)%')]
+        private readonly string $openWeatherApiKey,
+        #[Autowire('%env(OPENWEATHER_BASE_URL)%')]
+        private readonly string $openWeatherBaseUrl,
+    ) {
+    }
+
     #[Route('/dashboard', name: 'app_dashboard')]
     public function index(): Response
     {
@@ -43,10 +55,22 @@ class DashboardController extends AbstractController
     {
         /** @var User $user */
         $user = $this->getUser();
+        $weather = [];
+        $userCity = $user->getVille();
+
+        if ($userCity) {
+            try {
+                $weather = $this->fetchCurrentWeather($userCity);
+            } catch (\Throwable) {
+                $weather = [];
+            }
+        }
 
         return $this->render('user_management/dashboard/agriculteur.html.twig', [
             'myEvenementsCount' => $evenementRepository->countByOrganisateurId((int) $user->getId()),
             'myEvenements' => $evenementRepository->findLatestByOrganisateurId((int) $user->getId(), 6),
+            'weather' => $weather,
+            'userCity' => $userCity,
         ]);
     }
 
@@ -78,5 +102,44 @@ class DashboardController extends AbstractController
         }
 
         return $this->render('user_management/home/landing.html.twig');
+    }
+
+    /**
+     * Fetch current weather for a city
+     *
+     * @return array{
+     *     icon: string,
+     *     description: string,
+     *     temp: float,
+     *     feels_like: float,
+     *     humidity: int,
+     *     windSpeed: float
+     * }
+     */
+    private function fetchCurrentWeather(string $city): array
+    {
+        $response = $this->httpClient->request('GET', rtrim($this->openWeatherBaseUrl, '/') . '/weather', [
+            'query' => [
+                'q' => sprintf('%s,TN', $city),
+                'appid' => trim($this->openWeatherApiKey),
+                'units' => 'metric',
+                'lang' => 'fr',
+            ],
+        ]);
+
+        if ($response->getStatusCode() !== 200) {
+            throw new \RuntimeException('Unable to retrieve weather data.');
+        }
+
+        $payload = $response->toArray(false);
+
+        return [
+            'icon' => (string) $payload['weather'][0]['icon'],
+            'description' => ucfirst((string) $payload['weather'][0]['description']),
+            'temp' => (float) $payload['main']['temp'],
+            'feels_like' => (float) $payload['main']['feels_like'],
+            'humidity' => (int) $payload['main']['humidity'],
+            'windSpeed' => (float) $payload['wind']['speed'],
+        ];
     }
 }

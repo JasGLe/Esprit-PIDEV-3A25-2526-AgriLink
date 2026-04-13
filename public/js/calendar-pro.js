@@ -53,6 +53,11 @@ class CalendarPro {
 
         this.calendar = new FullCalendar.Calendar(calendarEl, this.getCalendarOptions());
         this.calendar.render();
+
+        // Load weather indicators after calendar renders
+        if (window.calendarWeatherModule) {
+            window.calendarWeatherModule.loadWeatherData(calendarEl);
+        }
     }
 
     getCalendarOptions() {

@@ -284,3 +284,38 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* ========================================
+   CALENDAR WEATHER INTEGRATION
+   ======================================== */
+
+.weather-indicator {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    font-size: 0.75rem;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 3px;
+    padding: 2px 4px;
+    z-index: 10;
+}
+
+.weather-indicator .weather-icon {
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+.weather-indicator .weather-temp {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.7rem;
+}
+
+.weather-indicator:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
