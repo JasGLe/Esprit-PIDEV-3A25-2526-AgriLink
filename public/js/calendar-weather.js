@@ -29,9 +29,14 @@
 
             try {
                 const response = await fetch(`/calendar/api/weather?city=${encodeURIComponent(city)}`);
-                if (!response.ok) throw new Error('Failed to load weather');
+                if (!response.ok) {
+                    console.log('Weather API returned:', response.status);
+                    return;
+                }
                 
                 const weatherData = await response.json();
+                console.log('Loaded weather data:', weatherData);
+                
                 this.applyWeatherToCalendar(calendarElement, weatherData);
             } catch (error) {
                 console.log('Weather data not available:', error);
@@ -39,8 +44,15 @@
         },
 
         applyWeatherToCalendar: function(calendarElement, weatherData) {
-            if (!weatherData || Object.keys(weatherData).length === 0) return;
+            if (!weatherData || Object.keys(weatherData).length === 0) {
+                console.log('No weather data to apply');
+                return;
+            }
 
+            // Inject immediately
+            this.injectWeatherIndicators(weatherData);
+
+            // Watch for calendar updates
             const observer = new MutationObserver(() => {
                 this.injectWeatherIndicators(weatherData);
             });
@@ -49,21 +61,21 @@
                 childList: true,
                 subtree: true,
             });
-
-            this.injectWeatherIndicators(weatherData);
         },
 
         injectWeatherIndicators: function(weatherData) {
             document.querySelectorAll('[data-datestr]').forEach((cell) => {
                 const dateStr = cell.getAttribute('data-datestr');
-                if (!dateStr || weatherData[dateStr]) return;
-
-                const existing = cell.querySelector('.weather-indicator');
-                if (existing) existing.remove();
+                if (!dateStr) return;
 
                 const weather = weatherData[dateStr];
                 if (!weather) return;
 
+                // Remove existing indicator
+                const existing = cell.querySelector('.weather-indicator');
+                if (existing) existing.remove();
+
+                // Create new indicator
                 const indicator = document.createElement('div');
                 indicator.className = 'weather-indicator';
                 indicator.setAttribute('title', weather.description);
@@ -82,3 +94,4 @@
         },
     };
 })();
+
