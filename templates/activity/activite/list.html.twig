@@ -19,7 +19,7 @@
             <button type="button" class="btn btn-outline-primary px-4" data-bs-toggle="modal" data-bs-target="#activiteExportModal">
                 📊 Extraits
             </button>
-            <a href="{{ path('activite_new') }}" class="btn btn-success px-4">
+            <a href="{{ path('activite_new', {'redirect': app.request.uri}) }}" class="btn btn-success px-4">
                 <span class="me-2">➕</span>
                 Nouvelle activité
             </a>

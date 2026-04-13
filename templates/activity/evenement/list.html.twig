@@ -15,7 +15,7 @@
             <h2 class="fs-3 fw-bold text-dark mb-1">Événements</h2>
             <p class="text-muted mb-0">Gérez vos événements et leurs invitations.</p>
         </div>
-        <a href="{{ path('evenement_new') }}" class="btn btn-success px-4">
+        <a href="{{ path('evenement_new', {'redirect': app.request.uri}) }}" class="btn btn-success px-4">
             <span class="me-2">➕</span>
             Nouvel événement
         </a>

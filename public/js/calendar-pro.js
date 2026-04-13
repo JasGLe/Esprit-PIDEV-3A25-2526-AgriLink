@@ -10,14 +10,21 @@ class CalendarPro {
             dayEventsModalLabel: '#dayEventsModalLabel',
             dayEventsDate: '#dayEventsDate',
             dayEventsContent: '#dayEventsContent',
+            quickAddModal: '#quickAddModal',
+            quickAddSelection: '#quickAddSelection',
+            quickAddEventLink: '#quickAddEventLink',
+            quickAddActivityLink: '#quickAddActivityLink',
             apiEventsUrl: '/calendar/api/events',
             apiDayEventsUrl: '/calendar/api/day-events',
+            activiteNewUrl: '/activite/new',
+            evenementNewUrl: '/evenement/new',
+            currentUrl: window.location.pathname + window.location.search,
             ...config
         };
 
         this.calendar = null;
-        this.modal = null;
-        this.selectedDate = null;
+        this.dayModal = null;
+        this.quickAddModal = null;
     }
 
     init() {
@@ -27,9 +34,21 @@ class CalendarPro {
             return;
         }
 
-        const modalElement = document.querySelector(this.config.dayEventsModal);
-        if (typeof bootstrap !== 'undefined' && modalElement) {
-            this.modal = new bootstrap.Modal(modalElement);
+        if (typeof bootstrap !== 'undefined') {
+            const dayModalElement = document.querySelector(this.config.dayEventsModal);
+            const quickAddModalElement = document.querySelector(this.config.quickAddModal);
+
+            if (dayModalElement) {
+                this.dayModal = new bootstrap.Modal(dayModalElement);
+            }
+
+            if (quickAddModalElement) {
+                this.quickAddModal = new bootstrap.Modal(quickAddModalElement);
+            }
+        }
+
+        if (calendarEl.dataset.currentUrl) {
+            this.config.currentUrl = calendarEl.dataset.currentUrl;
         }
 
         this.calendar = new FullCalendar.Calendar(calendarEl, this.getCalendarOptions());
@@ -73,19 +92,26 @@ class CalendarPro {
                 timeGridWeek: {
                     allDaySlot: true,
                     slotMinTime: '06:00:00',
-                    slotMaxTime: '22:00:00'
+                    slotMaxTime: '22:00:00',
+                    slotDuration: '01:00:00',
+                    slotLabelInterval: '01:00:00'
                 },
                 timeGridDay: {
                     allDaySlot: true,
                     slotMinTime: '06:00:00',
-                    slotMaxTime: '22:00:00'
+                    slotMaxTime: '22:00:00',
+                    slotDuration: '01:00:00',
+                    slotLabelInterval: '01:00:00'
                 }
             },
             events: this.fetchEvents.bind(this),
             eventContent: this.renderEventContent.bind(this),
             eventClick: this.handleEventClick.bind(this),
             dateClick: this.handleDateClick.bind(this),
-            dayCellDidMount: this.handleDayCellMount.bind(this)
+            datesSet: this.handleDatesSet.bind(this),
+            dayCellDidMount: this.handleDayCellMount.bind(this),
+            dayHeaderDidMount: this.handleDayHeaderMount.bind(this),
+            slotLaneDidMount: this.handleSlotLaneMount.bind(this)
         };
     }
 
@@ -130,22 +156,120 @@ class CalendarPro {
     }
 
     handleDayCellMount(info) {
-        if (!info.isOther) {
-            info.el.classList.add('fc-day-current-month');
+        const activeView = this.getViewType(info);
+        if (activeView === 'dayGridMonth' && !info.isOther && info.el) {
+            this.injectGoToDayButton(info.el, info.date);
+            return;
+        }
+
+        if (activeView !== 'timeGridDay') {
+            return;
         }
     }
 
+    handleDayHeaderMount(info) {
+        if (!info.el || !info.date) {
+            return;
+        }
+
+        const activeView = this.getViewType(info);
+        if (activeView !== 'timeGridDay') {
+            return;
+        }
+    }
+
+    handleSlotLaneMount(info) {
+        if (!info.el || !info.date) {
+            return;
+        }
+
+        const activeView = this.getViewType(info);
+        if (activeView !== 'timeGridDay') {
+            return;
+        }
+
+        this.injectAddButton(info.el, info.date, 'slot');
+    }
+
+    injectAddButton(container, dateValue, mode) {
+        if (!container || container.querySelector(`.fc-add-entry-btn-${mode}`)) {
+            return;
+        }
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = `fc-add-entry-btn fc-add-entry-btn-${mode}`;
+        button.setAttribute('aria-label', 'Ajouter une entree');
+        button.innerHTML = '+';
+
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            this.openQuickAddModal(dateValue);
+        });
+
+        container.appendChild(button);
+    }
+
     handleEventClick(info) {
-        const event = info.event;
-        const url = event.extendedProps?.url;
+        const url = info.event.extendedProps?.url;
         if (url) {
             window.location.href = url;
         }
     }
 
     handleDateClick(info) {
-        this.selectedDate = info.dateStr;
+        const activeView = this.getViewType(info);
+        if (activeView === 'timeGridDay') {
+            this.openQuickAddModal(info.date);
+            return;
+        }
+
         this.showDayEventsModal(info.dateStr);
+    }
+
+    handleDatesSet(info) {
+        const activeView = this.getViewType(info);
+        this.removeAllAddButtons();
+        this.removeAllGoToDayButtons();
+
+        if (activeView === 'dayGridMonth') {
+            window.requestAnimationFrame(() => {
+                this.ensureMonthViewGoToDayButtons();
+            });
+            return;
+        }
+
+        if (activeView !== 'timeGridDay') {
+            return;
+        }
+
+        window.requestAnimationFrame(() => {
+            this.ensureDayViewAddButtons();
+        });
+    }
+
+    injectGoToDayButton(container, dateValue) {
+        if (!container || container.querySelector('.fc-go-day-btn')) {
+            return;
+        }
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'fc-go-day-btn';
+        button.setAttribute('aria-label', 'Voir en vue jour');
+        button.textContent = '+';
+
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!this.calendar) {
+                return;
+            }
+            this.calendar.changeView('timeGridDay', dateValue);
+        });
+
+        container.appendChild(button);
     }
 
     showDayEventsModal(dateStr) {
@@ -190,8 +314,8 @@ class CalendarPro {
                 `;
             });
 
-        if (this.modal) {
-            this.modal.show();
+        if (this.dayModal) {
+            this.dayModal.show();
         }
     }
 
@@ -269,6 +393,144 @@ class CalendarPro {
                 </div>
             </div>
         `;
+    }
+
+    openQuickAddModal(dateValue) {
+        const payload = this.buildPrefillPayload(dateValue);
+
+        const selectionEl = document.querySelector(this.config.quickAddSelection);
+        const eventLinkEl = document.querySelector(this.config.quickAddEventLink);
+        const activityLinkEl = document.querySelector(this.config.quickAddActivityLink);
+
+        if (!selectionEl || !eventLinkEl || !activityLinkEl) {
+            return;
+        }
+
+        selectionEl.textContent = payload.label;
+        eventLinkEl.href = this.buildCreationUrl(this.config.evenementNewUrl, payload);
+        activityLinkEl.href = this.buildCreationUrl(this.config.activiteNewUrl, payload);
+
+        if (this.quickAddModal) {
+            this.quickAddModal.show();
+        }
+    }
+
+    buildPrefillPayload(dateValue) {
+        const dateObj = dateValue instanceof Date ? dateValue : new Date(dateValue);
+
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const hours = String(dateObj.getHours()).padStart(2, '0');
+        const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+
+        const date = `${year}-${month}-${day}`;
+        const time = `${hours}:${minutes}`;
+        const hasTime = !(hours === '00' && minutes === '00');
+
+        const humanDate = dateObj.toLocaleDateString('fr-FR', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+
+        return {
+            date,
+            time: hasTime ? time : '',
+            start: hasTime ? `${date}T${time}:00` : `${date}T00:00:00`,
+            label: hasTime ? `${humanDate} a ${time}` : humanDate
+        };
+    }
+
+    buildCreationUrl(baseUrl, payload) {
+        const params = new URLSearchParams();
+        params.set('date', payload.date);
+        params.set('start', payload.start);
+        params.set('redirect', this.config.currentUrl);
+
+        if (payload.time) {
+            params.set('time', payload.time);
+            params.set('datetime', `${payload.date} ${payload.time}`);
+        }
+
+        return `${baseUrl}?${params.toString()}`;
+    }
+
+    getViewType(info) {
+        return info?.view?.type || (this.calendar ? this.calendar.view.type : '');
+    }
+
+    removeAllAddButtons() {
+        if (!this.calendar || !this.calendar.el) {
+            return;
+        }
+
+        this.calendar.el.querySelectorAll('.fc-add-entry-btn').forEach((button) => {
+            button.remove();
+        });
+    }
+
+    removeAllGoToDayButtons() {
+        if (!this.calendar || !this.calendar.el) {
+            return;
+        }
+
+        this.calendar.el.querySelectorAll('.fc-go-day-btn').forEach((button) => {
+            button.remove();
+        });
+    }
+
+    ensureDayViewAddButtons() {
+        if (!this.calendar || !this.calendar.el || this.calendar.view.type !== 'timeGridDay') {
+            return;
+        }
+
+        const viewDate = new Date(this.calendar.view.currentStart);
+        viewDate.setHours(0, 0, 0, 0);
+
+        this.calendar.el.querySelectorAll('.fc-timegrid-slots tr[data-time]').forEach((row) => {
+            const lane = row.querySelector('.fc-timegrid-slot-lane');
+            if (!lane) {
+                return;
+            }
+
+            const time = (row.getAttribute('data-time') || '00:00:00').split(':');
+            const slotDate = new Date(viewDate);
+            slotDate.setHours(
+                Number.parseInt(time[0] || '0', 10),
+                Number.parseInt(time[1] || '0', 10),
+                0,
+                0
+            );
+
+            this.injectAddButton(lane, slotDate, 'slot');
+        });
+    }
+
+    ensureMonthViewGoToDayButtons() {
+        if (!this.calendar || !this.calendar.el || this.calendar.view.type !== 'dayGridMonth') {
+            return;
+        }
+
+        this.calendar.el.querySelectorAll('.fc-daygrid-day[data-date]').forEach((dayCell) => {
+            const dateRaw = dayCell.getAttribute('data-date');
+            if (!dateRaw) {
+                return;
+            }
+
+            const dayFrame = dayCell.querySelector('.fc-daygrid-day-frame');
+            if (!dayFrame) {
+                return;
+            }
+
+            const date = new Date(`${dateRaw}T00:00:00`);
+            if (Number.isNaN(date.getTime())) {
+                return;
+            }
+
+            this.injectGoToDayButton(dayFrame, date);
+        });
     }
 
     escapeHtml(text) {

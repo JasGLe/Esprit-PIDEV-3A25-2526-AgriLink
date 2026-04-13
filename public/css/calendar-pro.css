@@ -171,6 +171,7 @@
 
 .fc .fc-daygrid-day-frame {
     min-height: 110px;
+    position: relative;
 }
 
 .fc .fc-daygrid-day-number {
@@ -256,6 +257,30 @@
     border-left: 3px solid var(--cal-event);
 }
 
+/* Keep same readable colors in week/day time-grid views */
+.fc .fc-timegrid-event.activite-event,
+.fc .fc-timegrid-event-harness .fc-timegrid-event.activite-event {
+    background: var(--cal-activity-soft) !important;
+    color: #166534 !important;
+    border-left: 3px solid var(--cal-activity) !important;
+    border-color: transparent !important;
+}
+
+.fc .fc-timegrid-event.evenement-event,
+.fc .fc-timegrid-event-harness .fc-timegrid-event.evenement-event {
+    background: var(--cal-event-soft) !important;
+    color: #1e3a8a !important;
+    border-left: 3px solid var(--cal-event) !important;
+    border-color: transparent !important;
+}
+
+.fc .fc-timegrid-event .fc-event-main,
+.fc .fc-timegrid-event .fc-event-main-frame,
+.fc .fc-timegrid-event .fc-event-time,
+.fc .fc-timegrid-event .fc-event-title {
+    color: inherit !important;
+}
+
 .fc .fc-timegrid-slot,
 .fc .fc-timegrid-axis {
     height: 2.75rem;
@@ -279,6 +304,120 @@
 .fc .fc-timegrid-now-indicator-arrow {
     border-top-color: #ef4444;
     border-bottom-color: #ef4444;
+}
+
+.fc .fc-timegrid-slot-lane {
+    position: relative;
+}
+
+.fc-add-entry-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    border: 1px solid #8fb6ff;
+    background: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%);
+    color: #155fce;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.18);
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity var(--cal-transition), transform var(--cal-transition), background var(--cal-transition), color var(--cal-transition);
+}
+
+.fc-add-entry-btn:hover {
+    background: var(--cal-primary);
+    color: #ffffff;
+    border-color: var(--cal-primary);
+    transform: scale(1.05);
+}
+
+.fc-add-entry-btn-day {
+    position: absolute;
+    right: 6px;
+    top: 6px;
+    z-index: 3;
+}
+
+.fc-add-entry-btn-slot {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 6;
+}
+
+.fc-add-entry-btn-header {
+    position: absolute;
+    right: 8px;
+    top: 6px;
+    z-index: 4;
+}
+
+.fc .fc-daygrid-day:hover .fc-add-entry-btn-day,
+.fc .fc-col-header-cell:hover .fc-add-entry-btn-header,
+.fc .fc-timegrid-slot-lane:hover .fc-add-entry-btn-slot,
+.fc-add-entry-btn:focus {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.fc .fc-timegrid-slot-lane:hover .fc-add-entry-btn-slot {
+    transform: translateY(-50%);
+}
+
+.fc-add-entry-btn-slot:focus {
+    transform: translateY(-50%);
+}
+
+.fc .fc-col-header-cell-cushion {
+    position: relative;
+    display: inline-block;
+    padding-right: 36px;
+}
+
+.fc-go-day-btn {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    border: 1px solid #c7d2fe;
+    background: #ffffff;
+    color: #1d4ed8;
+    border-radius: 999px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    line-height: 1;
+    z-index: 8;
+    box-shadow: var(--cal-shadow-sm);
+    transition: background var(--cal-transition), color var(--cal-transition), border-color var(--cal-transition), transform var(--cal-transition);
+}
+
+.fc-go-day-btn:hover {
+    background: var(--cal-primary);
+    color: #ffffff;
+    border-color: var(--cal-primary);
+    transform: translateY(-1px);
+}
+
+.fc .fc-daygrid-day-frame {
+    position: relative;
+}
+
+.quick-add-modal-content {
+    border-radius: 16px;
+    border: 1px solid var(--cal-border);
+}
+
+.quick-add-actions .btn {
+    font-weight: 600;
 }
 
 .day-events-modal-body {
@@ -429,6 +568,10 @@
     .fc .fc-event-title,
     .fc .fc-event-time-chip {
         font-size: 0.66rem;
+    }
+
+    .fc-add-entry-btn {
+        opacity: 1;
     }
 
     .event-card {

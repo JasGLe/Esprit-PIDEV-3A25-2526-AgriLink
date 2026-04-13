@@ -59,12 +59,9 @@ class EvenementController extends AbstractController
         $this->assertModuleAccess();
 
         $evenement = new Evenement();
-        $dateParam = trim((string) $request->query->get('date', ''));
-        if ($dateParam !== '') {
-            $selectedDate = \DateTimeImmutable::createFromFormat('Y-m-d', $dateParam);
-            if ($selectedDate instanceof \DateTimeImmutable) {
-                $evenement->setDateEvenement($selectedDate->setTime(9, 0));
-            }
+        $prefilledDate = $this->resolvePrefillDateTime($request);
+        if ($prefilledDate instanceof \DateTimeImmutable) {
+            $evenement->setDateEvenement($prefilledDate);
         }
 
         $form = $this->createForm(EvenementType::class, $evenement, [
@@ -87,7 +84,7 @@ class EvenementController extends AbstractController
 
                     $this->addFlash('success', 'L\'événement a été créé avec succès.');
 
-                    return $this->redirectToRoute('evenement_show', ['id' => $evenement->getId()]);
+                    return $this->redirectBackOrFallback($request, 'evenement_list');
                 } catch (\Exception $e) {
                     $this->addFlash('error', 'Une erreur est survenue lors de l\'enregistrement de l\'événement. Veuillez réessayer.');
                 }
@@ -223,7 +220,7 @@ class EvenementController extends AbstractController
             $this->addFlash('success', 'L\'événement a été supprimé avec succès.');
         }
 
-        return $this->redirectToRoute('evenement_list');
+        return $this->redirectBackOrFallback($request, 'evenement_list');
     }
 
     private function assertModuleAccess(): void
@@ -317,5 +314,90 @@ class EvenementController extends AbstractController
             'nextDate' => $nextDate?->format('d/m/Y H:i') ?? 'Aucune date à venir',
             'nextInDays' => $nextInDays,
         ];
+    }
+
+    private function resolvePrefillDateTime(Request $request): ?\DateTimeImmutable
+    {
+        $datetimeParam = trim((string) $request->query->get('datetime', ''));
+        if ($datetimeParam !== '') {
+            $normalized = str_replace(' ', 'T', $datetimeParam);
+            try {
+                $dateTime = new \DateTimeImmutable($normalized);
+                return $dateTime->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            } catch (\Exception) {
+            }
+        }
+
+        $startParam = trim((string) $request->query->get('start', ''));
+        if ($startParam !== '') {
+            try {
+                $dateTime = new \DateTimeImmutable($startParam);
+                return $dateTime->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            } catch (\Exception) {
+            }
+        }
+
+        $dateParam = trim((string) $request->query->get('date', ''));
+        if ($dateParam === '') {
+            return null;
+        }
+
+        $selectedDate = \DateTimeImmutable::createFromFormat('Y-m-d', $dateParam);
+        if (!$selectedDate instanceof \DateTimeImmutable) {
+            return null;
+        }
+
+        $timeParam = trim((string) $request->query->get('time', ''));
+        if ($timeParam !== '' && preg_match('/^\d{2}:\d{2}$/', $timeParam) === 1) {
+            [$hour, $minute] = array_map('intval', explode(':', $timeParam));
+            return $selectedDate->setTime($hour, $minute);
+        }
+
+        return $selectedDate->setTime(9, 0);
+    }
+
+    private function redirectBackOrFallback(Request $request, string $fallbackRoute, array $fallbackParams = []): Response
+    {
+        $redirectTarget = $this->sanitizeRedirectTarget((string) $request->request->get('redirect', ''), $request)
+            ?? $this->sanitizeRedirectTarget((string) $request->query->get('redirect', ''), $request)
+            ?? $this->sanitizeRedirectTarget((string) $request->headers->get('referer', ''), $request);
+
+        if ($redirectTarget !== null) {
+            return $this->redirect($redirectTarget);
+        }
+
+        return $this->redirectToRoute($fallbackRoute, $fallbackParams);
+    }
+
+    private function sanitizeRedirectTarget(string $target, Request $request): ?string
+    {
+        $target = trim($target);
+        if ($target === '') {
+            return null;
+        }
+
+        if (str_starts_with($target, '/')) {
+            return str_starts_with($target, '//') ? null : $target;
+        }
+
+        $origin = $request->getSchemeAndHttpHost();
+        if (!str_starts_with($target, $origin)) {
+            return null;
+        }
+
+        $parts = parse_url($target);
+        if ($parts === false || (($parts['host'] ?? null) !== $request->getHost())) {
+            return null;
+        }
+
+        $path = $parts['path'] ?? '/';
+        if (!str_starts_with($path, '/')) {
+            $path = '/' . $path;
+        }
+
+        $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+        $fragment = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
+
+        return $path . $query . $fragment;
     }
 }

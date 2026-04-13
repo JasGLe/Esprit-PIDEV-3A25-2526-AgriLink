@@ -30,7 +30,7 @@
 
     <div class="card border-0 shadow-sm calendar-shell">
         <div class="card-body p-4">
-            <div id="calendar"></div>
+            <div id="calendar" data-current-url="{{ app.request.uri }}"></div>
         </div>
     </div>
 
@@ -51,6 +51,26 @@
                 </div>
                 <div class="modal-footer border-top">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="quickAddModal" tabindex="-1" aria-labelledby="quickAddModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content quick-add-modal-content">
+                <div class="modal-header border-bottom-0 pb-2">
+                    <div>
+                        <h5 class="modal-title" id="quickAddModalLabel">Ajouter rapidement</h5>
+                        <small id="quickAddSelection" class="text-muted d-block"></small>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-2">
+                    <div class="quick-add-actions d-grid gap-2">
+                        <a id="quickAddEventLink" href="#" class="btn btn-primary">Creer un evenement</a>
+                        <a id="quickAddActivityLink" href="#" class="btn btn-success">Creer une activite</a>
+                    </div>
                 </div>
             </div>
         </div>
