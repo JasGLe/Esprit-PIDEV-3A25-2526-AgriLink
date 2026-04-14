@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\UserManagement\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Twig\Environment;
@@ -19,7 +20,11 @@ class TwoFactorService
         private EntityManagerInterface $entityManager,
         private MailerInterface $mailer,
         private Environment $twig,
-        private string $appUrl = 'http://localhost'
+        private TwilioSmsService $twilioService,
+        #[Autowire('%env(APP_URL)%')]
+        private string $appUrl = 'http://localhost',
+        #[Autowire('%env(bool:TWILIO_SMS_OTP_ENABLED)%')]
+        private bool $smsSmsOtpEnabled = false
     ) {
     }
 
@@ -68,6 +73,52 @@ class TwoFactorService
             ->html($htmlContent);
 
         $this->mailer->send($email);
+    }
+
+    /**
+     * Send the OTP code via SMS to the user.
+     * Returns true if SMS was sent successfully, false if SMS is disabled or number unavailable.
+     */
+    public function sendOtpSms(User $user): bool
+    {
+        $code = $user->getOtpCode();
+        
+        if ($code === null) {
+            throw new \RuntimeException('Aucun code OTP à envoyer. Générez d\'abord un code.');
+        }
+
+        if (!$this->smsSmsOtpEnabled) {
+            return false;
+        }
+
+        $phoneNumber = $user->getTelephone();
+        if (empty($phoneNumber)) {
+            return false;
+        }
+
+        return $this->twilioService->sendOtpSms($phoneNumber, $code);
+    }
+
+    /**
+     * Send OTP via both email and SMS (if SMS is enabled and phone exists).
+     * Always sends email, optionally sends SMS based on configuration.
+     */
+    public function sendOtpByPreferredMethod(User $user, string $method = 'email'): bool
+    {
+        try {
+            if ($method === 'sms' && $this->smsSmsOtpEnabled) {
+                $smsSent = $this->sendOtpSms($user);
+                if ($smsSent) {
+                    return true;
+                }
+                // Fall back to email if SMS fails
+            }
+            
+            $this->sendOtpEmail($user);
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     /**
