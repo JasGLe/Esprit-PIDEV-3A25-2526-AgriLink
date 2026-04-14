@@ -424,7 +424,7 @@
         </div>
 
         <div class="table-responsive">
-            <table class="table mb-0">
+            <table class="table mb-0" id="users-table">
                 <thead class="table-header">
                     <tr>
                         <th>
@@ -471,7 +471,7 @@
                         <th class="text-end">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="users-tbody">
                     {% if users is defined and users|length > 0 %}
                         {% for user in users %}
                             <tr>
@@ -645,10 +645,10 @@
         </div>
 
         {# Enhanced Pagination #}
-        {% if totalPages > 1 %}
-            <div class="card-footer bg-white border-top py-3">
-                <nav>
-                    <ul class="pagination pagination-modern justify-content-center mb-0">
+        <div class="card-footer bg-white border-top py-3" id="pagination-container">
+            {% if totalPages > 1 %}
+            <nav>
+                <ul class="pagination pagination-modern justify-content-center mb-0">
                         {% if page > 1 %}
                             <li class="page-item">
                                 <a class="page-link" href="{{ path('admin_users_list', {search: search, role: roleFilter, status: statusFilter, orderBy: orderBy, orderDir: orderDir, page: page - 1}) }}">
@@ -682,9 +682,217 @@
                         {% endif %}
                     </ul>
                 </nav>
-            </div>
-        {% endif %}
+            {% endif %}
+        </div>
     </div>
 
 </div>
+
+<script>
+// AJAX Search functionality
+let searchTimeout;
+const searchInput = document.getElementById('searchUser');
+const roleSelect = document.getElementById('filterRole');
+const statusSelect = document.getElementById('filterStatus');
+const filterForm = document.getElementById('filter-form');
+
+// Add event listeners for real-time search
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            performAjaxSearch();
+        }, 500);
+    });
+}
+
+// Add event listeners for filter changes
+if (roleSelect) {
+    roleSelect.addEventListener('change', performAjaxSearch);
+}
+
+if (statusSelect) {
+    statusSelect.addEventListener('change', performAjaxSearch);
+}
+
+// Prevent form submission and use AJAX instead
+if (filterForm) {
+    filterForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        performAjaxSearch();
+    });
+}
+
+function performAjaxSearch(page = 1) {
+    const search = searchInput?.value || '';
+    const role = roleSelect?.value || '';
+    const status = statusSelect?.value || '';
+    const orderBy = new URLSearchParams(window.location.search).get('orderBy') || 'createdAt';
+    const orderDir = new URLSearchParams(window.location.search).get('orderDir') || 'DESC';
+
+    const url = new URL('{{ path("admin_users_search_ajax") }}', window.location.origin);
+    url.searchParams.append('page', page);
+    url.searchParams.append('search', search);
+    url.searchParams.append('role', role);
+    url.searchParams.append('status', status);
+    url.searchParams.append('orderBy', orderBy);
+    url.searchParams.append('orderDir', orderDir);
+
+    fetch(url, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            updateUserTable(data.users);
+            updatePagination(data.page, data.totalPages, search, role, status, orderBy, orderDir);
+            updateResultCount(data.total);
+        }
+    })
+    .catch(error => {
+        console.error('Error during AJAX search:', error);
+    });
+}
+
+function updateUserTable(users) {
+    const tbody = document.getElementById('users-tbody');
+    if (!tbody) return;
+
+    if (users.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center py-5">
+                    <svg width="64" height="64" fill="none" stroke="#cbd5e1" viewBox="0 0 24 24" class="mb-3">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                    </svg>
+                    <p class="text-muted mb-0">Aucun utilisateur trouvé</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    const colors = ['#667eea,#764ba2', '#11998e,#38ef7d', '#f093fb,#f5576c', '#ffa751,#ffe259', '#4facfe,#00f2fe'];
+
+    tbody.innerHTML = users.map(user => {
+        const colorIndex = user.id % 5;
+        const [color1, color2] = colors[colorIndex].split(',');
+
+        const photoHtml = user.photoProfil
+            ? `<img src="/agrilink/uploads/${user.photoProfil}" alt="${user.displayName}" class="user-avatar me-3">`
+            : `<div class="user-avatar-fallback me-3" style="background:linear-gradient(135deg, ${color1} 0%, ${color2} 100%);">${user.initials}</div>`;
+
+        const emailBadge = user.emailVerified
+            ? '<span class="badge bg-success-subtle text-success" style="border-radius:6px;font-size:0.6875rem;padding:0.25rem 0.5rem;"><svg width="10" height="10" fill="currentColor" viewBox="0 0 20 20" class="me-1" style="display:inline-block;vertical-align:middle;"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>Vérifié</span>'
+            : '<span class="badge bg-warning-subtle text-warning" style="border-radius:6px;font-size:0.6875rem;padding:0.25rem 0.5rem;"><svg width="10" height="10" fill="currentColor" viewBox="0 0 20 20" class="me-1" style="display:inline-block;vertical-align:middle;"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>Non vérifié</span>';
+
+        const roleBadges = {
+            'ADMIN': '<span class="role-badge" style="background:#fee2e2;color:#991b1b;"><svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20" class="me-1" style="display:inline-block;vertical-align:middle;"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM7 9a1 1 0 000 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>Admin</span>',
+            'AGRIPLUS': '<span class="role-badge" style="background:#fef3c7;color:#92400e;"><svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20" class="me-1" style="display:inline-block;vertical-align:middle;"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>AgriPlus</span>',
+            'FOURNISSEUR': '<span class="role-badge" style="background:#dbeafe;color:#1e40af;">Fournisseur</span>',
+            'AGRICULTEUR': '<span class="role-badge" style="background:#d1fae5;color:#065f46;">Agriculteur</span>',
+            'USER': '<span class="role-badge" style="background:#f3f4f6;color:#374151;">Utilisateur</span>'
+        };
+        const roleBadge = roleBadges[user.role] || roleBadges['USER'];
+
+        const statusBadges = {
+            'banned': '<span class="status-badge" style="background:#fef3c7;color:#92400e;"><span class="status-dot" style="background:#f59e0b;"></span>Banni</span>',
+            'active': '<span class="status-badge" style="background:#d1fae5;color:#065f46;"><span class="status-dot" style="background:#10b981;"></span>Actif</span>',
+            'inactive': '<span class="status-badge" style="background:#fee2e2;color:#991b1b;"><span class="status-dot" style="background:#ef4444;"></span>Inactif</span>'
+        };
+        const statusBadge = user.isBanned ? statusBadges['banned'] : (user.isActive ? statusBadges['active'] : statusBadges['inactive']);
+
+        const lastLoginHtml = user.lastLogin ? `<div style="font-size:0.75rem;color:#94a3b8;">Connexion: ${user.lastLogin}</div>` : '';
+
+        const editUrl = `{{ path('admin_users_edit', {'id': 'USERID'}) }}`.replace('USERID', user.id);
+
+        return `
+            <tr>
+                <td>
+                    <div class="d-flex align-items-center">
+                        ${photoHtml}
+                        <div>
+                            <div class="user-name">${user.displayName}</div>
+                            <div class="user-id">#${user.id}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="mb-1" style="color:#2d3748;font-size:0.875rem;">${user.email}</div>
+                    ${emailBadge}
+                </td>
+                <td>
+                    ${roleBadge}
+                </td>
+                <td>
+                    ${statusBadge}
+                </td>
+                <td>
+                    <div style="font-size:0.8125rem;color:#64748b;">
+                        <div class="mb-1">
+                            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1" style="display:inline-block;vertical-align:middle;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            ${user.createdAt || 'N/A'}
+                        </div>
+                        ${lastLoginHtml}
+                    </div>
+                </td>
+                <td>
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="${editUrl}" class="action-btn btn-edit" title="Modifier">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                        </a>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function updatePagination(page, totalPages, search, role, status, orderBy, orderDir) {
+    const container = document.getElementById('pagination-container');
+    if (!container || totalPages <= 1) {
+        container && (container.innerHTML = '');
+        return;
+    }
+
+    let html = '<nav><ul class="pagination pagination-modern justify-content-center mb-0">';
+
+    if (page > 1) {
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="performAjaxSearch(${page - 1}); return false;"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></a></li>`;
+    }
+
+    for (let p = 1; p <= totalPages; p++) {
+        if (p === 1 || p === totalPages || (p >= page - 2 && p <= page + 2)) {
+            const active = p === page ? 'active' : '';
+            html += `<li class="page-item ${active}"><a class="page-link" href="#" onclick="performAjaxSearch(${p}); return false;">${p}</a></li>`;
+        } else if (p === page - 3 || p === page + 3) {
+            html += '<li class="page-item disabled"><span class="page-link">...</span></li>';
+        }
+    }
+
+    if (page < totalPages) {
+        html += `<li class="page-item"><a class="page-link" href="#" onclick="performAjaxSearch(${page + 1}); return false;"><svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></a></li>`;
+    }
+
+    html += '</ul></nav>';
+    container.innerHTML = html;
+}
+
+function updateResultCount(total) {
+    const badge = document.querySelector('.card-header .badge');
+    if (badge) {
+        const plural = total !== 1 ? 's' : '';
+        badge.textContent = `${total} résultat${plural}`;
+    }
+}
+</script>
 {% endblock %}
