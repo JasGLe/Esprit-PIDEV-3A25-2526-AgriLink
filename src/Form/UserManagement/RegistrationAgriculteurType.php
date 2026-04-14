@@ -195,14 +195,13 @@ class RegistrationAgriculteurType extends AbstractType
             ])
             // Terms
             ->add('agreeTerms', CheckboxType::class, [
-                'label' => 'J\'accepte les conditions d\'utilisation',
+                'label' => false, // Label is rendered in template
                 'mapped' => false,
                 'required' => true,
                 'constraints' => [
                     new IsTrue(message: 'Vous devez accepter les conditions d\'utilisation.'),
                 ],
                 'attr' => ['class' => 'h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded'],
-                'label_attr' => ['class' => 'ml-2 block text-sm text-gray-900'],
             ]);
             // ->add('submit', SubmitType::class, [
             //     'label' => 'Créer mon compte Agriculteur',

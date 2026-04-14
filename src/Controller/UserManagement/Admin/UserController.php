@@ -9,6 +9,7 @@ use App\Service\FileUploader;
 use App\Service\SecurityEventService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
@@ -249,7 +250,9 @@ class UserController extends AbstractController
         Request $request,
         SecurityEventService $securityEventService,
         MailerInterface $mailer,
-        Environment $twig
+        Environment $twig,
+        #[Autowire('%env(APP_URL)%')]
+        string $appUrl
     ): Response {
         $submittedToken = $request->request->get('_token');
         if (!$this->isCsrfTokenValid('ban-user-' . $user->getId(), $submittedToken)) {
@@ -274,6 +277,7 @@ class UserController extends AbstractController
                 'user' => $user,
                 'reason' => $reason,
                 'bannedAt' => $user->getBannedAt(),
+                'appUrl' => $appUrl,
             ]);
 
             $email = (new Email())

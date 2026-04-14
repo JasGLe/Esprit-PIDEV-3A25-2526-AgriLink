@@ -152,4 +152,98 @@ class EmailVerificationController extends AbstractController
         $this->addFlash('info', 'Vérification ignorée. Vous pouvez vérifier votre email à tout moment depuis les paramètres de sécurité.');
         return $this->redirectToRoute('app_profile_security');
     }
+
+    #[Route('/verification-choice', name: 'app_verification_choice', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function verificationChoice(): Response
+    {
+        $user = $this->getUser();
+
+        // If both email and phone are verified, redirect to dashboard
+        if ($user->isEmailVerified() && $user->isPhoneVerified()) {
+            return $this->redirectToRoute('app_dashboard');
+        }
+
+        return $this->render('user_management/verification_choice.html.twig', [
+            'user' => $user,
+        ]);
+    }
+
+    #[Route('/verify', name: 'app_verify_unified', methods: ['GET', 'POST'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function verifyUnified(Request $request): Response
+    {
+        $user = $this->getUser();
+
+        // If both already verified, redirect to dashboard
+        if ($user->isEmailVerified() && $user->isPhoneVerified()) {
+            $this->addFlash('info', 'Votre compte est déjà vérifié.');
+            return $this->redirectToRoute('app_dashboard');
+        }
+
+        // Handle email verification POST request
+        if ($request->isMethod('POST') && $request->request->has('verification_code')) {
+            $code = $request->request->get('verification_code', '');
+            $code = trim($code);
+
+            if (empty($code)) {
+                $this->addFlash('error', 'Veuillez entrer le code de vérification.');
+                return $this->redirectToRoute('app_verify_unified');
+            }
+
+            if (strlen($code) !== 6 || !ctype_digit($code)) {
+                $this->addFlash('error', 'Le code de vérification doit contenir 6 chiffres.');
+                return $this->redirectToRoute('app_verify_unified');
+            }
+
+            // Check if expired
+            if ($this->emailVerificationService->isExpired($user)) {
+                $this->addFlash('error', 'Le code de vérification a expiré. Veuillez demander un nouveau code.');
+                return $this->redirectToRoute('app_verify_unified');
+            }
+
+            // Verify the code
+            if ($this->emailVerificationService->verifyCode($user, $code)) {
+                if ($user->getPendingEmail()) {
+                    $user->setEmail($user->getPendingEmail());
+                    $user->setPendingEmail(null);
+                    $this->addFlash('success', 'Votre nouvelle adresse email a été vérifiée et mise à jour avec succès !');
+                } else {
+                    $this->addFlash('success', 'Votre adresse email a été vérifiée avec succès !');
+                }
+
+                // Clear resend attempts from session
+                $request->getSession()->remove(self::SESSION_RESEND_ATTEMPTS_KEY);
+
+                // If phone also verified, redirect to dashboard
+                if ($user->isPhoneVerified()) {
+                    return $this->redirectToRoute('app_dashboard');
+                }
+
+                return $this->redirectToRoute('app_verify_unified');
+            } else {
+                $this->addFlash('error', 'Code de vérification incorrect. Veuillez réessayer.');
+                return $this->redirectToRoute('app_verify_unified');
+            }
+        }
+
+        // Generate email code if needed
+        if (!$user->isEmailVerified() && !$user->getEmailVerificationToken()) {
+            $this->emailVerificationService->generateVerificationCode($user);
+            $this->emailVerificationService->sendVerificationEmail($user);
+        }
+
+        // Get email verification data
+        $emailTimeRemaining = $this->emailVerificationService->getExpirationTimeRemaining($user);
+        $emailResendAttempts = $request->getSession()->get(self::SESSION_RESEND_ATTEMPTS_KEY, []);
+        $emailCanResendInfo = $this->emailVerificationService->canResendVerification($user, $emailResendAttempts);
+
+        return $this->render('user_management/verify_unified.html.twig', [
+            'user' => $user,
+            'timeRemaining' => $emailTimeRemaining,
+            'canResend' => $emailCanResendInfo['canResend'],
+            'resendWaitSeconds' => $emailCanResendInfo['waitSeconds'],
+            'phone' => $user->getTelephone() ?? '',
+        ]);
+    }
 }

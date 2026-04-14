@@ -9,7 +9,7 @@ use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Twig\Environment;
 
-class TwoFactorService
+class PhoneVerificationService
 {
     private const OTP_LENGTH = 6;
     private const OTP_EXPIRATION_MINUTES = 10;
@@ -18,77 +18,48 @@ class TwoFactorService
 
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private MailerInterface $mailer,
-        private Environment $twig,
         private TwilioSmsService $twilioService,
+        private Environment $twig,
         #[Autowire('%env(APP_URL)%')]
-        private string $appUrl = 'http://localhost',
-        #[Autowire('%env(bool:TWILIO_SMS_OTP_ENABLED)%')]
-        private bool $smsSmsOtpEnabled = false
+        private string $appUrl = 'http://localhost'
     ) {
     }
 
     /**
      * Generate a 6-digit OTP code and store it in the user entity.
      * Sets expiration to 10 minutes from now.
+     *
+     * @param User $user The user to generate OTP for
+     * @return string The generated OTP code
      */
-    public function generateOtp(User $user): string
+    public function generateVerificationCode(User $user): string
     {
         // Generate 6-digit code (000000-999999)
         $code = str_pad((string) random_int(0, 999999), self::OTP_LENGTH, '0', STR_PAD_LEFT);
-        
+
         // Set OTP data on user
         $user->setOtpCode($code);
         $user->setOtpExpiration(new \DateTime('+' . self::OTP_EXPIRATION_MINUTES . ' minutes'));
         $user->setOtpAttempts(0);
-        
+
         $this->entityManager->persist($user);
         $this->entityManager->flush();
-        
+
         return $code;
     }
 
     /**
-     * Send the OTP code via email to the user.
+     * Send the OTP code via SMS to the user's phone number.
+     *
+     * @param User $user The user to send SMS to
+     * @return bool True if SMS sent successfully, false otherwise
      */
-    public function sendOtpEmail(User $user): void
+    public function sendVerificationSms(User $user): bool
     {
         $code = $user->getOtpCode();
-        
+
         if ($code === null) {
             throw new \RuntimeException('Aucun code OTP à envoyer. Générez d\'abord un code.');
-        }
-
-        $htmlContent = $this->twig->render('emails/2fa_code.html.twig', [
-            'user' => $user,
-            'code' => $code,
-            'expiration_minutes' => self::OTP_EXPIRATION_MINUTES,
-            'appUrl' => $this->appUrl,
-        ]);
-
-        $email = (new Email())
-            ->from('noreply@agrilink.com')
-            ->to($user->getEmail())
-            ->subject('Votre code de vérification AgriLink')
-            ->html($htmlContent);
-
-        $this->mailer->send($email);
-    }
-
-    /**
-     * Send the OTP code via SMS to the user.
-     * Returns true if SMS was sent successfully, false if SMS is disabled or number unavailable.
-     */
-    public function sendOtpSms(User $user): bool
-    {
-        $code = $user->getOtpCode();
-        
-        if ($code === null) {
-            throw new \RuntimeException('Aucun code OTP à envoyer. Générez d\'abord un code.');
-        }
-
-        if (!$this->smsSmsOtpEnabled) {
-            return false;
         }
 
         $phoneNumber = $user->getTelephone();
@@ -100,33 +71,15 @@ class TwoFactorService
     }
 
     /**
-     * Send OTP via both email and SMS (if SMS is enabled and phone exists).
-     * Always sends email, optionally sends SMS based on configuration.
-     */
-    public function sendOtpByPreferredMethod(User $user, string $method = 'email'): bool
-    {
-        try {
-            if ($method === 'sms' && $this->smsSmsOtpEnabled) {
-                $smsSent = $this->sendOtpSms($user);
-                if ($smsSent) {
-                    return true;
-                }
-                // Fall back to email if SMS fails
-            }
-            
-            $this->sendOtpEmail($user);
-            return true;
-        } catch (\Exception $e) {
-            return false;
-        }
-    }
-
-    /**
      * Verify the OTP code entered by the user.
      * Returns true if valid, false otherwise.
      * Handles attempt counting and invalidation after max attempts.
+     *
+     * @param User $user The user verifying the code
+     * @param string $code The code to verify
+     * @return bool True if code is valid, false otherwise
      */
-    public function verifyOtp(User $user, string $code): bool
+    public function verifyCode(User $user, string $code): bool
     {
         // Check if OTP exists
         if ($user->getOtpCode() === null) {
@@ -141,8 +94,11 @@ class TwoFactorService
 
         // Verify the code
         if ($user->isOtpValid($code)) {
-            // Success - reset OTP
+            // Success - mark phone as verified and reset OTP
+            $user->setPhoneVerified(true);
             $this->resetOtp($user);
+            $this->entityManager->persist($user);
+            $this->entityManager->flush();
             return true;
         }
 
@@ -161,11 +117,14 @@ class TwoFactorService
 
     /**
      * Check if enough time has passed to resend OTP (60-second cooldown).
+     *
+     * @param User $user The user to check
+     * @return bool True if can resend
      */
-    public function canResendOtp(User $user): bool
+    public function canResendVerification(User $user): bool
     {
         $expiration = $user->getOtpExpiration();
-        
+
         if ($expiration === null) {
             return true; // No existing OTP, can send new one
         }
@@ -173,17 +132,20 @@ class TwoFactorService
         // Calculate when the OTP was created (expiration - 10 minutes)
         $createdAt = (clone $expiration)->modify('-' . self::OTP_EXPIRATION_MINUTES . ' minutes');
         $cooldownEnd = (clone $createdAt)->modify('+' . self::OTP_RESEND_COOLDOWN_SECONDS . ' seconds');
-        
+
         return new \DateTime() >= $cooldownEnd;
     }
 
     /**
      * Get remaining cooldown time in seconds.
+     *
+     * @param User $user The user to check
+     * @return int Seconds remaining before can resend
      */
     public function getRemainingCooldown(User $user): int
     {
         $expiration = $user->getOtpExpiration();
-        
+
         if ($expiration === null) {
             return 0;
         }
@@ -191,16 +153,19 @@ class TwoFactorService
         $createdAt = (clone $expiration)->modify('-' . self::OTP_EXPIRATION_MINUTES . ' minutes');
         $cooldownEnd = (clone $createdAt)->modify('+' . self::OTP_RESEND_COOLDOWN_SECONDS . ' seconds');
         $now = new \DateTime();
-        
+
         if ($now >= $cooldownEnd) {
             return 0;
         }
-        
+
         return $cooldownEnd->getTimestamp() - $now->getTimestamp();
     }
 
     /**
      * Get remaining attempts before OTP is invalidated.
+     *
+     * @param User $user The user to check
+     * @return int Number of attempts remaining
      */
     public function getRemainingAttempts(User $user): int
     {
@@ -209,40 +174,48 @@ class TwoFactorService
 
     /**
      * Get OTP expiration time remaining in seconds.
+     *
+     * @param User $user The user to check
+     * @return int Seconds remaining until expiration
      */
     public function getOtpExpirationSeconds(User $user): int
     {
         $expiration = $user->getOtpExpiration();
-        
+
         if ($expiration === null) {
             return 0;
         }
 
         $now = new \DateTime();
-        
+
         if ($now >= $expiration) {
             return 0;
         }
-        
+
         return $expiration->getTimestamp() - $now->getTimestamp();
     }
 
     /**
      * Check if OTP has expired.
+     *
+     * @param User $user The user to check
+     * @return bool True if expired
      */
     public function isOtpExpired(User $user): bool
     {
         $expiration = $user->getOtpExpiration();
-        
+
         if ($expiration === null) {
             return true;
         }
-        
+
         return new \DateTime() >= $expiration;
     }
 
     /**
      * Reset all OTP data for the user.
+     *
+     * @param User $user The user to reset
      */
     public function resetOtp(User $user): void
     {
@@ -253,6 +226,8 @@ class TwoFactorService
 
     /**
      * Get max attempts constant.
+     *
+     * @return int Maximum attempts allowed
      */
     public function getMaxAttempts(): int
     {
@@ -261,6 +236,8 @@ class TwoFactorService
 
     /**
      * Get expiration time in minutes.
+     *
+     * @return int Expiration time in minutes
      */
     public function getExpirationMinutes(): int
     {
@@ -269,9 +246,33 @@ class TwoFactorService
 
     /**
      * Get cooldown time in seconds.
+     *
+     * @return int Cooldown time in seconds
      */
     public function getCooldownSeconds(): int
     {
         return self::OTP_RESEND_COOLDOWN_SECONDS;
+    }
+
+    /**
+     * Check if user has verified their phone number.
+     *
+     * @param User $user The user to check
+     * @return bool True if phone is verified
+     */
+    public function isPhoneVerified(User $user): bool
+    {
+        return $user->isPhoneVerified();
+    }
+
+    /**
+     * Check if phone number is set and valid format.
+     *
+     * @param User $user The user to check
+     * @return bool True if phone number exists
+     */
+    public function hasPhoneNumber(User $user): bool
+    {
+        return !empty($user->getTelephone());
     }
 }

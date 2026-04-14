@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\UserManagement\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Twig\Environment;
@@ -20,6 +21,7 @@ class EmailVerificationService
         private MailerInterface $mailer,
         private Environment $twig,
         private string $mailerFrom = 'noreply@agrilink.com',
+        #[Autowire('%env(APP_URL)%')]
         private string $appUrl = 'http://localhost'
     ) {
     }

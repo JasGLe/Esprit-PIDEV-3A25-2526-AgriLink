@@ -1,0 +1,544 @@
+/* ============================================================
+   Profile Page Enhanced Design System
+   Modern card-based layout with AgriLink color scheme
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+    /* AgriLink Color Palette */
+    --profile-primary: #22c55e;
+    --profile-primary-light: #dcfce7;
+    --profile-primary-dark: #16a34a;
+    --profile-success: #10b981;
+    --profile-warning: #f59e0b;
+    --profile-danger: #ef4444;
+    --profile-info: #3b82f6;
+    
+    /* Backgrounds & Surfaces */
+    --profile-bg-primary: #f9fafb;
+    --profile-bg-secondary: #f3f4f6;
+    --profile-bg-card: #ffffff;
+    
+    /* Text */
+    --profile-text-primary: #111827;
+    --profile-text-secondary: #6b7280;
+    --profile-text-tertiary: #9ca3af;
+    
+    /* Borders & Effects */
+    --profile-border: #e5e7eb;
+    --profile-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --profile-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --profile-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+    
+    /* Spacing */
+    --profile-spacing-xs: 0.25rem;
+    --profile-spacing-sm: 0.5rem;
+    --profile-spacing-md: 1rem;
+    --profile-spacing-lg: 1.5rem;
+    --profile-spacing-xl: 2rem;
+    
+    /* Typography */
+    --profile-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --profile-radius: 0.875rem;
+    --profile-radius-lg: 1.25rem;
+    --profile-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Base Styles ── */
+.profile-container {
+    font-family: var(--profile-font-family);
+    color: var(--profile-text-primary);
+    background-color: var(--profile-bg-primary);
+    min-height: 100vh;
+}
+
+.profile-header {
+    margin-bottom: var(--profile-spacing-xl);
+}
+
+.profile-header-title {
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--profile-spacing-md);
+}
+
+/* ── Card System ── */
+.profile-card {
+    background: var(--profile-bg-card);
+    border: 1px solid var(--profile-border);
+    border-radius: var(--profile-radius);
+    box-shadow: var(--profile-shadow);
+    transition: var(--profile-transition);
+    overflow: hidden;
+}
+
+.profile-card:hover {
+    border-color: rgba(34, 197, 94, 0.3);
+    box-shadow: var(--profile-shadow-md);
+    transform: translateY(-2px);
+}
+
+.profile-card-header {
+    padding: var(--profile-spacing-lg);
+    border-bottom: 1px solid var(--profile-border);
+    background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+}
+
+.profile-card-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--profile-text-primary);
+    display: flex;
+    align-items: center;
+    gap: var(--profile-spacing-sm);
+}
+
+.profile-card-title svg {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+    color: var(--profile-primary);
+}
+
+.profile-card-body {
+    padding: var(--profile-spacing-lg);
+}
+
+.profile-card-footer {
+    padding: var(--profile-spacing-lg);
+    border-top: 1px solid var(--profile-border);
+    background-color: var(--profile-bg-secondary);
+    font-size: 0.875rem;
+    color: var(--profile-text-secondary);
+}
+
+/* ── Avatar Section ── */
+.profile-avatar-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--profile-spacing-md);
+}
+
+.profile-avatar-wrapper {
+    position: relative;
+}
+
+.profile-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    border: 4px solid var(--profile-primary);
+    object-fit: cover;
+    box-shadow: var(--profile-shadow-md);
+}
+
+.profile-user-name {
+    font-size: 1.5rem;
+    font-weight: 700;
+    text-align: center;
+    letter-spacing: -0.01em;
+}
+
+.profile-user-email {
+    font-size: 0.95rem;
+    color: var(--profile-text-secondary);
+    text-align: center;
+}
+
+.profile-member-since {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--profile-spacing-sm);
+    font-size: 0.875rem;
+    color: var(--profile-text-secondary);
+}
+
+.profile-member-since svg {
+    width: 1rem;
+    height: 1rem;
+    color: var(--profile-text-tertiary);
+}
+
+/* ── Status Indicators ── */
+.profile-status-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--profile-spacing-md);
+}
+
+@media (max-width: 576px) {
+    .profile-status-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.profile-status-item {
+    padding: var(--profile-spacing-md);
+    background-color: var(--profile-bg-secondary);
+    border-radius: var(--profile-radius);
+    border: 1px solid var(--profile-border);
+    transition: var(--profile-transition);
+}
+
+.profile-status-item:hover {
+    background-color: #ffffff;
+    border-color: var(--profile-primary);
+}
+
+.profile-status-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--profile-text-secondary);
+    margin-bottom: var(--profile-spacing-sm);
+    display: block;
+}
+
+.profile-status-value {
+    display: flex;
+    align-items: center;
+    gap: var(--profile-spacing-sm);
+    font-weight: 600;
+}
+
+/* ── Badge Styles ── */
+.profile-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--profile-spacing-xs);
+    padding: 0.375rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    transition: var(--profile-transition);
+}
+
+.profile-badge-success {
+    background-color: rgba(34, 197, 94, 0.1);
+    color: var(--profile-primary);
+}
+
+.profile-badge-success svg {
+    color: var(--profile-primary);
+}
+
+.profile-badge-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--profile-danger);
+}
+
+.profile-badge-danger svg {
+    color: var(--profile-danger);
+}
+
+.profile-badge-warning {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: var(--profile-warning);
+}
+
+.profile-badge-warning svg {
+    color: var(--profile-warning);
+}
+
+.profile-badge-info {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--profile-info);
+}
+
+.profile-badge-info svg {
+    color: var(--profile-info);
+}
+
+/* ── Info List Styles ── */
+.profile-info-list {
+    display: grid;
+    gap: 0;
+}
+
+.profile-info-item {
+    padding: var(--profile-spacing-md) 0;
+    border-bottom: 1px solid var(--profile-border);
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--profile-spacing-lg);
+    align-items: start;
+}
+
+.profile-info-item:last-child {
+    border-bottom: none;
+}
+
+.profile-info-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--profile-text-secondary);
+    white-space: nowrap;
+}
+
+.profile-info-value {
+    font-size: 0.95rem;
+    color: var(--profile-text-primary);
+    font-weight: 500;
+    word-break: break-word;
+}
+
+.profile-info-value-muted {
+    color: var(--profile-text-secondary);
+    font-style: italic;
+    font-weight: 400;
+}
+
+/* ── Role Badge (Agriculteur, Fournisseur, etc.) ── */
+.profile-role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--profile-spacing-sm);
+    padding: 0.5rem 1rem;
+    border-radius: var(--profile-radius);
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--profile-primary);
+    transition: var(--profile-transition);
+}
+
+.profile-role-badge:hover {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(16, 185, 129, 0.15) 100%);
+    border-color: var(--profile-primary);
+    transform: translateX(2px);
+}
+
+.profile-role-badge svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* ── Subscription Badge ── */
+.profile-subscription-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--profile-spacing-xs);
+    padding: 0.375rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.profile-subscription-badge-basic {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+}
+
+.profile-subscription-badge-premium {
+    background-color: rgba(139, 92, 246, 0.1);
+    color: #8b5cf6;
+}
+
+.profile-subscription-badge-enterprise {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+/* ── Edit Button ── */
+.profile-edit-button {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--profile-spacing-sm);
+    padding: 0.625rem 1.25rem;
+    background-color: var(--profile-primary);
+    color: white;
+    border: none;
+    border-radius: var(--profile-radius);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--profile-transition);
+    text-decoration: none;
+}
+
+.profile-edit-button:hover {
+    background-color: var(--profile-primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--profile-shadow-md);
+}
+
+.profile-edit-button svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+/* ── Icon Styles ── */
+.profile-icon {
+    display: inline-block;
+    width: 1.25rem;
+    height: 1.25rem;
+    flex-shrink: 0;
+}
+
+.profile-icon-sm {
+    width: 1rem;
+    height: 1rem;
+}
+
+.profile-icon-xs {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+.profile-icon-success {
+    color: var(--profile-primary);
+}
+
+.profile-icon-danger {
+    color: var(--profile-danger);
+}
+
+.profile-icon-warning {
+    color: var(--profile-warning);
+}
+
+.profile-icon-info {
+    color: var(--profile-info);
+}
+
+/* ── Last Updated ── */
+.profile-last-updated {
+    font-size: 0.8rem;
+    color: var(--profile-text-tertiary);
+    text-align: right;
+    margin-top: var(--profile-spacing-lg);
+    padding-top: var(--profile-spacing-lg);
+    border-top: 1px solid var(--profile-border);
+}
+
+/* ── Responsive Layout ── */
+@media (max-width: 768px) {
+    .profile-header-title {
+        font-size: 1.5rem;
+    }
+
+    .profile-card-header,
+    .profile-card-body,
+    .profile-card-footer {
+        padding: var(--profile-spacing-md);
+    }
+
+    .profile-info-item {
+        grid-template-columns: 1fr;
+        gap: var(--profile-spacing-sm);
+    }
+
+    .profile-info-label {
+        font-weight: 600;
+        color: var(--profile-text-primary);
+    }
+}
+
+/* ── Animation ── */
+@keyframes profileSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.profile-card {
+    animation: profileSlideIn 0.4s ease-out;
+}
+
+.profile-card:nth-child(2) {
+    animation-delay: 0.1s;
+}
+
+.profile-card:nth-child(3) {
+    animation-delay: 0.2s;
+}
+
+.profile-card:nth-child(4) {
+    animation-delay: 0.3s;
+}
+
+.profile-card:nth-child(5) {
+    animation-delay: 0.4s;
+}
+
+/* ── Accent Line (Left Border Highlight) ── */
+.profile-card-accented {
+    border-left: 4px solid var(--profile-primary);
+    border-left-color: var(--profile-primary);
+}
+
+.profile-card-accented.agricultural {
+    border-left-color: #16a34a;
+}
+
+.profile-card-accented.premium {
+    border-left-color: #f59e0b;
+}
+
+.profile-card-accented.supplier {
+    border-left-color: #3b82f6;
+}
+
+/* ── Section Grid Layout ── */
+.profile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--profile-spacing-lg);
+}
+
+.profile-grid-full {
+    grid-column: 1 / -1;
+}
+
+@media (min-width: 992px) {
+    .profile-grid-wide {
+        grid-column: span 2;
+    }
+}
+
+/* ── Hero Profile Card ── */
+.profile-hero-card {
+    background: linear-gradient(135deg, #fafafa 0%, #ffffff 100%);
+    border: none;
+    box-shadow: var(--profile-shadow-lg);
+}
+
+.profile-hero-card:hover {
+    box-shadow: var(--profile-shadow-lg);
+    transform: none;
+}
+
+/* ── Status Items in Grid ── */
+.profile-status-compact {
+    display: grid;
+    gap: var(--profile-spacing-sm);
+}
+
+.profile-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--profile-spacing-md) 0;
+    border-bottom: 1px solid var(--profile-border);
+}
+
+.profile-status-row:last-child {
+    border-bottom: none;
+}
+
+/* ── Hover Effects on Info ── */
+.profile-info-item:hover .profile-info-value {
+    color: var(--profile-primary);
+}

@@ -187,13 +187,12 @@ class RegistrationAgriPlusType extends AbstractType
                 'label_attr' => ['class' => $labelClass],
             ])
             ->add('agreeTerms', CheckboxType::class, [
-                'label' => 'J\'accepte les conditions d\'utilisation et la politique de confidentialité',
+                'label' => false, // Label is rendered in template
                 'mapped' => false,
                 'constraints' => [
                     new IsTrue(message: 'Vous devez accepter les conditions d\'utilisation.'),
                 ],
                 'attr' => ['class' => 'h-4 w-4 text-yellow-600 focus:ring-yellow-500 border-gray-300 rounded'],
-                'label_attr' => ['class' => 'ml-2 block text-sm text-gray-900'],
             ])
             // Note: Submit button is rendered manually in the template
             // ->add('submit', SubmitType::class, [...])
