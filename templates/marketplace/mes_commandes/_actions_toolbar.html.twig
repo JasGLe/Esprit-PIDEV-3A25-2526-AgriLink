@@ -1,0 +1,34 @@
+{% set del_map = deletable_commande_ids|default({}) %}
+{% set can_delete = del_map[commande.id] ?? false %}
+{% set pending_cancel = pending_cancellation_map|default({})[commande.id] ?? false %}
+{% set cancel_eligible = buyer_cancel_eligible_map|default({})[commande.id] ?? false %}
+{% set is_agriplus_buyer = mes_commandes_mode == 'acheteur' and app.user.isAgriPlus %}
+{% set del_title_disabled = mes_commandes_mode == 'vendeur'
+    ? 'Suppression impossible (commande livrée ou multi-producteurs)'
+    : (mes_commandes_mode == 'admin'
+        ? 'Suppression réservée aux commandes livrées ou annulées'
+        : 'Suppression impossible (commande livrée)') %}
+<div class="mc-act-toolbar">
+    <button type="button" class="btn btn-sm mc-act mc-act--view" title="Voir les détails" data-bs-toggle="modal" data-bs-target="#mcOrderDetailModal" data-mc-order-detail-url="{{ path('mes_commandes_detail_modal', { id: commande.id }) }}"><i class="bi bi-search" aria-hidden="true"></i></button>
+    <button type="button" class="btn btn-sm mc-act mc-act--edit" title="Modifier les coordonnées de livraison" data-bs-toggle="modal" data-bs-target="#mcOrderEditModal" data-mc-order-edit-url="{{ path('mes_commandes_edit_modal', { id: commande.id }) }}"><i class="bi bi-pencil" aria-hidden="true"></i></button>
+    {% if is_agriplus_buyer %}
+        {% if cancel_eligible %}
+            <form method="post" action="{{ path('mes_commandes_cancel_request', { id: commande.id }) }}" class="d-inline js-mc-cancel-request-form" data-mc-order-ref="#CMD{{ "%03d"|format(commande.id) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('cancel_request_' ~ commande.id) }}">
+                <button type="submit" class="btn btn-sm mc-act mc-act--agriplus-cancel" title="Demander l’annulation"><i class="bi bi-x-lg" aria-hidden="true"></i><span class="visually-hidden"> Demander l’annulation</span></button>
+            </form>
+        {% elseif pending_cancel %}
+            <button type="button" class="btn btn-sm mc-act mc-act--agriplus-cancel" disabled title="Demande d’annulation en attente de traitement"><i class="bi bi-hourglass-split" aria-hidden="true"></i><span class="visually-hidden"> Annulation en attente</span></button>
+        {% else %}
+            <button type="button" class="btn btn-sm mc-act mc-act--agriplus-cancel" disabled title="Annulation indisponible (délai 48 h dépassé, commande expédiée ou terminée)"><i class="bi bi-x-lg" aria-hidden="true"></i><span class="visually-hidden"> Annulation indisponible</span></button>
+        {% endif %}
+    {% elseif can_delete %}
+        <form method="post" action="{{ path('mes_commandes_delete', { id: commande.id }) }}" class="d-inline js-mc-delete-form" data-mc-order-ref="#CMD{{ "%03d"|format(commande.id) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete_commande_' ~ commande.id) }}">
+            <button type="submit" class="btn btn-sm mc-act mc-act--delete" title="Supprimer la commande"><i class="bi bi-trash" aria-hidden="true"></i></button>
+        </form>
+    {% else %}
+        <button type="button" class="btn btn-sm mc-act mc-act--delete" disabled title="{{ del_title_disabled }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+    {% endif %}
+    <a href="{{ path('mes_commandes_pdf', { id: commande.id }) }}" class="btn btn-sm mc-act mc-act--pdf"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Export PDF</a>
+</div>

@@ -115,6 +115,28 @@ class SecurityEventRepository extends ServiceEntityRepository
     }
 
     /**
+     * Find login history events for a specific user
+     */
+    public function findLoginHistoryByUser(int $userId, int $limit = 50): array
+    {
+        return $this->createQueryBuilder('e')
+            ->join('e.user', 'u')
+            ->where('u.id = :userId')
+            ->andWhere('e.eventType IN (:types)')
+            ->setParameter('userId', $userId)
+            ->setParameter('types', [
+                SecurityEvent::EVENT_LOGIN_SUCCESS,
+                SecurityEvent::EVENT_LOGIN_FAILED,
+                SecurityEvent::EVENT_ACCOUNT_LOCKED,
+                SecurityEvent::EVENT_OAUTH_LOGIN,
+            ])
+            ->orderBy('e.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Find events by type
      */
     public function findByType(string $eventType, int $days = 30, int $limit = 100): array

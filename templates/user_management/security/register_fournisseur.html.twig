@@ -94,10 +94,14 @@
             </div>
         </div>
 
+        {# Determine visibility server-side: POST means user already chose a type and submitted #}
+        {% set wasPosted = app.request.method == 'POST' %}
+
         {{ form_start(registrationForm, {'attr': {'class': 'mt-4', 'id': 'fournisseur-form', 'novalidate': 'novalidate'}}) }}
-            
-            {# Section 1: Modern Type Selection #}
-            <div id="step1-section" class="animate-slide-up">
+            <input type="hidden" name="g-recaptcha-response" id="recaptchaResponse">
+
+            {# Section 1: Type selection — hidden after first submission #}
+            <div id="step1-section" class="{{ wasPosted ? 'd-none' : 'animate-slide-up' }}">
                 <div class="selection-container">
                     {# Clean Modern Header #}
                     <div class="selection-header text-center mb-5">
@@ -253,8 +257,8 @@
                 </div>
             </div>
 
-            {# Section 2: Information Form #}
-            <div id="step2-section" class="d-none">
+            {# Section 2: Information form — visible after first submission #}
+            <div id="step2-section" class="{{ wasPosted ? '' : 'd-none' }}">
                 {# Back button #}
                 <button type="button" id="btn-back" class="btn btn-link mb-3 text-decoration-none text-muted p-0">
                     <svg class="me-1" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -324,10 +328,18 @@
                             </div>
                         </div>
 
-                        <div>
-                            {{ form_label(registrationForm.telephone) }}
-                            {{ form_widget(registrationForm.telephone) }}
-                            {{ form_errors(registrationForm.telephone) }}
+                        <div class="row g-3">
+                            <div class="col-12 col-md-6">
+                                {{ form_label(registrationForm.telephone) }}
+                                {{ form_widget(registrationForm.telephone) }}
+                                {{ form_errors(registrationForm.telephone) }}
+                            </div>
+                            <div class="col-12 col-md-6">
+                                {{ form_label(registrationForm.dateNaissance) }}
+                                {{ form_widget(registrationForm.dateNaissance) }}
+                                {{ form_errors(registrationForm.dateNaissance) }}
+                                <p class="mt-1 small text-muted">Vous devez avoir au moins 18 ans</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -541,7 +553,7 @@
     width: 52px;
     height: 52px;
     object-fit: contain;
-    filter: brightness(0) invert(1);
+    filter: none;
     opacity: .95;
     flex-shrink: 0;
     transition: transform 0.3s ease;
@@ -1410,8 +1422,8 @@
     opacity: 0.4;
 }
 
-/* Success state for valid fields */
-.form-control:valid:not(:placeholder-shown) {
+/* Success state for valid fields — JS-driven only (.is-valid class set by script) */
+.form-control.is-valid {
     border-color: #198754;
     padding-right: calc(1.5em + 0.75rem);
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
@@ -1608,219 +1620,324 @@
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Use the Symfony-generated select element name attribute (reliable across form name changes)
-    const typeSelect = document.querySelector('select[name="registration_fournisseur[fournisseurTypeFournisseur]"]');
-    const personneFields = document.getElementById('personne-fields');
-    const societeFields = document.getElementById('societe-fields');
-    const cardPersonne = document.getElementById('card-personne');
-    const cardSociete = document.getElementById('card-societe');
-    const btnNext = document.getElementById('btn-next');
-    const btnBack = document.getElementById('btn-back');
-    const step1Section = document.getElementById('step1-section');
-    const step2Section = document.getElementById('step2-section');
-    const step2Circle = document.getElementById('step2-circle');
-    const step2Text = document.getElementById('step2-text');
+document.addEventListener('DOMContentLoaded', function () {
 
-    if (!typeSelect || !cardPersonne || !cardSociete || !btnNext) {
-        return;
-    }
+    // ── DOM refs ──────────────────────────────────────────────────────────────
+    const typeSelect    = document.querySelector('select[name="registration_fournisseur[fournisseurTypeFournisseur]"]');
+    const personneFields = document.getElementById('personne-fields');
+    const societeFields  = document.getElementById('societe-fields');
+    const cardPersonne  = document.getElementById('card-personne');
+    const cardSociete   = document.getElementById('card-societe');
+    const btnNext       = document.getElementById('btn-next');
+    const btnBack       = document.getElementById('btn-back');
+    const step1Section  = document.getElementById('step1-section');
+    const step2Section  = document.getElementById('step2-section');
+    const step2Circle   = document.getElementById('step2-circle');
+    const step2Text     = document.getElementById('step2-text');
+    const formEl        = document.getElementById('fournisseur-form');
+
+    // typeSelect is the only truly required element
+    if (!typeSelect) return;
 
     let selectedType = typeSelect.value || null;
 
+    // ── Type display (cards + conditional field sections) ─────────────────────
     function updateTypeDisplay() {
         const isPersonne = selectedType === 'PERSONNE';
-        const isSociete = selectedType === 'SOCIETE';
+        const isSociete  = selectedType === 'SOCIETE';
 
-        // Enhanced card selection with smooth transitions - NEW CLASSES
-        cardPersonne.classList.toggle('selected', isPersonne);
-        cardSociete.classList.toggle('selected', isSociete);
-
-        // Update select value
+        if (cardPersonne) cardPersonne.classList.toggle('selected', isPersonne);
+        if (cardSociete)  cardSociete.classList.toggle('selected', isSociete);
         if (selectedType) typeSelect.value = selectedType;
 
-        // Enable/disable continue button with visual feedback
-        btnNext.disabled = !selectedType;
-        if (!selectedType) {
-            btnNext.classList.add('opacity-50');
-        } else {
-            btnNext.classList.remove('opacity-50');
+        if (btnNext) {
+            btnNext.disabled = !selectedType;
+            btnNext.classList.toggle('opacity-50', !selectedType);
         }
 
-        // Show/hide specific fields
         if (personneFields) personneFields.classList.toggle('d-none', !isPersonne);
-        if (societeFields) societeFields.classList.toggle('d-none', !isSociete);
-
-        // Update CIN requirement
-        const cinInput = document.getElementById('registration_fournisseur_fournisseurCin');
-        if (cinInput) cinInput.required = isPersonne;
+        if (societeFields)  societeFields.classList.toggle('d-none', !isSociete);
     }
 
-    cardPersonne.addEventListener('click', function() {
-        // Add ripple effect
-        createRipple(this, event);
-        selectedType = 'PERSONNE';
-        updateTypeDisplay();
-        // Add haptic feedback (if supported)
-        if (navigator.vibrate) navigator.vibrate(50);
-    });
+    // ── Step indicator helpers ────────────────────────────────────────────────
+    function activateStep2Indicator() {
+        if (step2Circle) {
+            step2Circle.classList.replace('bg-secondary', 'bg-primary');
+            const ind = document.getElementById('step2-indicator');
+            if (ind) ind.classList.add('active');
+        }
+        if (step2Text) {
+            step2Text.classList.remove('text-muted');
+            step2Text.classList.add('text-primary', 'fw-semibold');
+        }
+    }
+    function deactivateStep2Indicator() {
+        if (step2Circle) {
+            step2Circle.classList.replace('bg-primary', 'bg-secondary');
+            const ind = document.getElementById('step2-indicator');
+            if (ind) ind.classList.remove('active');
+        }
+        if (step2Text) {
+            step2Text.classList.add('text-muted');
+            step2Text.classList.remove('text-primary', 'fw-semibold');
+        }
+    }
 
-    cardSociete.addEventListener('click', function() {
-        // Add ripple effect
-        createRipple(this, event);
-        selectedType = 'SOCIETE';
-        updateTypeDisplay();
-        // Add haptic feedback (if supported)
-        if (navigator.vibrate) navigator.vibrate(50);
-    });
-
-    // Ripple effect function
+    // ── Ripple ────────────────────────────────────────────────────────────────
     function createRipple(element, event) {
         const ripple = document.createElement('span');
-        const rect = element.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        const x = event.clientX - rect.left - size / 2;
-        const y = event.clientY - rect.top - size / 2;
-        
-        ripple.style.width = ripple.style.height = size + 'px';
-        ripple.style.left = x + 'px';
-        ripple.style.top = y + 'px';
+        const rect   = element.getBoundingClientRect();
+        const size   = Math.max(rect.width, rect.height);
+        ripple.style.cssText = `width:${size}px;height:${size}px;left:${event.clientX - rect.left - size / 2}px;top:${event.clientY - rect.top - size / 2}px`;
         ripple.classList.add('ripple-effect');
-        
         element.appendChild(ripple);
-        
         setTimeout(() => ripple.remove(), 600);
     }
 
-    btnNext.addEventListener('click', function() {
-        if (!selectedType || !step1Section || !step2Section) return;
-        
-        // Smooth transition with fade out
-        step1Section.classList.add('fade-out');
-        
-        setTimeout(() => {
-            step1Section.classList.add('d-none');
-            step1Section.classList.remove('fade-out');
-            step2Section.classList.remove('d-none');
-            step2Section.classList.add('fade-in');
-            
-            // Smooth scroll to top
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            
-            // Update step indicators with animation
-            if (step2Circle) {
-                step2Circle.classList.remove('bg-secondary');
-                step2Circle.classList.add('bg-primary');
-                document.getElementById('step2-indicator').classList.add('active');
-            }
-            if (step2Text) {
-                step2Text.classList.remove('text-muted');
-                step2Text.classList.add('text-primary', 'fw-semibold');
-            }
-            
-            
-            // Animate form fields entrance
-            setTimeout(() => {
-                const formFields = step2Section.querySelectorAll('.mb-3, .mb-4');
-                formFields.forEach((field, index) => {
-                    setTimeout(() => {
-                        field.style.animation = 'slideUp 0.4s ease-out forwards';
-                        field.style.opacity = '1';
-                    }, index * 50);
-                });
-            }, 100);
-        }, 300);
-    });
+    // ── Card clicks ───────────────────────────────────────────────────────────
+    if (cardPersonne) {
+        cardPersonne.addEventListener('click', function (e) {
+            createRipple(this, e);
+            selectedType = 'PERSONNE';
+            updateTypeDisplay();
+            if (navigator.vibrate) navigator.vibrate(50);
+        });
+    }
+    if (cardSociete) {
+        cardSociete.addEventListener('click', function (e) {
+            createRipple(this, e);
+            selectedType = 'SOCIETE';
+            updateTypeDisplay();
+            if (navigator.vibrate) navigator.vibrate(50);
+        });
+    }
 
-    if (btnBack) {
-        btnBack.addEventListener('click', function() {
-            if (!step1Section || !step2Section) return;
-            
-            // Smooth transition back to step 1
-            step2Section.classList.add('fade-out');
-            
+    // ── Continuer button (first-time visit, step-1 → step-2) ─────────────────
+    if (btnNext) {
+        btnNext.addEventListener('click', function () {
+            if (!selectedType || !step1Section || !step2Section) return;
+            step1Section.classList.add('fade-out');
             setTimeout(() => {
-                step2Section.classList.add('d-none');
-                step2Section.classList.remove('fade-out', 'fade-in');
-                step1Section.classList.remove('d-none');
-                step1Section.style.animation = 'slideInRight 0.5s ease-out';
-                
-                // Update step indicators
-                if (step2Circle) {
-                    step2Circle.classList.add('bg-secondary');
-                    step2Circle.classList.remove('bg-primary');
-                    document.getElementById('step2-indicator').classList.remove('active');
-                }
-                if (step2Text) {
-                    step2Text.classList.add('text-muted');
-                    step2Text.classList.remove('text-primary', 'fw-semibold');
-                }
-                
-                // Smooth scroll to top
+                step1Section.classList.add('d-none');
+                step1Section.classList.remove('fade-out');
+                step2Section.classList.remove('d-none');
+                step2Section.classList.add('fade-in');
+                activateStep2Indicator();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }, 300);
         });
     }
 
-    typeSelect.addEventListener('change', function() {
+    // ── Back button ───────────────────────────────────────────────────────────
+    if (btnBack) {
+        btnBack.addEventListener('click', function () {
+            if (!step1Section || !step2Section) return;
+            step2Section.classList.add('fade-out');
+            setTimeout(() => {
+                step2Section.classList.add('d-none');
+                step2Section.classList.remove('fade-out', 'fade-in');
+                step1Section.classList.remove('d-none');
+                step1Section.style.animation = 'slideInRight 0.5s ease-out';
+                deactivateStep2Indicator();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 300);
+        });
+    }
+
+    // ── Hidden select change ──────────────────────────────────────────────────
+    typeSelect.addEventListener('change', function () {
         selectedType = this.value;
         updateTypeDisplay();
     });
 
+    // ── Initialise on page load ───────────────────────────────────────────────
+    // Always sync card + field visibility with whatever value the select holds
+    // (on GET it's empty; on POST re-render Symfony keeps the submitted value).
     if (selectedType) updateTypeDisplay();
-    
-    // Add real-time validation feedback
-    const formInputs = document.querySelectorAll('.form-control, .form-select');
-    formInputs.forEach(input => {
-        // Focus animation
-        input.addEventListener('focus', function() {
-            this.parentElement.classList.add('focused');
+
+    // If step-2 is already visible (server rendered on POST), sync indicators
+    // and scroll to the first Symfony-rendered error message.
+    if (step2Section && !step2Section.classList.contains('d-none')) {
+        activateStep2Indicator();
+        setTimeout(() => {
+            const firstError = step2Section.querySelector('.invalid-feedback');
+            if (firstError) firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 80);
+    }
+
+    // ── Per-field real-time validation ────────────────────────────────────────
+    //
+    // numbersOnly → blocks non-digit keys and strips pasted non-digits.
+    // Validation triggers on blur; while already invalid, re-validates live
+    // so errors clear as soon as the user fixes the value.
+    //
+    const FIELD_RULES = {
+        'registration_fournisseur_nom':
+            { required: true,  min: 2,  max: 100 },
+        'registration_fournisseur_email':
+            { required: true,  email: true },
+        'registration_fournisseur_telephone':
+            { required: true,  numbersOnly: true,
+              min: 8, max: 15,
+              patternMsg: '8 à 15 chiffres (ex : 55123456)' },
+        'registration_fournisseur_ville':
+            { required: true,  min: 2,  max: 100 },
+        'registration_fournisseur_codePostale':
+            { required: true,  numbersOnly: true,
+              pattern: /^\d{4}$/, patternMsg: '4 chiffres exacts (ex : 1000)' },
+        'registration_fournisseur_fournisseurCin':
+            { required: false, numbersOnly: true,
+              pattern: /^\d{8}$/, patternMsg: '8 chiffres exacts' },
+        'registration_fournisseur_fournisseurRaisonSocial':
+            { required: false, min: 2 },
+        'registration_fournisseur_fournisseurNumRegistre':
+            { required: false, min: 2 },
+        'registration_fournisseur_fournisseurCapital':
+            { required: false, positiveNumber: true },
+    };
+
+    const SELECT_REQUIRED_IDS = [
+        'registration_fournisseur_gouvernant',
+        'registration_fournisseur_fournisseurFormeJuridique',
+    ];
+
+    function getError(id, value, rules) {
+        const v = value.trim();
+        if (rules.required && !v)  return 'Ce champ est obligatoire.';
+        if (!v)                    return null;   // optional + empty → OK
+        if (rules.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))
+            return "Format d'email invalide. Ex : nom@domaine.com";
+        if (rules.min && v.length < rules.min)
+            return `Minimum ${rules.min} caractère${rules.min > 1 ? 's' : ''}.`;
+        if (rules.max && v.length > rules.max)
+            return `Maximum ${rules.max} caractères.`;
+        if (rules.pattern && !rules.pattern.test(v))
+            return rules.patternMsg || 'Format invalide.';
+        if (rules.positiveNumber && (isNaN(parseFloat(v)) || parseFloat(v) < 0))
+            return 'Valeur numérique positive requise.';
+        return null;
+    }
+
+    function applyState(input, errorMsg) {
+        // Remove previous JS-generated feedback
+        const prev = input.parentElement.querySelector('.js-feedback');
+        if (prev) prev.remove();
+
+        // Hide any server-rendered Symfony error in the same container
+        input.parentElement.querySelectorAll('.invalid-feedback:not(.js-feedback)').forEach(function(el) {
+            el.style.display = 'none';
         });
-        
-        input.addEventListener('blur', function() {
-            this.parentElement.classList.remove('focused');
-            
-            // Validate on blur
-            if (this.value && this.checkValidity()) {
-                this.classList.add('is-valid');
-                this.classList.remove('is-invalid');
-            } else if (this.value && !this.checkValidity()) {
-                this.classList.add('is-invalid');
+
+        if (errorMsg) {
+            input.classList.add('is-invalid');
+            input.classList.remove('is-valid');
+            const fb = document.createElement('div');
+            fb.className = 'invalid-feedback js-feedback';
+            fb.style.display = 'block';
+            fb.textContent = errorMsg;
+            const anchor = (input.nextElementSibling &&
+                            input.nextElementSibling.classList.contains('password-toggle'))
+                           ? input.nextElementSibling : input;
+            anchor.insertAdjacentElement('afterend', fb);
+        } else if (input.value.trim()) {
+            input.classList.remove('is-invalid');
+            input.classList.add('is-valid');
+        } else {
+            input.classList.remove('is-invalid', 'is-valid');
+        }
+    }
+
+    Object.entries(FIELD_RULES).forEach(([id, rules]) => {
+        const input = document.getElementById(id);
+        if (!input) return;
+
+        if (rules.numbersOnly) {
+            input.setAttribute('inputmode', 'numeric');
+            input.addEventListener('keydown', function (e) {
+                const nav = ['Backspace','Delete','Tab','Enter',
+                             'ArrowLeft','ArrowRight','ArrowUp','ArrowDown'];
+                if (!nav.includes(e.key) && !/^\d$/.test(e.key)) e.preventDefault();
+            });
+            // Strip any non-digits that arrive via paste or autofill
+            input.addEventListener('input', function () {
+                const clean = this.value.replace(/\D/g, '');
+                if (clean !== this.value) this.value = clean;
+            });
+        }
+
+        input.addEventListener('blur', function () {
+            applyState(this, getError(id, this.value, rules));
+        });
+        input.addEventListener('input', function () {
+            // Live-validate if field is already invalid (JS or server error)
+            const hasServerErr = Array.from(
+                this.parentElement.querySelectorAll('.invalid-feedback:not(.js-feedback)')
+            ).some(function(el) { return el.textContent.trim() && el.style.display !== 'none'; });
+
+            if (this.classList.contains('is-invalid') || hasServerErr) {
+                applyState(this, getError(id, this.value, rules));
+            } else {
                 this.classList.remove('is-valid');
             }
         });
-        
-        // Clear validation on input
-        input.addEventListener('input', function() {
-            this.classList.remove('is-valid', 'is-invalid');
+    });
+
+    SELECT_REQUIRED_IDS.forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        sel.addEventListener('change', function () {
+            this.classList.toggle('is-valid',   !!this.value);
+            this.classList.toggle('is-invalid', !this.value);
         });
     });
-    
-    // Add loading state to submit button
-    const form = document.getElementById('fournisseur-form');
-    if (form) {
-        form.addEventListener('submit', function() {
-            const submitBtn = this.querySelector('button[type="submit"]');
-            if (submitBtn) {
-                submitBtn.classList.add('loading');
-                submitBtn.disabled = true;
-            }
+
+    // ── Submit: loading spinner ───────────────────────────────────────────────
+    if (formEl) {
+        formEl.addEventListener('submit', function () {
+            const btn = this.querySelector('button[type="submit"]');
+            if (btn) { btn.classList.add('loading'); btn.disabled = true; }
         });
-    }
-    
-    // Smooth scroll to first error if validation fails
-    const firstError = document.querySelector('.is-invalid, .invalid-feedback');
-    if (firstError) {
-        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
 });
 
-// Password visibility toggle (global scope for inline onclick handlers)
+// Password visibility toggle (called from inline onclick)
 function togglePasswordVisibility(button) {
     const input = button.previousElementSibling;
-    const isPassword = input.type === 'password';
-    input.type = isPassword ? 'text' : 'password';
-    button.classList.toggle('opacity-50', !isPassword);
+    const hide  = input.type === 'password';
+    input.type  = hide ? 'text' : 'password';
+    button.classList.toggle('opacity-50', !hide);
 }
+
+// ── reCAPTCHA v3 ─────────────────────────────────────────
+(function () {
+    var siteKey = '{{ recaptcha_site_key is defined ? recaptcha_site_key : "" }}';
+    if (!siteKey || siteKey === 'YOUR_RECAPTCHA_V3_SITE_KEY') return;
+    var script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js?render=' + siteKey;
+    script.onload = function() {
+        var form = document.getElementById('fournisseur-form');
+        if (form) {
+            var isSubmitting = false;
+            form.addEventListener('submit', function (e) {
+                var tokenField = document.getElementById('recaptchaResponse');
+                if (tokenField && tokenField.value) {
+                    return true;
+                }
+                if (isSubmitting) {
+                    return true;
+                }
+                e.preventDefault();
+                isSubmitting = true;
+                grecaptcha.ready(function () {
+                    grecaptcha.execute(siteKey, { action: 'register' }).then(function (token) {
+                        tokenField.value = token;
+                        form.submit();
+                    });
+                });
+            });
+        }
+    };
+    document.head.appendChild(script);
+})();
 </script>
 {% endblock %}

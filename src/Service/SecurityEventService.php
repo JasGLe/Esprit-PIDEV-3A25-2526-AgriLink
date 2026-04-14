@@ -224,6 +224,48 @@ class SecurityEventService
         );
     }
 
+    public function logAccountBanned(User $user, string $reason): void
+    {
+        $this->log(
+            SecurityEvent::EVENT_ACCOUNT_BANNED,
+            $user,
+            json_encode([
+                'email' => $user->getEmail(),
+                'reason' => $reason
+            ])
+        );
+    }
+
+    public function logAccountUnbanned(User $user): void
+    {
+        $this->log(
+            SecurityEvent::EVENT_ACCOUNT_UNBANNED,
+            $user,
+            json_encode(['email' => $user->getEmail()])
+        );
+    }
+
+    public function logBackupCodeUsed(User $user): void
+    {
+        $this->log(
+            SecurityEvent::EVENT_BACKUP_CODE_USED,
+            $user,
+            json_encode(['email' => $user->getEmail()])
+        );
+    }
+
+    public function logEmailChangeRequested(User $user, string $newEmail): void
+    {
+        $this->log(
+            SecurityEvent::EVENT_EMAIL_CHANGE_REQUESTED,
+            $user,
+            json_encode([
+                'email' => $user->getEmail(),
+                'new_email' => $newEmail
+            ])
+        );
+    }
+
     /**
      * Build base details array with IP and user agent from current request
      */

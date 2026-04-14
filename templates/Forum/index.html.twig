@@ -1,0 +1,74 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+{% block title %}Forum - AgriLink{% endblock %}
+{% block page_title %}Forum{% endblock %}
+
+{% block dashboard_content %}
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+        <div>
+            <h2 class="fs-4 fw-bold text-dark mb-1">Forum communautaire</h2>
+            <p class="text-muted mb-0">Retrouvez les sujets de discussion et poursuivez les echanges.</p>
+        </div>
+        <a href="{{ path('forum_new') }}" class="btn btn-success">Nouveau sujet</a>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-lg-6">
+                    <label for="forum-search" class="form-label fw-semibold small text-dark">Recherche</label>
+                    <input
+                        id="forum-search"
+                        type="text"
+                        name="q"
+                        value="{{ filters.q|default('') }}"
+                        class="form-control"
+                        placeholder="Rechercher par titre ou categorie"
+                    >
+                </div>
+                <div class="col-12 col-md-4 col-lg-3">
+                    <label for="forum-sort" class="form-label fw-semibold small text-dark">Tri</label>
+                    <select id="forum-sort" name="sort" class="form-select">
+                        <option value="recent" {{ (filters.sort|default('recent')) == 'recent' ? 'selected' : '' }}>Plus recents</option>
+                        <option value="az" {{ (filters.sort|default('recent')) == 'az' ? 'selected' : '' }}>Titre A-Z</option>
+                        <option value="za" {{ (filters.sort|default('recent')) == 'za' ? 'selected' : '' }}>Titre Z-A</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-8 col-lg-3 d-flex flex-wrap gap-2">
+                    <button type="submit" class="btn btn-outline-success">Rechercher</button>
+                    <a href="{{ path('forum_index') }}" class="btn btn-outline-secondary">Reinitialiser</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for forum in forums %}
+            <div class="col-12 col-xl-6">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-body p-4">
+                        <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                            <div>
+                                <h3 class="fs-5 fw-bold text-dark mb-1">{{ forum.titre }}</h3>
+                                <p class="small text-muted mb-0">Cree le {{ forum.dateCreation|date('d/m/Y H:i') }}</p>
+                            </div>
+                            <span class="badge text-bg-light border">{{ forum.categorie }}</span>
+                        </div>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{{ path('forum_show', {id: forum.id}) }}" class="btn btn-sm btn-outline-primary">Ouvrir</a>
+                            <a href="{{ path('forum_edit', {id: forum.id}) }}" class="btn btn-sm btn-outline-secondary">Modifier</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-5 text-center text-muted">
+                        Aucun sujet pour le moment.
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock %}

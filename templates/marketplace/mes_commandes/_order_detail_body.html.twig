@@ -1,0 +1,199 @@
+{# Contenu détail commande (page show + modal). Requiert statut_redirect : 'index' | 'show' #}
+{% set del_title_disabled = mes_commandes_mode == 'vendeur'
+    ? 'Suppression impossible (commande livrée ou multi-producteurs)'
+    : (mes_commandes_mode == 'admin'
+        ? 'Suppression réservée aux commandes livrées ou annulées'
+        : 'Suppression impossible (commande livrée)') %}
+<div class="mc-order-detail-toolbar mc-act-toolbar mc-act-toolbar--detail mc-od-toolbar d-flex flex-wrap align-items-center gap-2">
+    {% if show_cancellation_moderation|default(false) %}
+        <form method="post" action="{{ path('mes_commandes_cancel_approve', { id: commande.id }) }}" class="d-inline">
+            <input type="hidden" name="_token" value="{{ csrf_token('cancel_approve_' ~ commande.id) }}">
+            <button type="submit" class="btn btn-sm btn-success">Accepter l’annulation</button>
+        </form>
+        <form method="post" action="{{ path('mes_commandes_cancel_reject', { id: commande.id }) }}" class="d-inline">
+            <input type="hidden" name="_token" value="{{ csrf_token('cancel_reject_' ~ commande.id) }}">
+            <button type="submit" class="btn btn-sm btn-outline-secondary">Refuser</button>
+        </form>
+    {% endif %}
+    <button type="button" class="btn btn-sm mc-act mc-act--edit" title="Modifier les coordonnées de livraison" data-bs-toggle="modal" data-bs-target="#mcOrderEditModal" data-mc-order-edit-url="{{ path('mes_commandes_edit_modal', { id: commande.id }) }}"><i class="bi bi-pencil" aria-hidden="true"></i></button>
+    {% if commande_deletable %}
+        <form method="post" action="{{ path('mes_commandes_delete', { id: commande.id }) }}" class="d-inline js-mc-delete-form" data-mc-order-ref="#CMD{{ "%03d"|format(commande.id) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('delete_commande_' ~ commande.id) }}">
+            <button type="submit" class="btn btn-sm mc-act mc-act--delete" title="Supprimer la commande"><i class="bi bi-trash" aria-hidden="true"></i></button>
+        </form>
+    {% else %}
+        <button type="button" class="btn btn-sm mc-act mc-act--delete" disabled title="{{ del_title_disabled }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+    {% endif %}
+    <a href="{{ path('mes_commandes_pdf', { id: commande.id }) }}" class="btn btn-sm mc-act mc-act--pdf"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Export PDF</a>
+</div>
+
+<div class="mc-order-detail mc-od">
+    {% if mes_commandes_mode == 'vendeur' %}
+        {% set client_nom = [commande.prenom, commande.nom]|filter(v => v)|join(' ')|trim %}
+        {% if client_nom is empty %}
+            {% set client_nom = 'Client' %}
+            {% set client_initial = '?' %}
+        {% else %}
+            {% set client_initial = client_nom|slice(0, 1)|upper %}
+        {% endif %}
+        {% set loc_v = [commande.codePostal, commande.ville]|filter(v => v)|join(' ') %}
+        <section class="mc-detail-card mc-od-card mc-od-card--unified" aria-labelledby="mc-od-v-head">
+            <div class="mc-od-card__pad">
+                <div class="mc-od-head mc-od-head--seller">
+                    <div class="mc-od-head__main">
+                        <span class="mc-avatar mc-avatar--md" aria-hidden="true">{{ client_initial }}</span>
+                        <div class="mc-od-head__text">
+                            <h2 class="mc-od-title" id="mc-od-v-head">{{ client_nom }}</h2>
+                            <p class="mc-od-sub">Acheteur · <span class="mc-num">#CMD{{ "%03d"|format(commande.id) }}</span></p>
+                            {% if commande.telephone or commande.email %}
+                                <div class="mc-od-chips">
+                                    {% if commande.telephone %}<span class="mc-od-chip"><i class="bi bi-telephone" aria-hidden="true"></i>{{ commande.telephone }}</span>{% endif %}
+                                    {% if commande.email %}<span class="mc-od-chip"><i class="bi bi-envelope" aria-hidden="true"></i>{{ commande.email }}</span>{% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="mc-od-head__amounts">
+                        <div class="mc-od-amt mc-od-amt--lead"><span class="mc-od-amt__fig">{{ montant_vendeur|number_format(3, ',', ' ') }}</span> <span class="mc-od-amt__unit">DT</span></div>
+                        <div class="mc-od-amt__hint">Montant de vos articles</div>
+                        {% if has_autres_vendeurs %}
+                            <div class="mc-od-amt__hint mc-od-amt__hint--2">Total commande <span class="mc-od-amt__fig mc-od-amt__fig--sm">{{ commande.prixTotal|number_format(3, ',', ' ') }} DT</span></div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="mc-od-meta">
+                    <time class="mc-od-meta__date" datetime="{{ commande.dateCommande|date('Y-m-d') }}">{{ commande.dateCommande|date('d/m/Y') }}</time>
+                    <span class="mc-od-meta__sep" aria-hidden="true">·</span>
+                    <span class="mc-od-meta__status">{% include 'marketplace/mes_commandes/_status.html.twig' with { mes_commandes_mode: mes_commandes_mode, status: commande.status, commande_id: commande.id, dropdown_choices: statut_choices, statut_redirect: statut_redirect, force_statut_edit: force_statut_edit|default(false), cancellation_request_pending: cancellation_request_pending|default(false), show_buyer_cancel_request: show_buyer_cancel_request|default(false), buyer_cancel_order_ref: buyer_cancel_order_ref|default('') } %}</span>
+                </div>
+
+                <div class="mc-od-sec">
+                    <h3 class="mc-od-sec__h">Livraison</h3>
+                    <div class="mc-od-prose">
+                        {% if commande.adresse %}
+                            <p class="mc-od-prose__line">{{ commande.adresse }}</p>
+                        {% else %}
+                            <p class="mc-od-prose__line mc-od-prose__empty">—</p>
+                        {% endif %}
+                        {% if commande.complement %}
+                            <p class="mc-od-prose__line mc-od-prose__secondary">{{ commande.complement }}</p>
+                        {% endif %}
+                        {% if loc_v != '' %}
+                            <p class="mc-od-prose__line mc-od-prose__local">{{ loc_v }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% if has_autres_vendeurs %}
+                    <p class="mc-od-note"><i class="bi bi-info-circle me-1" aria-hidden="true"></i>Commande multi-producteurs — seuls vos articles sont listés ci-dessous.</p>
+                {% endif %}
+            </div>
+
+            <div class="mc-od-table-panel">
+                <h3 class="mc-od-sec__h mc-od-sec__h--in-panel" id="mc-od-lines-h">Vos articles</h3>
+                <div class="mc-table-wrap mc-table-wrap--allow-float mc-od-table-wrap">
+                    <div class="table-responsive">
+                        <table class="table mc-table mc-table--od mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th>Qté</th>
+                                    <th class="text-end">Prix unit.</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for l in lignes %}
+                                    <tr>
+                                        <td>{{ l.nomProduit }}</td>
+                                        <td>{{ l.quantite }}</td>
+                                        <td class="text-end mc-muted">{{ l.prixUnitaire|number_format(3, ',', ' ') }} DT</td>
+                                        <td class="text-end mc-amount">{{ l.prixTotal|number_format(3, ',', ' ') }} DT</td>
+                                    </tr>
+                                {% else %}
+                                    <tr><td colspan="4" class="text-center mc-muted mc-table--od-empty">Aucune ligne enregistrée.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    {% else %}
+        {% set loc_a = [commande.codePostal, commande.ville]|filter(v => v)|join(' ') %}
+        <section class="mc-detail-card mc-od-card mc-od-card--unified" aria-labelledby="mc-od-a-head">
+            <div class="mc-od-card__pad">
+                <div class="mc-od-head mc-od-head--buyer">
+                    <div class="mc-od-head__buyer-left">
+                        <h2 class="mc-od-title" id="mc-od-a-head"><span class="mc-num">{% if mes_commandes_mode == 'vendeur' or mes_commandes_mode == 'admin' or app.user.isAgriPlus %}#CMD{{ "%03d"|format(commande.id) }}{% else %}#{{ commande.numCommande }}{% endif %}</span></h2>
+                        <div class="mc-od-meta mc-od-meta--tight">
+                            <time class="mc-od-meta__date" datetime="{{ commande.dateCommande|date('Y-m-d') }}">{{ commande.dateCommande|date('d/m/Y') }}</time>
+                            <span class="mc-od-meta__sep" aria-hidden="true">·</span>
+                            <span class="mc-od-meta__status">{% include 'marketplace/mes_commandes/_status.html.twig' with { mes_commandes_mode: mes_commandes_mode, status: commande.status, commande_id: commande.id, dropdown_choices: statut_choices, statut_redirect: statut_redirect, force_statut_edit: force_statut_edit|default(false), cancellation_request_pending: cancellation_request_pending|default(false), show_buyer_cancel_request: show_buyer_cancel_request|default(false), buyer_cancel_order_ref: buyer_cancel_order_ref|default('') } %}</span>
+                        </div>
+                    </div>
+                    <div class="mc-od-head__amounts">
+                        <div class="mc-od-amt mc-od-amt--lead"><span class="mc-od-amt__fig">{{ commande.prixTotal|number_format(3, ',', ' ') }}</span> <span class="mc-od-amt__unit">DT</span></div>
+                        <div class="mc-od-amt__hint">Total TTC · {{ commande.quantite }} article{{ commande.quantite > 1 ? 's' : '' }}</div>
+                    </div>
+                </div>
+
+                <div class="mc-od-sec">
+                    <h3 class="mc-od-sec__h">Contact</h3>
+                    <dl class="mc-od-kvlist">
+                        <div class="mc-od-kvrow"><dt class="mc-od-kvrow__k">Prénom</dt><dd class="mc-od-kvrow__v">{{ commande.prenom|default('—') }}</dd></div>
+                        <div class="mc-od-kvrow"><dt class="mc-od-kvrow__k">Nom</dt><dd class="mc-od-kvrow__v">{{ commande.nom|default('—') }}</dd></div>
+                        <div class="mc-od-kvrow"><dt class="mc-od-kvrow__k">E-mail</dt><dd class="mc-od-kvrow__v mc-od-kvrow__v--break">{{ commande.email|default('—') }}</dd></div>
+                        <div class="mc-od-kvrow"><dt class="mc-od-kvrow__k">Téléphone</dt><dd class="mc-od-kvrow__v">{{ commande.telephone|default('—') }}</dd></div>
+                    </dl>
+                </div>
+
+                <div class="mc-od-sec">
+                    <h3 class="mc-od-sec__h">Livraison</h3>
+                    <div class="mc-od-prose">
+                        {% if commande.adresse %}
+                            <p class="mc-od-prose__line">{{ commande.adresse }}</p>
+                        {% else %}
+                            <p class="mc-od-prose__line mc-od-prose__empty">—</p>
+                        {% endif %}
+                        {% if commande.complement %}
+                            <p class="mc-od-prose__line mc-od-prose__secondary">{{ commande.complement }}</p>
+                        {% endif %}
+                        {% if loc_a != '' %}
+                            <p class="mc-od-prose__line mc-od-prose__local">{{ loc_a }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="mc-od-table-panel">
+                <h3 class="mc-od-sec__h mc-od-sec__h--in-panel" id="mc-od-lines-h">Articles</h3>
+                <div class="mc-table-wrap mc-table-wrap--allow-float mc-od-table-wrap">
+                    <div class="table-responsive">
+                        <table class="table mc-table mc-table--od mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Produit</th>
+                                    <th>Qté</th>
+                                    <th class="text-end">Prix unit.</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for l in lignes %}
+                                    <tr>
+                                        <td>{{ l.nomProduit }}</td>
+                                        <td>{{ l.quantite }}</td>
+                                        <td class="text-end mc-muted">{{ l.prixUnitaire|number_format(3, ',', ' ') }} DT</td>
+                                        <td class="text-end mc-amount">{{ l.prixTotal|number_format(3, ',', ' ') }} DT</td>
+                                    </tr>
+                                {% else %}
+                                    <tr><td colspan="4" class="text-center mc-muted mc-table--od-empty">Aucune ligne enregistrée.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+</div>

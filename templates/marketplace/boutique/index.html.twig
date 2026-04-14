@@ -1,0 +1,959 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Ma Boutique — AgriLink{% endblock %}
+{% block page_title %}Ma Boutique{% endblock %}
+
+{% block dashboard_content %}
+    <style>
+    :root {
+        /* Two-shade green system (pro + calming) */
+        --bq-green-700: #166534;   /* deep emerald */
+        --bq-green-600: #15803d;
+        --bq-green-500: #22c55e;
+        --bq-green-200: #bbf7d0;   /* mint */
+        --bq-green-100: #dcfce7;   /* light mint */
+        --bq-surface: rgba(255,255,255,0.78);
+        --bq-border: rgba(22,101,52,0.18);
+        --bq-shadow: 0 10px 24px rgba(22, 163, 74, 0.14);
+    }
+    .boutique-page .boutique-media {
+    aspect-ratio: 4 / 3;
+    max-height: 145px;
+    background: linear-gradient(145deg, #1a4731 0%, #166534 30%, #15803d 60%, #3f6212 100%);
+    border-bottom: 1px solid #166534;
+    box-shadow: inset 0 -2px 8px rgba(0,0,0,0.12);
+}
+    .boutique-hero {
+        background: linear-gradient(135deg, var(--bq-green-100) 0%, var(--bq-green-200) 100%);
+        border: 1px solid var(--bq-border);
+        border-radius: .95rem;
+        padding: .9rem 1rem;
+        margin-bottom: .95rem;
+        box-shadow: var(--bq-shadow);
+    }
+    .boutique-hero__title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--bq-green-700);
+        margin-bottom: .2rem;
+        letter-spacing: -.01em;
+    }
+    .boutique-hero__lead {
+        margin: 0;
+        font-size: .84rem;
+        color: rgba(22,101,52,0.92);
+        line-height: 1.45;
+    }
+    .boutique-hero__lead strong {
+        color: var(--bq-green-600);
+        font-weight: 700;
+    }
+    .boutique-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        border-radius: 999px;
+        padding: .2rem .55rem;
+        font-size: .72rem;
+        font-weight: 700;
+    }
+    .boutique-chip--active {
+        color: var(--bq-green-700);
+        background: rgba(34, 197, 94, 0.16);
+        border: 1px solid rgba(34, 197, 94, 0.32);
+    }
+    .boutique-chip--hidden {
+        color: rgba(22,101,52,0.72);
+        background: rgba(220, 252, 231, 0.70);
+        border: 1px solid rgba(22,101,52,0.16);
+    }
+    .boutique-actions-top .btn {
+        border-radius: .72rem;
+        font-size: .78rem;
+        font-weight: 700;
+        padding: .48rem .8rem;
+        transition: all .18s ease;
+        border-width: 1px;
+    }
+    .boutique-btn-marketplace {
+        background: linear-gradient(135deg, var(--bq-green-200) 0%, rgba(34,197,94,0.28) 100%);
+        color: var(--bq-green-700) !important;
+        border-color: rgba(22, 163, 74, 0.28) !important;
+        box-shadow: 0 6px 16px rgba(22, 163, 74, 0.18);
+    }
+    .boutique-btn-marketplace:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(22, 163, 74, 0.22);
+    }
+    .boutique-btn-return {
+        background: rgba(255,255,255,0.92);
+        color: var(--bq-green-700) !important;
+        border-color: rgba(22, 163, 74, 0.22) !important;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.12);
+    }
+    .boutique-btn-return:hover {
+        background: var(--bq-green-100);
+        color: var(--bq-green-700) !important;
+        transform: translateY(-1px);
+    }
+    .boutique-page .boutique-card {
+        border: 1px solid var(--bq-border);
+        border-radius: 0.9rem;
+        background: linear-gradient(160deg, rgba(255,255,255,0.92) 0%, rgba(220,252,231,0.55) 100%);
+        box-shadow: 0 8px 18px rgba(22, 163, 74, 0.10);
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .boutique-page .boutique-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 28px rgba(22, 163, 74, 0.16);
+        border-color: rgba(22, 163, 74, 0.35);
+    }
+    .boutique-page .boutique-media {
+        aspect-ratio: 4 / 3;
+        max-height: 145px;
+        background: linear-gradient(135deg, rgba(22,101,52,0.14) 0%, rgba(220,252,231,0.82) 100%);
+        border-bottom: 1px solid rgba(22,101,52,0.14);
+    }
+    .boutique-page .boutique-card .card-body {
+        padding: .72rem .78rem;
+    }
+    .boutique-page .boutique-card .h6 {
+        font-size: 1rem;
+        margin-bottom: .15rem;
+    }
+    .boutique-page .boutique-card .small {
+        font-size: .78rem !important;
+    }
+    .boutique-page .boutique-actions .btn {
+        padding: .26rem .5rem;
+        font-size: .75rem;
+    }
+
+    /* Boutique search + category filter */
+    .boutique-tools {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .6rem;
+        align-items: center;
+        justify-content: space-between;
+        margin: .2rem 0 1rem;
+    }
+    .boutique-search {
+        flex: 1 1 18rem;
+        min-width: 16rem;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        padding: .55rem .65rem;
+        border-radius: .95rem;
+        background: var(--bq-surface);
+        border: 1px solid var(--bq-border);
+        box-shadow: 0 10px 18px rgba(22,163,74,0.10);
+    }
+    .boutique-search__icon { color: var(--bq-green-700); opacity:.85; }
+    .boutique-search__input {
+        border: 0 !important;
+        outline: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+        color: var(--bq-green-700) !important;
+        font-weight: 700;
+        font-size: .9rem;
+        padding: .2rem 0 !important;
+    }
+    .boutique-search__hint { font-size:.72rem; color: rgba(22,101,52,0.88); margin-top:.15rem; }
+    .boutique-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .45rem;
+        align-items: center;
+        justify-content: flex-end;
+        flex: 1 1 22rem;
+    }
+    .boutique-filter__chip {
+        border-radius: 999px;
+        padding: .32rem .7rem;
+        font-size: .74rem;
+        font-weight: 800;
+        border: 1px solid rgba(22,101,52,0.18);
+        background: rgba(255,255,255,0.86);
+        color: var(--bq-green-700);
+        cursor: pointer;
+        user-select: none;
+        transition: all .15s ease;
+    }
+    .boutique-filter__chip:hover { transform: translateY(-1px); box-shadow: 0 6px 14px rgba(22,163,74,0.12); }
+    .boutique-filter__chip.is-active {
+        background: linear-gradient(135deg, rgba(34,197,94,0.22) 0%, var(--bq-green-200) 100%);
+        border-color: rgba(22,101,52,0.26);
+        color: var(--bq-green-700);
+        box-shadow: 0 10px 18px rgba(22,163,74,0.18);
+    }
+    .boutique-empty-live {
+        border: 1px dashed rgba(22,163,74,0.28);
+        background: rgba(240,253,244,0.70);
+        border-radius: .95rem;
+        padding: 2.2rem 1rem;
+        text-align: center;
+        color:#14532d;
+        box-shadow: 0 10px 24px rgba(22,163,74,0.10);
+    }
+
+    /* Selection + contextual promo button */
+    .boutique-item { cursor: pointer; position: relative; }
+    .boutique-item.is-selected {
+        border: 2px solid rgba(34,197,94,0.75) !important;
+        box-shadow: 0 0 0 3px rgba(34,197,94,0.16), 0 14px 28px rgba(22, 163, 74, 0.16) !important;
+    }
+    .boutique-item.is-selected::after {
+        content: "Sélectionné";
+        position: absolute;
+        top: .55rem;
+        right: .55rem;
+        z-index: 4;
+        padding: .2rem .45rem;
+        border-radius: 999px;
+        font-size: .68rem;
+        font-weight: 700;
+        color: #14532d;
+        background: rgba(220,252,231,0.96);
+        border: 1px solid rgba(34,197,94,0.45);
+        box-shadow: 0 8px 16px rgba(22,163,74,0.16);
+        pointer-events: none;
+    }
+    .boutique-actions-top .boutique-promo-btn {
+        opacity: 0;
+        transform: translateY(-2px);
+        pointer-events: none;
+        transition: opacity .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .boutique-actions-top .boutique-promo-btn.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+    .boutique-hero:hover .boutique-actions-top .boutique-promo-btn {
+        opacity: .85;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+    .boutique-actions-top .boutique-promo-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(22, 163, 74, 0.22);
+    }
+
+    /* Promo modal redesign */
+    .promo-modal__content {
+        border: 0;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 24px 50px rgba(15, 23, 42, 0.22);
+    }
+    .promo-modal__header {
+        border: 0;
+        padding: 1rem 1.1rem .8rem;
+        background: linear-gradient(135deg, #166534 0%, #15803d 42%, #22c55e 100%);
+        color: #fff;
+    }
+    .promo-modal__title {
+        font-size: 1.03rem;
+        font-weight: 800;
+        letter-spacing: -.01em;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+    .promo-modal__badge {
+        width: 1.9rem;
+        height: 1.9rem;
+        border-radius: .55rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,.20);
+        border: 1px solid rgba(255,255,255,.28);
+        font-size: .95rem;
+    }
+    .promo-modal__sub {
+        margin: .35rem 0 0;
+        font-size: .78rem;
+        color: rgba(255,255,255,.90);
+    }
+    .promo-modal__body {
+        padding: 1rem 1.1rem 1.05rem;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fffb 100%);
+    }
+    .promo-modal__field {
+        margin-bottom: .88rem;
+    }
+    .promo-modal__label {
+        font-size: .82rem;
+        font-weight: 700;
+        color: #14532d;
+        margin-bottom: .35rem;
+    }
+    .promo-modal__input {
+        border-radius: .72rem;
+        border: 1.5px solid rgba(22,101,52,.16);
+        padding: .62rem .78rem;
+        font-weight: 600;
+        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+    .promo-modal__input:focus {
+        border-color: rgba(34,197,94,.55);
+        box-shadow: 0 0 0 .22rem rgba(34,197,94,.18);
+        transform: translateY(-1px);
+    }
+    .promo-modal__hint {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        font-size: .74rem;
+        color: #166534;
+        background: rgba(220,252,231,.7);
+        border: 1px solid rgba(34,197,94,.26);
+        border-radius: 999px;
+        padding: .25rem .55rem;
+        margin-bottom: .9rem;
+    }
+    .promo-modal__hint.is-warning {
+        color: #92400e;
+        background: rgba(254, 243, 199, 0.9);
+        border-color: rgba(245, 158, 11, 0.4);
+    }
+    .promo-modal__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: .45rem;
+    }
+    .promo-modal__btn-cancel {
+        border-radius: .65rem;
+        border: 1px solid rgba(100,116,139,.35);
+        padding: .45rem .88rem;
+        font-weight: 600;
+    }
+    .promo-modal__btn-save {
+        border: 0;
+        border-radius: .65rem;
+        padding: .45rem .96rem;
+        font-weight: 700;
+        color: #fff;
+        background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        box-shadow: 0 10px 20px rgba(22,163,74,.28);
+    }
+    .promo-modal__btn-save:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 24px rgba(22,163,74,.34);
+    }
+</style>
+
+    <div class="boutique-page">
+    <div class="boutique-hero">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between gap-3">
+            <div>
+                <h2 class="boutique-hero__title">Gérez vos produits en toute simplicité</h2>
+                <p class="boutique-hero__lead mb-2">Retrouvez ici toutes vos annonces boutique, mettez-les à jour rapidement et contrôlez leur visibilité.</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <span class="boutique-chip boutique-chip--active">● Actif : visible sur le Marketplace</span>
+                    <span class="boutique-chip boutique-chip--hidden">● Masqué : visible uniquement dans votre espace</span>
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 boutique-actions-top">
+                <button type="button"
+                        class="btn boutique-btn-marketplace boutique-promo-btn"
+                        id="boutiquePromoBtn"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalAddPromoCode">
+                    Code promo <span class="ms-1 small opacity-75" id="boutiquePromoBtnCount"></span>
+                </button>
+                <a href="{{ path('marketplace_index') }}" class="btn boutique-btn-marketplace">
+                    <svg style="width:1rem;height:1rem;" class="me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    Voir Marketplace
+                </a>
+                <a href="{{ path('exploitation_index') }}" class="btn boutique-btn-return">
+                    ← Retour
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <p class="small text-muted mb-3">
+        <span id="boutiqueCount">{{ produits|length }}</span> annonce{{ produits|length > 1 ? 's' : '' }} dans votre boutique.
+    </p>
+
+    
+
+    <div class="boutique-tools">
+        <div class="flex-grow-1">
+            <div class="boutique-search" role="search" aria-label="Recherche boutique">
+                <span class="boutique-search__icon" aria-hidden="true">⌕</span>
+                <input type="search"
+                       id="boutiqueSearchInput"
+                       class="form-control boutique-search__input"
+                       placeholder="Rechercher par nom ou catégorie…"
+                       autocomplete="off">
+            </div>
+        </div>
+        <div class="boutique-filter" aria-label="Filtre catégorie">
+            <button type="button" class="boutique-filter__chip is-active" data-bcat="all">Tout</button>
+            <button type="button" class="boutique-filter__chip" data-bcat="legume">Légume</button>
+            <button type="button" class="boutique-filter__chip" data-bcat="fruit">Fruit</button>
+            <button type="button" class="boutique-filter__chip" data-bcat="graines">Graines</button>
+            <button type="button" class="boutique-filter__chip" data-bcat="equipement">Équipement</button>
+        </div>
+    </div>
+
+    {% if produits is empty %}
+        <div class="text-center py-5 rounded-3 border border-dashed border-secondary bg-white shadow-sm">
+            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width:4rem;height:4rem;background:rgba(34,197,94,0.12);">
+                <svg style="width:2rem;height:2rem;color:#16a34a;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3C9 3 5 6 5 10c0 2.5 1.5 4.5 3 6l1 5h6l1-5c1.5-1.5 3-3.5 3-6 0-4-4-7-7-7z"/>
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 21h6M12 3v2M7.5 6.5l1 1M16.5 6.5l-1 1"/>
+</svg>
+            </div>
+            <p class="text-muted mb-3">Aucune annonce pour le moment.</p>
+            <p class="small text-muted mb-0">Depuis <strong>Mes exploitations</strong>, ouvrez une culture et cliquez sur <strong>Mettre en vente</strong>.</p>
+        </div>
+    {% else %}
+        <div class="row g-3" id="boutiqueGrid">
+            {% for p in produits %}
+                {% set cat_parts = ' · ' in p.categorie ? p.categorie|split(' · ', 2) : [p.categorie] %}
+                {% set cat_label = (cat_parts[0]|default(''))|lower %}
+                {% set promo_expired = p.promoEndAt and (p.promoEndAt|date('U') < "now"|date('U')) %}
+                {% set cat_key =
+                    (p.equipementId is not null) ? 'equipement'
+                    : (cat_label matches '/fruit/' ? 'fruit'
+                    : (cat_label matches '/grain/' ? 'graines'
+                    : (cat_label matches '/l[ée]gume|legume/' ? 'legume' : 'all'))) %}
+                <div class="col-12 col-sm-6 col-xl-3">
+                    <div class="card boutique-card h-100 overflow-hidden boutique-item"
+                         data-produit-id="{{ p.id }}"
+                         data-promo-code="{{ p.promoCode|default('')|e('html_attr') }}"
+                         data-promo-discount="{{ p.promoDiscountPercent is not null ? p.promoDiscountPercent : '' }}"
+                         data-promo-start="{{ p.promoStartAt ? p.promoStartAt|date('Y-m-d') : '' }}"
+                         data-promo-end="{{ p.promoEndAt ? p.promoEndAt|date('Y-m-d') : '' }}"
+                         data-promo-expired="{{ promo_expired ? '1' : '0' }}"
+                         data-bname="{{ (p.nom|default(''))|lower|e('html_attr') }}"
+                         data-bcat="{{ cat_key }}"
+                         data-bcatlabel="{{ (cat_parts[0]|default(''))|lower|e('html_attr') }}">
+                        <div class="ratio ratio-4x3 boutique-media d-flex align-items-center justify-content-center">
+                            {% if p.image and p.image|trim != '' %}
+                                {% if p.equipementId is not null %}
+                                    <img src="{{ uploads_base_url }}/{{ p.image }}"
+                                         alt="{{ p.nom }}"
+                                         class="object-fit-cover w-100 h-100"
+                                         onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'fs-1 text-success',textContent:'🛠️'}))">
+                                {% else %}
+                                    <img src="{{ uploads_base_url }}/cultures/{{ p.image }}"
+                                     alt="{{ p.nom }}"
+                                     class="object-fit-cover w-100 h-100"
+                                     onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'fs-1 text-success',textContent:'🌱'}))">
+                                {% endif %}
+                            {% else %}
+                               <svg style="width:3rem;height:3rem;color:#4ade80;opacity:.85;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 2C9 2 5 5.5 5 9.5c0 2.8 1.5 5.2 4 6.8V19h6v-2.7c2.5-1.6 4-4 4-6.8C19 5.5 15 2 12 2z"/>
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19h6M12 2v4M7 7l1.5 1.5M17 7l-1.5 1.5"/>
+</svg>
+                            {% endif %}
+                        </div>
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center gap-2 mb-2 small">
+                                {% if p.active %}
+                                    <span class="badge rounded-pill bg-success-subtle text-success">● Actif</span>
+                                {% else %}
+                                    <span class="badge rounded-pill bg-secondary-subtle text-secondary">Masqué</span>
+                                {% endif %}
+                                <span class="text-muted">{{ p.quantite }} en stock</span>
+                            </div>
+                            <h3 class="h6 fw-bold text-dark mb-1">{{ p.nom }}</h3>
+                            <p class="small text-muted mb-2">{{ cat_parts[0] }}</p>
+                            <p class="fw-bold text-success mb-3">{{ p.prixUnitaire|number_format(3, ',', ' ') }} DT{% if cat_parts[1] is defined %} / {{ cat_parts[1] }}{% endif %}</p>
+                            {% if p.promoActive and p.promoCode and p.promoDiscountPercent is not null %}
+                                <p class="small mb-2">
+                                    <span class="badge rounded-pill {{ promo_expired ? 'text-bg-danger' : 'text-bg-warning' }}">
+                                        Promo {{ p.promoCode }} (-{{ p.promoDiscountPercent|number_format(0, ',', ' ') }}%)
+                                    </span>
+                                    
+                                </p>
+                            {% endif %}
+                            {% if p.description %}
+                                <p class="small text-muted flex-grow-1 mb-3">{{ p.description|length > 120 ? p.description|slice(0, 117) ~ '…' : p.description }}</p>
+                            {% endif %}
+                            <div class="d-flex flex-wrap gap-1 mt-auto boutique-actions">
+                                <form action="{{ path('boutique_produit_basculer', {id: p.id}) }}" method="post" class="d-inline">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('boutique_visible' ~ p.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                        {% if p.active %}
+                                            <svg style="width:0.9rem;height:0.9rem;" class="me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                                            Masquer
+                                        {% else %}
+                                            <svg style="width:0.9rem;height:0.9rem;" class="me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                            Activer
+                                        {% endif %}
+                                    </button>
+                                </form>
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary boutique-edit-open"
+                                        title="Modifier"
+                                        data-url="{{ path('boutique_produit_modifier_fragment', {id: p.id}) }}">
+                                    <svg style="width:0.9rem;height:0.9rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                </button>
+                                <form action="{{ path('boutique_produit_supprimer', {id: p.id}) }}" method="post" class="d-inline js-boutique-delete-form" data-boutique-product="{{ p.nom|e('html_attr') }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('boutique_supprimer' ~ p.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
+                                        <svg style="width:0.9rem;height:0.9rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        <div id="boutiqueLiveEmpty" class="boutique-empty-live d-none">
+            <div style="font-size:2rem;line-height:1;">🔎</div>
+            <p class="mb-1 fw-bold">Aucun résultat</p>
+            <p class="mb-0 small" style="color:#166534;">Essayez un autre nom ou changez la catégorie.</p>
+        </div>
+    {% endif %}
+    </div>
+
+    <div class="modal fade" id="modalAddPromoCode" tabindex="-1" aria-labelledby="modalAddPromoCodeLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content promo-modal__content">
+                <div class="modal-header promo-modal__header">
+                    <div>
+                        <h2 class="modal-title mb-0 promo-modal__title" id="modalAddPromoCodeLabel">
+                            <span class="promo-modal__badge" aria-hidden="true">🏷️</span>
+                            Ajouter un code promo
+                        </h2>
+                        <p class="promo-modal__sub">Appliquez une remise ciblée sur vos produits sélectionnés.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body promo-modal__body">
+                    {{ form_start(promo_form, { action: path('boutique_promo_assign'), attr: { novalidate: 'novalidate', id: 'boutiquePromoForm', 'data-server-errors': (open_promo_modal|default(false)) ? '1' : '0' } }) }}
+                    <div class="promo-modal__hint">
+                        <span aria-hidden="true">✓</span>
+                        <span id="promoModalSelectedCount">0 produit sélectionné</span>
+                    </div>
+                    <div class="promo-modal__hint d-none" id="promoModalStateHint"></div>
+                    {{ form_errors(promo_form) }}
+                    <div class="promo-modal__field">
+                        {{ form_label(promo_form.code, null, { label_attr: { class: 'promo-modal__label' } }) }}
+                        {{ form_widget(promo_form.code, { attr: { class: 'form-control promo-modal__input', placeholder: 'Ex : PRINTEMPS20' } }) }}
+                        {{ form_errors(promo_form.code) }}
+                    </div>
+                    <div class="promo-modal__field">
+                        {{ form_label(promo_form.discount_percent, null, { label_attr: { class: 'promo-modal__label' } }) }}
+                        {{ form_widget(promo_form.discount_percent, { attr: { class: 'form-control promo-modal__input', placeholder: 'Ex : 15' } }) }}
+                        {{ form_errors(promo_form.discount_percent) }}
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-12 col-md-6 promo-modal__field">
+                            {{ form_label(promo_form.start_date, null, { label_attr: { class: 'promo-modal__label' } }) }}
+                            {{ form_widget(promo_form.start_date, { attr: { class: 'form-control promo-modal__input' } }) }}
+                            {{ form_errors(promo_form.start_date) }}
+                        </div>
+                        <div class="col-12 col-md-6 promo-modal__field">
+                            {{ form_label(promo_form.end_date, null, { label_attr: { class: 'promo-modal__label' } }) }}
+                            {{ form_widget(promo_form.end_date, { attr: { class: 'form-control promo-modal__input' } }) }}
+                            {{ form_errors(promo_form.end_date) }}
+                        </div>
+                    </div>
+                    {{ form_widget(promo_form.product_ids, { attr: { id: 'boutiquePromoProductIds' } }) }}
+                    {{ form_errors(promo_form.product_ids) }}
+
+                    <div class="promo-modal__actions">
+                        <button type="button" class="btn btn-sm promo-modal__btn-cancel" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-sm promo-modal__btn-save">Enregistrer</button>
+                    </div>
+                    {{ form_end(promo_form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const promoBtn = document.getElementById('boutiquePromoBtn');
+        const promoBtnCount = document.getElementById('boutiquePromoBtnCount');
+        const modalEl = document.getElementById('modalAddPromoCode');
+        const formEl = document.getElementById('boutiquePromoForm');
+        const selectedCountEl = document.getElementById('promoModalSelectedCount');
+        const stateHintEl = document.getElementById('promoModalStateHint');
+        const codeInput = formEl ? formEl.querySelector('input[name$="[code]"]') : null;
+        const discountInput = formEl ? formEl.querySelector('input[name$="[discount_percent]"]') : null;
+        const startInput = formEl ? formEl.querySelector('input[name$="[start_date]"]') : null;
+        const endInput = formEl ? formEl.querySelector('input[name$="[end_date]"]') : null;
+        const selectedIds = new Set();
+        let productIdsInput = document.getElementById('boutiquePromoProductIds');
+        const shouldKeepServerValues = formEl && formEl.getAttribute('data-server-errors') === '1';
+
+        if (!promoBtn) return;
+        if (!productIdsInput && formEl) {
+            productIdsInput = formEl.querySelector('input[name$="[product_ids]"]');
+        }
+        if (!productIdsInput && formEl) {
+            productIdsInput = document.createElement('input');
+            productIdsInput.type = 'hidden';
+            productIdsInput.name = 'promo_code_assign[product_ids]';
+            productIdsInput.id = 'boutiquePromoProductIds';
+            formEl.appendChild(productIdsInput);
+        }
+        if (!productIdsInput) return;
+
+        if (productIdsInput.value) {
+            productIdsInput.value
+                .split(',')
+                .map(v => parseInt(v.trim(), 10))
+                .filter(v => Number.isFinite(v) && v > 0)
+                .forEach(v => selectedIds.add(v));
+        }
+
+        function getSelectedIds() {
+            return Array.from(selectedIds.values());
+        }
+
+        function syncUI() {
+            const ids = getSelectedIds();
+            promoBtn.classList.toggle('is-visible', ids.length > 0);
+            if (promoBtnCount) {
+                promoBtnCount.textContent = ids.length > 0 ? '(' + ids.length + ')' : '';
+            }
+            if (selectedCountEl) {
+                selectedCountEl.textContent = ids.length + ' produit' + (ids.length > 1 ? 's' : '') + ' sélectionné' + (ids.length > 1 ? 's' : '');
+            }
+            document.querySelectorAll('.boutique-item').forEach(card => {
+                const pid = parseInt(card.getAttribute('data-produit-id') || '0', 10);
+                card.classList.toggle('is-selected', ids.includes(pid));
+            });
+        }
+
+        function sameValue(values) {
+            if (!values.length) return null;
+            const first = values[0];
+            for (const value of values) {
+                if (String(value || '') !== String(first || '')) return null;
+            }
+            return first || '';
+        }
+
+        function selectedCards() {
+            const ids = getSelectedIds();
+            return Array.from(document.querySelectorAll('.boutique-item')).filter((card) => {
+                const pid = parseInt(card.getAttribute('data-produit-id') || '0', 10);
+                return ids.includes(pid);
+            });
+        }
+
+        function hydratePromoForm() {
+            const cards = selectedCards();
+            const codes = cards.map((c) => c.getAttribute('data-promo-code') || '');
+            const discounts = cards.map((c) => c.getAttribute('data-promo-discount') || '');
+            const starts = cards.map((c) => c.getAttribute('data-promo-start') || '');
+            const ends = cards.map((c) => c.getAttribute('data-promo-end') || '');
+            const hasExpired = cards.some((c) => c.getAttribute('data-promo-expired') === '1');
+
+            const commonCode = sameValue(codes);
+            const commonDiscount = sameValue(discounts);
+            const commonStart = sameValue(starts);
+            const commonEnd = sameValue(ends);
+
+            if (codeInput) codeInput.value = commonCode !== null ? commonCode : '';
+            if (discountInput) discountInput.value = commonDiscount !== null ? commonDiscount : '';
+            if (startInput) startInput.value = commonStart !== null ? commonStart : '';
+            if (endInput) endInput.value = commonEnd !== null ? commonEnd : '';
+            syncDateGuards();
+
+            if (!stateHintEl) return;
+            stateHintEl.classList.remove('d-none', 'is-warning');
+            if (hasExpired) {
+                stateHintEl.classList.add('is-warning');
+                stateHintEl.innerHTML = '<span aria-hidden="true">⚠</span><span>Au moins un code est expiré. Mettez à jour les dates et enregistrez pour le réactiver.</span>';
+            } else if (cards.length > 0 && commonCode !== null && commonCode !== '') {
+                stateHintEl.innerHTML = '<span aria-hidden="true">✎</span><span>Code existant détecté : vous pouvez le modifier.</span>';
+            } else {
+                stateHintEl.classList.add('d-none');
+                stateHintEl.textContent = '';
+            }
+        }
+
+        function syncDateGuards() {
+            if (!startInput || !endInput) return;
+            const startVal = startInput.value || '';
+            if (startVal !== '') {
+                endInput.min = startVal;
+                if (endInput.value && endInput.value <= startVal) {
+                    endInput.value = '';
+                }
+            }
+        }
+
+        document.querySelectorAll('.boutique-item').forEach(function (card) {
+            card.addEventListener('click', function (e) {
+                if (
+                    e.target.closest('form') ||
+                    e.target.closest('button') ||
+                    e.target.closest('a') ||
+                    e.target.closest('input') ||
+                    e.target.closest('select') ||
+                    e.target.closest('textarea')
+                ) {
+                    return;
+                }
+                const pid = parseInt(card.getAttribute('data-produit-id') || '0', 10);
+                if (!Number.isFinite(pid) || pid <= 0) return;
+                if (selectedIds.has(pid)) {
+                    selectedIds.delete(pid);
+                } else {
+                    selectedIds.add(pid);
+                }
+                syncUI();
+            });
+        });
+
+        if (modalEl) {
+            modalEl.addEventListener('show.bs.modal', function () {
+                productIdsInput.value = getSelectedIds().join(',');
+                if (!shouldKeepServerValues) {
+                    hydratePromoForm();
+                }
+            });
+        }
+
+        if (formEl) {
+            if (startInput) {
+                startInput.addEventListener('change', syncDateGuards);
+            }
+            formEl.addEventListener('submit', function () {
+                productIdsInput.value = getSelectedIds().join(',');
+            });
+        }
+
+        syncUI();
+
+        {% if open_promo_modal|default(false) %}
+        if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+        {% endif %}
+    })();
+    </script>
+
+    {# Modal modifier l’annonce (reste sur /boutique) #}
+    <div class="modal fade" id="modalEditBoutiqueAnnonce" tabindex="-1" aria-labelledby="modalEditBoutiqueAnnonceLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 bg-transparent shadow-none">
+                <div id="modalEditBoutiqueAnnonceBody" class="p-0">
+                    <div class="text-center py-5 text-muted small">Chargement…</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalBoutiqueDeleteConfirm" tabindex="-1" aria-labelledby="modalBoutiqueDeleteConfirmLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content boutique-confirm__content border-0 shadow-lg">
+                <div class="modal-header boutique-confirm__header border-0">
+                    <h2 class="modal-title h6 mb-0 boutique-confirm__title" id="modalBoutiqueDeleteConfirmLabel">
+                        <span class="boutique-confirm__icon" aria-hidden="true">🗑️</span>
+                        Supprimer l’annonce
+                    </h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body boutique-confirm__body">
+                    <p class="mb-0">Cette action est définitive.</p>
+                    <p class="mb-0 text-muted small">Annonce : <strong class="js-boutique-delete-name">—</strong></p>
+                </div>
+                <div class="modal-footer boutique-confirm__footer border-0">
+                    <button type="button" class="btn btn-sm btn-outline-secondary boutique-confirm__btn-cancel" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-sm btn-danger boutique-confirm__btn-confirm js-boutique-delete-confirm">Supprimer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const modalEl = document.getElementById('modalEditBoutiqueAnnonce');
+        const bodyEl = document.getElementById('modalEditBoutiqueAnnonceBody');
+        const boutiqueUrl = {{ path('boutique_index')|json_encode|raw }};
+
+        if (!modalEl || !bodyEl || typeof bootstrap === 'undefined') {
+            return;
+        }
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+
+        document.body.addEventListener('click', async function (e) {
+            const btn = e.target.closest('.boutique-edit-open');
+            if (!btn) {
+                return;
+            }
+            e.preventDefault();
+            const url = btn.getAttribute('data-url');
+            if (!url) {
+                return;
+            }
+            bodyEl.innerHTML = '<div class="text-center py-5 text-muted small">Chargement…</div>';
+            modal.show();
+            try {
+                const res = await fetch(url, {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                });
+                if (!res.ok) {
+                    throw new Error('HTTP ' + res.status);
+                }
+                bodyEl.innerHTML = await res.text();
+            } catch (err) {
+                bodyEl.innerHTML = '<div class="alert alert-danger m-3 mb-0">Impossible de charger le formulaire. Réessayez.</div>';
+            }
+        });
+
+        document.body.addEventListener('submit', async function (e) {
+            const form = e.target;
+            if (!form.matches || !form.matches('form.boutique-edit-form')) {
+                return;
+            }
+            e.preventDefault();
+            try {
+                const res = await fetch(form.action, {
+                    method: 'POST',
+                    body: new FormData(form),
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                });
+                const ct = res.headers.get('content-type') || '';
+                if (ct.includes('application/json')) {
+                    const data = await res.json();
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    }
+                    return;
+                }
+                if (res.status === 422) {
+                    bodyEl.innerHTML = await res.text();
+                    return;
+                }
+                if (res.ok || res.redirected) {
+                    window.location.href = boutiqueUrl;
+                }
+            } catch (err) {
+                bodyEl.innerHTML = '<div class="alert alert-danger m-3 mb-0">Erreur lors de l’enregistrement.</div>';
+            }
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            bodyEl.innerHTML = '<div class="text-center py-5 text-muted small">Chargement…</div>';
+        });
+    })();
+    </script>
+
+    <script>
+    (function () {
+        var input = document.getElementById('boutiqueSearchInput');
+        var chips = Array.prototype.slice.call(document.querySelectorAll('.boutique-filter__chip'));
+        var items = Array.prototype.slice.call(document.querySelectorAll('.boutique-item'));
+        var countEl = document.getElementById('boutiqueCount');
+        var emptyEl = document.getElementById('boutiqueLiveEmpty');
+        var activeCat = 'all';
+
+        function norm(s) {
+            return String(s || '').toLowerCase().trim().replace(/\s+/g, ' ');
+        }
+
+        function apply() {
+            var q = input ? norm(input.value) : '';
+            var visible = 0;
+            items.forEach(function (el) {
+                var name = norm(el.getAttribute('data-bname'));
+                var catLabel = norm(el.getAttribute('data-bcatlabel'));
+                var cat = el.getAttribute('data-bcat') || 'all';
+
+                var matchCat = activeCat === 'all' || cat === activeCat;
+                var matchQ = q === '' || name.indexOf(q) !== -1 || catLabel.indexOf(q) !== -1;
+                var show = matchCat && matchQ;
+                el.closest('.col-12')?.classList.toggle('d-none', !show);
+                if (show) visible += 1;
+            });
+
+            if (countEl) countEl.textContent = String(visible);
+            if (emptyEl) emptyEl.classList.toggle('d-none', visible > 0);
+        }
+
+        if (input) {
+            input.addEventListener('input', apply);
+            input.addEventListener('search', apply);
+        }
+
+        chips.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                chips.forEach(function (b) { b.classList.remove('is-active'); });
+                btn.classList.add('is-active');
+                activeCat = btn.getAttribute('data-bcat') || 'all';
+                apply();
+            });
+        });
+
+        apply();
+    })();
+    </script>
+
+    <style>
+        .boutique-confirm__content { border-radius: 1rem; overflow: hidden; }
+        .boutique-confirm__header { background: linear-gradient(90deg, rgba(220,38,38,0.10), rgba(245,158,11,0.06)); }
+        .boutique-confirm__title { display:flex; align-items:center; gap:.5rem; font-weight:700; }
+        .boutique-confirm__icon { width:1.8rem; height:1.8rem; border-radius:.6rem; display:inline-flex; align-items:center; justify-content:center; background:rgba(220,38,38,0.10); }
+        .boutique-confirm__body { padding: 1rem 1rem 0.75rem; }
+        .boutique-confirm__footer { padding: 0.75rem 1rem 1rem; display:flex; gap:.5rem; }
+        .boutique-confirm__btn-confirm { border-radius: .6rem; }
+        .boutique-confirm__btn-cancel { border-radius: .6rem; }
+    </style>
+
+    <script>
+    (function () {
+        const modalEl = document.getElementById('modalBoutiqueDeleteConfirm');
+        if (!modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: 'static' });
+        const nameEl = modalEl.querySelector('.js-boutique-delete-name');
+        const confirmBtn = modalEl.querySelector('.js-boutique-delete-confirm');
+        let pendingForm = null;
+
+        document.addEventListener('submit', function (event) {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement)) return;
+            if (!form.classList.contains('js-boutique-delete-form')) return;
+
+            event.preventDefault();
+            pendingForm = form;
+            if (nameEl) {
+                nameEl.textContent = form.getAttribute('data-boutique-product') || 'cette annonce';
+            }
+            modal.show();
+        }, true);
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function () {
+                if (!pendingForm) { modal.hide(); return; }
+                const form = pendingForm;
+                pendingForm = null;
+                modal.hide();
+                form.submit();
+            });
+        }
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            pendingForm = null;
+        });
+    })();
+    </script>
+{% endblock %}

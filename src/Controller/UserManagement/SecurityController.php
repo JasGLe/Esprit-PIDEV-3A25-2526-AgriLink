@@ -11,6 +11,10 @@ use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 class SecurityController extends AbstractController
 {
+    public function __construct(
+        private string $recaptchaSiteKey,
+    ) {}
+
     #[Route('/login', name: 'app_login')]
     public function login(Request $request, AuthenticationUtils $authenticationUtils): Response
     {
@@ -28,6 +32,7 @@ class SecurityController extends AbstractController
             'last_username' => $lastUsername ?: $rememberedEmail,
             'remembered_email' => $rememberedEmail,
             'error' => $error,
+            'recaptcha_site_key' => $this->recaptchaSiteKey,
         ]);
     }
 

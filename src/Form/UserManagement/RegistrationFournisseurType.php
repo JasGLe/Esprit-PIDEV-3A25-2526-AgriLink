@@ -6,18 +6,23 @@ use App\Entity\UserManagement\User;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
-use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 use Symfony\Component\Form\Extension\Core\Type\TelType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\IsTrue;
 use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\LessThanOrEqual;
 use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Constraints\Regex;
 
@@ -49,6 +54,11 @@ class RegistrationFournisseurType extends AbstractType
                     'class' => self::INPUT_CLASS,
                 ],
                 'label_attr' => ['class' => self::LABEL_CLASS],
+                'constraints' => [
+                    new NotBlank(message: "L'adresse email est obligatoire."),
+                    new Email(message: "L'adresse email '{{ value }}' n'est pas valide."),
+                    new Length(max: 150, maxMessage: "L'email ne peut pas dépasser {{ limit }} caractères."),
+                ],
             ])
             ->add('plainPassword', RepeatedType::class, [
                 'type' => PasswordType::class,
@@ -79,13 +89,30 @@ class RegistrationFournisseurType extends AbstractType
             ->add('telephone', TelType::class, [
                 'label' => 'Numéro de téléphone',
                 'attr' => [
-                    'placeholder' => '+216 XX XXX XXX',
+                    'placeholder' => '55123456',
                     'class' => self::INPUT_CLASS,
+                    'inputmode' => 'numeric',
+                    'maxlength' => 15,
                 ],
                 'label_attr' => ['class' => self::LABEL_CLASS],
                 'constraints' => [
                     new NotBlank(message: 'Veuillez saisir votre numéro de téléphone.'),
-                    new Regex(pattern: '/^[0-9\s\+\-\(\)]+$/', message: 'Le numéro de téléphone n\'est pas valide.'),
+                    new Regex(pattern: '/^\d{8,15}$/', message: 'Le numéro de téléphone doit contenir entre 8 et 15 chiffres.'),
+                ],
+            ])
+            ->add('dateNaissance', DateType::class, [
+                'label' => 'Date de naissance',
+                'required' => false,
+                'widget' => 'single_text',
+                'attr' => [
+                    'class' => self::INPUT_CLASS,
+                ],
+                'label_attr' => ['class' => self::LABEL_CLASS],
+                'constraints' => [
+                    new LessThanOrEqual(
+                        value: new \DateTimeImmutable('-18 years'),
+                        message: 'Vous devez avoir au moins 18 ans.'
+                    ),
                 ],
             ])
             ->add('gouvernant', ChoiceType::class, [
@@ -244,10 +271,44 @@ class RegistrationFournisseurType extends AbstractType
                 ],
                 'attr' => ['class' => 'h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded'],
                 'label_attr' => ['class' => 'ml-2 block text-sm text-gray-900'],
-            ])
-            // Note: Submit button is rendered manually in the template
-            // ->add('submit', SubmitType::class, [...])
-        ;
+            ]);
+
+        // Conditional server-side validation based on fournisseur type
+        $builder->addEventListener(FormEvents::POST_SUBMIT, function (FormEvent $event): void {
+            $form = $event->getForm();
+            $data = $event->getData();
+
+            if (!$data instanceof User) {
+                return;
+            }
+
+            $type = $data->getFournisseurTypeFournisseur();
+
+            if ($type === User::FOURNISSEUR_PERSONNE) {
+                $cin = $form->get('fournisseurCin')->getData();
+                if (empty($cin)) {
+                    $form->get('fournisseurCin')->addError(
+                        new FormError('Le CIN est obligatoire pour une personne physique.')
+                    );
+                }
+            } elseif ($type === User::FOURNISSEUR_SOCIETE) {
+                if (empty($form->get('fournisseurRaisonSocial')->getData())) {
+                    $form->get('fournisseurRaisonSocial')->addError(
+                        new FormError('La raison sociale est obligatoire pour une société.')
+                    );
+                }
+                if (empty($form->get('fournisseurNumRegistre')->getData())) {
+                    $form->get('fournisseurNumRegistre')->addError(
+                        new FormError('Le numéro de registre de commerce est obligatoire.')
+                    );
+                }
+                if (empty($form->get('fournisseurFormeJuridique')->getData())) {
+                    $form->get('fournisseurFormeJuridique')->addError(
+                        new FormError('La forme juridique est obligatoire.')
+                    );
+                }
+            }
+        });
     }
 
     public function configureOptions(OptionsResolver $resolver): void

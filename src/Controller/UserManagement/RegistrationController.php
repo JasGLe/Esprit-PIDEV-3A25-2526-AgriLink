@@ -8,6 +8,7 @@ use App\Form\UserManagement\RegistrationAgriPlusType;
 use App\Form\UserManagement\RegistrationFormType;
 use App\Form\UserManagement\RegistrationFournisseurType;
 use App\Service\EmailVerificationService;
+use App\Service\RecaptchaService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
@@ -19,7 +20,9 @@ use Symfony\Component\Routing\Attribute\Route;
 class RegistrationController extends AbstractController
 {
     public function __construct(
-        private EmailVerificationService $emailVerificationService
+        private EmailVerificationService $emailVerificationService,
+        private RecaptchaService $recaptchaService,
+        private string $recaptchaSiteKey,
     ) {
     }
     #[Route('/register', name: 'app_register')]
@@ -48,6 +51,13 @@ class RegistrationController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Validate reCAPTCHA v3
+            $recaptchaToken = $request->request->get('g-recaptcha-response', '');
+            if ($recaptchaToken && !$this->recaptchaService->verify($recaptchaToken, 'register')) {
+                $this->addFlash('error', 'La vérification reCAPTCHA a échoué. Veuillez réessayer.');
+                return $this->redirectToRoute('app_register_agriculteur');
+            }
+
             $user->setPassword(
                 $passwordHasher->hashPassword(
                     $user,
@@ -72,13 +82,14 @@ class RegistrationController extends AbstractController
                 $this->addFlash('success', 'Votre compte Agriculteur a été créé avec succès ! Bienvenue sur AgriLink.');
             }
 
-            // Auto-login après inscription and redirect to verification
+            // Auto-login après inscription and redirect to verification choice
             $security->login($user, 'App\\Security\\UserAuthenticator', 'main');
-            return $this->redirectToRoute('app_verify_email');
+            return $this->redirectToRoute('app_verification_choice');
         }
 
         return $this->render('user_management/security/register_agriculteur.html.twig', [
             'registrationForm' => $form,
+            'recaptcha_site_key' => $this->recaptchaSiteKey,
         ]);
     }
 
@@ -98,6 +109,13 @@ class RegistrationController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Validate reCAPTCHA v3
+            $recaptchaToken = $request->request->get('g-recaptcha-response', '');
+            if ($recaptchaToken && !$this->recaptchaService->verify($recaptchaToken, 'register')) {
+                $this->addFlash('error', 'La vérification reCAPTCHA a échoué. Veuillez réessayer.');
+                return $this->redirectToRoute('app_register_fournisseur');
+            }
+
             $user->setPassword(
                 $passwordHasher->hashPassword(
                     $user,
@@ -136,13 +154,14 @@ class RegistrationController extends AbstractController
                 $this->addFlash('success', 'Votre compte Fournisseur a été créé avec succès ! Bienvenue sur AgriLink.');
             }
 
-            // Auto-login after registration and redirect to verification
+            // Auto-login after registration and redirect to verification choice
             $security->login($user, 'App\\Security\\UserAuthenticator', 'main');
-            return $this->redirectToRoute('app_verify_email');
+            return $this->redirectToRoute('app_verification_choice');
         }
 
         return $this->render('user_management/security/register_fournisseur.html.twig', [
             'registrationForm' => $form,
+            'recaptcha_site_key' => $this->recaptchaSiteKey,
         ]);
     }
 
@@ -162,6 +181,13 @@ class RegistrationController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Validate reCAPTCHA v3
+            $recaptchaToken = $request->request->get('g-recaptcha-response', '');
+            if ($recaptchaToken && !$this->recaptchaService->verify($recaptchaToken, 'register')) {
+                $this->addFlash('error', 'La vérification reCAPTCHA a échoué. Veuillez réessayer.');
+                return $this->redirectToRoute('app_register_agriplus');
+            }
+
             $user->setPassword(
                 $passwordHasher->hashPassword(
                     $user,
@@ -191,13 +217,14 @@ class RegistrationController extends AbstractController
                 $this->addFlash('success', 'Votre compte AgriPlus a été créé avec succès ! Bienvenue parmi nos membres premium.');
             }
 
-            // Auto-login after registration and redirect to verification
+            // Auto-login after registration and redirect to verification choice
             $security->login($user, 'App\\Security\\UserAuthenticator', 'main');
-            return $this->redirectToRoute('app_verify_email');
+            return $this->redirectToRoute('app_verification_choice');
         }
 
         return $this->render('user_management/security/register_agriplus.html.twig', [
             'registrationForm' => $form,
+            'recaptcha_site_key' => $this->recaptchaSiteKey,
         ]);
     }
 }

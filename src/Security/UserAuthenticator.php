@@ -3,6 +3,7 @@
 namespace App\Security;
 
 use App\Entity\UserManagement\User;
+use App\Service\RecaptchaService;
 use App\Service\TwoFactorService;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -10,6 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractLoginFormAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\CsrfTokenBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\RememberMeBadge;
@@ -29,6 +31,7 @@ class UserAuthenticator extends AbstractLoginFormAuthenticator
         private UrlGeneratorInterface $urlGenerator,
         private TwoFactorService $twoFactorService,
         private TokenStorageInterface $tokenStorage,
+        private RecaptchaService $recaptchaService,
     ) {
     }
 
@@ -37,6 +40,14 @@ class UserAuthenticator extends AbstractLoginFormAuthenticator
         $email = $request->getPayload()->getString('_username');
 
         $request->getSession()->set(SecurityRequestAttributes::LAST_USERNAME, $email);
+
+        // Validate reCAPTCHA v3
+        $recaptchaToken = $request->request->get('g-recaptcha-response', '');
+        if ($recaptchaToken && !$this->recaptchaService->verify($recaptchaToken, 'login')) {
+            throw new CustomUserMessageAuthenticationException(
+                'La vérification reCAPTCHA a échoué. Veuillez réessayer.'
+            );
+        }
 
         return new Passport(
             new UserBadge($email),

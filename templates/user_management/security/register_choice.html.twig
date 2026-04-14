@@ -4,140 +4,376 @@
 
 {% block body %}
 {{ include('components/_auth_background.html.twig') }}
-<div class="min-vh-100 d-flex align-items-center justify-content-center py-5 px-3 px-sm-4">
-    <div class="w-100" style="max-width: 1200px;">
-        <div>
-            <div class="d-flex justify-content-center">
-                <img src="{{ asset('logo_with_text.png') }}" alt="AgriLink Logo" class="logo logo-header">
+
+<div class="choice-wrapper">
+    <div class="choice-container">
+
+        {# ── Header ──────────────────────────────────────────── #}
+        <div class="choice-header">
+            <div class="header-blob-tr"></div>
+            <div class="header-blob-bl"></div>
+
+            <div style="position:relative; z-index:1;">
+                <div class="d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="{{ asset('logo_without_text.png') }}" alt="AgriLink" class="main-logo">
+                        <div>
+                            <div class="logo-name">AgriLink</div>
+                            <div class="logo-tagline">Plateforme Agricole</div>
+                        </div>
+                    </div>
+                    <a href="{{ path('app_login') }}" class="nav-link-header d-flex align-items-center gap-2">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/>
+                        </svg>
+                        Se connecter
+                    </a>
+                </div>
+
+                <div class="text-center">
+                    <span class="role-badge mb-3 d-inline-block">Inscription</span>
+                    <h1 class="header-title mb-2">Rejoignez AgriLink</h1>
+                    <p class="header-sub">Choisissez le type de compte qui correspond à votre activité</p>
+                </div>
             </div>
-            <h2 class="mt-4 text-center display-6 fw-bold text-dark">
-                Rejoignez AgriLink
-            </h2>
-            <p class="mt-2 text-center small text-muted">
-                Choisissez votre type de compte pour commencer
-            </p>
         </div>
 
+        {# ── Flash messages ─────────────────────────────────── #}
         {% for flash_message in app.flashes('info') %}
-            <div class="alert alert-info border border-info d-flex align-items-start mt-3">
-                <div class="flex-shrink-0">
-                    <svg class="bi" width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-                    </svg>
-                </div>
-                <div class="ms-3">
-                    <p class="mb-0 small">{{ flash_message }}</p>
-                </div>
+            <div class="mx-4 mt-4 alert alert-info border-0 rounded-3 d-flex align-items-center gap-2">
+                <svg width="18" height="18" fill="currentColor" viewBox="0 0 20 20" class="flex-shrink-0">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+                {{ flash_message }}
             </div>
         {% endfor %}
 
-        <div class="row row-cols-1 row-cols-md-3 g-4 mt-4">
-            <!-- Agriculteur Card -->
-            <div class="col">
-                <a href="{{ path('app_register_agriculteur') }}" class="text-decoration-none">
-                    <div class="card h-100 shadow-sm border-2 hover-card">
-                        <div class="card-body p-4 text-center">
-                            <span class="fs-1 d-block mb-3">🌾</span>
-                            <h3 class="h5 fw-bold text-dark mb-2 card-title-hover">
-                                Agriculteur
-                            </h3>
-                            <p class="text-muted small">
-                                Vous êtes agriculteur et souhaitez gérer votre exploitation
-                            </p>
-                            <div class="mt-4">
-                                <span class="btn btn-outline-primary w-100">
-                                    Commencer
-                                </span>
+        {# ── Role Cards ──────────────────────────────────────── #}
+        <div class="choice-body">
+            <div class="row g-4">
+
+                {# Agriculteur #}
+                <div class="col-12 col-md-4">
+                    <a href="{{ path('app_register_agriculteur') }}" class="role-card-link">
+                        <div class="role-card role-card-green">
+                            <div class="role-card-glow"></div>
+                            <div class="role-icon-wrap role-icon-green">
+                                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                          d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <div class="role-name">Agriculteur</div>
+                            <p class="role-desc">Gérez votre exploitation, vos parcelles et accédez aux ressources agricoles</p>
+                            <ul class="role-features">
+                                <li>Gestion des parcelles et cultures</li>
+                                <li>Accès aux données météo</li>
+                                <li>Réseau de 1 200+ agriculteurs</li>
+                                <li>Outils de planification</li>
+                            </ul>
+                            <div class="role-cta role-cta-green">
+                                Créer un compte
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
                             </div>
                         </div>
-                    </div>
-                </a>
+                    </a>
+                </div>
+
+                {# Fournisseur #}
+                <div class="col-12 col-md-4">
+                    <a href="{{ path('app_register_fournisseur') }}" class="role-card-link">
+                        <div class="role-card role-card-blue">
+                            <div class="role-card-glow"></div>
+                            <div class="role-icon-wrap role-icon-blue">
+                                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                          d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                                </svg>
+                            </div>
+                            <div class="role-name">Fournisseur</div>
+                            <p class="role-desc">Développez votre activité en rejoignant notre réseau de fournisseurs certifiés</p>
+                            <ul class="role-features">
+                                <li>Vitrine produits & services</li>
+                                <li>Contact direct avec agriculteurs</li>
+                                <li>Gestion des commandes</li>
+                                <li>Certifications reconnues</li>
+                            </ul>
+                            <div class="role-cta role-cta-blue">
+                                Créer un compte
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+                {# AgriPlus #}
+                <div class="col-12 col-md-4">
+                    <a href="{{ path('app_register_agriplus') }}" class="role-card-link">
+                        <div class="role-card role-card-premium">
+                            <div class="premium-badge">
+                                <svg width="10" height="10" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                                </svg>
+                                Premium
+                            </div>
+                            <div class="role-card-glow"></div>
+                            <div class="role-icon-wrap role-icon-premium">
+                                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                                          d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                                </svg>
+                            </div>
+                            <div class="role-name">AgriPlus</div>
+                            <p class="role-desc">Accédez aux outils premium et boostez votre activité agricole</p>
+                            <ul class="role-features">
+                                <li>Toutes les fonctionnalités</li>
+                                <li>Analyses et statistiques avancées</li>
+                                <li>Support prioritaire 24/7</li>
+                                <li>1 mois d'essai gratuit</li>
+                            </ul>
+                            <div class="role-cta role-cta-premium">
+                                Commencer l'essai gratuit
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
             </div>
 
-            <!-- Fournisseur Card -->
-            <div class="col">
-                <a href="{{ path('app_register_fournisseur') }}" class="text-decoration-none">
-                    <div class="card h-100 shadow-sm border-2 hover-card">
-                        <div class="card-body p-4 text-center">
-                            <span class="fs-1 d-block mb-3">📦</span>
-                            <h3 class="h5 fw-bold text-dark mb-2 card-title-hover">
-                                Fournisseur
-                            </h3>
-                            <p class="text-muted small">
-                                Vous êtes fournisseur de produits ou services agricoles
-                            </p>
-                            <div class="mt-4">
-                                <span class="btn btn-outline-primary w-100">
-                                    Commencer
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-            </div>
-
-            <!-- AgriPlus Card -->
-            <div class="col">
-                <a href="{{ path('app_register_agriplus') }}" class="text-decoration-none">
-                    <div class="card h-100 shadow-sm border-2 hover-card-yellow position-relative overflow-hidden">
-                        <div class="position-absolute top-0 end-0 bg-warning text-white small fw-bold px-3 py-1 rounded-bottom-start">
-                            Premium
-                        </div>
-                        <div class="card-body p-4 text-center">
-                            <span class="fs-1 d-block mb-3">⭐</span>
-                            <h3 class="h5 fw-bold text-dark mb-2 card-title-hover-yellow">
-                                AgriPlus
-                            </h3>
-                            <p class="text-muted small">
-                                Accédez aux fonctionnalités premium d'AgriLink
-                            </p>
-                            <div class="mt-4">
-                                <span class="btn btn-outline-warning w-100 text-warning">
-                                    Commencer
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                </a>
+            {# Footer #}
+            <div class="text-center mt-5 pb-2">
+                <p class="small text-muted mb-0">
+                    Déjà inscrit ?
+                    <a href="{{ path('app_login') }}" class="text-green fw-semibold text-decoration-none">Se connecter</a>
+                </p>
             </div>
         </div>
 
-        <div class="text-center mt-4">
-            <p class="small text-muted">
-                Déjà inscrit ?
-                <a href="{{ path('app_login') }}" class="fw-medium text-primary">
-                    Se connecter
-                </a>
-            </p>
-        </div>
     </div>
 </div>
 
 <style>
-.hover-card {
-    transition: all 0.3s ease;
+/* ── Wrapper & Container ─────────────────────────────────── */
+.choice-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    position: relative;
+    z-index: 1;
 }
-.hover-card:hover {
-    box-shadow: 0 .5rem 1rem rgba(0,0,0,.15) !important;
-    border-color: var(--bs-primary) !important;
+.choice-container {
+    width: 100%;
+    max-width: 1080px;
+    background: #fff;
+    border-radius: 24px;
+    box-shadow:
+        0 20px 60px -15px rgba(0,0,0,.12),
+        0 0 0 1px rgba(0,0,0,.05);
+    overflow: hidden;
+}
+
+/* ── Header ──────────────────────────────────────────────── */
+.choice-header {
+    background: linear-gradient(155deg, #0f4c2a 0%, #1a7a4a 45%, #22c55e 100%);
+    padding: 2rem 2.5rem 2.5rem;
+    position: relative;
+    overflow: hidden;
+}
+.header-blob-tr {
+    position: absolute; top: -80px; right: -80px;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.06);
+    pointer-events: none;
+}
+.header-blob-bl {
+    position: absolute; bottom: -60px; left: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.04);
+    pointer-events: none;
+}
+.main-logo {
+    width: 48px; height: 48px;
+    filter: none;
+    flex-shrink: 0;
+}
+.logo-name {
+    font-size: 1.45rem; font-weight: 900;
+    color: #fff; line-height: 1.1;
+}
+.logo-tagline {
+    font-size: .65rem; color: rgba(255,255,255,.55);
+    text-transform: uppercase; letter-spacing: .06em;
+}
+.nav-link-header {
+    font-size: .82rem; color: rgba(255,255,255,.8);
+    text-decoration: none; font-weight: 500;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.22);
+    padding: .4rem .9rem; border-radius: 8px;
+    transition: background .2s, color .2s;
+}
+.nav-link-header:hover { background: rgba(255,255,255,.22); color: #fff; }
+.role-badge {
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.28);
+    color: #fff; font-size: .7rem; font-weight: 700;
+    letter-spacing: .08em; text-transform: uppercase;
+    padding: .25rem .75rem; border-radius: 999px;
+}
+.header-title {
+    color: #fff; font-size: clamp(1.5rem, 3vw, 2.1rem);
+    font-weight: 800; letter-spacing: -.02em; margin: 0;
+}
+.header-sub {
+    color: rgba(255,255,255,.7); font-size: .9rem; margin: 0;
+}
+
+/* ── Body ────────────────────────────────────────────────── */
+.choice-body {
+    padding: 2rem 2.5rem 2rem;
+}
+
+/* ── Role Cards ──────────────────────────────────────────── */
+.role-card-link {
+    text-decoration: none;
+    display: block;
+    height: 100%;
+}
+.role-card {
+    background: #fff;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 1.6rem 1.4rem 1.4rem;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: border-color .25s, box-shadow .25s, transform .25s;
+}
+.role-card-glow {
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity .3s;
+    pointer-events: none;
+}
+
+/* Green — Agriculteur */
+.role-card-green:hover {
+    border-color: #1a7a4a;
+    box-shadow: 0 12px 32px -8px rgba(26,122,74,.22);
     transform: translateY(-4px);
 }
-.hover-card:hover .card-title-hover {
-    color: var(--bs-primary) !important;
+.role-card-green .role-card-glow { background: radial-gradient(circle, rgba(34,197,94,.15), transparent); }
+.role-card-green:hover .role-card-glow { opacity: 1; }
+.role-icon-green { background: linear-gradient(135deg, rgba(26,122,74,.1), rgba(34,197,94,.15)); color: #1a7a4a; }
+.role-cta-green { background: linear-gradient(135deg, #0f4c2a, #1a7a4a); color: #fff; }
+.role-cta-green:hover { box-shadow: 0 8px 20px -4px rgba(15,76,42,.35); }
+
+/* Blue — Fournisseur */
+.role-card-blue:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 12px 32px -8px rgba(59,130,246,.22);
+    transform: translateY(-4px);
 }
-.hover-card:hover .btn-outline-primary {
-    background-color: var(--bs-primary);
-    color: white;
+.role-card-blue .role-card-glow { background: radial-gradient(circle, rgba(59,130,246,.12), transparent); }
+.role-card-blue:hover .role-card-glow { opacity: 1; }
+.role-icon-blue { background: linear-gradient(135deg, rgba(59,130,246,.1), rgba(59,130,246,.18)); color: #2563eb; }
+.role-cta-blue { background: linear-gradient(135deg, #1d4ed8, #3b82f6); color: #fff; }
+.role-cta-blue:hover { box-shadow: 0 8px 20px -4px rgba(29,78,216,.35); }
+
+/* Premium — AgriPlus */
+.role-card-premium {
+    border-color: #d97706;
+    background: linear-gradient(160deg, #fffbeb 0%, #fff 60%);
 }
-.hover-card-yellow:hover {
-    border-color: #ffc107 !important;
+.role-card-premium:hover {
+    border-color: #b45309;
+    box-shadow: 0 12px 32px -8px rgba(180,83,9,.25);
+    transform: translateY(-4px);
 }
-.hover-card-yellow:hover .card-title-hover-yellow {
-    color: #ffc107 !important;
+.role-card-premium .role-card-glow { background: radial-gradient(circle, rgba(245,158,11,.15), transparent); }
+.role-card-premium:hover .role-card-glow { opacity: 1; }
+.role-icon-premium { background: linear-gradient(135deg, rgba(245,158,11,.12), rgba(217,119,6,.2)); color: #b45309; }
+.role-cta-premium { background: linear-gradient(135deg, #92400e, #d97706); color: #fff; }
+.role-cta-premium:hover { box-shadow: 0 8px 20px -4px rgba(146,64,14,.35); }
+
+.premium-badge {
+    position: absolute; top: -1px; right: 1.25rem;
+    background: linear-gradient(135deg, #92400e, #f59e0b);
+    color: #fff; font-size: .65rem; font-weight: 700;
+    letter-spacing: .06em; text-transform: uppercase;
+    padding: .3rem .7rem .25rem;
+    border-radius: 0 0 10px 10px;
+    display: flex; align-items: center; gap: .3rem;
 }
-.hover-card-yellow:hover .btn-outline-warning {
-    background-color: #ffc107;
-    color: white;
+
+/* Shared card internals */
+.role-icon-wrap {
+    width: 58px; height: 58px;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+    transition: transform .25s;
+}
+.role-card:hover .role-icon-wrap { transform: scale(1.08) rotate(3deg); }
+.role-name {
+    font-size: 1.15rem; font-weight: 800;
+    color: #111827; margin-bottom: .35rem;
+}
+.role-desc {
+    font-size: .82rem; color: #6b7280;
+    line-height: 1.55; margin-bottom: .75rem;
+}
+.role-features {
+    list-style: none; padding: 0; margin: 0 0 1.25rem;
+    border-top: 1px solid #f3f4f6; padding-top: .75rem;
+    flex: 1;
+}
+.role-features li {
+    font-size: .8rem; color: #4b5563;
+    padding: .22rem 0 .22rem 1.1rem;
+    position: relative;
+}
+.role-features li::before {
+    content: '';
+    position: absolute; left: 0; top: .52rem;
+    width: 6px; height: 6px;
+    border-radius: 50%; background: #22c55e;
+}
+.role-cta {
+    display: flex; align-items: center; justify-content: center;
+    gap: .4rem; padding: .7rem 1rem;
+    border-radius: 10px; font-size: .85rem; font-weight: 700;
+    margin-top: auto; transition: opacity .2s, box-shadow .2s, transform .2s;
+}
+.role-card:hover .role-cta { transform: translateY(-1px); }
+
+/* Utility */
+.text-green { color: #1a7a4a !important; }
+
+/* Responsive */
+@media (max-width: 767px) {
+    .choice-wrapper { padding: .75rem; align-items: flex-start; }
+    .choice-container { border-radius: 16px; }
+    .choice-header { padding: 1.5rem 1.5rem 2rem; }
+    .choice-body { padding: 1.5rem; }
 }
 </style>
 {% endblock %}

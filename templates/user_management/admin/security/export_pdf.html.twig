@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { 
+            font-family: 'DejaVu Sans', sans-serif; 
+            color: #111827; 
+            width: 100%;
+            height: auto;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        
+        .page {
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm 20mm;
+            margin: 0;
+            page-break-after: always;
+            background: white;
+        }
+        
+        .page:last-child {
+            page-break-after: avoid;
+        }
+        
+        .header { 
+            text-align: center; 
+            margin-bottom: 20px; 
+            border-bottom: 3px solid #1f2937; 
+            padding-bottom: 12px; 
+        }
+        .header h1 { font-size: 22px; color: #1f2937; margin-bottom: 3px; }
+        .header p { color: #6b7280; font-size: 10px; }
+        .date { text-align: right; color: #9ca3af; font-size: 9px; margin-bottom: 15px; }
+        
+        .section { 
+            margin-bottom: 18px; 
+            page-break-inside: avoid;
+        }
+        
+        .section-title { 
+            background-color: #1f2937; 
+            color: white; 
+            padding: 8px 10px; 
+            font-size: 11px; 
+            font-weight: bold; 
+            margin-bottom: 10px;
+            border-radius: 3px;
+        }
+        
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 1fr); 
+            gap: 8px; 
+            margin-bottom: 12px; 
+        }
+        
+        .stat-box { 
+            background: #f9fafb; 
+            border: 1px solid #e5e7eb; 
+            padding: 8px; 
+            border-radius: 3px; 
+            page-break-inside: avoid;
+        }
+        .stat-label { 
+            font-size: 8px; 
+            color: #6b7280; 
+            text-transform: uppercase; 
+            letter-spacing: 0.3px; 
+            margin-bottom: 2px; 
+        }
+        .stat-value { 
+            font-size: 14px; 
+            font-weight: bold; 
+            color: #1f2937; 
+        }
+        
+        table { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-top: 8px;
+            font-size: 9px;
+            page-break-inside: avoid;
+        }
+        table thead { background-color: #6b7280; color: white; }
+        table th { 
+            padding: 5px; 
+            text-align: left; 
+            font-size: 9px; 
+            font-weight: bold;
+            border: 1px solid #d1d5db;
+        }
+        table td { 
+            padding: 5px; 
+            border: 1px solid #e5e7eb; 
+            font-size: 8px; 
+        }
+        table tbody tr:nth-child(even) { background-color: #f9fafb; }
+        table tbody tr:nth-child(odd) { background-color: #ffffff; }
+        
+        .footer { 
+            margin-top: 20px; 
+            padding-top: 10px; 
+            border-top: 1px solid #e5e7eb; 
+            text-align: center; 
+            color: #9ca3af; 
+            font-size: 8px; 
+        }
+        
+        @media print {
+            html, body {
+                width: 210mm;
+                height: 297mm;
+            }
+            .page {
+                page-break-after: always;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <div class="header">
+            <h1>Rapport de Sécurité AgriLink</h1>
+            <p>Centre de sécurité administrateur</p>
+        </div>
+        
+        <div class="date">Généré le {{ date|date('d/m/Y \\à H:i') }}</div>
+        
+        <!-- 30 Days Statistics -->
+        <div class="section">
+            <div class="section-title">📊 STATISTIQUES 30 DERNIERS JOURS</div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Connexions réussies</div>
+                    <div class="stat-value">{{ stats30d.loginSuccess ?? 0 }}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Connexions échouées</div>
+                    <div class="stat-value">{{ stats30d.loginFailed ?? 0 }}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">2FA réussi</div>
+                    <div class="stat-value">{{ stats30d.twoFaSuccess ?? 0 }}</div>
+                </div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Événement</th>
+                        <th>Nombre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Connexions réussies</td>
+                        <td>{{ stats30d.loginSuccess ?? 0 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Connexions échouées</td>
+                        <td>{{ stats30d.loginFailed ?? 0 }}</td>
+                    </tr>
+                    <tr>
+                        <td>2FA réussi</td>
+                        <td>{{ stats30d.twoFaSuccess ?? 0 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Comptes verrouillés</td>
+                        <td>{{ stats30d.accountLocked ?? 0 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Mots de passe changés</td>
+                        <td>{{ stats30d.passwordChanged ?? 0 }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- 24 Hours Statistics -->
+        <div class="section">
+            <div class="section-title">⏱️ STATISTIQUES 24H</div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Connexions réussies</div>
+                    <div class="stat-value">{{ stats24h.loginSuccess ?? 0 }}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Connexions échouées</div>
+                    <div class="stat-value">{{ stats24h.loginFailed ?? 0 }}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Total événements</div>
+                    <div class="stat-value">{{ stats24h.total ?? 0 }}</div>
+                </div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Événement</th>
+                        <th>Nombre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Connexions réussies</td>
+                        <td>{{ stats24h.loginSuccess ?? 0 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Connexions échouées</td>
+                        <td>{{ stats24h.loginFailed ?? 0 }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Account Overview -->
+        <div class="section">
+            <div class="section-title">👥 APERÇU COMPTES</div>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-label">Total comptes</div>
+                    <div class="stat-value">{{ accountStats.total ?? 0 }}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Actifs</div>
+                    <div class="stat-value">{{ accountStats.active ?? 0 }}</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-label">Verrouillés</div>
+                    <div class="stat-value">{{ accountStats.lockedNow ?? 0 }}</div>
+                </div>
+            </div>
+            
+            <table>
+                <thead>
+                    <tr>
+                        <th>Statistique</th>
+                        <th>Nombre</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Total comptes</td>
+                        <td>{{ accountStats.total ?? 0 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Comptes actifs</td>
+                        <td>{{ accountStats.active ?? 0 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Emails vérifiés</td>
+                        <td>{{ accountStats.verified ?? 0 }}</td>
+                    </tr>
+                    <tr>
+                        <td>2FA activé</td>
+                        <td>{{ accountStats.twoFactorEnabled ?? 0 }}</td>
+                    </tr>
+                    <tr>
+                        <td>Comptes verrouillés actuellement</td>
+                        <td>{{ accountStats.lockedNow ?? 0 }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="footer">
+            <p>AgriLink - Rapport généré automatiquement</p>
+        </div>
+    </div>
+</body>
+</html>

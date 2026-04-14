@@ -2,409 +2,512 @@
 
 {% block title %}Modifier {{ user.nom }} - Administration{% endblock %}
 
-{% block main_content %}
-<div class="container-fluid py-4">
-    {# Page header #}
-    <div class="mb-4">
-        <div class="d-flex align-items-center gap-3">
-            <a href="{{ path('admin_users_list') }}" class="btn btn-link text-decoration-none p-0">
-                <svg class="me-1" style="width: 20px; height: 20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-                <small>Retour à la liste</small>
-            </a>
-        </div>
-        <div class="mt-2 d-flex align-items-center gap-3">
-            <div class="flex-shrink-0">
-                {{ include('components/_avatar.html.twig', {user: user, size: 'large'}) }}
-            </div>
-            <div>
-                <h1 class="h2 fw-bold mb-1">Modifier {{ user.nom }}</h1>
-                <p class="text-muted mb-2"><small>{{ user.email }}</small></p>
-                <div class="d-flex align-items-center gap-2">
-                    {% set roleKey = 'ROLE_' ~ user.role %}
-                    {{ include('components/_role_badge.html.twig', {role: roleKey}) }}
-                    {% if user.isActive %}
-                        <span class="badge bg-success">Actif</span>
+{% block dashboard_content %}
+<div class="py-2">
+
+    {# Breadcrumb #}
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('admin_users_list') }}" class="text-decoration-none">Utilisateurs</a></li>
+            <li class="breadcrumb-item active">Modifier {{ user.nom }}</li>
+        </ol>
+    </nav>
+
+    {# User profile header #}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-center gap-4 flex-wrap">
+                <div class="flex-shrink-0">
+                    {% if user.photoProfil %}
+                        <img src="{{ asset('agrilink/uploads/' ~ user.photoProfil) }}" alt="{{ user.displayName }}"
+                             class="rounded-circle" width="72" height="72" style="object-fit:cover;">
                     {% else %}
-                        <span class="badge bg-danger">Inactif</span>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
+                             style="width:72px;height:72px;background:linear-gradient(135deg,#667eea,#764ba2);font-size:1.5rem;">
+                            {{ user.initials }}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                    <h2 class="h4 fw-bold mb-1">{{ user.displayName }}</h2>
+                    <p class="text-muted mb-2">{{ user.email }}</p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        {% if user.role == 'ADMIN' %}
+                            <span class="badge bg-danger">{{ user.roleBadge }}</span>
+                        {% elseif user.role == 'AGRIPLUS' %}
+                            <span class="badge bg-warning text-dark">AgriPlus</span>
+                        {% elseif user.role == 'FOURNISSEUR' %}
+                            <span class="badge bg-info text-dark">{{ user.roleBadge }}</span>
+                        {% elseif user.role == 'AGRICULTEUR' %}
+                            <span class="badge bg-success">Agriculteur</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Utilisateur</span>
+                        {% endif %}
+                        {% if user.isActive %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">Actif</span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inactif</span>
+                        {% endif %}
+                        {% if user.emailVerified %}
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Email vérifié</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="text-end text-muted small">
+                    <div>Inscrit le : <strong>{{ user.createdAt ? user.createdAt|date('d/m/Y') : 'N/A' }}</strong></div>
+                    <div>Connexion : <strong>{{ user.lastLogin ? user.lastLogin|date('d/m/Y H:i') : 'Jamais' }}</strong></div>
+                    {% if user.failedLoginAttempts > 0 %}
+                        <div class="text-danger">{{ user.failedLoginAttempts }} tentative(s) échouée(s)</div>
+                    {% endif %}
+                    {% if user.lockedUntil %}
+                        <div class="text-danger">🔒 Verrouillé jusqu'au {{ user.lockedUntil|date('d/m/Y H:i') }}</div>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 
-    {# Flash messages #}
-    {% for label, messages in app.flashes %}
-        {% for message in messages %}
-            <div class="mb-4 rounded-md p-4 {{ label == 'success' ? 'bg-green-50' : (label == 'error' ? 'bg-red-50' : 'bg-blue-50') }}">
-                <div class="flex">
-                    <div class="flex-shrink-0">
-                        {% if label == 'success' %}
-                            <svg class="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                            </svg>
-                        {% elseif label == 'error' %}
-                            <svg class="h-5 w-5 text-red-400" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                            </svg>
-                        {% endif %}
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium {{ label == 'success' ? 'text-green-800' : (label == 'error' ? 'text-red-800' : 'text-blue-800') }}">{{ message }}</p>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-    {% endfor %}
+    {{ form_start(form, {attr: {novalidate: 'novalidate', enctype: 'multipart/form-data'}}) }}
 
-    {# Account info card #}
-    <div class="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div class="flex">
-            <div class="flex-shrink-0">
-                <svg class="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
-                </svg>
-            </div>
-            <div class="ml-3 flex-1">
-                <h3 class="text-sm font-medium text-blue-800">Informations du compte</h3>
-                <div class="mt-2 text-sm text-blue-700">
-                    <ul class="list-disc pl-5 space-y-1">
-                        <li>Inscrit le : <strong>{{ user.createdAt ? user.createdAt|date('d/m/Y à H:i') : 'Inconnue' }}</strong></li>
-                        <li>Dernière connexion : <strong>{{ user.lastLogin ? user.lastLogin|date('d/m/Y à H:i') : 'Jamais connecté' }}</strong></li>
-                        <li>Email vérifié : <strong>{{ user.emailVerified ? 'Oui' : 'Non' }}</strong></li>
-                        {% if user.failedLoginAttempts > 0 %}
-                            <li class="text-red-600">Tentatives de connexion échouées : <strong>{{ user.failedLoginAttempts }}</strong></li>
-                        {% endif %}
-                        {% if user.lockedUntil %}
-                            <li class="text-red-600">Compte verrouillé jusqu'au : <strong>{{ user.lockedUntil|date('d/m/Y H:i') }}</strong></li>
-                        {% endif %}
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
+    <div class="row g-4">
+        {# Left column #}
+        <div class="col-lg-8">
 
-    {{ form_start(form, {'attr': {'class': 'space-y-8', 'novalidate': 'novalidate'}}) }}
-        {# Basic Information #}
-        <div class="bg-white shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
-                    <span class="inline-flex items-center">
-                        <svg class="mr-2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {# Informations de base #}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold">
+                        <svg class="me-2" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         Informations de base
-                    </span>
-                </h3>
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div>
-                        {{ form_label(form.nom) }}
-                        {{ form_widget(form.nom) }}
-                        {{ form_errors(form.nom) }}
-                    </div>
-                    <div>
-                        {{ form_label(form.email) }}
-                        {{ form_widget(form.email) }}
-                        {{ form_errors(form.email) }}
-                    </div>
-                    <div>
-                        {{ form_label(form.plainPassword.first) }}
-                        {{ form_widget(form.plainPassword.first) }}
-                        {{ form_errors(form.plainPassword.first) }}
-                        <p class="mt-1 text-xs text-gray-500">Laissez vide pour conserver le mot de passe actuel</p>
-                    </div>
-                    <div>
-                        {{ form_label(form.plainPassword.second) }}
-                        {{ form_widget(form.plainPassword.second) }}
-                        {{ form_errors(form.plainPassword.second) }}
-                    </div>
-                    <div>
-                        {{ form_label(form.telephone) }}
-                        {{ form_widget(form.telephone) }}
-                        {{ form_errors(form.telephone) }}
-                    </div>
-                    <div>
-                        {{ form_label(form.dateNaissance) }}
-                        {{ form_widget(form.dateNaissance) }}
-                        {{ form_errors(form.dateNaissance) }}
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form_label(form.nom, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.nom, {attr: {class: 'form-control'}}) }}
+                            {{ form_errors(form.nom) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.email, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.email, {attr: {class: 'form-control'}}) }}
+                            {{ form_errors(form.email) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.plainPassword.first, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.plainPassword.first, {attr: {class: 'form-control', placeholder: 'Laisser vide pour conserver'}}) }}
+                            {{ form_errors(form.plainPassword.first) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.plainPassword.second, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.plainPassword.second, {attr: {class: 'form-control', placeholder: 'Laisser vide pour conserver'}}) }}
+                            {{ form_errors(form.plainPassword.second) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.telephone, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.telephone, {attr: {class: 'form-control'}}) }}
+                            {{ form_errors(form.telephone) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.dateNaissance, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.dateNaissance, {attr: {class: 'form-control'}}) }}
+                            {{ form_errors(form.dateNaissance) }}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {# Location #}
-        <div class="bg-white shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
-                    <span class="inline-flex items-center">
-                        <svg class="mr-2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {# Localisation #}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold">
+                        <svg class="me-2" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
                         Localisation
-                    </span>
-                </h3>
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                    <div>
-                        {{ form_label(form.gouvernant) }}
-                        {{ form_widget(form.gouvernant) }}
-                        {{ form_errors(form.gouvernant) }}
-                    </div>
-                    <div>
-                        {{ form_label(form.ville) }}
-                        {{ form_widget(form.ville) }}
-                        {{ form_errors(form.ville) }}
-                    </div>
-                    <div>
-                        {{ form_label(form.codePostale) }}
-                        {{ form_widget(form.codePostale) }}
-                        {{ form_errors(form.codePostale) }}
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            {{ form_label(form.gouvernant, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.gouvernant, {attr: {class: 'form-select'}}) }}
+                            {{ form_errors(form.gouvernant) }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form_label(form.ville, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.ville, {attr: {class: 'form-control'}}) }}
+                            {{ form_errors(form.ville) }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form_label(form.codePostale, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.codePostale, {attr: {class: 'form-control'}}) }}
+                            {{ form_errors(form.codePostale) }}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        {# Role & Status #}
-        <div class="bg-white shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
-                    <span class="inline-flex items-center">
-                        <svg class="mr-2 h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                        Rôle et statut
-                    </span>
-                </h3>
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div>
-                        {{ form_label(form.role) }}
-                        {{ form_widget(form.role, {'attr': {'id': 'user_role', 'onchange': 'toggleRoleFields()'}}) }}
-                        {{ form_errors(form.role) }}
+            {# Role-specific: Admin #}
+            <div id="admin-fields" class="card border-0 shadow-sm mb-4 {{ user.role != 'ADMIN' ? 'd-none' : '' }}">
+                <div class="card-header bg-danger bg-opacity-10 border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold text-danger">🛡️ Configuration Administrateur</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form_label(form.adminNiveau, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.adminNiveau, {attr: {class: 'form-select'}}) }}
+                            {{ form_errors(form.adminNiveau) }}
+                        </div>
                     </div>
-                    <div>
-                        {{ form_label(form.profilePhoto) }}
-                        {% if user.photoProfil %}
-                            <div class="mb-2">
-                                <span class="text-sm text-gray-500">Photo actuelle : </span>
-                                <span class="text-sm font-medium text-gray-700">{{ user.photoProfil }}</span>
+                </div>
+            </div>
+
+            {# Role-specific: Agriculteur #}
+            <div id="agriculteur-fields" class="card border-0 shadow-sm mb-4 {{ user.role != 'AGRICULTEUR' ? 'd-none' : '' }}">
+                <div class="card-header bg-success bg-opacity-10 border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold text-success">🌱 Informations Agriculteur</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form_label(form.agriculteurExpAnnee, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.agriculteurExpAnnee, {attr: {class: 'form-control'}}) }}
+                            {{ form_errors(form.agriculteurExpAnnee) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Role-specific: AgriPlus #}
+            <div id="agriplus-fields" class="card border-0 shadow-sm mb-4 {{ user.role != 'AGRIPLUS' ? 'd-none' : '' }}">
+                <div class="card-header bg-warning bg-opacity-10 border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold text-warning">⭐ Abonnement AgriPlus</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            {{ form_label(form.agriplusAbonnement, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.agriplusAbonnement, {attr: {class: 'form-select'}}) }}
+                            {{ form_errors(form.agriplusAbonnement) }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form_label(form.agriplusDateExpiration, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.agriplusDateExpiration, {attr: {class: 'form-control'}}) }}
+                            {{ form_errors(form.agriplusDateExpiration) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Role-specific: Fournisseur #}
+            <div id="fournisseur-fields" class="card border-0 shadow-sm mb-4 {{ user.role != 'FOURNISSEUR' ? 'd-none' : '' }}">
+                <div class="card-header bg-info bg-opacity-10 border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold text-info">🏢 Informations Fournisseur</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            {{ form_label(form.fournisseurTypeFournisseur, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.fournisseurTypeFournisseur, {attr: {class: 'form-select', id: 'fournisseurTypeFournisseur'}}) }}
+                            {{ form_errors(form.fournisseurTypeFournisseur) }}
+                        </div>
+                    </div>
+
+                    <div id="fournisseur-personne-fields" class="mt-4 {{ user.fournisseurTypeFournisseur != 'PERSONNE' ? 'd-none' : '' }}">
+                        <hr class="mb-3"><h6 class="fw-semibold mb-3">Informations personnelles</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form_label(form.fournisseurCin, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                                {{ form_widget(form.fournisseurCin, {attr: {class: 'form-control'}}) }}
+                                {{ form_errors(form.fournisseurCin) }}
                             </div>
-                        {% endif %}
-                        {{ form_widget(form.profilePhoto) }}
-                        {{ form_errors(form.profilePhoto) }}
-                    </div>
-                    <div class="flex items-center space-x-6">
-                        <div class="flex items-center">
-                            {{ form_widget(form.isActive) }}
-                            {{ form_label(form.isActive) }}
-                        </div>
-                        <div class="flex items-center">
-                            {{ form_widget(form.emailVerified) }}
-                            {{ form_label(form.emailVerified) }}
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
 
-        {# Admin-specific fields #}
-        <div id="admin-fields" class="bg-white shadow rounded-lg {{ user.role != 'ADMIN' ? 'hidden' : '' }}">
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
-                    <span class="inline-flex items-center">
-                        🛡️ Configuration Administrateur
-                    </span>
-                </h3>
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div>
-                        {{ form_label(form.adminNiveau) }}
-                        {{ form_widget(form.adminNiveau) }}
-                        {{ form_errors(form.adminNiveau) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {# Agriculteur-specific fields #}
-        <div id="agriculteur-fields" class="bg-white shadow rounded-lg {{ user.role != 'AGRICULTEUR' ? 'hidden' : '' }}">
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
-                    <span class="inline-flex items-center">
-                        🌱 Informations Agriculteur
-                    </span>
-                </h3>
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div>
-                        {{ form_label(form.agriculteurExpAnnee) }}
-                        {{ form_widget(form.agriculteurExpAnnee) }}
-                        {{ form_errors(form.agriculteurExpAnnee) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {# AgriPlus-specific fields #}
-        <div id="agriplus-fields" class="bg-white shadow rounded-lg {{ user.role != 'AGRIPLUS' ? 'hidden' : '' }}">
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
-                    <span class="inline-flex items-center">
-                        ⭐ Abonnement AgriPlus
-                    </span>
-                </h3>
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div>
-                        {{ form_label(form.agriplusAbonnement) }}
-                        {{ form_widget(form.agriplusAbonnement) }}
-                        {{ form_errors(form.agriplusAbonnement) }}
-                    </div>
-                    <div>
-                        {{ form_label(form.agriplusDateExpiration) }}
-                        {{ form_widget(form.agriplusDateExpiration) }}
-                        {{ form_errors(form.agriplusDateExpiration) }}
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {# Fournisseur-specific fields #}
-        <div id="fournisseur-fields" class="bg-white shadow rounded-lg {{ user.role != 'FOURNISSEUR' ? 'hidden' : '' }}">
-            <div class="px-4 py-5 sm:p-6">
-                <h3 class="text-lg font-medium leading-6 text-gray-900 mb-4">
-                    <span class="inline-flex items-center">
-                        🏢 Informations Fournisseur
-                    </span>
-                </h3>
-                <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                    <div class="sm:col-span-2">
-                        {{ form_label(form.fournisseurTypeFournisseur) }}
-                        {{ form_widget(form.fournisseurTypeFournisseur, {'attr': {'id': 'fournisseur_type', 'onchange': 'toggleFournisseurFields()'}}) }}
-                        {{ form_errors(form.fournisseurTypeFournisseur) }}
-                    </div>
-                </div>
-
-                {# Personne fields #}
-                <div id="fournisseur-personne-fields" class="mt-6 {{ user.fournisseurTypeFournisseur != 'PERSONNE' ? 'hidden' : '' }}">
-                    <h4 class="text-md font-medium text-gray-700 mb-4">Informations personnelles</h4>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        <div>
-                            {{ form_label(form.fournisseurCin) }}
-                            {{ form_widget(form.fournisseurCin) }}
-                            {{ form_errors(form.fournisseurCin) }}
+                    <div id="fournisseur-societe-fields" class="mt-4 {{ user.fournisseurTypeFournisseur != 'SOCIETE' ? 'd-none' : '' }}">
+                        <hr class="mb-3"><h6 class="fw-semibold mb-3">Informations de la société</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ form_label(form.fournisseurRaisonSocial, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                                {{ form_widget(form.fournisseurRaisonSocial, {attr: {class: 'form-control'}}) }}
+                                {{ form_errors(form.fournisseurRaisonSocial) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_label(form.fournisseurNumRegistre, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                                {{ form_widget(form.fournisseurNumRegistre, {attr: {class: 'form-control'}}) }}
+                                {{ form_errors(form.fournisseurNumRegistre) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_label(form.fournisseurFormeJuridique, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                                {{ form_widget(form.fournisseurFormeJuridique, {attr: {class: 'form-control'}}) }}
+                                {{ form_errors(form.fournisseurFormeJuridique) }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form_label(form.fournisseurCapital, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                                {{ form_widget(form.fournisseurCapital, {attr: {class: 'form-control'}}) }}
+                                {{ form_errors(form.fournisseurCapital) }}
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {# Societe fields #}
-                <div id="fournisseur-societe-fields" class="mt-6 {{ user.fournisseurTypeFournisseur != 'SOCIETE' ? 'hidden' : '' }}">
-                    <h4 class="text-md font-medium text-gray-700 mb-4">Informations de la société</h4>
-                    <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                        <div>
-                            {{ form_label(form.fournisseurRaisonSocial) }}
-                            {{ form_widget(form.fournisseurRaisonSocial) }}
-                            {{ form_errors(form.fournisseurRaisonSocial) }}
-                        </div>
-                        <div>
-                            {{ form_label(form.fournisseurNumRegistre) }}
-                            {{ form_widget(form.fournisseurNumRegistre) }}
-                            {{ form_errors(form.fournisseurNumRegistre) }}
-                        </div>
-                        <div>
-                            {{ form_label(form.fournisseurFormeJuridique) }}
-                            {{ form_widget(form.fournisseurFormeJuridique) }}
-                            {{ form_errors(form.fournisseurFormeJuridique) }}
-                        </div>
-                        <div>
-                            {{ form_label(form.fournisseurCapital) }}
-                            {{ form_widget(form.fournisseurCapital) }}
-                            {{ form_errors(form.fournisseurCapital) }}
-                        </div>
-                    </div>
-                </div>
-
-                {# Certifications (common) #}
-                <div class="mt-6">
-                    <div class="grid grid-cols-1 gap-6">
-                        <div>
-                            {{ form_label(form.fournisseurCertifications) }}
-                            {{ form_widget(form.fournisseurCertifications) }}
+                    <div class="row g-3 mt-1">
+                        <div class="col-12">
+                            {{ form_label(form.fournisseurCertifications, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                            {{ form_widget(form.fournisseurCertifications, {attr: {class: 'form-control', rows: 3}}) }}
                             {{ form_errors(form.fournisseurCertifications) }}
                         </div>
                     </div>
                 </div>
             </div>
+
         </div>
 
-        {# Form actions #}
-        <div class="flex justify-between">
-            <div>
-                {% if user.id != app.user.id %}
-                    <form method="POST" action="{{ path('admin_users_delete', {id: user.id}) }}" class="inline" onsubmit="return confirm('Voulez-vous vraiment supprimer cet utilisateur ? Cette action désactivera le compte.');">
-                        <input type="hidden" name="_token" value="{{ csrf_token('delete-user-' ~ user.id) }}">
-                        <button type="submit" class="inline-flex items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">
-                            <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {# Right column #}
+        <div class="col-lg-4">
+
+            {# Rôle et statut #}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold">Rôle et statut</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="mb-3">
+                        {{ form_label(form.role, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                        {{ form_widget(form.role, {attr: {class: 'form-select', id: 'userRole'}}) }}
+                        {{ form_errors(form.role) }}
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form_widget(form.isActive, {attr: {class: 'form-check-input', role: 'switch'}}) }}
+                            {{ form_label(form.isActive, null, {label_attr: {class: 'form-check-label fw-semibold'}}) }}
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-check form-switch">
+                            {{ form_widget(form.emailVerified, {attr: {class: 'form-check-input', role: 'switch'}}) }}
+                            {{ form_label(form.emailVerified, null, {label_attr: {class: 'form-check-label fw-semibold'}}) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# Photo de profil #}
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <h5 class="mb-0 fw-semibold">Photo de profil</h5>
+                </div>
+                <div class="card-body p-4 text-center">
+                    {% if user.photoProfil %}
+                        <img src="{{ asset('agrilink/uploads/' ~ user.photoProfil) }}" alt="{{ user.displayName }}"
+                             class="rounded-circle mb-3" width="80" height="80" style="object-fit:cover;" id="avatar-preview">
+                        <div id="avatar-placeholder" class="d-none"></div>
+                    {% else %}
+                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 fw-bold text-white"
+                             style="width:80px;height:80px;background:linear-gradient(135deg,#667eea,#764ba2);font-size:1.5rem;" id="avatar-placeholder">
+                            {{ user.initials }}
+                        </div>
+                        <img id="avatar-preview" src="" alt="" class="rounded-circle mb-3 d-none" width="80" height="80" style="object-fit:cover;">
+                    {% endif %}
+                    {{ form_label(form.profilePhoto, null, {label_attr: {class: 'form-label fw-semibold d-block mt-3'}}) }}
+                    {{ form_widget(form.profilePhoto, {attr: {class: 'form-control form-control-sm', accept: 'image/jpeg,image/png,image/webp', id: 'profile-photo-input'}}) }}
+                    {{ form_errors(form.profilePhoto) }}
+                    <div class="mt-2 d-flex gap-2 justify-content-center">
+                        {% if user.photoProfil %}
+                            <small class="text-muted d-block">Photo actuelle : <strong>{{ user.photoProfil|split('/')|last }}</strong></small>
+                        {% endif %}
+                    </div>
+                    {% if user.photoProfil %}
+                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="delete-avatar-btn">
+                            <svg class="me-1" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
-                            Supprimer
+                            Supprimer la photo
                         </button>
-                    </form>
-                {% endif %}
+                    {% endif %}
+                    <small class="text-muted d-block mt-2">JPG, PNG ou WEBP · max 2 Mo</small>
+                </div>
             </div>
-            <div class="flex space-x-3">
-                <a href="{{ path('admin_users_list') }}" class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                    Annuler
-                </a>
-                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
-                    <svg class="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    Enregistrer les modifications
-                </button>
+
+            {# Actions #}
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <svg class="me-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Enregistrer les modifications
+                        </button>
+                        <a href="{{ path('admin_users_list') }}" class="btn btn-outline-secondary">Annuler</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {{ form_end(form) }}
+
+    {# Hidden form for deleting photo (outside main form) #}
+    <form id="delete-photo-form" method="POST" action="{{ path('admin_users_delete_photo', {id: user.id}) }}" style="display: none;">
+        <input type="hidden" name="_token" value="{{ csrf_token('delete-photo-' ~ user.id) }}">
+    </form>
+
+    {# Delete form (outside main form to avoid nested forms) #}
+    {% if user.id != app.user.id %}
+        <div class="card border-0 shadow-sm mt-4">
+            <div class="card-body p-4">
+                <h5 class="text-danger mb-3">Zone de danger</h5>
+                <p class="text-muted mb-3">Supprimer définitivement cet utilisateur. Cette action est irréversible.</p>
+                <form method="POST" action="{{ path('admin_users_delete', {id: user.id}) }}"
+                      onsubmit="return confirm('Supprimer définitivement cet utilisateur ? Cette action est irréversible.');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delete-user-' ~ user.id) }}">
+                    <button type="submit" class="btn btn-outline-danger">
+                        <svg class="me-2" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                        Supprimer l'utilisateur
+                    </button>
+                </form>
             </div>
         </div>
-    {{ form_end(form) }}
+    {% endif %}
 </div>
 
 <script>
-function toggleRoleFields() {
-    const role = document.getElementById('user_role').value;
+document.addEventListener('DOMContentLoaded', function () {
+    console.log('Edit page: DOM loaded, initializing...');
     
-    // Hide all role-specific sections
-    document.getElementById('admin-fields').classList.add('hidden');
-    document.getElementById('agriculteur-fields').classList.add('hidden');
-    document.getElementById('agriplus-fields').classList.add('hidden');
-    document.getElementById('fournisseur-fields').classList.add('hidden');
+    // Get elements using name attribute (more reliable than ID)
+    const roleSelect = document.querySelector('select[name*="[role]"]');
+    const fournisseurTypeSelect = document.querySelector('select[name*="[fournisseurTypeFournisseur]"]');
     
-    // Show relevant section
-    if (role === 'ADMIN') {
-        document.getElementById('admin-fields').classList.remove('hidden');
-    } else if (role === 'AGRICULTEUR') {
-        document.getElementById('agriculteur-fields').classList.remove('hidden');
-    } else if (role === 'AGRIPLUS') {
-        document.getElementById('agriplus-fields').classList.remove('hidden');
-    } else if (role === 'FOURNISSEUR') {
-        document.getElementById('fournisseur-fields').classList.remove('hidden');
+    console.log('Role select found:', roleSelect);
+    console.log('Fournisseur type select found:', fournisseurTypeSelect);
+    
+    // Role sections
+    const adminFields = document.getElementById('admin-fields');
+    const agriculteurFields = document.getElementById('agriculteur-fields');
+    const agriplusFields = document.getElementById('agriplus-fields');
+    const fournisseurFields = document.getElementById('fournisseur-fields');
+    
+    // Fournisseur sub-sections
+    const fournisseurPersonneFields = document.getElementById('fournisseur-personne-fields');
+    const fournisseurSocieteFields = document.getElementById('fournisseur-societe-fields');
+    
+    // Toggle role-specific fields
+    function toggleRoleFields() {
+        if (!roleSelect) {
+            console.error('Role select not found!');
+            return;
+        }
+        
+        const selectedRole = roleSelect.value;
+        console.log('Selected role:', selectedRole);
+        
+        // Hide all role sections
+        if (adminFields) adminFields.classList.add('d-none');
+        if (agriculteurFields) agriculteurFields.classList.add('d-none');
+        if (agriplusFields) agriplusFields.classList.add('d-none');
+        if (fournisseurFields) fournisseurFields.classList.add('d-none');
+        
+        // Show selected role section
+        switch(selectedRole) {
+            case 'ADMIN':
+                if (adminFields) adminFields.classList.remove('d-none');
+                break;
+            case 'AGRICULTEUR':
+                if (agriculteurFields) agriculteurFields.classList.remove('d-none');
+                break;
+            case 'AGRIPLUS':
+                if (agriplusFields) agriplusFields.classList.remove('d-none');
+                break;
+            case 'FOURNISSEUR':
+                if (fournisseurFields) {
+                    fournisseurFields.classList.remove('d-none');
+                    // Also trigger fournisseur type fields
+                    setTimeout(toggleFournisseurTypeFields, 100);
+                }
+                break;
+        }
     }
-}
-
-function toggleFournisseurFields() {
-    const type = document.getElementById('fournisseur_type').value;
     
-    // Hide both
-    document.getElementById('fournisseur-personne-fields').classList.add('hidden');
-    document.getElementById('fournisseur-societe-fields').classList.add('hidden');
-    
-    // Show relevant
-    if (type === 'PERSONNE') {
-        document.getElementById('fournisseur-personne-fields').classList.remove('hidden');
-    } else if (type === 'SOCIETE') {
-        document.getElementById('fournisseur-societe-fields').classList.remove('hidden');
+    // Toggle fournisseur type-specific fields
+    function toggleFournisseurTypeFields() {
+        if (!fournisseurTypeSelect) {
+            console.error('Fournisseur type select not found!');
+            return;
+        }
+        
+        const selectedType = fournisseurTypeSelect.value;
+        console.log('Selected fournisseur type:', selectedType);
+        
+        // Hide both sub-sections
+        if (fournisseurPersonneFields) fournisseurPersonneFields.classList.add('d-none');
+        if (fournisseurSocieteFields) fournisseurSocieteFields.classList.add('d-none');
+        
+        // Show selected type section
+        if (selectedType === 'PERSONNE' && fournisseurPersonneFields) {
+            fournisseurPersonneFields.classList.remove('d-none');
+        } else if (selectedType === 'SOCIETE' && fournisseurSocieteFields) {
+            fournisseurSocieteFields.classList.remove('d-none');
+        }
     }
-}
-
-// Initialize on page load
-document.addEventListener('DOMContentLoaded', function() {
+    
+    // Attach event listeners
+    if (roleSelect) {
+        roleSelect.addEventListener('change', function() {
+            console.log('Role changed to:', this.value);
+            toggleRoleFields();
+        });
+    }
+    
+    if (fournisseurTypeSelect) {
+        fournisseurTypeSelect.addEventListener('change', function() {
+            console.log('Fournisseur type changed to:', this.value);
+            toggleFournisseurTypeFields();
+        });
+    }
+    
+    // Initialize on page load
     toggleRoleFields();
-    toggleFournisseurFields();
+    toggleFournisseurTypeFields();
+    
+    // Live photo preview
+    // Photo upload preview
+    const input = document.getElementById('profile-photo-input');
+    if (input) {
+        input.addEventListener('change', function () {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const placeholder = document.getElementById('avatar-placeholder');
+                    if (placeholder) placeholder.classList.add('d-none');
+                    const img = document.getElementById('avatar-preview');
+                    img.src = e.target.result;
+                    img.classList.remove('d-none');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Delete avatar button
+    const deleteAvatarBtn = document.getElementById('delete-avatar-btn');
+    if (deleteAvatarBtn) {
+        deleteAvatarBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (confirm('Supprimer la photo de profil ? Cette action est irréversible.')) {
+                document.getElementById('delete-photo-form').submit();
+            }
+        });
+    }
 });
 </script>
-{% endblock %}
+{% endblock dashboard_content %}

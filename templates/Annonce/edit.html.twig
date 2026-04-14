@@ -1,0 +1,34 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Modifier l'annonce - AgriLink{% endblock %}
+{% block page_title %}Modifier l'annonce{% endblock %}
+
+{% block dashboard_content %}
+    <div class="row g-4">
+        <div class="col-12 col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 p-lg-5">
+                    <h2 class="fs-4 fw-bold text-dark mb-1">{{ annonce.titre }}</h2>
+                    <p class="text-muted mb-4">Mettez a jour les informations de cette annonce.</p>
+                    {% include 'Annonce/_form.html.twig' with {
+                        form: form,
+                        submit_label: 'Enregistrer'
+                    } only %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-xl-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <h3 class="fs-6 fw-bold text-dark mb-3">Action irreversible</h3>
+                    <p class="text-muted small">La suppression retire definitivement cette annonce.</p>
+                    <form method="post" action="{{ path('annonce_delete', {id: annonce.id}) }}" onsubmit="return confirm('Supprimer cette annonce ?');">
+                        <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ annonce.id) }}">
+                        <button class="btn btn-outline-danger">Supprimer l'annonce</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

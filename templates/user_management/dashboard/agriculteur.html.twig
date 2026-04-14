@@ -172,28 +172,28 @@
             </div>
         </div>
 
-        {# Commandes en cours #}
+        {# Ma boutique #}
         <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm">
+            <div class="card shadow-sm h-100">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center">
                         <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #dbeafe;">
-                                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background: linear-gradient(135deg, rgba(245,158,11,0.20), rgba(249,115,22,0.16));">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#c2410c;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18l-1.5 9a2 2 0 01-2 1.7H6.5a2 2 0 01-2-1.7L3 7zm4-3h10l1 3H6l1-3zM9 11v4m6-4v4" />
                                 </svg>
                             </div>
                         </div>
                         <div class="ms-3 flex-grow-1">
                             <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Commandes</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">--</dd>
+                                <dt class="small fw-medium text-muted text-truncate">Ma boutique</dt>
+                                <dd class="fs-5 fw-semibold mb-0" style="color:#ea580c;">Produits</dd>
                             </dl>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer bg-light p-3">
-                    <a href="#" class="small fw-medium text-primary text-decoration-none">Voir tout →</a>
+                    <a href="{{ path('boutique_index') }}" class="small fw-medium text-decoration-none" style="color:#c2410c;">Ouvrir ma boutique →</a>
                 </div>
             </div>
         </div>
@@ -211,13 +211,38 @@
                         <div class="ms-3 flex-grow-1">
                             <dl>
                                 <dt class="small fw-medium text-muted text-truncate">Météo</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">--°C</dd>
+                                {% set weatherEmoji = '🌤️' %}
+                                {% if weatherIcon is defined and weatherIcon %}
+                                    {% if weatherIcon starts with '01' %}
+                                        {% set weatherEmoji = '☀️' %}
+                                    {% elseif weatherIcon starts with '02' %}
+                                        {% set weatherEmoji = '⛅' %}
+                                    {% elseif weatherIcon starts with '03' or weatherIcon starts with '04' %}
+                                        {% set weatherEmoji = '☁️' %}
+                                    {% elseif weatherIcon starts with '09' or weatherIcon starts with '10' %}
+                                        {% set weatherEmoji = '🌧️' %}
+                                    {% elseif weatherIcon starts with '11' %}
+                                        {% set weatherEmoji = '⛈️' %}
+                                    {% elseif weatherIcon starts with '13' %}
+                                        {% set weatherEmoji = '❄️' %}
+                                    {% endif %}
+                                {% endif %}
+                                <dd class="fs-5 fw-semibold text-dark mb-0">
+                                    {% if temperature is defined and temperature is not null %}
+                                        {{ weatherEmoji }} {{ temperature|round }}°C
+                                    {% else %}
+                                        --°C
+                                    {% endif %}
+                                </dd>
+                                {% if weatherDescription is defined and weatherDescription %}
+                                    <dd class="small text-muted mb-0">{{ weatherDescription }}</dd>
+                                {% endif %}
                             </dl>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer bg-light p-3">
-                    <span class="small text-muted">{{ app.user.ville|default('Non défini') }}</span>
+                    <span class="small text-muted">{{ userCity|default('Non défini') }}</span>
                 </div>
             </div>
         </div>
@@ -313,14 +338,24 @@
         {% embed 'components/_card.html.twig' %}
             {% block card_title %}Calendrier agricole{% endblock %}
             {% block card_content %}
-                <div class="text-center py-5">
-                    <div class="d-flex align-items-center justify-content-center rounded-circle mx-auto mb-3" style="width: 64px; height: 64px; background-color: #f3f4f6;">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #9ca3af;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </div>
-                    <p class="text-muted small mb-3">Aucune tâche programmée pour aujourd'hui</p>
-                    <a href="#" class="btn btn-success btn-sm">Voir le calendrier</a>
+                <div class="text-center py-3">
+                    {% if events is defined and events|length > 0 %}
+                        <div class="text-start">
+                            <p class="small fw-medium text-dark mb-2">Tâches / événements du jour</p>
+                            <ul class="list-unstyled mb-0">
+                                {% for event in events %}
+                                    <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-light-subtle">
+                                        <div>
+                                            <p class="small fw-medium text-dark mb-0">{{ event.title }}</p>
+                                            <p class="small text-muted mb-0">{{ event.typeLabel }}</p>
+                                        </div>
+                                        <span class="small text-muted">{{ event.time ?? '--:--' }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    <a href="{{ path('calendar_index') }}" class="btn btn-success btn-sm">Voir le calendrier</a>
                 </div>
             {% endblock %}
         {% endembed %}

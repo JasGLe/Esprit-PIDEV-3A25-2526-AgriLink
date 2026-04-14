@@ -1,0 +1,60 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+{% block page_title %}Modifier une maintenance{% endblock %}
+
+{% block dashboard_content %}
+
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('maintenance_index') }}">Maintenances</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('maintenance_show', {id: maintenance.id}) }}">Maintenance #{{ maintenance.id }}</a></li>
+            <li class="breadcrumb-item active">Modifier</li>
+        </ol>
+    </nav>
+
+    <h2 class="fw-bold mb-4">✏️ Modifier la maintenance
+        {% if equipement %} — {{ equipement.nom }}{% endif %}
+    </h2>
+
+    {% set allErrors = [] %}
+    {% for field in form %}
+        {% for error in field.vars.errors %}
+            {% set allErrors = allErrors|merge([error.message]) %}
+        {% endfor %}
+    {% endfor %}
+    {% if allErrors|length > 0 %}
+        <div class="alert alert-danger shadow-sm mb-4">
+            <div class="fw-semibold mb-1">⚠️ Veuillez corriger les erreurs :</div>
+            <ul class="mb-0">
+                {% for msg in allErrors %}<li>{{ msg }}</li>{% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header fw-semibold bg-white">Informations</div>
+        <div class="card-body row g-3">
+            <div class="col-12">{{ form_label(form.equipementId) }}{{ form_widget(form.equipementId) }}{{ form_errors(form.equipementId) }}</div>
+            <div class="col-md-6">{{ form_label(form.type) }}{{ form_widget(form.type) }}{{ form_errors(form.type) }}</div>
+            <div class="col-md-6">{{ form_label(form.categorie) }}{{ form_widget(form.categorie) }}{{ form_errors(form.categorie) }}</div>
+            <div class="col-md-6">{{ form_label(form.statut) }}{{ form_widget(form.statut) }}{{ form_errors(form.statut) }}</div>
+            <div class="col-md-6">{{ form_label(form.datePlanifiee) }}{{ form_widget(form.datePlanifiee) }}{{ form_errors(form.datePlanifiee) }}</div>
+            <div class="col-md-6">
+                {{ form_label(form.dateReelle) }}{{ form_widget(form.dateReelle) }}{{ form_errors(form.dateReelle) }}
+                <small class="text-muted">Laisser vide si pas encore effectuée</small>
+            </div>
+            <div class="col-12">
+                {{ form_label(form.description) }}{{ form_widget(form.description) }}{{ form_errors(form.description) }}
+                <small class="text-muted">Minimum 10 caractères</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-primary px-4">💾 Enregistrer</button>
+        <a href="{{ path('maintenance_show', {id: maintenance.id}) }}" class="btn btn-outline-secondary">Annuler</a>
+    </div>
+
+    {{ form_end(form) }}
+{% endblock %}

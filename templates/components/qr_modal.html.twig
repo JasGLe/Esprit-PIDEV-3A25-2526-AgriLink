@@ -1,0 +1,111 @@
+{# Reusable QR Code Modal #}
+<div class="modal fade" id="qrCodeModal" tabindex="-1" aria-labelledby="qrCodeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title" id="qrCodeModalLabel">Code QR</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+
+            <div class="modal-body text-center py-4">
+                {# Loading spinner #}
+                <div id="qrLoadingSpinner" class="d-none">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Génération...</span>
+                    </div>
+                    <p class="text-muted small mt-2">Génération du code QR...</p>
+                </div>
+
+                {# Error message #}
+                <div id="qrErrorMessage" class="alert alert-danger d-none" role="alert"></div>
+
+                {# QR Content (hidden by default) #}
+                <div id="qrContent" class="d-none">
+                    {# Logo #}
+                    <div class="mb-4">
+                        <img src="{{ asset('logo_with_text.png') }}" alt="AgriLink" style="height: 40px; width: auto;">
+                    </div>
+
+                    {# Title #}
+                    <h6 class="fw-bold text-dark mb-1" id="qrTitle"></h6>
+                    <p class="text-muted small mb-3" id="qrSubtitle"></p>
+
+                    {# QR Code Image #}
+                    <div class="d-flex justify-content-center mb-4">
+                        <img id="qrImage" src="" alt="QR Code" style="max-width: 280px; width: 100%; height: auto; border: 2px solid #e5e7eb; border-radius: 12px; padding: 16px; background-color: #f9fafb;">
+                    </div>
+
+                    {# Instructions #}
+                    <p class="text-muted small">
+                        <strong>Scannez ce code</strong> pour accéder aux détails de l'élément.
+                    </p>
+
+                    {# Item name #}
+                    <div class="alert alert-light border mb-0" style="font-size: 0.95rem;">
+                        <strong class="text-dark">Élément:</strong> <span id="qrItemName" class="text-muted"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const qrModal = new bootstrap.Modal(document.getElementById('qrCodeModal'));
+        const loadingSpinner = document.getElementById('qrLoadingSpinner');
+        const errorMessage = document.getElementById('qrErrorMessage');
+        const qrContent = document.getElementById('qrContent');
+        const qrImage = document.getElementById('qrImage');
+        const qrTitle = document.getElementById('qrTitle');
+        const qrSubtitle = document.getElementById('qrSubtitle');
+        const qrItemName = document.getElementById('qrItemName');
+
+        // Attach event listeners to all QR buttons
+        document.querySelectorAll('[data-action="show-qr"]').forEach(button => {
+            button.addEventListener('click', async function(e) {
+                e.preventDefault();
+
+                const url = this.getAttribute('data-qr-url');
+                const type = this.getAttribute('data-qr-type');
+                const itemName = this.getAttribute('data-qr-item');
+
+                // Reset modal state
+                loadingSpinner.classList.remove('d-none');
+                errorMessage.classList.add('d-none');
+                qrContent.classList.add('d-none');
+
+                // Show modal
+                qrModal.show();
+
+                try {
+                    const response = await fetch(url);
+                    const data = await response.json();
+
+                    if (!data.success) {
+                        throw new Error(data.error || 'Erreur lors de la génération du code QR');
+                    }
+
+                    // Update modal content
+                    qrTitle.textContent = type === 'event' ? '📅 Code QR - Événement' : '🌾 Code QR - Activité';
+                    qrSubtitle.textContent = 'Scannez pour plus de détails';
+                    qrImage.src = data.qr_url;
+                    qrItemName.textContent = data.title || itemName;
+
+                    // Hide spinner, show content
+                    loadingSpinner.classList.add('d-none');
+                    qrContent.classList.remove('d-none');
+                } catch (error) {
+                    console.error('QR Generation Error:', error);
+                    errorMessage.textContent = error.message || 'Impossible de générer le code QR. Veuillez réessayer.';
+                    errorMessage.classList.remove('d-none');
+                    loadingSpinner.classList.add('d-none');
+                }
+            });
+        });
+    });
+</script>

@@ -6,13 +6,18 @@ use App\Entity\UserManagement\User;
 use App\Form\UserManagement\AdminUserType;
 use App\Repository\UserManagement\UserRepository;
 use App\Service\FileUploader;
+use App\Service\SecurityEventService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Twig\Environment;
 
 #[Route('/admin/users', name: 'admin_users_')]
 #[IsGranted('ROLE_ADMIN')]
@@ -43,9 +48,9 @@ class UserController extends AbstractController
             $activeFilter = false;
         }
 
-        // Validate role filter
+        // Validate and clean role filter
         $validRoles = ['ADMIN', 'AGRICULTEUR', 'AGRIPLUS', 'FOURNISSEUR', 'USER'];
-        if ($roleFilter && !in_array($roleFilter, $validRoles)) {
+        if (!$roleFilter || !in_array($roleFilter, $validRoles)) {
             $roleFilter = null;
         }
 
@@ -63,25 +68,6 @@ class UserController extends AbstractController
 
         // Get statistics for the dashboard cards
         $stats = $this->userRepository->getStatistics();
-        
-        // COMPREHENSIVE DEBUG
-        dump([
-            'total' => $result['total'],
-            'data_count' => count($result['data']),
-            'page' => $page,
-            'limit' => $limit,
-            'roleFilter' => $roleFilter,
-            'activeFilter' => $activeFilter,
-            'search' => $search,
-            'orderBy' => $orderBy,
-            'orderDir' => $orderDir,
-            'first_user' => !empty($result['data']) ? [
-                'id' => $result['data'][0]->getId(),
-                'nom' => $result['data'][0]->getNom(),
-                'email' => $result['data'][0]->getEmail(),
-                'role' => $result['data'][0]->getRole(),
-            ] : null
-        ]);
 
         return $this->render('user_management/admin/users/list.html.twig', [
             'users' => $result['data'],
@@ -100,7 +86,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/create', name: 'create', methods: ['GET', 'POST'])]
-    public function create(Request $request, ?FileUploader $fileUploader = null): Response
+    public function create(Request $request, FileUploader $fileUploader): Response
     {
         $user = new User();
         
@@ -118,12 +104,10 @@ class UserController extends AbstractController
             }
 
             // Handle profile photo upload
-            if ($fileUploader) {
-                $photoFile = $form->get('profilePhoto')->getData();
-                if ($photoFile) {
-                    $photoFilename = $fileUploader->upload($photoFile, 'avatars');
-                    $user->setPhotoProfil($photoFilename);
-                }
+            $photoFile = $form->get('profilePhoto')->getData();
+            if ($photoFile) {
+                $photoFilename = $fileUploader->upload($photoFile, 'profiles');
+                $user->setPhotoProfil($photoFilename);
             }
 
             // Set email as verified by admin
@@ -143,7 +127,7 @@ class UserController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(User $user, Request $request, ?FileUploader $fileUploader = null): Response
+    public function edit(User $user, Request $request, FileUploader $fileUploader): Response
     {
         $form = $this->createForm(AdminUserType::class, $user, [
             'is_edit' => true,
@@ -159,12 +143,11 @@ class UserController extends AbstractController
             }
 
             // Handle profile photo upload
-            if ($fileUploader) {
-                $photoFile = $form->get('profilePhoto')->getData();
-                if ($photoFile) {
-                    $photoFilename = $fileUploader->upload($photoFile, 'avatars');
-                    $user->setPhotoProfil($photoFilename);
-                }
+            $photoFile = $form->get('profilePhoto')->getData();
+            if ($photoFile) {
+                $oldPhoto = $user->getPhotoProfil();
+                $photoFilename = $fileUploader->upload($photoFile, 'profiles', $oldPhoto);
+                $user->setPhotoProfil($photoFilename);
             }
 
             $this->entityManager->flush();
@@ -221,12 +204,115 @@ class UserController extends AbstractController
             return $this->redirectToRoute('admin_users_list');
         }
 
-        // Soft delete: deactivate the user
-        $user->setIsActive(false);
+        // Nullify exploitation references (no onDelete cascade on that FK)
+        foreach ($user->getExploitations() as $exploitation) {
+            $exploitation->setUser(null);
+        }
+
+        $userName = $user->getDisplayName();
+        $this->entityManager->remove($user);
         $this->entityManager->flush();
 
-        $this->addFlash('success', 'Utilisateur supprimé (désactivé) avec succès.');
+        $this->addFlash('success', sprintf('Utilisateur "%s" supprimé définitivement.', $userName));
 
         return $this->redirectToRoute('admin_users_list');
     }
+
+    #[Route('/{id}/delete-photo', name: 'delete_photo', methods: ['POST'])]
+    public function deletePhoto(User $user, Request $request, FileUploader $fileUploader): Response
+    {
+        // CSRF protection
+        $submittedToken = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('delete-photo-' . $user->getId(), $submittedToken)) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_users_edit', ['id' => $user->getId()]);
+        }
+
+        if ($user->getPhotoProfil()) {
+            // Delete the file using FileUploader service (handles all platform paths correctly)
+            $fileUploader->deleteFile($user->getPhotoProfil());
+            
+            // Clear the photo reference in the database
+            $user->setPhotoProfil(null);
+            $this->entityManager->flush();
+
+            $this->addFlash('success', 'Photo de profil supprimée avec succès.');
+        } else {
+            $this->addFlash('info', 'Aucune photo de profil à supprimer.');
+        }
+
+        return $this->redirectToRoute('admin_users_edit', ['id' => $user->getId()]);
+    }
+
+    #[Route('/{id}/ban', name: 'ban', methods: ['POST'])]
+    public function ban(
+        User $user,
+        Request $request,
+        SecurityEventService $securityEventService,
+        MailerInterface $mailer,
+        Environment $twig,
+        #[Autowire('%env(APP_URL)%')]
+        string $appUrl
+    ): Response {
+        $submittedToken = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('ban-user-' . $user->getId(), $submittedToken)) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_users_list');
+        }
+
+        if ($user === $this->getUser()) {
+            $this->addFlash('error', 'Vous ne pouvez pas bannir votre propre compte.');
+            return $this->redirectToRoute('admin_users_list');
+        }
+
+        $reason = $request->request->get('ban_reason', 'Violation des conditions d\'utilisation');
+        $user->ban($reason);
+        $this->entityManager->flush();
+
+        $securityEventService->logAccountBanned($user, $reason);
+
+        // Send ban notification email
+        try {
+            $htmlContent = $twig->render('emails/account_banned.html.twig', [
+                'user' => $user,
+                'reason' => $reason,
+                'bannedAt' => $user->getBannedAt(),
+                'appUrl' => $appUrl,
+            ]);
+
+            $email = (new Email())
+                ->from('noreply@agrilink.com')
+                ->to($user->getEmail())
+                ->subject('AgriLink - Votre compte a été suspendu')
+                ->html($htmlContent);
+
+            $mailer->send($email);
+        } catch (\Exception $e) {
+        }
+
+        $this->addFlash('success', sprintf('L\'utilisateur "%s" a été banni.', $user->getDisplayName()));
+        return $this->redirectToRoute('admin_users_list');
+    }
+
+    #[Route('/{id}/unban', name: 'unban', methods: ['POST'])]
+    public function unban(
+        User $user,
+        Request $request,
+        SecurityEventService $securityEventService
+    ): Response {
+        $submittedToken = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('unban-user-' . $user->getId(), $submittedToken)) {
+            $this->addFlash('error', 'Token CSRF invalide.');
+            return $this->redirectToRoute('admin_users_list');
+        }
+
+        $user->unban();
+        $this->entityManager->flush();
+
+        $securityEventService->logAccountUnbanned($user);
+
+        $this->addFlash('success', sprintf('L\'utilisateur "%s" a été débanni.', $user->getDisplayName()));
+        return $this->redirectToRoute('admin_users_list');
+    }
 }
+

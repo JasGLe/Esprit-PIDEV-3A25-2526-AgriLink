@@ -162,6 +162,39 @@ select.reg-input {
 /* ── Horizontal rule ─────────────────────────────────── */
 .reg-divider { display: flex; align-items: center; gap: .75rem; margin: .75rem 0; }
 .reg-divider::before, .reg-divider::after { content: ''; flex: 1; height: 1px; background: #e9ecef; }
+
+/* ── Field validation states (JS-driven only) ─────────── */
+@keyframes reg-shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
+@keyframes reg-slide-down {
+    from { opacity: 0; transform: translateY(-5px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.reg-input.is-valid {
+    border-color: #198754;
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%23198754' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right .75rem center;
+    background-size: 1rem;
+    box-shadow: 0 0 0 2.5px rgba(25,135,84,.15);
+    transition: border-color .15s, box-shadow .15s;
+}
+.reg-input.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 2.5px rgba(220,53,69,.15);
+    animation: reg-shake .4s;
+    transition: border-color .15s, box-shadow .15s;
+}
+.reg-feedback {
+    font-size: .73rem;
+    color: #dc3545;
+    margin-top: .3rem;
+    animation: reg-slide-down .2s ease;
+}
 </style>
 {% endblock %}
 
@@ -180,7 +213,7 @@ select.reg-input {
                     <div class="mb-auto pb-4">
                         <div class="d-flex align-items-center gap-3">
                             <img src="{{ asset('logo_without_text.png') }}" alt="AgriLink"
-                                 style="width:52px; height:52px; object-fit:contain; filter:brightness(0) invert(1); opacity:.95; flex-shrink:0;">
+                                 style="width:52px; height:52px; object-fit:contain; flex-shrink:0;">
                             <div>
                                 <div class="fw-black text-white" style="font-size:1.55rem; letter-spacing:-.02em; line-height:1;">AgriLink</div>
                                 <div style="font-size:.7rem; color:rgba(255,255,255,.55); font-weight:500; letter-spacing:.04em; text-transform:uppercase;">Plateforme Agricole</div>
@@ -285,6 +318,7 @@ select.reg-input {
                 {% endif %}
 
                 {{ form_start(registrationForm, {'attr': {'novalidate': 'novalidate', 'id': 'regForm'}}) }}
+                <input type="hidden" name="g-recaptcha-response" id="recaptchaResponse">
 
                 {# ── Section 1 · Identité ─────────────────────── #}
                 <div class="reg-section">
@@ -353,7 +387,7 @@ select.reg-input {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                                     </svg>
                                 </span>
-                                {{ form_widget(registrationForm.telephone, {'attr': {'class': 'reg-input has-icon', 'placeholder': '+216 XX XXX XXX'}}) }}
+                                {{ form_widget(registrationForm.telephone, {'attr': {'class': 'reg-input has-icon', 'placeholder': '55123456'}}) }}
                             </div>
                             <div class="reg-err">{{ form_errors(registrationForm.telephone) }}</div>
                         </div>
@@ -555,6 +589,7 @@ select.reg-input {
 
 {% block javascripts %}
 {{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/@zxcvbn-ts/core@3/dist/zxcvbn-ts.js"></script>
 <script>
 (function () {
     'use strict';
@@ -579,10 +614,17 @@ select.reg-input {
         pw1.addEventListener('input', function () {
             const v = this.value;
             let s = 0;
-            if (v.length >= 6)  s++;
-            if (v.length >= 10) s++;
-            if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
-            if (/\d/.test(v) || /[^A-Za-z0-9]/.test(v)) s++;
+
+            // Use zxcvbn if available
+            if (v && typeof zxcvbnts !== 'undefined' && zxcvbnts.core) {
+                var result = zxcvbnts.core.zxcvbn(v);
+                s = Math.max(1, result.score); // 1-4
+            } else {
+                if (v.length >= 6)  s++;
+                if (v.length >= 10) s++;
+                if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
+                if (/\d/.test(v) || /[^A-Za-z0-9]/.test(v)) s++;
+            }
 
             pwBar.className = 'pw-strength s' + s;
             const labels = { 1: ['Faible', '#dc3545'], 2: ['Moyen', '#f59e0b'], 3: ['Bon', '#0dcaf0'], 4: ['Fort', '#198754'] };
@@ -637,6 +679,162 @@ select.reg-input {
     // Init exp bar if value present (form re-submission)
     const expInput = document.getElementById('expInput');
     if (expInput && expInput.value) updateExp(expInput.value);
+
+    // ── Numbers-only enforcement ─────────────────────────────
+    document.querySelectorAll('[name*="[telephone]"], [name*="[codePostale]"]').forEach(function(inp) {
+        inp.setAttribute('inputmode', 'numeric');
+        inp.addEventListener('keydown', function(e) {
+            if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
+                 'Tab','Enter','Home','End'].includes(e.key) || e.ctrlKey || e.metaKey) return;
+            if (!/^\d$/.test(e.key)) e.preventDefault();
+        });
+        inp.addEventListener('input', function() {
+            const pos = this.selectionStart;
+            const clean = this.value.replace(/\D/g, '');
+            if (this.value !== clean) { this.value = clean; this.setSelectionRange(pos, pos); }
+        });
+    });
+
+    // ── Real-time field validation ───────────────────────────
+    const RULES = {
+        nom:               { required: true,  min: 2,  max: 100 },
+        email:             { required: true,  email: true },
+        telephone:         { min: 8, max: 15, msg: '8 à 15 chiffres (ex : 55123456)' },
+        codePostale:       { pattern: /^\d{4}$/, msg: '4 chiffres exacts (ex : 1000)' },
+        agriculteurExpAnnee: { required: true, numRange: [0, 60], msg: 'Entre 0 et 60 ans.' },
+    };
+
+    function getErr(id, val) {
+        const key = Object.keys(RULES).find(function(k) { return id.endsWith('_' + k); });
+        if (!key) return null;
+        const r = RULES[key];
+        const v = val.trim();
+        if (r.required && !v) return 'Ce champ est obligatoire.';
+        if (!v) return null;
+        if (r.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))
+            return "Format d'email invalide (ex : nom@exemple.com).";
+        if (r.min && v.length < r.min) return 'Minimum ' + r.min + ' caractères.';
+        if (r.max && v.length > r.max) return 'Maximum ' + r.max + ' caractères.';
+        if (r.pattern && !r.pattern.test(v)) return r.msg || 'Format invalide.';
+        if (r.numRange) {
+            const n = parseInt(v, 10);
+            if (isNaN(n) || n < r.numRange[0] || n > r.numRange[1]) return r.msg || 'Valeur invalide.';
+        }
+        return null;
+    }
+
+    // Find the server-error element for a given input (searches up to column div)
+    function findErrEl(inp) {
+        let p = inp.parentElement;
+        while (p && p !== document.body) {
+            if (p.matches('[class*="col-"]')) {
+                return p.querySelector('.reg-err')
+                    || p.querySelector('.invalid-feedback:not(.reg-feedback)')
+                    || null;
+            }
+            p = p.parentElement;
+        }
+        return null;
+    }
+
+    function applyState(inp, err) {
+        const wrap = inp.closest('.reg-input-wrap') || inp.parentElement;
+
+        // Create/reuse persistent feedback element (lives after the wrap)
+        let fb = wrap.nextElementSibling;
+        if (!fb || !fb.classList.contains('reg-feedback')) {
+            fb = document.createElement('div');
+            fb.className = 'reg-feedback';
+            wrap.insertAdjacentElement('afterend', fb);
+        }
+
+        // Hide any server-rendered Symfony error
+        const serverErr = findErrEl(inp);
+        if (serverErr) serverErr.style.display = 'none';
+
+        if (err) {
+            const alreadyInvalid = inp.classList.contains('is-invalid');
+            inp.classList.remove('is-valid');
+            inp.classList.add('is-invalid');
+            // Re-trigger shake only on first transition to invalid
+            if (!alreadyInvalid) {
+                inp.classList.remove('is-invalid');
+                void inp.offsetWidth;
+                inp.classList.add('is-invalid');
+            }
+            // Re-trigger slide-down only when message text changes
+            if (fb.textContent !== err) {
+                fb.style.animation = 'none';
+                void fb.offsetWidth;
+                fb.style.animation = '';
+                fb.textContent = err;
+            }
+        } else if (inp.value.trim()) {
+            inp.classList.remove('is-invalid');
+            inp.classList.add('is-valid');
+            fb.textContent = '';
+        } else {
+            inp.classList.remove('is-valid', 'is-invalid');
+            fb.textContent = '';
+        }
+    }
+
+    function serverErrVisible(inp) {
+        const el = findErrEl(inp);
+        return el && el.textContent.trim() && el.style.display !== 'none';
+    }
+
+    document.querySelectorAll('.reg-input').forEach(function(inp) {
+        if (inp.tagName === 'SELECT' || inp.type === 'checkbox' || inp.type === 'date') return;
+
+        // Pre-mark as dirty if a server error is already showing
+        let dirty = serverErrVisible(inp);
+
+        inp.addEventListener('blur', function() {
+            dirty = true;
+            applyState(this, getErr(this.id, this.value));
+        });
+
+        inp.addEventListener('input', function() {
+            // Trigger immediately if: already touched, or server error visible, or field already invalid
+            if (dirty || serverErrVisible(this) || this.classList.contains('is-invalid')) {
+                dirty = true;
+                applyState(this, getErr(this.id, this.value));
+            }
+        });
+    });
+})();
+
+// ── reCAPTCHA v3 ─────────────────────────────────────────
+(function () {
+    var siteKey = '{{ recaptcha_site_key is defined ? recaptcha_site_key : "" }}';
+    if (!siteKey || siteKey === 'YOUR_RECAPTCHA_V3_SITE_KEY') return;
+    var script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js?render=' + siteKey;
+    script.onload = function() {
+        var form = document.getElementById('regForm');
+        if (form) {
+            var isSubmitting = false;
+            form.addEventListener('submit', function (e) {
+                var tokenField = document.getElementById('recaptchaResponse');
+                if (tokenField && tokenField.value) {
+                    return true;
+                }
+                if (isSubmitting) {
+                    return true;
+                }
+                e.preventDefault();
+                isSubmitting = true;
+                grecaptcha.ready(function () {
+                    grecaptcha.execute(siteKey, { action: 'register' }).then(function (token) {
+                        tokenField.value = token;
+                        form.submit();
+                    });
+                });
+            });
+        }
+    };
+    document.head.appendChild(script);
 })();
 </script>
 {% endblock %}

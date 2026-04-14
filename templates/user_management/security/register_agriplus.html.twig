@@ -3,14 +3,15 @@
 {% block title %}Inscription AgriPlus - AgriLink{% endblock %}
 
 {% block body %}
-<div class="min-vh-100" style="background:#f0f4f0;">
+<div class="registration-wrapper">
+<div class="registration-container">
 
     {# ── Green Gradient Header ─────────────────────────────── #}
     <div class="registration-header">
         <div class="header-blob-tr"></div>
         <div class="header-blob-bl"></div>
 
-        <div class="container" style="max-width:900px; position:relative; z-index:1;">
+        <div style="position:relative; z-index:1;">
             {# Top bar: logo + nav #}
             <div class="d-flex align-items-center justify-content-between mb-4">
                 <div class="d-flex align-items-center gap-3">
@@ -55,7 +56,7 @@
         </div>
     </div>
 
-    <div class="container py-4 py-lg-5" style="max-width:900px;">
+    <div class="registration-content">
 
         {# Flash / form errors #}
         {% for flash_message in app.flashes('error') %}
@@ -184,6 +185,7 @@
             </div>
 
             {{ form_start(registrationForm, {'attr': {'id': 'agriplus-form', 'novalidate': 'novalidate'}}) }}
+                <input type="hidden" name="g-recaptcha-response" id="recaptchaResponse">
 
                 {# Hidden subscription radio buttons #}
                 <div class="d-none" id="subscription-wrapper">
@@ -233,7 +235,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
                                 </svg>
                                 {{ form_widget(registrationForm.telephone, {
-                                    'attr': {'class': 'reg-input', 'placeholder': '+216 XX XXX XXX'}
+                                    'attr': {'class': 'reg-input', 'placeholder': '55123456'}
                                 }) }}
                             </div>
                             {{ form_errors(registrationForm.telephone) }}
@@ -380,14 +382,44 @@
             {{ form_end(registrationForm) }}
         </div>{# /.reg-card #}
 
-    </div>{# /.container #}
-</div>{# /.min-vh-100 #}
+    </div>{# /.registration-content #}
+
+</div>{# /.registration-container #}
+</div>{# /.registration-wrapper #}
 
 <style>
+/* ── Wrapper & Container (matching fournisseur layout) ── */
+.registration-wrapper {
+    min-height: 100vh;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem;
+    background: #f8fafc;
+}
+.registration-container {
+    width: 100%;
+    max-width: 960px;
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow:
+        0 20px 60px -15px rgba(0,0,0,.1),
+        0 0 0 1px rgba(0,0,0,.05);
+    overflow: hidden;
+}
+.registration-content {
+    padding: 2rem 2.5rem 2.5rem;
+}
+@media (max-width: 767px) {
+    .registration-wrapper { padding: 1rem; }
+    .registration-container { border-radius: 16px; }
+    .registration-content { padding: 1.5rem; }
+}
+
 /* ── Page & Header ──────────────────────────────────────── */
 .registration-header {
     background: linear-gradient(155deg, #0f4c2a 0%, #1a7a4a 45%, #22c55e 100%);
-    padding: 2rem 1.5rem 2.5rem;
+    padding: 2rem 2.5rem 2.5rem;
     position: relative;
     overflow: hidden;
 }
@@ -409,7 +441,7 @@
 }
 .main-logo {
     width: 52px; height: 52px;
-    filter: brightness(0) invert(1);
+    filter: none;
     flex-shrink: 0;
 }
 .logo-name {
@@ -744,8 +776,42 @@
 
 /* Utility */
 .text-green { color: #1a7a4a !important; }
+
+/* ── Field validation states (JS-driven only) ─────────── */
+@keyframes reg-shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-4px); }
+    40%, 80% { transform: translateX(4px); }
+}
+@keyframes reg-slide-down {
+    from { opacity: 0; transform: translateY(-5px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.reg-input.is-valid {
+    border-color: #1a7a4a;
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 8 8'%3e%3cpath fill='%231a7a4a' d='M2.3 6.73L.6 4.53c-.4-1.04.46-1.4 1.1-.8l1.1 1.4 3.4-3.8c.6-.63 1.6-.27 1.2.7l-4 4.6c-.43.5-.8.4-1.1.1z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right .75rem center;
+    background-size: 1rem;
+    box-shadow: 0 0 0 2.5px rgba(26,122,74,.15);
+    transition: border-color .15s, box-shadow .15s;
+}
+.reg-input.is-invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 2.5px rgba(220,53,69,.15);
+    animation: reg-shake .4s;
+    transition: border-color .15s, box-shadow .15s;
+}
+.reg-feedback {
+    font-size: .73rem;
+    color: #dc3545;
+    margin-top: .3rem;
+    animation: reg-slide-down .2s ease;
+}
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/@zxcvbn-ts/core@3/dist/zxcvbn-ts.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -800,6 +866,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function scorePassword(p) {
         if (!p) return 0;
+        // Use zxcvbn if available
+        if (typeof zxcvbnts !== 'undefined' && zxcvbnts.core) {
+            var result = zxcvbnts.core.zxcvbn(p);
+            return Math.max(1, result.score); // 1-4
+        }
         let s = 0;
         if (p.length >= 6)  s++;
         if (p.length >= 10) s++;
@@ -834,6 +905,157 @@ document.addEventListener('DOMContentLoaded', function () {
             matchLabel.className = 'pwd-match-label mt-1 nomatch';
         }
     }
+
+    /* ── Numbers-only enforcement ──────────────────────────── */
+    document.querySelectorAll('[name*="[telephone]"], [name*="[codePostale]"]').forEach(function(inp) {
+        inp.setAttribute('inputmode', 'numeric');
+        inp.addEventListener('keydown', function(e) {
+            if (['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown',
+                 'Tab','Enter','Home','End'].includes(e.key) || e.ctrlKey || e.metaKey) return;
+            if (!/^\d$/.test(e.key)) e.preventDefault();
+        });
+        inp.addEventListener('input', function() {
+            const pos = this.selectionStart;
+            const clean = this.value.replace(/\D/g, '');
+            if (this.value !== clean) { this.value = clean; this.setSelectionRange(pos, pos); }
+        });
+    });
+
+    /* ── Real-time field validation ────────────────────────── */
+    const RULES = {
+        nom:         { required: true, min: 2, max: 100 },
+        email:       { required: true, email: true },
+        telephone:   { min: 8, max: 15, msg: '8 à 15 chiffres (ex : 55123456)' },
+        codePostale: { pattern: /^\d{4}$/, msg: '4 chiffres exacts (ex : 1000)' },
+    };
+
+    function getErr(id, val) {
+        const key = Object.keys(RULES).find(function(k) { return id.endsWith('_' + k); });
+        if (!key) return null;
+        const r = RULES[key];
+        const v = val.trim();
+        if (r.required && !v) return 'Ce champ est obligatoire.';
+        if (!v) return null;
+        if (r.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v))
+            return "Format d'email invalide (ex : nom@exemple.com).";
+        if (r.min && v.length < r.min) return 'Minimum ' + r.min + ' caractères.';
+        if (r.max && v.length > r.max) return 'Maximum ' + r.max + ' caractères.';
+        if (r.pattern && !r.pattern.test(v)) return r.msg || 'Format invalide.';
+        return null;
+    }
+
+    // Find the server-error element for a given input (searches up to column div)
+    function findErrEl(inp) {
+        let p = inp.parentElement;
+        while (p && p !== document.body) {
+            if (p.matches('[class*="col-"]')) {
+                return p.querySelector('.invalid-feedback:not(.reg-feedback)')
+                    || p.querySelector('.reg-err')
+                    || null;
+            }
+            p = p.parentElement;
+        }
+        return null;
+    }
+
+    function applyState(inp, err) {
+        const wrap = inp.closest('.reg-input-wrap') || inp.parentElement;
+
+        // Create/reuse persistent feedback element (lives after the wrap)
+        let fb = wrap.nextElementSibling;
+        if (!fb || !fb.classList.contains('reg-feedback')) {
+            fb = document.createElement('div');
+            fb.className = 'reg-feedback';
+            wrap.insertAdjacentElement('afterend', fb);
+        }
+
+        // Hide any server-rendered Symfony error
+        const serverErr = findErrEl(inp);
+        if (serverErr) serverErr.style.display = 'none';
+
+        if (err) {
+            const alreadyInvalid = inp.classList.contains('is-invalid');
+            inp.classList.remove('is-valid');
+            inp.classList.add('is-invalid');
+            // Re-trigger shake only on first transition to invalid
+            if (!alreadyInvalid) {
+                inp.classList.remove('is-invalid');
+                void inp.offsetWidth;
+                inp.classList.add('is-invalid');
+            }
+            // Re-trigger slide-down only when message text changes
+            if (fb.textContent !== err) {
+                fb.style.animation = 'none';
+                void fb.offsetWidth;
+                fb.style.animation = '';
+                fb.textContent = err;
+            }
+        } else if (inp.value.trim()) {
+            inp.classList.remove('is-invalid');
+            inp.classList.add('is-valid');
+            fb.textContent = '';
+        } else {
+            inp.classList.remove('is-valid', 'is-invalid');
+            fb.textContent = '';
+        }
+    }
+
+    function serverErrVisible(inp) {
+        const el = findErrEl(inp);
+        return el && el.textContent.trim() && el.style.display !== 'none';
+    }
+
+    document.querySelectorAll('.reg-input').forEach(function(inp) {
+        if (inp.tagName === 'SELECT' || inp.type === 'checkbox' || inp.type === 'date') return;
+
+        // Pre-mark as dirty if a server error is already showing
+        let dirty = serverErrVisible(inp);
+
+        inp.addEventListener('blur', function() {
+            dirty = true;
+            applyState(this, getErr(this.id, this.value));
+        });
+
+        inp.addEventListener('input', function() {
+            // Trigger immediately if: already touched, or server error visible, or already invalid
+            if (dirty || serverErrVisible(this) || this.classList.contains('is-invalid')) {
+                dirty = true;
+                applyState(this, getErr(this.id, this.value));
+            }
+        });
+    });
 });
+
+// ── reCAPTCHA v3 ─────────────────────────────────────────
+(function () {
+    var siteKey = '{{ recaptcha_site_key is defined ? recaptcha_site_key : "" }}';
+    if (!siteKey || siteKey === 'YOUR_RECAPTCHA_V3_SITE_KEY') return;
+    var script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js?render=' + siteKey;
+    script.onload = function() {
+        var form = document.getElementById('agriplus-form');
+        if (form) {
+            var isSubmitting = false;
+            form.addEventListener('submit', function (e) {
+                var tokenField = document.getElementById('recaptchaResponse');
+                if (tokenField && tokenField.value) {
+                    return true;
+                }
+                if (isSubmitting) {
+                    return true;
+                }
+                e.preventDefault();
+                isSubmitting = true;
+                grecaptcha.ready(function () {
+                    grecaptcha.execute(siteKey, { action: 'register' }).then(function (token) {
+                        tokenField.value = token;
+                        form.submit();
+                    });
+                });
+            });
+        }
+    };
+    document.head.appendChild(script);
+})();
 </script>
 {% endblock %}

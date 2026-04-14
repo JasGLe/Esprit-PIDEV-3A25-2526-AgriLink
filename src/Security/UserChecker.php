@@ -16,6 +16,14 @@ class UserChecker implements UserCheckerInterface
             return;
         }
 
+        // Check if account is banned (permanent)
+        if ($user->isBanned()) {
+            $reason = $user->getBanReason() ?: 'Violation des conditions d\'utilisation';
+            throw new CustomUserMessageAccountStatusException(
+                'Votre compte a été banni : ' . $reason . '. Contactez le support pour plus d\'informations.'
+            );
+        }
+
         // Check if account is locked
         if ($user->isLockedOut()) {
             $lockedUntil = $user->getLockedUntil();

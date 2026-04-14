@@ -1,0 +1,62 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Mettre en vente — {{ culture.nom }}{% endblock %}
+{% block page_title %}Mettre en vente{% endblock %}
+
+{% block dashboard_content %}
+    <nav aria-label="Fil d'Ariane" class="mb-3">
+        <ol class="breadcrumb small mb-0">
+            <li class="breadcrumb-item"><a href="{{ path('exploitation_index') }}" class="text-success text-decoration-none">Mes exploitations</a></li>
+            <li class="breadcrumb-item"><a href="{{ path('boutique_index') }}" class="text-success text-decoration-none">Ma boutique</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Nouvelle annonce</li>
+        </ol>
+    </nav>
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex align-items-start gap-3 mb-4">
+                <div class="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0" style="width:3rem;height:3rem;background:rgba(34,197,94,0.15);">
+                    <svg style="width:1.5rem;height:1.5rem;color:#16a34a;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h2 class="h5 fw-bold text-dark mb-1">Publier dans votre boutique</h2>
+                    <p class="small text-muted mb-0">Culture : <strong>{{ culture.nom }}</strong> — l’annonce reste privée à votre espace (pas sur le marché public).</p>
+                </div>
+            </div>
+
+            {{ form_start(form, { attr: { class: 'boutique-culture-vente-form', novalidate: 'novalidate' } }) }}
+            <div class="row g-3">
+                <div class="col-md-6">
+                    {{ form_row(form.nom) }}
+                </div>
+                <div class="col-md-6">
+                    {{ form_row(form.category) }}
+                </div>
+                <div class="col-md-4">
+                    {{ form_row(form.uniteVente) }}
+                </div>
+                <div class="col-md-4">
+                    {{ form_row(form.prixUnitaire) }}
+                </div>
+                <div class="col-md-4">
+                    {{ form_row(form.quantite) }}
+                </div>
+                <div class="col-12">
+                    {{ form_row(form.description) }}
+                </div>
+            </div>
+            <div class="d-flex flex-wrap gap-2 mt-4">
+                <button type="submit" class="btn btn-success fw-semibold px-4">
+                    <svg style="width:1rem;height:1rem;" class="me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Publier / Mettre en boutique
+                </button>
+                <a href="{{ path('exploitation_index') }}" class="btn btn-outline-secondary">Annuler</a>
+            </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}

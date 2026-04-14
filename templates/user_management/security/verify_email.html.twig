@@ -65,6 +65,35 @@
     }
     .skip-link:hover { color: #495057; }
     .alert-auth { border-radius: 10px; border: none; font-size: .875rem; }
+    
+    /* Verification tabs */
+    .verify-tabs {
+        display: flex;
+        gap: 0.5rem;
+        border-bottom: 2px solid #dee2e6;
+        margin-bottom: 1.5rem;
+    }
+    
+    .verify-tab-btn {
+        padding: 0.75rem 1rem;
+        background: none;
+        border: none;
+        border-bottom: 3px solid transparent;
+        color: #6c757d;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .verify-tab-btn:hover {
+        color: #495057;
+    }
+    
+    .verify-tab-btn.active {
+        color: #ffc107;
+        border-bottom-color: #ffc107;
+    }
 </style>
 
 <div class="min-vh-100 d-flex align-items-center justify-content-center py-5 px-3">
@@ -78,6 +107,24 @@
         </div>
 
         <div class="auth-card">
+            {# Verification tabs #}
+            <div class="verify-tabs">
+                <button 
+                    type="button" 
+                    class="verify-tab-btn active"
+                    data-tab="email"
+                >
+                    Vérifier par Email
+                </button>
+                <button 
+                    type="button" 
+                    class="verify-tab-btn"
+                    data-tab="sms"
+                >
+                    Vérifier par SMS
+                </button>
+            </div>
+
             {# Header #}
             <div class="text-center mb-4">
                 <div class="email-icon-wrap">
@@ -230,6 +277,19 @@
 <script>
 let timeRemaining = {{ timeRemaining }};
 let resendWait    = {{ resendWaitSeconds }};
+
+// Handle tab switching
+document.querySelectorAll('.verify-tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const tab = this.getAttribute('data-tab');
+        document.querySelectorAll('.verify-tab-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        if (tab === 'sms') {
+            window.location.href = '{{ path("app_verify_phone") }}';
+        }
+    });
+});
 
 // — Expiration timer —
 function tickExpiry() {

@@ -179,6 +179,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'face_enrolled_at', type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $faceEnrolledAt = null;
 
+    #[ORM\Column(name: 'pending_email', length: 150, nullable: true)]
+    private ?string $pendingEmail = null;
+
+    #[ORM\Column(name: 'is_banned', type: Types::BOOLEAN, options: ['default' => false])]
+    private bool $isBanned = false;
+
+    #[ORM\Column(name: 'banned_at', type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $bannedAt = null;
+
+    #[ORM\Column(name: 'ban_reason', length: 500, nullable: true)]
+    private ?string $banReason = null;
+
+    #[ORM\Column(name: 'backup_codes', type: Types::JSON, nullable: true)]
+    private ?array $backupCodes = null;
+
     #[ORM\OneToMany(targetEntity: Exploitation::class, mappedBy: 'user')]
     private Collection $exploitations;
 
@@ -697,6 +712,59 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setFaceEnrolledAt(?\DateTimeInterface $faceEnrolledAt): static
     {
         $this->faceEnrolledAt = $faceEnrolledAt;
+        return $this;
+    }
+
+    public function getPendingEmail(): ?string
+    {
+        return $this->pendingEmail;
+    }
+
+    public function setPendingEmail(?string $pendingEmail): static
+    {
+        $this->pendingEmail = $pendingEmail;
+        return $this;
+    }
+
+    public function isBanned(): bool
+    {
+        return $this->isBanned;
+    }
+
+    public function getBannedAt(): ?\DateTimeInterface
+    {
+        return $this->bannedAt;
+    }
+
+    public function getBanReason(): ?string
+    {
+        return $this->banReason;
+    }
+
+    public function ban(string $reason): static
+    {
+        $this->isBanned = true;
+        $this->bannedAt = new \DateTime();
+        $this->banReason = $reason;
+        return $this;
+    }
+
+    public function unban(): static
+    {
+        $this->isBanned = false;
+        $this->bannedAt = null;
+        $this->banReason = null;
+        return $this;
+    }
+
+    public function getBackupCodes(): ?array
+    {
+        return $this->backupCodes;
+    }
+
+    public function setBackupCodes(?array $backupCodes): static
+    {
+        $this->backupCodes = $backupCodes;
         return $this;
     }
 
