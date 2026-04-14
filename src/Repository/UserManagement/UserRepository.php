@@ -72,7 +72,7 @@ class UserRepository extends ServiceEntityRepository
 
         $roleStats = [];
         foreach ($byRole as $row) {
-            $roleStats[$row['role']] = (int) $row['count'];
+            $roleStats['ROLE_' . $row['role']] = (int) $row['count'];
         }
 
         return [
@@ -81,12 +81,12 @@ class UserRepository extends ServiceEntityRepository
             'inactive' => (int) $total - (int) $active,
             'verified' => (int) $verified,
             'unverified' => (int) $total - (int) $verified,
-            'byRole' => $roleStats,
-            'agriculteurs' => $roleStats[User::ROLE_AGRICULTEUR] ?? 0,
-            'agriplus' => $roleStats[User::ROLE_AGRIPLUS] ?? 0,
-            'fournisseurs' => $roleStats[User::ROLE_FOURNISSEUR] ?? 0,
-            'admins' => $roleStats[User::ROLE_ADMIN] ?? 0,
-            'users' => $roleStats[User::ROLE_USER] ?? 0,
+            'by_role' => $roleStats,
+            'agriculteurs' => $roleStats['ROLE_' . User::ROLE_AGRICULTEUR] ?? 0,
+            'agriplus' => $roleStats['ROLE_' . User::ROLE_AGRIPLUS] ?? 0,
+            'fournisseurs' => $roleStats['ROLE_' . User::ROLE_FOURNISSEUR] ?? 0,
+            'admins' => $roleStats['ROLE_' . User::ROLE_ADMIN] ?? 0,
+            'users' => $roleStats['ROLE_' . User::ROLE_USER] ?? 0,
         ];
     }
 
