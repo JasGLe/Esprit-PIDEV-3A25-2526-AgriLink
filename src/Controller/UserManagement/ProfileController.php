@@ -338,11 +338,18 @@ class ProfileController extends AbstractController
         return $this->redirectToRoute('app_profile_backup_codes');
     }
 
-    #[Route('/delete-photo', name: 'app_profile_delete_photo', methods: ['GET'])]
+    #[Route('/delete-photo', name: 'app_profile_delete_photo', methods: ['POST'])]
     public function deletePhoto(
+        Request $request,
         EntityManagerInterface $entityManager,
         FileUploader $fileUploader
     ): Response {
+        $token = $request->request->get('_token');
+        if (!$this->isCsrfTokenValid('profile_photo_delete', $token)) {
+            $this->addFlash('error', 'Token de sécurité invalide.');
+            return $this->redirectToRoute('app_profile_edit');
+        }
+
         /** @var User $user */
         $user = $this->getUser();
 
