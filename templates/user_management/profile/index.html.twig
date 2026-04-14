@@ -2,8 +2,11 @@
 
 {% block title %}Mon profil - AgriLink{% endblock %}
 
-{% block dashboard_content %}
+{% block stylesheets %}
     <link rel="stylesheet" href="{{ asset('css/profile-enhanced.css') }}">
+{% endblock %}
+
+{% block dashboard_content %}
     
     <div class="profile-container">
         {# Header avec titre et bouton de modification #}
