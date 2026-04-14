@@ -50,6 +50,21 @@ class Produits
     #[ORM\Column(type: Types::INTEGER)]
     private ?int $quantite = null;
 
+    #[ORM\Column(type: Types::STRING, length: 40, nullable: true)]
+    private ?string $promoCode = null;
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    private ?float $promoDiscountPercent = null;
+
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $promoActive = false;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $promoStartAt = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $promoEndAt = null;
+
     public function getId(): int
     {
         return $this->id;
@@ -222,6 +237,66 @@ class Produits
     public function setQuantite(int $quantite): static
     {
         $this->quantite = $quantite;
+
+        return $this;
+    }
+
+    public function getPromoCode(): ?string
+    {
+        return $this->promoCode;
+    }
+
+    public function setPromoCode(?string $promoCode): static
+    {
+        $this->promoCode = $promoCode !== null ? mb_strtoupper(trim($promoCode)) : null;
+
+        return $this;
+    }
+
+    public function getPromoDiscountPercent(): ?float
+    {
+        return $this->promoDiscountPercent;
+    }
+
+    public function setPromoDiscountPercent(?float $promoDiscountPercent): static
+    {
+        $this->promoDiscountPercent = $promoDiscountPercent;
+
+        return $this;
+    }
+
+    public function isPromoActive(): bool
+    {
+        return $this->promoActive;
+    }
+
+    public function setPromoActive(bool $promoActive): static
+    {
+        $this->promoActive = $promoActive;
+
+        return $this;
+    }
+
+    public function getPromoStartAt(): ?\DateTimeInterface
+    {
+        return $this->promoStartAt;
+    }
+
+    public function setPromoStartAt(?\DateTimeInterface $promoStartAt): static
+    {
+        $this->promoStartAt = $promoStartAt;
+
+        return $this;
+    }
+
+    public function getPromoEndAt(): ?\DateTimeInterface
+    {
+        return $this->promoEndAt;
+    }
+
+    public function setPromoEndAt(?\DateTimeInterface $promoEndAt): static
+    {
+        $this->promoEndAt = $promoEndAt;
 
         return $this;
     }
