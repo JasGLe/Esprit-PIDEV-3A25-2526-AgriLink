@@ -2,6 +2,14 @@
 
 {% block title %}Modifier {{ user.nom }} - Administration{% endblock %}
 
+{% block stylesheets %}
+<style>
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
+
 {% block dashboard_content %}
 <div class="py-2">
 
@@ -503,8 +511,18 @@ document.addEventListener('DOMContentLoaded', function () {
     if (deleteAvatarBtn) {
         deleteAvatarBtn.addEventListener('click', function (e) {
             e.preventDefault();
+            e.stopPropagation();
             if (confirm('Supprimer la photo de profil ? Cette action est irréversible.')) {
-                document.getElementById('delete-photo-form').submit();
+                const deleteForm = document.getElementById('delete-photo-form');
+                if (deleteForm) {
+                    // Disable button and show loading state
+                    deleteAvatarBtn.disabled = true;
+                    deleteAvatarBtn.innerHTML = '<svg class="me-1" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Suppression...';
+                    deleteForm.submit();
+                } else {
+                    console.error('Delete photo form not found');
+                    alert('Erreur : formulaire de suppression introuvable');
+                }
             }
         });
     }

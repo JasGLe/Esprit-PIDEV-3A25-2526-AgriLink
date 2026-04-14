@@ -15,6 +15,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Twig\Environment;
@@ -82,6 +83,66 @@ class UserController extends AbstractController
             'orderDir' => $orderDir,
             'stats' => $stats,
             'validRoles' => $validRoles,
+        ]);
+    }
+
+    #[Route('/search', name: 'search_ajax', methods: ['GET'])]
+    public function searchAjax(Request $request): JsonResponse
+    {
+        $page = max(1, $request->query->getInt('page', 1));
+        $limit = 20;
+        $search = $request->query->get('search', '');
+        $roleFilter = $request->query->get('role');
+        $statusFilter = $request->query->get('status');
+        $orderBy = $request->query->get('orderBy', 'createdAt');
+        $orderDir = $request->query->get('orderDir', 'DESC');
+
+        // Convert status filter to boolean
+        $activeFilter = null;
+        if ($statusFilter === 'active') {
+            $activeFilter = true;
+        } elseif ($statusFilter === 'inactive') {
+            $activeFilter = false;
+        }
+
+        // Validate and clean role filter
+        $validRoles = ['ADMIN', 'AGRICULTEUR', 'AGRIPLUS', 'FOURNISSEUR', 'USER'];
+        if (!$roleFilter || !\in_array($roleFilter, $validRoles, true)) {
+            $roleFilter = null;
+        }
+
+        $result = $this->userRepository->findPaginated(
+            $page,
+            $limit,
+            $roleFilter,
+            $activeFilter,
+            $search ?: null,
+            $orderBy,
+            $orderDir
+        );
+
+        $totalPages = (int) \ceil($result['total'] / $limit);
+
+        return new JsonResponse([
+            'success' => true,
+            'total' => $result['total'],
+            'page' => $page,
+            'totalPages' => $totalPages,
+            'users' => array_map(function($user) {
+                return [
+                    'id' => $user->getId(),
+                    'displayName' => $user->getDisplayName(),
+                    'email' => $user->getEmail(),
+                    'role' => $user->getRole(),
+                    'isActive' => $user->isActive(),
+                    'isBanned' => $user->isBanned(),
+                    'emailVerified' => $user->isEmailVerified(),
+                    'createdAt' => $user->getCreatedAt()?->format('d/m/Y'),
+                    'lastLogin' => $user->getLastLogin()?->format('d/m/Y'),
+                    'initials' => $user->getInitials(),
+                    'photoProfil' => $user->getPhotoProfil(),
+                ];
+            }, $result['data']),
         ]);
     }
 

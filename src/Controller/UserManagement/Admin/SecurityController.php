@@ -127,7 +127,7 @@ class SecurityController extends AbstractController
         $sheet->mergeCells('A1:C1');
         $sheet->setCellValue('A1', 'RAPPORT SÉCURITÉ AGRILINK - ' . date('d/m/Y'));
         $sheet->getStyle('A1')->applyFromArray($titleStyle);
-        $sheet->setRowDimension(1, 25);
+        $sheet->getRowDimension(1)->setRowHeight(25);
 
         $currentRow = 3;
 
@@ -135,7 +135,7 @@ class SecurityController extends AbstractController
         $sheet->mergeCells('A' . $currentRow . ':B' . $currentRow);
         $sheet->setCellValue('A' . $currentRow, '📊 STATISTIQUES 30 DERNIERS JOURS');
         $sheet->getStyle('A' . $currentRow)->applyFromArray($headerStyle);
-        $sheet->setRowDimension($currentRow, 20);
+        $sheet->getRowDimension($currentRow)->setRowHeight(20);
         $currentRow++;
 
         $secHeaders = ['Événement', 'Nombre'];
@@ -172,7 +172,7 @@ class SecurityController extends AbstractController
         $sheet->mergeCells('A' . $currentRow . ':B' . $currentRow);
         $sheet->setCellValue('A' . $currentRow, '⏱️ STATISTIQUES 24H');
         $sheet->getStyle('A' . $currentRow)->applyFromArray($headerStyle);
-        $sheet->setRowDimension($currentRow, 20);
+        $sheet->getRowDimension($currentRow)->setRowHeight(20);
         $currentRow++;
 
         $sheet->setCellValue('A' . $currentRow, 'Connexions réussies');
@@ -187,7 +187,7 @@ class SecurityController extends AbstractController
         $sheet->mergeCells('A' . $currentRow . ':B' . $currentRow);
         $sheet->setCellValue('A' . $currentRow, '👥 APERÇU COMPTES');
         $sheet->getStyle('A' . $currentRow)->applyFromArray($headerStyle);
-        $sheet->setRowDimension($currentRow, 20);
+        $sheet->getRowDimension($currentRow)->setRowHeight(20);
         $currentRow++;
 
         $accountRows = [
