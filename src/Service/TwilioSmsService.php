@@ -135,7 +135,7 @@ class TwilioSmsService
      * @param string $phoneNumber The phone number (with or without +216)
      * @return string|null Formatted phone number with +216, or null if invalid
      */
-    private function formatPhoneNumber(string $phoneNumber): ?string
+    public function formatPhoneNumber(string $phoneNumber): ?string
     {
         // Remove any spaces, dashes, or parentheses
         $clean = preg_replace('/[\s\-\(\)]+/', '', $phoneNumber);
@@ -165,7 +165,7 @@ class TwilioSmsService
      * @param string $phoneNumber The phone number to validate
      * @return bool True if valid format
      */
-    private function isValidPhoneNumber(string $phoneNumber): bool
+    public function isValidPhoneNumber(string $phoneNumber): bool
     {
         // Tunisia format: +216 followed by 8 digits
         return (bool) preg_match('/^\+216\d{8}$/', $phoneNumber);
