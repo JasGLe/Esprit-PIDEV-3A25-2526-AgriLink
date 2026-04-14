@@ -757,10 +757,10 @@
     gap: 1rem;
     margin-top: 0.25rem;
     padding: 1rem 1.1rem;
-    background: linear-gradient(135deg, rgba(15, 41, 24, 0.12) 0%, rgba(26, 61, 42, 0.14) 55%, rgba(21, 128, 61, 0.12) 100%);
-    border: 1px solid rgba(26, 46, 34, 0.35);
+    background: linear-gradient(135deg, #14532d 0%, #166534 46%, #15803d 100%);
+    border: 1px solid rgba(196, 232, 50, 0.42);
     border-radius: 0.85rem;
-    box-shadow: 0 4px 18px rgba(15, 31, 24, 0.12);
+    box-shadow: 0 8px 20px rgba(15, 31, 24, 0.22), 0 0 0 1px rgba(196, 232, 50, 0.14) inset;
 }
 
 .mpc-recap__total-label {
@@ -785,7 +785,79 @@
     color: var(--mpc-lime);
     letter-spacing: -0.02em;
     line-height: 1.1;
-    text-shadow: 0 1px 2px rgba(15, 31, 24, 0.25);
+    text-shadow: 0 1px 2px rgba(15, 31, 24, 0.36);
+}
+
+/* Promo code block - modernized */
+#mpc-promo-code-input {
+    border: 1.5px solid rgba(21, 128, 61, 0.28);
+    border-right: 0;
+    border-radius: 0.65rem 0 0 0.65rem !important;
+    background: linear-gradient(180deg, #ffffff 0%, #f4fbf7 100%);
+    color: #0f3b23;
+    font-weight: 600;
+    height: 2.45rem;
+    padding: 0.45rem 0.75rem;
+    box-shadow: inset 0 1px 2px rgba(15, 31, 24, 0.06);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+#mpc-promo-code-input::placeholder {
+    color: #6b7f73;
+    font-weight: 500;
+}
+
+#mpc-promo-code-input:focus {
+    border-color: rgba(22, 163, 74, 0.58);
+    background: #ffffff;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.14);
+    outline: none;
+    z-index: 2;
+}
+
+#mpc-promo-apply-btn {
+    border: 1.5px solid rgba(21, 128, 61, 0.38) !important;
+    border-radius: 0 0.65rem 0.65rem 0 !important;
+    height: 2.45rem;
+    min-width: 6.4rem;
+    padding: 0.45rem 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    color: #f8fffb !important;
+    background: linear-gradient(135deg, #166534 0%, #15803d 48%, #22c55e 100%) !important;
+    box-shadow: 0 10px 20px rgba(22, 163, 74, 0.22);
+    transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+#mpc-promo-apply-btn:hover:not(:disabled) {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+    box-shadow: 0 12px 22px rgba(22, 163, 74, 0.28);
+}
+
+#mpc-promo-apply-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+#mpc-promo-feedback {
+    border-radius: 0.55rem;
+    padding: 0.35rem 0.55rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+#mpc-promo-feedback.text-success {
+    color: #166534 !important;
+    background: rgba(220, 252, 231, 0.8);
+    border: 1px solid rgba(34, 197, 94, 0.32);
+}
+
+#mpc-promo-feedback.text-danger {
+    color: #991b1b !important;
+    background: rgba(254, 226, 226, 0.86);
+    border: 1px solid rgba(239, 68, 68, 0.28);
 }
 
 /* Étapes livraison / paiement */

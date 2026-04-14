@@ -198,6 +198,153 @@
         color:#14532d;
         box-shadow: 0 10px 24px rgba(22,163,74,0.10);
     }
+
+    /* Selection + contextual promo button */
+    .boutique-item { cursor: pointer; position: relative; }
+    .boutique-item.is-selected {
+        border: 2px solid rgba(34,197,94,0.75) !important;
+        box-shadow: 0 0 0 3px rgba(34,197,94,0.16), 0 14px 28px rgba(22, 163, 74, 0.16) !important;
+    }
+    .boutique-item.is-selected::after {
+        content: "Sélectionné";
+        position: absolute;
+        top: .55rem;
+        right: .55rem;
+        z-index: 4;
+        padding: .2rem .45rem;
+        border-radius: 999px;
+        font-size: .68rem;
+        font-weight: 700;
+        color: #14532d;
+        background: rgba(220,252,231,0.96);
+        border: 1px solid rgba(34,197,94,0.45);
+        box-shadow: 0 8px 16px rgba(22,163,74,0.16);
+        pointer-events: none;
+    }
+    .boutique-actions-top .boutique-promo-btn {
+        opacity: 0;
+        transform: translateY(-2px);
+        pointer-events: none;
+        transition: opacity .18s ease, transform .18s ease, box-shadow .18s ease;
+    }
+    .boutique-actions-top .boutique-promo-btn.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+    .boutique-hero:hover .boutique-actions-top .boutique-promo-btn {
+        opacity: .85;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+    .boutique-actions-top .boutique-promo-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 20px rgba(22, 163, 74, 0.22);
+    }
+
+    /* Promo modal redesign */
+    .promo-modal__content {
+        border: 0;
+        border-radius: 1rem;
+        overflow: hidden;
+        box-shadow: 0 24px 50px rgba(15, 23, 42, 0.22);
+    }
+    .promo-modal__header {
+        border: 0;
+        padding: 1rem 1.1rem .8rem;
+        background: linear-gradient(135deg, #166534 0%, #15803d 42%, #22c55e 100%);
+        color: #fff;
+    }
+    .promo-modal__title {
+        font-size: 1.03rem;
+        font-weight: 800;
+        letter-spacing: -.01em;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+    .promo-modal__badge {
+        width: 1.9rem;
+        height: 1.9rem;
+        border-radius: .55rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,.20);
+        border: 1px solid rgba(255,255,255,.28);
+        font-size: .95rem;
+    }
+    .promo-modal__sub {
+        margin: .35rem 0 0;
+        font-size: .78rem;
+        color: rgba(255,255,255,.90);
+    }
+    .promo-modal__body {
+        padding: 1rem 1.1rem 1.05rem;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fffb 100%);
+    }
+    .promo-modal__field {
+        margin-bottom: .88rem;
+    }
+    .promo-modal__label {
+        font-size: .82rem;
+        font-weight: 700;
+        color: #14532d;
+        margin-bottom: .35rem;
+    }
+    .promo-modal__input {
+        border-radius: .72rem;
+        border: 1.5px solid rgba(22,101,52,.16);
+        padding: .62rem .78rem;
+        font-weight: 600;
+        transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease;
+    }
+    .promo-modal__input:focus {
+        border-color: rgba(34,197,94,.55);
+        box-shadow: 0 0 0 .22rem rgba(34,197,94,.18);
+        transform: translateY(-1px);
+    }
+    .promo-modal__hint {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        font-size: .74rem;
+        color: #166534;
+        background: rgba(220,252,231,.7);
+        border: 1px solid rgba(34,197,94,.26);
+        border-radius: 999px;
+        padding: .25rem .55rem;
+        margin-bottom: .9rem;
+    }
+    .promo-modal__hint.is-warning {
+        color: #92400e;
+        background: rgba(254, 243, 199, 0.9);
+        border-color: rgba(245, 158, 11, 0.4);
+    }
+    .promo-modal__actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: .45rem;
+    }
+    .promo-modal__btn-cancel {
+        border-radius: .65rem;
+        border: 1px solid rgba(100,116,139,.35);
+        padding: .45rem .88rem;
+        font-weight: 600;
+    }
+    .promo-modal__btn-save {
+        border: 0;
+        border-radius: .65rem;
+        padding: .45rem .96rem;
+        font-weight: 700;
+        color: #fff;
+        background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        box-shadow: 0 10px 20px rgba(22,163,74,.28);
+    }
+    .promo-modal__btn-save:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 24px rgba(22,163,74,.34);
+    }
 </style>
 
     <div class="boutique-page">
@@ -212,6 +359,13 @@
                 </div>
             </div>
             <div class="d-flex flex-wrap gap-2 boutique-actions-top">
+                <button type="button"
+                        class="btn boutique-btn-marketplace boutique-promo-btn"
+                        id="boutiquePromoBtn"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalAddPromoCode">
+                    Code promo <span class="ms-1 small opacity-75" id="boutiquePromoBtnCount"></span>
+                </button>
                 <a href="{{ path('marketplace_index') }}" class="btn boutique-btn-marketplace">
                     <svg style="width:1rem;height:1rem;" class="me-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
@@ -229,6 +383,8 @@
         <span id="boutiqueCount">{{ produits|length }}</span> annonce{{ produits|length > 1 ? 's' : '' }} dans votre boutique.
     </p>
 
+    
+
     <div class="boutique-tools">
         <div class="flex-grow-1">
             <div class="boutique-search" role="search" aria-label="Recherche boutique">
@@ -239,7 +395,6 @@
                        placeholder="Rechercher par nom ou catégorie…"
                        autocomplete="off">
             </div>
-            <div class="boutique-search__hint">Recherche: <strong>nom</strong> du produit ou <strong>catégorie</strong>.</div>
         </div>
         <div class="boutique-filter" aria-label="Filtre catégorie">
             <button type="button" class="boutique-filter__chip is-active" data-bcat="all">Tout</button>
@@ -266,6 +421,7 @@
             {% for p in produits %}
                 {% set cat_parts = ' · ' in p.categorie ? p.categorie|split(' · ', 2) : [p.categorie] %}
                 {% set cat_label = (cat_parts[0]|default(''))|lower %}
+                {% set promo_expired = p.promoEndAt and (p.promoEndAt|date('U') < "now"|date('U')) %}
                 {% set cat_key =
                     (p.equipementId is not null) ? 'equipement'
                     : (cat_label matches '/fruit/' ? 'fruit'
@@ -273,6 +429,12 @@
                     : (cat_label matches '/l[ée]gume|legume/' ? 'legume' : 'all'))) %}
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card boutique-card h-100 overflow-hidden boutique-item"
+                         data-produit-id="{{ p.id }}"
+                         data-promo-code="{{ p.promoCode|default('')|e('html_attr') }}"
+                         data-promo-discount="{{ p.promoDiscountPercent is not null ? p.promoDiscountPercent : '' }}"
+                         data-promo-start="{{ p.promoStartAt ? p.promoStartAt|date('Y-m-d') : '' }}"
+                         data-promo-end="{{ p.promoEndAt ? p.promoEndAt|date('Y-m-d') : '' }}"
+                         data-promo-expired="{{ promo_expired ? '1' : '0' }}"
                          data-bname="{{ (p.nom|default(''))|lower|e('html_attr') }}"
                          data-bcat="{{ cat_key }}"
                          data-bcatlabel="{{ (cat_parts[0]|default(''))|lower|e('html_attr') }}">
@@ -308,6 +470,14 @@
                             <h3 class="h6 fw-bold text-dark mb-1">{{ p.nom }}</h3>
                             <p class="small text-muted mb-2">{{ cat_parts[0] }}</p>
                             <p class="fw-bold text-success mb-3">{{ p.prixUnitaire|number_format(3, ',', ' ') }} DT{% if cat_parts[1] is defined %} / {{ cat_parts[1] }}{% endif %}</p>
+                            {% if p.promoActive and p.promoCode and p.promoDiscountPercent is not null %}
+                                <p class="small mb-2">
+                                    <span class="badge rounded-pill {{ promo_expired ? 'text-bg-danger' : 'text-bg-warning' }}">
+                                        Promo {{ p.promoCode }} (-{{ p.promoDiscountPercent|number_format(0, ',', ' ') }}%)
+                                    </span>
+                                    
+                                </p>
+                            {% endif %}
                             {% if p.description %}
                                 <p class="small text-muted flex-grow-1 mb-3">{{ p.description|length > 120 ? p.description|slice(0, 117) ~ '…' : p.description }}</p>
                             {% endif %}
@@ -353,6 +523,229 @@
         </div>
     {% endif %}
     </div>
+
+    <div class="modal fade" id="modalAddPromoCode" tabindex="-1" aria-labelledby="modalAddPromoCodeLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content promo-modal__content">
+                <div class="modal-header promo-modal__header">
+                    <div>
+                        <h2 class="modal-title mb-0 promo-modal__title" id="modalAddPromoCodeLabel">
+                            <span class="promo-modal__badge" aria-hidden="true">🏷️</span>
+                            Ajouter un code promo
+                        </h2>
+                        <p class="promo-modal__sub">Appliquez une remise ciblée sur vos produits sélectionnés.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body promo-modal__body">
+                    {{ form_start(promo_form, { action: path('boutique_promo_assign'), attr: { novalidate: 'novalidate', id: 'boutiquePromoForm', 'data-server-errors': (open_promo_modal|default(false)) ? '1' : '0' } }) }}
+                    <div class="promo-modal__hint">
+                        <span aria-hidden="true">✓</span>
+                        <span id="promoModalSelectedCount">0 produit sélectionné</span>
+                    </div>
+                    <div class="promo-modal__hint d-none" id="promoModalStateHint"></div>
+                    {{ form_errors(promo_form) }}
+                    <div class="promo-modal__field">
+                        {{ form_label(promo_form.code, null, { label_attr: { class: 'promo-modal__label' } }) }}
+                        {{ form_widget(promo_form.code, { attr: { class: 'form-control promo-modal__input', placeholder: 'Ex : PRINTEMPS20' } }) }}
+                        {{ form_errors(promo_form.code) }}
+                    </div>
+                    <div class="promo-modal__field">
+                        {{ form_label(promo_form.discount_percent, null, { label_attr: { class: 'promo-modal__label' } }) }}
+                        {{ form_widget(promo_form.discount_percent, { attr: { class: 'form-control promo-modal__input', placeholder: 'Ex : 15' } }) }}
+                        {{ form_errors(promo_form.discount_percent) }}
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-12 col-md-6 promo-modal__field">
+                            {{ form_label(promo_form.start_date, null, { label_attr: { class: 'promo-modal__label' } }) }}
+                            {{ form_widget(promo_form.start_date, { attr: { class: 'form-control promo-modal__input' } }) }}
+                            {{ form_errors(promo_form.start_date) }}
+                        </div>
+                        <div class="col-12 col-md-6 promo-modal__field">
+                            {{ form_label(promo_form.end_date, null, { label_attr: { class: 'promo-modal__label' } }) }}
+                            {{ form_widget(promo_form.end_date, { attr: { class: 'form-control promo-modal__input' } }) }}
+                            {{ form_errors(promo_form.end_date) }}
+                        </div>
+                    </div>
+                    {{ form_widget(promo_form.product_ids, { attr: { id: 'boutiquePromoProductIds' } }) }}
+                    {{ form_errors(promo_form.product_ids) }}
+
+                    <div class="promo-modal__actions">
+                        <button type="button" class="btn btn-sm promo-modal__btn-cancel" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-sm promo-modal__btn-save">Enregistrer</button>
+                    </div>
+                    {{ form_end(promo_form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const promoBtn = document.getElementById('boutiquePromoBtn');
+        const promoBtnCount = document.getElementById('boutiquePromoBtnCount');
+        const modalEl = document.getElementById('modalAddPromoCode');
+        const formEl = document.getElementById('boutiquePromoForm');
+        const selectedCountEl = document.getElementById('promoModalSelectedCount');
+        const stateHintEl = document.getElementById('promoModalStateHint');
+        const codeInput = formEl ? formEl.querySelector('input[name$="[code]"]') : null;
+        const discountInput = formEl ? formEl.querySelector('input[name$="[discount_percent]"]') : null;
+        const startInput = formEl ? formEl.querySelector('input[name$="[start_date]"]') : null;
+        const endInput = formEl ? formEl.querySelector('input[name$="[end_date]"]') : null;
+        const selectedIds = new Set();
+        let productIdsInput = document.getElementById('boutiquePromoProductIds');
+        const shouldKeepServerValues = formEl && formEl.getAttribute('data-server-errors') === '1';
+
+        if (!promoBtn) return;
+        if (!productIdsInput && formEl) {
+            productIdsInput = formEl.querySelector('input[name$="[product_ids]"]');
+        }
+        if (!productIdsInput && formEl) {
+            productIdsInput = document.createElement('input');
+            productIdsInput.type = 'hidden';
+            productIdsInput.name = 'promo_code_assign[product_ids]';
+            productIdsInput.id = 'boutiquePromoProductIds';
+            formEl.appendChild(productIdsInput);
+        }
+        if (!productIdsInput) return;
+
+        if (productIdsInput.value) {
+            productIdsInput.value
+                .split(',')
+                .map(v => parseInt(v.trim(), 10))
+                .filter(v => Number.isFinite(v) && v > 0)
+                .forEach(v => selectedIds.add(v));
+        }
+
+        function getSelectedIds() {
+            return Array.from(selectedIds.values());
+        }
+
+        function syncUI() {
+            const ids = getSelectedIds();
+            promoBtn.classList.toggle('is-visible', ids.length > 0);
+            if (promoBtnCount) {
+                promoBtnCount.textContent = ids.length > 0 ? '(' + ids.length + ')' : '';
+            }
+            if (selectedCountEl) {
+                selectedCountEl.textContent = ids.length + ' produit' + (ids.length > 1 ? 's' : '') + ' sélectionné' + (ids.length > 1 ? 's' : '');
+            }
+            document.querySelectorAll('.boutique-item').forEach(card => {
+                const pid = parseInt(card.getAttribute('data-produit-id') || '0', 10);
+                card.classList.toggle('is-selected', ids.includes(pid));
+            });
+        }
+
+        function sameValue(values) {
+            if (!values.length) return null;
+            const first = values[0];
+            for (const value of values) {
+                if (String(value || '') !== String(first || '')) return null;
+            }
+            return first || '';
+        }
+
+        function selectedCards() {
+            const ids = getSelectedIds();
+            return Array.from(document.querySelectorAll('.boutique-item')).filter((card) => {
+                const pid = parseInt(card.getAttribute('data-produit-id') || '0', 10);
+                return ids.includes(pid);
+            });
+        }
+
+        function hydratePromoForm() {
+            const cards = selectedCards();
+            const codes = cards.map((c) => c.getAttribute('data-promo-code') || '');
+            const discounts = cards.map((c) => c.getAttribute('data-promo-discount') || '');
+            const starts = cards.map((c) => c.getAttribute('data-promo-start') || '');
+            const ends = cards.map((c) => c.getAttribute('data-promo-end') || '');
+            const hasExpired = cards.some((c) => c.getAttribute('data-promo-expired') === '1');
+
+            const commonCode = sameValue(codes);
+            const commonDiscount = sameValue(discounts);
+            const commonStart = sameValue(starts);
+            const commonEnd = sameValue(ends);
+
+            if (codeInput) codeInput.value = commonCode !== null ? commonCode : '';
+            if (discountInput) discountInput.value = commonDiscount !== null ? commonDiscount : '';
+            if (startInput) startInput.value = commonStart !== null ? commonStart : '';
+            if (endInput) endInput.value = commonEnd !== null ? commonEnd : '';
+            syncDateGuards();
+
+            if (!stateHintEl) return;
+            stateHintEl.classList.remove('d-none', 'is-warning');
+            if (hasExpired) {
+                stateHintEl.classList.add('is-warning');
+                stateHintEl.innerHTML = '<span aria-hidden="true">⚠</span><span>Au moins un code est expiré. Mettez à jour les dates et enregistrez pour le réactiver.</span>';
+            } else if (cards.length > 0 && commonCode !== null && commonCode !== '') {
+                stateHintEl.innerHTML = '<span aria-hidden="true">✎</span><span>Code existant détecté : vous pouvez le modifier.</span>';
+            } else {
+                stateHintEl.classList.add('d-none');
+                stateHintEl.textContent = '';
+            }
+        }
+
+        function syncDateGuards() {
+            if (!startInput || !endInput) return;
+            const startVal = startInput.value || '';
+            if (startVal !== '') {
+                endInput.min = startVal;
+                if (endInput.value && endInput.value <= startVal) {
+                    endInput.value = '';
+                }
+            }
+        }
+
+        document.querySelectorAll('.boutique-item').forEach(function (card) {
+            card.addEventListener('click', function (e) {
+                if (
+                    e.target.closest('form') ||
+                    e.target.closest('button') ||
+                    e.target.closest('a') ||
+                    e.target.closest('input') ||
+                    e.target.closest('select') ||
+                    e.target.closest('textarea')
+                ) {
+                    return;
+                }
+                const pid = parseInt(card.getAttribute('data-produit-id') || '0', 10);
+                if (!Number.isFinite(pid) || pid <= 0) return;
+                if (selectedIds.has(pid)) {
+                    selectedIds.delete(pid);
+                } else {
+                    selectedIds.add(pid);
+                }
+                syncUI();
+            });
+        });
+
+        if (modalEl) {
+            modalEl.addEventListener('show.bs.modal', function () {
+                productIdsInput.value = getSelectedIds().join(',');
+                if (!shouldKeepServerValues) {
+                    hydratePromoForm();
+                }
+            });
+        }
+
+        if (formEl) {
+            if (startInput) {
+                startInput.addEventListener('change', syncDateGuards);
+            }
+            formEl.addEventListener('submit', function () {
+                productIdsInput.value = getSelectedIds().join(',');
+            });
+        }
+
+        syncUI();
+
+        {% if open_promo_modal|default(false) %}
+        if (modalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        }
+        {% endif %}
+    })();
+    </script>
 
     {# Modal modifier l’annonce (reste sur /boutique) #}
     <div class="modal fade" id="modalEditBoutiqueAnnonce" tabindex="-1" aria-labelledby="modalEditBoutiqueAnnonceLabel" aria-hidden="true">

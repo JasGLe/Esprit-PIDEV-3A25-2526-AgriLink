@@ -57,6 +57,12 @@ class Commandes
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $idFournisseur = null;
 
+    #[ORM\Column(type: Types::STRING, length: 40, nullable: true)]
+    private ?string $promoCodeApplied = null;
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    private ?float $promoDiscountTotal = null;
+
     public function getId(): int
     {
         return $this->id;
@@ -226,6 +232,30 @@ class Commandes
     public function setIdFournisseur(?int $idFournisseur): static
     {
         $this->idFournisseur = $idFournisseur;
+
+        return $this;
+    }
+
+    public function getPromoCodeApplied(): ?string
+    {
+        return $this->promoCodeApplied;
+    }
+
+    public function setPromoCodeApplied(?string $promoCodeApplied): static
+    {
+        $this->promoCodeApplied = $promoCodeApplied;
+
+        return $this;
+    }
+
+    public function getPromoDiscountTotal(): ?float
+    {
+        return $this->promoDiscountTotal;
+    }
+
+    public function setPromoDiscountTotal(?float $promoDiscountTotal): static
+    {
+        $this->promoDiscountTotal = $promoDiscountTotal;
 
         return $this;
     }
