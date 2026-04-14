@@ -6,6 +6,7 @@ use App\Entity\UserManagement\User;
 use App\Repository\UserManagement\UserRepository;
 use App\Service\SecurityEventService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Security\Http\Event\LoginFailureEvent;
@@ -22,7 +23,9 @@ class LoginFailureListener
         private UserRepository $userRepository,
         private SecurityEventService $securityEventService,
         private MailerInterface $mailer,
-        private Environment $twig
+        private Environment $twig,
+        #[Autowire('%env(APP_URL)%')]
+        private string $appUrl
     ) {
     }
 
@@ -80,6 +83,7 @@ class LoginFailureListener
                     'timestamp' => new \DateTime(),
                     'attempts' => $user->getFailedLoginAttempts(),
                     'accountLocked' => $accountLocked,
+                    'appUrl' => $this->appUrl,
                 ]);
 
                 $alertEmail = (new Email())

@@ -64,43 +64,69 @@ class TwoFactorController extends AbstractController
             } elseif ($this->twoFactorService->getRemainingAttempts($user) <= 0) {
                 $error = 'Nombre maximum de tentatives atteint. Veuillez demander un nouveau code.';
             } else {
-                // Try OTP first (6 numeric digits)
-                $cleanedOtp = preg_replace('/[^0-9]/', '', $rawCode);
-                $isOtpValid = $this->twoFactorService->verifyOtp($user, $cleanedOtp);
-                
-                // Try backup code (8 alphanumeric characters, no cleaning needed)
+                // Try backup code first (8 alphanumeric characters, no cleaning needed)
+                // This way backup codes don't increment OTP attempts
                 $isBackupValid = $this->backupCodeService->verify($user, $rawCode);
-                
-                if ($isOtpValid || $isBackupValid) {
-                    // Success! Complete the login (OTP or backup code)
-                    if ($this->backupCodeService->getRemainingCount($user) < 8) {
-                        // A backup code was used (count decreased)
-                        $this->securityEventService->logBackupCodeUsed($user);
-                    }
+
+                if ($isBackupValid) {
+                    // Valid backup code - login successful
+                    $this->securityEventService->logBackupCodeUsed($user);
                     $success = true;
                     $session->remove('_2fa_pending_user');
-                    
+
                     // Mark 2FA as verified in this session (critical for defense-in-depth)
                     $session->set('_2fa_verified', true);
-                    
+
                     // Create authentication token
                     $token = new UsernamePasswordToken($user, 'main', $user->getRoles());
                     $this->tokenStorage->setToken($token);
-                    
+
                     // Save token to session
                     $session->set('_security_main', serialize($token));
-                    
+
                     // Dispatch interactive login event
                     $event = new InteractiveLoginEvent($request, $token);
                     $this->eventDispatcher->dispatch($event);
-                    
+
                     // Redirect to dashboard or target path
                     $targetPath = $session->get('_security.main.target_path');
                     if ($targetPath) {
                         $session->remove('_security.main.target_path');
                         return $this->redirect($targetPath);
                     }
-                    
+
+                    return $this->redirectToRoute('app_dashboard');
+                }
+
+                // Try OTP (6 numeric digits) - only if backup code failed
+                $cleanedOtp = preg_replace('/[^0-9]/', '', $rawCode);
+                $isOtpValid = $this->twoFactorService->verifyOtp($user, $cleanedOtp);
+
+                if ($isOtpValid) {
+                    // Success! Complete the login with OTP
+                    $session->remove('_2fa_pending_user');
+
+                    // Mark 2FA as verified in this session (critical for defense-in-depth)
+                    $session->set('_2fa_verified', true);
+
+                    // Create authentication token
+                    $token = new UsernamePasswordToken($user, 'main', $user->getRoles());
+                    $this->tokenStorage->setToken($token);
+
+                    // Save token to session
+                    $session->set('_security_main', serialize($token));
+
+                    // Dispatch interactive login event
+                    $event = new InteractiveLoginEvent($request, $token);
+                    $this->eventDispatcher->dispatch($event);
+
+                    // Redirect to dashboard or target path
+                    $targetPath = $session->get('_security.main.target_path');
+                    if ($targetPath) {
+                        $session->remove('_security.main.target_path');
+                        return $this->redirect($targetPath);
+                    }
+
                     return $this->redirectToRoute('app_dashboard');
                 } else {
                     $remainingAttempts = $this->twoFactorService->getRemainingAttempts($user);
