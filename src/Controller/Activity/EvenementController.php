@@ -2,15 +2,25 @@
 
 namespace App\Controller\Activity;
 
+use App\Dto\Activity\EvenementInvitationMailDto;
 use App\Entity\Activity\Evenement;
 use App\Entity\UserManagement\User;
+use App\Form\Activity\EvenementInvitationMailType;
 use App\Form\Activity\EvenementType;
 use App\Repository\Activity\EvenementRepository;
+use App\Repository\UserManagement\UserRepository;
 use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -20,7 +30,14 @@ class EvenementController extends AbstractController
 {
     public function __construct(
         private readonly EvenementRepository $evenementRepository,
+        private readonly UserRepository $userRepository,
         private readonly EntityManagerInterface $entityManager,
+        #[Autowire('%env(MAILER_FROM_EMAIL)%')]
+        private readonly string $mailerFromEmail,
+        #[Autowire('%env(MAILER_FROM_NAME)%')]
+        private readonly string $mailerFromName,
+        #[Autowire('%env(APP_URL)%')]
+        private readonly string $appUrl,
     ) {
     }
 
@@ -42,6 +59,7 @@ class EvenementController extends AbstractController
                 'type' => $type,
             ],
             'typeOptions' => $this->evenementRepository->findAvailableTypes(),
+            'invitationMailForm' => $this->createInvitationMailForm()->createView(),
         ];
 
         if ($request->isXmlHttpRequest()) {
@@ -51,6 +69,120 @@ class EvenementController extends AbstractController
         return $this->render('activity/evenement/list.html.twig', [
             ...$viewData,
         ]);
+    }
+
+    #[Route('/invitation/mail', name: 'evenement_send_invitation_mail', methods: ['POST'])]
+    public function sendInvitationMail(Request $request, MailerInterface $mailer): Response
+    {
+        $this->assertModuleAccess();
+
+        $form = $this->createInvitationMailForm();
+        $form->handleRequest($request);
+
+        if (!$form->isSubmitted()) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Soumission invalide du formulaire.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!$form->isValid()) {
+            $errors = $this->extractFormErrors($form);
+
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => false,
+                    'errors' => $errors,
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            foreach ($errors as $error) {
+                $this->addFlash('error', $error);
+            }
+
+            return $this->redirectToRoute('evenement_list');
+        }
+
+        /** @var EvenementInvitationMailDto $payload */
+        $payload = $form->getData();
+        $pdfFile = $payload->getPdfFile();
+
+        if (!$pdfFile instanceof UploadedFile) {
+            $message = 'Veuillez importer un fichier PDF.';
+
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => false,
+                    'errors' => [$message],
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $this->addFlash('error', $message);
+
+            return $this->redirectToRoute('evenement_list');
+        }
+
+        if (($pdfFile->getMimeType() ?? '') !== 'application/pdf') {
+            $message = 'Le fichier doit être au format PDF.';
+
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => false,
+                    'errors' => [$message],
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $this->addFlash('error', $message);
+
+            return $this->redirectToRoute('evenement_list');
+        }
+
+        try {
+            // Render the HTML email template
+            $htmlContent = $this->renderView('emails/invitation.html.twig', [
+                'recipientEmail' => $payload->getEmail(),
+                'senderName' => $this->mailerFromName,
+                'appUrl' => $this->appUrl,
+            ]);
+
+            // Create and send the email with HTML content
+            $email = (new Email())
+                ->from(new Address($this->mailerFromEmail, $this->mailerFromName))
+                ->to((string) $payload->getEmail())
+                ->subject('Invitation à un événement')
+                ->html($htmlContent)
+                ->attachFromPath(
+                    $pdfFile->getPathname(),
+                    $pdfFile->getClientOriginalName() ?: 'invitation.pdf',
+                    'application/pdf'
+                );
+
+            $mailer->send($email);
+
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => true,
+                    'message' => 'Invitation envoyée avec succès.',
+                ]);
+            }
+
+            $this->addFlash('success', 'Invitation envoyée avec succès.');
+
+            return $this->redirectToRoute('evenement_list');
+        } catch (\Throwable) {
+            $message = 'Erreur lors de l\'envoi de l\'invitation. Veuillez réessayer.';
+
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => false,
+                    'errors' => [$message],
+                ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $this->addFlash('error', $message);
+
+            return $this->redirectToRoute('evenement_list');
+        }
     }
 
     #[Route('/new', name: 'evenement_new', methods: ['GET', 'POST'])]
@@ -205,7 +337,7 @@ class EvenementController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'evenement_delete', requirements: ['id' => '\\d+'], methods: ['POST'])]
-    public function delete(Request $request, Evenement $evenement): Response
+    public function delete(Request $request, Evenement $evenement, MailerInterface $mailer): Response
     {
         $this->assertModuleAccess();
 
@@ -214,13 +346,66 @@ class EvenementController extends AbstractController
         }
 
         if ($this->isCsrfTokenValid('delete' . $evenement->getId(), (string) $request->request->get('_token'))) {
+            // Store event data before deletion for email notification
+            $eventTitle = $evenement->getTitre();
+            $eventDate = $evenement->getDateEvenement();
+
+            // Delete the event
             $this->entityManager->remove($evenement);
             $this->entityManager->flush();
+
+            // Send cancellation notification to all AGRICULTEUR users
+            try {
+                $this->sendEventCancellationNotifications($eventTitle, $eventDate, $mailer);
+            } catch (\Throwable $e) {
+                // Log error but don't block deletion
+                error_log('Failed to send event cancellation emails: ' . $e->getMessage());
+            }
 
             $this->addFlash('success', 'L\'événement a été supprimé avec succès.');
         }
 
         return $this->redirectBackOrFallback($request, 'evenement_list');
+    }
+
+    /**
+     * Send event cancellation notification emails to all AGRICULTEUR users
+     */
+    private function sendEventCancellationNotifications(?string $eventTitle, ?\DateTimeInterface $eventDate, MailerInterface $mailer): void
+    {
+        // Fetch all users with ROLE_AGRICULTEUR
+        $agriculteurs = $this->userRepository->findByRole(User::ROLE_AGRICULTEUR);
+
+        if (empty($agriculteurs)) {
+            return; // No users to notify
+        }
+
+        // Prepare email data
+        $emailData = [
+            'appUrl' => $this->appUrl,
+            'event' => [
+                'titre' => $eventTitle,
+                'dateEvenement' => $eventDate,
+            ],
+        ];
+
+        // Send email to each agriculteur
+        foreach ($agriculteurs as $user) {
+            try {
+                $htmlContent = $this->renderView('emails/event_cancelled.html.twig', $emailData);
+
+                $email = (new Email())
+                    ->from(new Address($this->mailerFromEmail, $this->mailerFromName))
+                    ->to((string) $user->getEmail())
+                    ->subject('Annulation d\'un événement')
+                    ->html($htmlContent);
+
+                $mailer->send($email);
+            } catch (\Throwable $e) {
+                // Log but continue with other users
+                error_log("Failed to send event cancellation email to {$user->getEmail()}: " . $e->getMessage());
+            }
+        }
     }
 
     private function assertModuleAccess(): void
@@ -399,5 +584,28 @@ class EvenementController extends AbstractController
         $fragment = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
 
         return $path . $query . $fragment;
+    }
+
+    private function createInvitationMailForm(): FormInterface
+    {
+        return $this->createForm(EvenementInvitationMailType::class, new EvenementInvitationMailDto(), [
+            'action' => $this->generateUrl('evenement_send_invitation_mail'),
+            'method' => 'POST',
+        ]);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function extractFormErrors(FormInterface $form): array
+    {
+        $errors = [];
+
+        /** @var FormError $error */
+        foreach ($form->getErrors(true) as $error) {
+            $errors[] = $error->getMessage();
+        }
+
+        return array_values(array_unique($errors));
     }
 }
