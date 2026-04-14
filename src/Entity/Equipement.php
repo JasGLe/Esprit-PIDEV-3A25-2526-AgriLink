@@ -194,6 +194,10 @@ class Equipement
         message: 'La date de dernière maintenance ne peut pas être dans le futur.'
     )]
     private ?\DateTimeInterface $dateDerniereMaintenance = null;
+    
+// AJOUT : variable pour qr code 
+    #[ORM\Column(type: Types::STRING, length: 20, nullable: true, unique: true)]
+    private ?string $codePasseport = null;
 
     // ════════════════════════════════════════════════════════
     // AJOUT : Lifecycle callbacks (dates automatiques)
@@ -460,4 +464,17 @@ public function getCategorie(): ?string
         $this->dateDerniereMaintenance = $dateDerniereMaintenance;
         return $this;
     }
+
+    public function getCodePasseport(): ?string { return $this->codePasseport; }
+public function setCodePasseport(?string $codePasseport): static
+{
+    $this->codePasseport = $codePasseport;
+    return $this;
+}
+
+// Helper — génère un code unique style EQ-2024-0042
+public function genererCodePasseport(): string
+{
+    return 'EQ-' . date('Y') . '-' . str_pad($this->id, 4, '0', STR_PAD_LEFT);
+}
 }

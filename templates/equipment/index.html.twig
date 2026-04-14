@@ -36,7 +36,26 @@
     .eq-sale-btn { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.35); color: #16a34a; font-weight: 700; }
     .eq-sale-btn:hover { background: rgba(34,197,94,0.18); color:#0f7a34; }
     .eq-sale-btn:disabled { opacity: .55; cursor:not-allowed; }
+
+    /* ── Pagination KnpPaginator en vert ── */
+.pagination .page-item.active .page-link {
+    background-color: #198754;
+    border-color: #198754;
+    color: #fff;
+}
+.pagination .page-item .page-link {
+    color: #198754;
+}
+.pagination .page-item .page-link:hover {
+    background-color: #d1e7dd;
+    border-color: #198754;
+    color: #198754;
+}
+.pagination .page-item.disabled .page-link {
+    color: #6c757d;
+}
 </style>
+
 {% endblock %}
 
 {% block dashboard_content %}
@@ -45,30 +64,80 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h2 class="fw-bold mb-0">🚜 Mes Équipements</h2>
-            <span class="text-muted">{{ equipements|length }} équipement(s) enregistré(s)</span>
+            {# MODIFIÉ : getTotalItemCount() au lieu de |length pour compter tous les équipements pas juste la page #}
+            <span class="text-muted">{{ equipements.getTotalItemCount() }} équipement(s) enregistré(s)</span>
         </div>
         <a href="{{ path('equipement_new') }}" class="btn btn-success">
             + Ajouter un équipement
         </a>
     </div>
 
-    {# ── Barre de recherche ── #}
-    <div class="mb-3">
-        <input type="search"
-               id="recherche-equipement"
-               class="form-control"
-               placeholder="Rechercher par nom, type, marque ou statut..."
-               autocomplete="off">
-    </div>
+    {# ════════════════════════════════════════════════════════
+       MODIFIÉ : Filtre serveur via formulaire GET
+       Remplace l'ancienne barre de recherche JS + boutons statut JS
+       La recherche et le filtre statut s'appliquent sur TOUS les équipements
+       pas seulement ceux de la page courante
+    ════════════════════════════════════════════════════════ #}
+    {# ── Filtre dynamique serveur — soumission automatique sans bouton ── #}
+<form method="get" action="{{ path('equipement_index') }}" id="form-filtres">
+    <div class="row g-2 mb-4">
 
-    {# ── Filtre rapide par statut ── #}
-    <div class="d-flex gap-2 mb-4 flex-wrap">
-        <button class="btn btn-sm btn-outline-secondary filtre-btn active" data-filtre="tous">Tous</button>
-        <button class="btn btn-sm btn-outline-success  filtre-btn" data-filtre="Actif">Actif</button>
-        <button class="btn btn-sm btn-outline-danger   filtre-btn" data-filtre="En panne">En panne</button>
-        <button class="btn btn-sm btn-outline-warning  filtre-btn" data-filtre="En maintenance">En maintenance</button>
-        <button class="btn btn-sm btn-outline-secondary filtre-btn" data-filtre="Hors service">Hors service</button>
+        <div class="col-md-7">
+            <input type="search"
+                   name="search"
+                   value="{{ search }}"
+                   class="form-control"
+                   placeholder="Rechercher par nom, type, marque..."
+                   autocomplete="off"
+                   id="input-search">
+        </div>
+
+        <div class="col-md-4">
+            <select name="statut" class="form-select" id="select-statut">
+                <option value="" {{ statut == '' ? 'selected' : '' }}>Tous les statuts</option>
+                <option value="Actif"          {{ statut == 'Actif'          ? 'selected' : '' }}>Actif</option>
+                <option value="En panne"       {{ statut == 'En panne'       ? 'selected' : '' }}>En panne</option>
+                <option value="En maintenance" {{ statut == 'En maintenance' ? 'selected' : '' }}>En maintenance</option>
+                <option value="Hors service"   {{ statut == 'Hors service'   ? 'selected' : '' }}>Hors service</option>
+            </select>
+        </div>
+
+        <div class="col-md-1">
+            <a href="{{ path('equipement_index') }}" class="btn btn-outline-secondary w-100">✕</a>
+        </div>
+
     </div>
+</form>
+
+<script>
+(function () {
+    var form   = document.getElementById('form-filtres');
+    var search = document.getElementById('input-search');
+    var statut = document.getElementById('select-statut');
+    var timer  = null;
+
+    search.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+            form.submit();
+        }, 800);
+    });
+
+    // Soumettre aussi si l'utilisateur appuie sur Entrée
+    search.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+            clearTimeout(timer);
+            form.submit();
+        }
+    });
+
+    statut.addEventListener('change', function () {
+        clearTimeout(timer);
+        form.submit();
+    });
+})();
+</script>
+    {# ════════════════════════════════════════════════════════ #}
 
     {# ── Grille ── #}
     {% if equipements is empty %}
@@ -151,9 +220,21 @@
                 </div>
             {% endfor %}
         </div>
+
+        {# ════════════════════════════════════════════════════════
+           AJOUT : Pagination KnpPaginator
+           Affiche les boutons page 1, 2, 3... sous la grille
+           Le paramètre ?page=N est automatiquement géré par KnpPaginator
+           et conserve les filtres search et statut dans l'URL
+        ════════════════════════════════════════════════════════ #}
+        <div class="d-flex justify-content-center mt-4">
+            {{ knp_pagination_render(equipements, '@KnpPaginator/Pagination/bootstrap_v5_pagination.html.twig') }}
+        </div>
+        {# ════════════════════════════════════════════════════════ #}
+
     {% endif %}
 
-    {# Put for sale modal (Equipment → My Boutique) #}
+    {# Put for sale modal — INCHANGÉ #}
     <div class="modal fade" id="modalEqPutForSale" tabindex="-1" aria-labelledby="modalEqPutForSaleLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content eq-sale-modal__content eq-sale-modal__content">
@@ -207,7 +288,7 @@
                                 </div>
                                 <div class="col-6">
                                     <div class="eq-field-label">Image</div>
-                                    <input type="text" class="form-control eq-input" value="Reprise depuis l’équipement" readonly>
+                                    <input type="text" class="form-control eq-input" value="Reprise depuis l'équipement" readonly>
                                 </div>
                             </div>
 
@@ -240,7 +321,7 @@
                                 </div>
 
                                 <div class="mt-2 d-none" id="eqUsedDurationWrap">
-                                    <div class="eq-field-label">Durée d’utilisation (si occasion)</div>
+                                    <div class="eq-field-label">Durée d'utilisation (si occasion)</div>
                                     <div class="row g-2">
                                         <div class="col-7">
                                             <input type="text" name="eq_vente[used_value]" class="form-control eq-input" placeholder="Ex : 6" autocomplete="off">
@@ -252,7 +333,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="form-text" style="color:rgba(6,95,70,0.72);">Visible uniquement si vous sélectionnez “Occasion”.</div>
+                                    <div class="form-text" style="color:rgba(6,95,70,0.72);">Visible uniquement si vous sélectionnez "Occasion".</div>
                                 </div>
 
                                 <div class="mb-3">
@@ -269,7 +350,7 @@
                                     <input type="text"
                                            name="eq_vente[quantite]"
                                            class="form-control eq-input"
-                                           placeholder="Nombre d’exemplaires disponibles"
+                                           placeholder="Nombre d'exemplaires disponibles"
                                            autocomplete="off">
                                 </div>
 
@@ -290,7 +371,7 @@
                                 <div class="mt-2 d-none" id="eqWarrantyDurationWrap">
                                     <div class="eq-field-label">Durée de garantie</div>
                                     <input type="text" name="eq_vente[warranty_duration]" class="form-control eq-input" placeholder="Ex : 6 mois / 1 an" autocomplete="off">
-                                    <div class="form-text" style="color:rgba(6,95,70,0.72);">Indiquez une durée (ex. “12 mois”).</div>
+                                    <div class="form-text" style="color:rgba(6,95,70,0.72);">Indiquez une durée (ex. "12 mois").</div>
                                 </div>
                             </form>
                         </div>
@@ -298,38 +379,19 @@
                 </div>
                 <div class="modal-footer eq-sale-footer">
                     <button type="button" class="eq-btn-secondary" data-bs-dismiss="modal">Annuler</button>
-                    <button type="submit" form="eqSaleForm" class="eq-btn-primary">Publier l’annonce</button>
+                    <button type="submit" form="eqSaleForm" class="eq-btn-primary">Publier l'annonce</button>
                 </div>
             </div>
         </div>
     </div>
 
+{# ════════════════════════════════════════════════════════
+   JS — SUPPRIMÉ : filtreStatut, filtreTexte, applyFilters,
+   filtre-btn listeners, recherche-equipement listener
+   Ces filtres sont maintenant gérés côté serveur via le formulaire GET
+   CONSERVÉ : tout le JS du modal "Mettre en vente" — INCHANGÉ
+════════════════════════════════════════════════════════ #}
 <script>
-let filtreStatut = 'tous';
-let filtreTexte  = '';
-
-function applyFilters() {
-    document.querySelectorAll('.equipement-card').forEach(card => {
-        const matchStatut = filtreStatut === 'tous' || card.dataset.statut === filtreStatut;
-        const matchTexte  = filtreTexte === '' || (card.dataset.search ?? '').includes(filtreTexte);
-        card.style.display = matchStatut && matchTexte ? '' : 'none';
-    });
-}
-
-document.querySelectorAll('.filtre-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-        document.querySelectorAll('.filtre-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        filtreStatut = this.dataset.filtre;
-        applyFilters();
-    });
-});
-
-document.getElementById('recherche-equipement').addEventListener('input', function () {
-    filtreTexte = this.value.trim().toLowerCase();
-    applyFilters();
-});
-
 (function () {
     var modalEl = document.getElementById('modalEqPutForSale');
     if (!modalEl) return;
@@ -402,17 +464,13 @@ document.getElementById('recherche-equipement').addEventListener('input', functi
         if (fieldStatut) fieldStatut.value = statut;
         if (fieldCategorie) fieldCategorie.value = categorie;
 
-        // set action + token
         if (form) {
             form.action = {{ path('boutique_produit_depuis_equipement', { equipementId: 0 })|json_encode|raw }}.replace('/0/', '/' + id + '/');
         }
-        // CSRF is generated server-side per equipment id to avoid guessing.
-        // We embed a map of tokens in the page.
         if (tokenInput && window.__EQ_BOUTIQUE_TOKENS__) {
             tokenInput.value = window.__EQ_BOUTIQUE_TOKENS__[String(id)] || '';
         }
 
-        // image preview (equipment)
         if (img && imgPh) {
             if (image) {
                 img.src = image.startsWith('http') ? image : ({{ asset('')|json_encode|raw }} + image);
@@ -428,12 +486,10 @@ document.getElementById('recherche-equipement').addEventListener('input', functi
             }
         }
 
-        // reset warranty UI
         setWarrantyVisible(false);
         var off = modalEl.querySelector('input[name="eq_vente[warranty_enabled]"][value="0"]');
         if (off) off.checked = true;
 
-        // reset condition UI + used duration
         setUsedVisible(false);
         var cNew = modalEl.querySelector('input[name="eq_vente[condition]"][value="NEUF"]');
         if (cNew) cNew.checked = true;

@@ -8,6 +8,7 @@ use App\Repository\EquipementRepository;
 use App\Repository\Marketplace\ProduitsRepository;
 use App\Service\FileUploader;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;  // ← AJOUT
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -19,41 +20,64 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 #[Route('/equipement', name: 'equipement_')]
 class EquipementController extends AbstractController
 {
-    // ════════════════════════════════════════════════════════
-    // INDEX — liste tous les équipements de l'agriculteur
-    // ════════════════════════════════════════════════════════
     #[Route('/', name: 'index', methods: ['GET'])]
-    public function index(EquipementRepository $repo, ProduitsRepository $produitsRepository): Response
-    {
-        $user = $this->getUser();
+public function index(
+    Request $request,
+    EquipementRepository $repo,
+    ProduitsRepository $produitsRepository,
+    PaginatorInterface $paginator
+): Response {
+    $user      = $this->getUser();
+    $search    = $request->query->get('search', '');
+    $statut    = $request->query->get('statut', '');
 
-        $equipements = $repo->findBy(
-            ['userlog' => $user->getId()],
-            ['dateCreation' => 'DESC']
-        );
+    $qb = $repo->createQueryBuilder('e')
+        ->where('e.userlog = :userId')
+        ->setParameter('userId', $user->getId())
+        ->orderBy('e.dateCreation', 'DESC');
 
-        $equipementIdsEnBoutique = [];
-        if ($user !== null && method_exists($user, 'getId') && $user->getId() !== null) {
-            $equipementIdsEnBoutique = $produitsRepository->findEquipementIdsAlreadyInBoutiqueByOwner((int) $user->getId());
-        }
-
-        $boutiqueTokens = [];
-        foreach ($equipements as $eq) {
-            $boutiqueTokens[(string) $eq->getId()] = $this->container->get('security.csrf.token_manager')
-                ->getToken('boutique_equipement_vente_' . $eq->getId())
-                ->getValue();
-        }
-
-        return $this->render('equipment/index.html.twig', [
-            'equipements' => $equipements,
-            'equipement_ids_en_boutique' => $equipementIdsEnBoutique,
-            'equipement_boutique_tokens' => $boutiqueTokens,
-        ]);
+    // ── Filtre recherche texte ──
+    if ($search !== '') {
+        $qb->andWhere(
+            'e.nom LIKE :search OR e.type LIKE :search OR e.marque LIKE :search'
+        )->setParameter('search', '%' . $search . '%');
     }
 
-    // ════════════════════════════════════════════════════════
-    // NEW — formulaire d'ajout
-    // ════════════════════════════════════════════════════════
+    // ── Filtre statut ──
+    if ($statut !== '') {
+        $qb->andWhere('e.statut = :statut')
+           ->setParameter('statut', $statut);
+    }
+
+    $equipements = $paginator->paginate(
+        $qb->getQuery(),
+        $request->query->getInt('page', 1),
+        6
+    );
+
+    $equipementIdsEnBoutique = [];
+    if ($user !== null && method_exists($user, 'getId') && $user->getId() !== null) {
+        $equipementIdsEnBoutique = $produitsRepository->findEquipementIdsAlreadyInBoutiqueByOwner((int) $user->getId());
+    }
+
+    $boutiqueTokens = [];
+    foreach ($equipements as $eq) {
+        $boutiqueTokens[(string) $eq->getId()] = $this->container->get('security.csrf.token_manager')
+            ->getToken('boutique_equipement_vente_' . $eq->getId())
+            ->getValue();
+    }
+
+    return $this->render('equipment/index.html.twig', [
+        'equipements'                => $equipements,
+        'equipement_ids_en_boutique' => $equipementIdsEnBoutique,
+        'equipement_boutique_tokens' => $boutiqueTokens,
+        'search'                     => $search,
+        'statut'                     => $statut,
+    ]);
+}
+
+    // ── Toutes les autres méthodes restent INCHANGÉES ──
+
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(
         Request $request,
@@ -65,8 +89,6 @@ class EquipementController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
-            // ── Upload image using FileUploader service ──────────────────────────
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {
                 try {
@@ -77,8 +99,6 @@ class EquipementController extends AbstractController
                 }
             }
 
-            // ── Nettoyer les champs véhicule si pas un véhicule ──────────────
-            // Même si le JS les masque, on s'assure côté serveur qu'ils sont null
             if (!$equipement->isVehicule()) {
                 $equipement
                     ->setKilometrageActuel(null)
@@ -89,9 +109,7 @@ class EquipementController extends AbstractController
                     ->setSeuilHeuresMaintenance(null);
             }
 
-            // ── Lier à l'utilisateur connecté ───────────────────────────────
             $equipement->setUserlog($this->getUser()->getId());
-
             $em->persist($equipement);
             $em->flush();
 
@@ -105,22 +123,15 @@ class EquipementController extends AbstractController
         ]);
     }
 
-    // ════════════════════════════════════════════════════════
-    // SHOW — fiche détail
-    // ════════════════════════════════════════════════════════
     #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(Equipement $equipement): Response
     {
         $this->denyAccessUnlessOwner($equipement);
-
         return $this->render('equipment/show.html.twig', [
             'equipement' => $equipement,
         ]);
     }
 
-    // ════════════════════════════════════════════════════════
-    // EDIT — formulaire de modification
-    // ════════════════════════════════════════════════════════
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'], requirements: ['id' => '\d+'])]
     public function edit(
         Request $request,
@@ -134,23 +145,16 @@ class EquipementController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-
-            // ── Upload image (optionnel en édition) using FileUploader service ──
             $imageFile = $form->get('imageFile')->getData();
             if ($imageFile) {
                 try {
-                    $imagePath = $fileUploader->upload(
-                        $imageFile,
-                        'equipements',
-                        $equipement->getImageUrl()
-                    );
+                    $imagePath = $fileUploader->upload($imageFile, 'equipements', $equipement->getImageUrl());
                     $equipement->setImageUrl($imagePath);
                 } catch (FileException $e) {
                     $this->addFlash('danger', 'Erreur lors de l\'upload de l\'image: ' . $e->getMessage());
                 }
             }
 
-            // ── Nettoyer les champs véhicule si catégorie changée ────────────
             if (!$equipement->isVehicule()) {
                 $equipement
                     ->setKilometrageActuel(null)
@@ -162,7 +166,6 @@ class EquipementController extends AbstractController
             }
 
             $em->flush();
-
             $this->addFlash('success', 'Équipement modifié avec succès !');
             return $this->redirectToRoute('equipement_index');
         }
@@ -173,9 +176,6 @@ class EquipementController extends AbstractController
         ]);
     }
 
-    // ════════════════════════════════════════════════════════
-    // DELETE — suppression avec token CSRF
-    // ════════════════════════════════════════════════════════
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'], requirements: ['id' => '\d+'])]
     public function delete(
         Request $request,
@@ -195,31 +195,20 @@ class EquipementController extends AbstractController
         return $this->redirectToRoute('equipement_index');
     }
 
-    // ════════════════════════════════════════════════════════
-    // API AJAX — retourne les types selon la catégorie
-    // Appelé par le JS du formulaire pour peupler le select 'type'
-    // ════════════════════════════════════════════════════════
     #[Route('/api/types', name: 'api_types', methods: ['GET'])]
     public function apiTypes(Request $request): JsonResponse
     {
         $categorie = $request->query->get('categorie', 'Autre Équipement');
-
         $types = $categorie === 'Véhicule Motorisé'
             ? Equipement::TYPES_VEHICULES
             : Equipement::TYPES_EQUIPEMENTS;
-
         return $this->json(array_keys($types));
     }
 
-    // ════════════════════════════════════════════════════════
-    // Helper privé — sécurité : l'agriculteur ne voit que ses équipements
-    // ════════════════════════════════════════════════════════
     private function denyAccessUnlessOwner(Equipement $equipement): void
     {
         if ($equipement->getUserlog() !== $this->getUser()->getId()) {
-            throw $this->createAccessDeniedException(
-                'Vous n\'avez pas accès à cet équipement.'
-            );
+            throw $this->createAccessDeniedException('Vous n\'avez pas accès à cet équipement.');
         }
     }
 }

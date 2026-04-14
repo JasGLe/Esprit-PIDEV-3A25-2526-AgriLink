@@ -95,6 +95,7 @@
                     </div>
                     {% endif %}
 
+
                 </div>
             </div>
         </div>
@@ -187,6 +188,21 @@
             </div>
         </div>
     </div>
+
+   {# ── Passeport Numérique ── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-header fw-semibold bg-white">📱 Passeport Numérique</div>
+    <div class="card-body text-center">
+        <img src="{{ path('passeport_qr', {id: equipement.id}) }}"
+             alt="QR Code"
+             style="width:180px; height:180px; border-radius:12px; border:3px solid #198754"
+             onload="this.nextElementSibling.style.display='none'"
+             onerror="this.style.display='none'">
+        <p class="text-muted small mt-2 mb-0">
+            Scannez pour accéder au passeport numérique
+        </p>
+    </div>
+</div>
     {# ── Maintenances de cet équipement ── #}
 {% set maintenances = equipement.id ? app.request.attributes.get('maintenances', []) : [] %}
 
@@ -200,10 +216,16 @@
         {# On passe les maintenances depuis le controller show de l'équipement #}
         <p class="text-muted p-3 mb-0">
             <a href="{{ path('maintenance_index') }}">Voir toutes les maintenances →</a>
+
         </p>
     </div>
 </div>
-
+    
     <a href="{{ path('equipement_index') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
+    <a href="{{ path('passeport_show_by_id', {id: equipement.id}) }}"
+   class="btn btn-outline-success"
+   target="_blank">
+    📱 Voir le passeport
+</a>
 
 {% endblock %}
