@@ -9,10 +9,13 @@ use App\Entity\Marketplace\Produits;
 use App\Entity\UserManagement\User;
 use App\Form\Marketplace\BoutiqueCultureProduitType;
 use App\Form\Marketplace\BoutiqueEquipementVenteType;
+use App\Form\Marketplace\PromoCodeAssignType;
 use App\Repository\Marketplace\ProduitsRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\ExpressionLanguage\Expression;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -41,13 +44,116 @@ class BoutiqueController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         $uid = (int) $user->getId();
+        $promoForm = $this->createForm(PromoCodeAssignType::class);
+
+        return $this->renderBoutiqueIndex($uid, $promoForm, false);
+    }
+
+    #[Route('/promo-code/assign', name: 'boutique_promo_assign', methods: ['POST'])]
+    public function assignPromoCode(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $uid = (int) $user->getId();
+        $produits = $this->produitsRepository->findBoutiqueByProprietaire($uid);
+
+        $form = $this->createForm(PromoCodeAssignType::class);
+        $form->handleRequest($request);
+
+        if (!$form->isSubmitted()) {
+            return $this->renderBoutiqueIndex($uid, $form, true);
+        }
+
+        $selectedIdsRaw = $form->get('product_ids')->getData();
+        $selectedIds = [];
+        if (\is_array($selectedIdsRaw)) {
+            $selectedIds = array_map('intval', $selectedIdsRaw);
+        } elseif (\is_string($selectedIdsRaw) && trim($selectedIdsRaw) !== '') {
+            $selectedIds = array_map('intval', preg_split('/\s*,\s*/', trim($selectedIdsRaw)) ?: []);
+        }
+        $selectedIds = array_values(array_unique(array_filter($selectedIds, static fn (int $v) => $v > 0)));
+
+        if ($selectedIds === []) {
+            $form->get('product_ids')->addError(new FormError('Sélectionnez au moins un produit.'));
+        }
+
+        $ownedIds = array_map(static fn (Produits $p) => $p->getId(), $produits);
+        foreach ($selectedIds as $id) {
+            if (!\in_array($id, $ownedIds, true)) {
+                $form->get('product_ids')->addError(new FormError('Un produit sélectionné ne vous appartient pas.'));
+                break;
+            }
+        }
+
+        if (!$form->isValid()) {
+            return $this->renderBoutiqueIndex($uid, $form, true);
+        }
+
+        $code = mb_strtoupper(trim((string) $form->get('code')->getData()));
+        $discountPercent = (float) $form->get('discount_percent')->getData();
+        /** @var \DateTimeInterface|null $startDate */
+        $startDate = $form->get('start_date')->getData();
+        /** @var \DateTimeInterface|null $endDate */
+        $endDate = $form->get('end_date')->getData();
+
+        if ($startDate === null || $endDate === null) {
+            return $this->renderBoutiqueIndex($uid, $form, true);
+        }
+
+        foreach ($produits as $produit) {
+            if (!\in_array($produit->getId(), $selectedIds, true)) {
+                continue;
+            }
+            $produit->setPromoCode($code);
+            $produit->setPromoDiscountPercent($discountPercent);
+            $produit->setPromoActive(true);
+            $produit->setPromoStartAt(clone $startDate);
+            $produit->setPromoEndAt(clone $endDate);
+        }
+
+        $this->entityManager->flush();
+        $this->addFlash('success', 'Code promo enregistré sur les produits sélectionnés.');
+
+        return $this->redirectToRoute('boutique_index');
+    }
+
+    private function renderBoutiqueIndex(int $uid, FormInterface $promoForm, bool $openPromoModal): Response
+    {
         $produits = $this->produitsRepository->findBoutiqueByProprietaire($uid);
 
         return $this->render('marketplace/boutique/index.html.twig', [
             'produits' => $produits,
+            'promo_form' => $promoForm->createView(),
+            'active_promos' => $this->buildActivePromos($produits),
+            'open_promo_modal' => $openPromoModal,
         ]);
     }
 
+    /**
+     * @param Produits[] $produits
+     * @return array<int, array{code: string, discountPercent: float, productsCount: int, startDate: ?string, endDate: ?string}>
+     */
+    private function buildActivePromos(array $produits): array
+    {
+        $activePromos = [];
+        foreach ($produits as $produit) {
+            if (!$produit->isPromoActive() || !$produit->getPromoCode() || $produit->getPromoDiscountPercent() === null) {
+                continue;
+            }
+            $start = $produit->getPromoStartAt()?->format('Y-m-d');
+            $end = $produit->getPromoEndAt()?->format('Y-m-d');
+            $key = $produit->getPromoCode().'|'.(string) $produit->getPromoDiscountPercent().'|'.$start.'|'.$end;
+            $activePromos[$key] = [
+                'code' => $produit->getPromoCode(),
+                'discountPercent' => $produit->getPromoDiscountPercent(),
+                'productsCount' => ($activePromos[$key]['productsCount'] ?? 0) + 1,
+                'startDate' => $start,
+                'endDate' => $end,
+            ];
+        }
+
+        return array_values($activePromos);
+    }
     #[Route('/produit/culture/{cultureId}/nouveau', name: 'boutique_produit_depuis_culture', requirements: ['cultureId' => '\\d+'], methods: ['GET', 'POST'])]
     public function nouveauDepuisCulture(int $cultureId, Request $request): Response
     {

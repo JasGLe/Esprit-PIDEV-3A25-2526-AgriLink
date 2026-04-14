@@ -318,6 +318,7 @@ select.reg-input {
                 {% endif %}
 
                 {{ form_start(registrationForm, {'attr': {'novalidate': 'novalidate', 'id': 'regForm'}}) }}
+                <input type="hidden" name="g-recaptcha-response" id="recaptchaResponse">
 
                 {# ── Section 1 · Identité ─────────────────────── #}
                 <div class="reg-section">
@@ -588,6 +589,7 @@ select.reg-input {
 
 {% block javascripts %}
 {{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/@zxcvbn-ts/core@3/dist/zxcvbn-ts.js"></script>
 <script>
 (function () {
     'use strict';
@@ -612,10 +614,17 @@ select.reg-input {
         pw1.addEventListener('input', function () {
             const v = this.value;
             let s = 0;
-            if (v.length >= 6)  s++;
-            if (v.length >= 10) s++;
-            if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
-            if (/\d/.test(v) || /[^A-Za-z0-9]/.test(v)) s++;
+
+            // Use zxcvbn if available
+            if (v && typeof zxcvbnts !== 'undefined' && zxcvbnts.core) {
+                var result = zxcvbnts.core.zxcvbn(v);
+                s = Math.max(1, result.score); // 1-4
+            } else {
+                if (v.length >= 6)  s++;
+                if (v.length >= 10) s++;
+                if (/[A-Z]/.test(v) && /[a-z]/.test(v)) s++;
+                if (/\d/.test(v) || /[^A-Za-z0-9]/.test(v)) s++;
+            }
 
             pwBar.className = 'pw-strength s' + s;
             const labels = { 1: ['Faible', '#dc3545'], 2: ['Moyen', '#f59e0b'], 3: ['Bon', '#0dcaf0'], 4: ['Fort', '#198754'] };
@@ -794,6 +803,38 @@ select.reg-input {
             }
         });
     });
+})();
+
+// ── reCAPTCHA v3 ─────────────────────────────────────────
+(function () {
+    var siteKey = '{{ recaptcha_site_key is defined ? recaptcha_site_key : "" }}';
+    if (!siteKey || siteKey === 'YOUR_RECAPTCHA_V3_SITE_KEY') return;
+    var script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js?render=' + siteKey;
+    script.onload = function() {
+        var form = document.getElementById('regForm');
+        if (form) {
+            var isSubmitting = false;
+            form.addEventListener('submit', function (e) {
+                var tokenField = document.getElementById('recaptchaResponse');
+                if (tokenField && tokenField.value) {
+                    return true;
+                }
+                if (isSubmitting) {
+                    return true;
+                }
+                e.preventDefault();
+                isSubmitting = true;
+                grecaptcha.ready(function () {
+                    grecaptcha.execute(siteKey, { action: 'register' }).then(function (token) {
+                        tokenField.value = token;
+                        form.submit();
+                    });
+                });
+            });
+        }
+    };
+    document.head.appendChild(script);
 })();
 </script>
 {% endblock %}

@@ -38,4 +38,18 @@ class UserSessionRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    public function revokeAllForUser(int $userId): int
+    {
+        return $this->createQueryBuilder('s')
+            ->update()
+            ->set('s.revoked', ':true')
+            ->where('s.user = :userId')
+            ->andWhere('s.revoked = :false')
+            ->setParameter('true', true)
+            ->setParameter('false', false)
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->execute();
+    }
 }

@@ -98,6 +98,7 @@
         {% set wasPosted = app.request.method == 'POST' %}
 
         {{ form_start(registrationForm, {'attr': {'class': 'mt-4', 'id': 'fournisseur-form', 'novalidate': 'novalidate'}}) }}
+            <input type="hidden" name="g-recaptcha-response" id="recaptchaResponse">
 
             {# Section 1: Type selection — hidden after first submission #}
             <div id="step1-section" class="{{ wasPosted ? 'd-none' : 'animate-slide-up' }}">
@@ -1906,5 +1907,37 @@ function togglePasswordVisibility(button) {
     input.type  = hide ? 'text' : 'password';
     button.classList.toggle('opacity-50', !hide);
 }
+
+// ── reCAPTCHA v3 ─────────────────────────────────────────
+(function () {
+    var siteKey = '{{ recaptcha_site_key is defined ? recaptcha_site_key : "" }}';
+    if (!siteKey || siteKey === 'YOUR_RECAPTCHA_V3_SITE_KEY') return;
+    var script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js?render=' + siteKey;
+    script.onload = function() {
+        var form = document.getElementById('fournisseur-form');
+        if (form) {
+            var isSubmitting = false;
+            form.addEventListener('submit', function (e) {
+                var tokenField = document.getElementById('recaptchaResponse');
+                if (tokenField && tokenField.value) {
+                    return true;
+                }
+                if (isSubmitting) {
+                    return true;
+                }
+                e.preventDefault();
+                isSubmitting = true;
+                grecaptcha.ready(function () {
+                    grecaptcha.execute(siteKey, { action: 'register' }).then(function (token) {
+                        tokenField.value = token;
+                        form.submit();
+                    });
+                });
+            });
+        }
+    };
+    document.head.appendChild(script);
+})();
 </script>
 {% endblock %}

@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\UserManagement\User;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Twig\Environment;
@@ -20,6 +21,7 @@ class EmailVerificationService
         private MailerInterface $mailer,
         private Environment $twig,
         private string $mailerFrom = 'noreply@agrilink.com',
+        #[Autowire('%env(APP_URL)%')]
         private string $appUrl = 'http://localhost'
     ) {
     }
@@ -64,6 +66,27 @@ class EmailVerificationService
             ->from($this->mailerFrom)
             ->to($user->getEmail())
             ->subject('AgriLink - Vérification de votre adresse email')
+            ->html($htmlContent);
+
+        $this->mailer->send($email);
+    }
+
+    /**
+     * Send verification email to a specific address (for pending email change)
+     */
+    public function sendVerificationEmailTo(User $user, string $toEmail, string $code): void
+    {
+        $htmlContent = $this->twig->render('emails/verification_code.html.twig', [
+            'user' => $user,
+            'code' => $code,
+            'expirationMinutes' => self::EXPIRATION_MINUTES,
+            'appUrl' => $this->appUrl,
+        ]);
+
+        $email = (new Email())
+            ->from($this->mailerFrom)
+            ->to($toEmail)
+            ->subject('AgriLink - Vérification de votre nouvelle adresse email')
             ->html($htmlContent);
 
         $this->mailer->send($email);

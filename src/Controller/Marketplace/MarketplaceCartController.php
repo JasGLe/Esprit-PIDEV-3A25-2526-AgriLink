@@ -71,7 +71,49 @@ class MarketplaceCartController extends AbstractController
             'total_panier' => round($totalPanier, 3),
             'livraison_gratuite_sous_total_min' => self::LIVRAISON_GRATUITE_SOUS_TOTAL_MIN,
             'frais_livraison_standard' => self::FRAIS_LIVRAISON_STANDARD,
+            'promo_validate_url' => $this->generateUrl('marketplace_panier_promo_valider'),
         ]);
+    }
+
+    #[Route('/promo/valider', name: 'marketplace_panier_promo_valider', methods: ['POST'])]
+    public function validerPromoCode(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $uid = (int) $user->getId();
+
+        if (!$this->isCsrfTokenValid('panier_promo', (string) $request->request->get('_token'))) {
+            return new JsonResponse([
+                'ok' => false,
+                'message' => 'Jeton de sécurité invalide.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $lignesPanier = $this->panierRepository->findByUtilisateur($uid);
+        if ($lignesPanier === []) {
+            return new JsonResponse([
+                'ok' => false,
+                'message' => 'Votre panier est vide.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $subtotal = $this->computeSubtotal($lignesPanier);
+        $promo = $this->computePromoDiscount((string) $request->request->get('code'), $lignesPanier);
+        $netSubtotal = round(max(0.0, $subtotal - $promo['discountAmount']), 3);
+        $shipping = $this->fraisLivraisonPourSousTotal($netSubtotal);
+        $total = round($netSubtotal + $shipping, 3);
+
+        return new JsonResponse([
+            'ok' => $promo['ok'],
+            'message' => $promo['message'],
+            'promoCode' => $promo['code'],
+            'discountPercent' => $promo['discountPercent'],
+            'discountAmount' => $promo['discountAmount'],
+            'subtotal' => $subtotal,
+            'subtotalAfterDiscount' => $netSubtotal,
+            'shipping' => $shipping,
+            'total' => $total,
+        ], $promo['ok'] ? Response::HTTP_OK : Response::HTTP_UNPROCESSABLE_ENTITY);
     }
 
     #[Route('/commande', name: 'marketplace_panier_commander', methods: ['POST'])]
@@ -101,6 +143,7 @@ class MarketplaceCartController extends AbstractController
         $complement = trim((string) $request->request->get('complement'));
         $codePostal = trim((string) $request->request->get('code_postal'));
         $ville = trim((string) $request->request->get('ville'));
+        $promoCodeInput = trim((string) $request->request->get('promo_code'));
 
         if ($email === '' && $user->getEmail()) {
             $email = trim((string) $user->getEmail());
@@ -153,8 +196,10 @@ class MarketplaceCartController extends AbstractController
                 throw new \RuntimeException('Aucune ligne de panier valide.');
             }
 
-            $frais = $this->fraisLivraisonPourSousTotal($sousTotal);
-            $prixTotalCommande = round($sousTotal + $frais, 3);
+            $promo = $this->computePromoDiscount($promoCodeInput, $lignesPanier);
+            $netSousTotal = round(max(0.0, $sousTotal - $promo['discountAmount']), 3);
+            $frais = $this->fraisLivraisonPourSousTotal($netSousTotal);
+            $prixTotalCommande = round($netSousTotal + $frais, 3);
 
             $datePart = (new \DateTimeImmutable('today'))->format('Ymd');
             $numCommande = 'MKT-'.$datePart.'-'.strtoupper(bin2hex(random_bytes(3)));
@@ -177,6 +222,8 @@ class MarketplaceCartController extends AbstractController
             $commande->setVille($ville);
             $commande->setTelephone($telephone);
             $commande->setIdFournisseur(null);
+            $commande->setPromoCodeApplied($promo['ok'] ? $promo['code'] : null);
+            $commande->setPromoDiscountTotal($promo['ok'] ? $promo['discountAmount'] : null);
 
             $this->entityManager->persist($commande);
             $this->entityManager->flush();
@@ -249,6 +296,93 @@ class MarketplaceCartController extends AbstractController
     private function fraisLivraisonPourSousTotal(float $sousTotal): float
     {
         return $sousTotal > self::LIVRAISON_GRATUITE_SOUS_TOTAL_MIN ? 0.0 : self::FRAIS_LIVRAISON_STANDARD;
+    }
+
+    /**
+     * @param Panier[] $lignesPanier
+     */
+    private function computeSubtotal(array $lignesPanier): float
+    {
+        $subtotal = 0.0;
+        foreach ($lignesPanier as $lignePanier) {
+            $pt = $lignePanier->getPrixTotal();
+            if ($pt !== null) {
+                $subtotal += $pt;
+            }
+        }
+
+        return round($subtotal, 3);
+    }
+
+    /**
+     * @param Panier[] $lignesPanier
+     * @return array{ok: bool, message: string, code: ?string, discountPercent: float, discountAmount: float}
+     */
+    private function computePromoDiscount(string $rawCode, array $lignesPanier): array
+    {
+        $code = mb_strtoupper(trim($rawCode));
+        $today = new \DateTimeImmutable('today');
+        if ($code === '') {
+            return [
+                'ok' => false,
+                'message' => 'Saisissez un code promo.',
+                'code' => null,
+                'discountPercent' => 0.0,
+                'discountAmount' => 0.0,
+            ];
+        }
+
+        $eligibleSubtotal = 0.0;
+        $discountPercent = null;
+        foreach ($lignesPanier as $lignePanier) {
+            $pid = $lignePanier->getIdProduit();
+            if ($pid === null) {
+                continue;
+            }
+            $produit = $this->produitsRepository->find($pid);
+            if (!$produit || !$produit->isPromoActive() || $produit->getPromoCode() !== $code) {
+                continue;
+            }
+            if (!$produit->getActive() || $produit->getQuantite() <= 0 || $produit->getPromoDiscountPercent() === null) {
+                continue;
+            }
+            $startAt = $produit->getPromoStartAt();
+            $endAt = $produit->getPromoEndAt();
+            if ($startAt === null || $endAt === null) {
+                continue;
+            }
+            if ($today < \DateTimeImmutable::createFromInterface($startAt)->setTime(0, 0, 0)) {
+                continue;
+            }
+            if ($today > \DateTimeImmutable::createFromInterface($endAt)->setTime(23, 59, 59)) {
+                continue;
+            }
+
+            $discountPercent = $discountPercent ?? (float) $produit->getPromoDiscountPercent();
+            $lineTotal = $lignePanier->getPrixTotal() ?? 0.0;
+            $eligibleSubtotal += max(0.0, $lineTotal);
+        }
+
+        if ($eligibleSubtotal <= 0 || $discountPercent === null) {
+            return [
+                'ok' => false,
+                'message' => 'Code invalide ou non applicable aux produits du panier.',
+                'code' => null,
+                'discountPercent' => 0.0,
+                'discountAmount' => 0.0,
+            ];
+        }
+
+        $discountPercent = min(100.0, max(1.0, $discountPercent));
+        $discountAmount = round($eligibleSubtotal * ($discountPercent / 100), 3);
+
+        return [
+            'ok' => true,
+            'message' => sprintf('Code appliqué : -%s%% sur les produits éligibles.', rtrim(rtrim(number_format($discountPercent, 2, '.', ''), '0'), '.')),
+            'code' => $code,
+            'discountPercent' => $discountPercent,
+            'discountAmount' => $discountAmount,
+        ];
     }
 
     /**

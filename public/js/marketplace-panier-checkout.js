@@ -14,6 +14,9 @@
         parseFloat(String(root.getAttribute('data-mpc-livraison-seuil') || '99').replace(',', '.')) || 99;
     var DELIVERY_FEE =
         parseFloat(String(root.getAttribute('data-mpc-livraison-frais') || '7').replace(',', '.')) || 7;
+    var promoValidateUrl = root.getAttribute('data-mpc-promo-validate-url') || '';
+    var promoToken = root.getAttribute('data-mpc-promo-token') || '';
+    var promoState = { code: '', discountAmount: 0 };
 
     var stepInfo = document.getElementById('mpc-step-info');
     var stepDelivery = document.getElementById('mpc-step-delivery');
@@ -33,6 +36,11 @@
     var elTotalLabel = document.getElementById('mpc-recap-total-label-main');
     var elTotalSublabel = document.getElementById('mpc-recap-total-sublabel');
     var elShippingRow = document.getElementById('mpc-recap-shipping-row');
+    var elDiscountRow = document.getElementById('mpc-recap-discount-row');
+    var elDiscountVal = document.getElementById('mpc-recap-discount-val');
+    var elPromoInput = document.getElementById('mpc-promo-code-input');
+    var elPromoApplyBtn = document.getElementById('mpc-promo-apply-btn');
+    var elPromoFeedback = document.getElementById('mpc-promo-feedback');
 
     var elSummaryContact = document.getElementById('mpc-summary-contact');
     var elSummaryAddress = document.getElementById('mpc-summary-address');
@@ -56,6 +64,7 @@
         complement: document.getElementById('mpc-order-complement'),
         code_postal: document.getElementById('mpc-order-cp'),
         ville: document.getElementById('mpc-order-ville'),
+        promo_code: document.getElementById('mpc-order-promo-code'),
     };
 
     function formatDt(n) {
@@ -111,6 +120,9 @@
         if (orderHid.ville && inputs.ville) {
             orderHid.ville.value = inputs.ville.value.trim();
         }
+        if (orderHid.promo_code) {
+            orderHid.promo_code.value = promoState.code || '';
+        }
     }
 
     function setStep(step) {
@@ -154,8 +166,13 @@
     }
 
     function updateRecapStep1() {
+        var effectiveSubtotal = Math.max(0, subtotal - (promoState.discountAmount || 0));
         if (elSubtotal) {
             elSubtotal.textContent = formatDt(subtotal) + ' DT';
+        }
+        if (elDiscountRow && elDiscountVal) {
+            elDiscountRow.classList.toggle('d-none', !promoState.discountAmount);
+            elDiscountVal.textContent = '-' + formatDt(promoState.discountAmount || 0) + ' DT';
         }
         if (elShipping) {
             elShipping.textContent = '—';
@@ -171,14 +188,19 @@
             elTotalSublabel.textContent = '';
         }
         if (elTotal) {
-            elTotal.textContent = formatDt(subtotal) + ' DT';
+            elTotal.textContent = formatDt(effectiveSubtotal) + ' DT';
         }
     }
 
     function updateRecapStep2() {
-        var ship = shippingFor(subtotal);
+        var effectiveSubtotal = Math.max(0, subtotal - (promoState.discountAmount || 0));
+        var ship = shippingFor(effectiveSubtotal);
         if (elSubtotal) {
             elSubtotal.textContent = formatDt(subtotal) + ' DT';
+        }
+        if (elDiscountRow && elDiscountVal) {
+            elDiscountRow.classList.toggle('d-none', !promoState.discountAmount);
+            elDiscountVal.textContent = '-' + formatDt(promoState.discountAmount || 0) + ' DT';
         }
         if (elShipping) {
             elShipping.textContent = ship.display;
@@ -196,9 +218,72 @@
             elTotalSublabel.hidden = false;
             elTotalSublabel.textContent = 'Produits + livraison';
         }
-        var grand = subtotal + ship.amount;
+        var grand = effectiveSubtotal + ship.amount;
         if (elTotal) {
             elTotal.textContent = formatDt(grand) + ' DT';
+        }
+    }
+
+    function setPromoFeedback(message, ok) {
+        if (!elPromoFeedback) return;
+        elPromoFeedback.textContent = message || '';
+        elPromoFeedback.classList.remove('d-none', 'text-success', 'text-danger');
+        elPromoFeedback.classList.add(ok ? 'text-success' : 'text-danger');
+    }
+
+    async function applyPromoCode() {
+        if (!elPromoInput || !elPromoApplyBtn || !promoValidateUrl || !promoToken) {
+            return;
+        }
+        var code = (elPromoInput.value || '').trim();
+        if (!code) {
+            promoState = { code: '', discountAmount: 0 };
+            setPromoFeedback('Saisissez un code promo.', false);
+            if (stepPayment && !stepPayment.hidden) {
+                updateRecapStep2();
+            } else {
+                updateRecapStep1();
+            }
+            syncOrderHiddenFromCheckout();
+            return;
+        }
+
+        elPromoApplyBtn.disabled = true;
+        try {
+            var params = new URLSearchParams();
+            params.set('_token', promoToken);
+            params.set('code', code);
+            var res = await fetch(promoValidateUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: params.toString(),
+                credentials: 'same-origin'
+            });
+            var data = await res.json();
+            if (data.ok) {
+                promoState = {
+                    code: data.promoCode || code.toUpperCase(),
+                    discountAmount: Number(data.discountAmount || 0)
+                };
+                setPromoFeedback(data.message || 'Code promo appliqué.', true);
+            } else {
+                promoState = { code: '', discountAmount: 0 };
+                setPromoFeedback(data.message || 'Code promo invalide.', false);
+            }
+        } catch (e) {
+            promoState = { code: '', discountAmount: 0 };
+            setPromoFeedback('Erreur réseau lors de la validation du code.', false);
+        } finally {
+            elPromoApplyBtn.disabled = false;
+            if (stepPayment && !stepPayment.hidden) {
+                updateRecapStep2();
+            } else {
+                updateRecapStep1();
+            }
+            syncOrderHiddenFromCheckout();
         }
     }
 
@@ -305,6 +390,18 @@
     if (formCommande) {
         formCommande.addEventListener('submit', function () {
             syncOrderHiddenFromCheckout();
+        });
+    }
+
+    if (elPromoApplyBtn) {
+        elPromoApplyBtn.addEventListener('click', applyPromoCode);
+    }
+    if (elPromoInput) {
+        elPromoInput.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyPromoCode();
+            }
         });
     }
 

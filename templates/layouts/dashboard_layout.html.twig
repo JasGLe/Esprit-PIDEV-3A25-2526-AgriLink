@@ -33,6 +33,22 @@
                 </button>
             </div>
             <nav class="flex-fill px-2 py-3 overflow-auto" style="gap: 0.25rem;">
+                {% if is_granted('ROLE_ADMIN') %}
+                    <div class="px-3 py-1 text-danger text-uppercase fw-semibold" style="font-size:0.65rem; letter-spacing:0.05em;">Administration</div>
+                    <a href="{{ path('admin_dashboard') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') == 'admin_dashboard' ? 'bg-danger bg-opacity-10 text-danger fw-medium' : 'text-dark' }}">
+                        <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                        <span class="small fw-medium">Tableau de bord admin</span>
+                    </a>
+                    <a href="{{ path('admin_users_list') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'admin_users' ? 'bg-danger bg-opacity-10 text-danger fw-medium' : 'text-dark' }}">
+                        <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                        <span class="small fw-medium">Gestion des utilisateurs</span>
+                    </a>
+                    <a href="{{ path('admin_security_logs') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'admin_security' ? 'bg-danger bg-opacity-10 text-danger fw-medium' : 'text-dark' }}">
+                        <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                        <span class="small fw-medium">Centre de Sécurité</span>
+                    </a>
+                    <hr class="my-2 border-secondary opacity-25">
+                {% endif %}
                 {# Same navigation as desktop #}
                 <a href="{{ path('app_dashboard') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') == 'app_dashboard' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,18 +128,20 @@
                     </svg>
                     <span class="small fw-medium">Exploitations agricoles</span>
                 </a>
-                {# <a href="#" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'carte' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                <a href="{{ path('carte_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'carte' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                     </svg>
                     <span class="small fw-medium">Carte Exploitations</span>
                 </a>
-                <a href="#" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'statistique' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                <a  href="{{ path('statistiques_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'statistique' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                     </svg>
                     <span class="small fw-medium">Statistiques Agricoles</span> #}
-                {# </a> #}
+                </a>
+                <hr class="my-2 border-secondary opacity-25">
+                {#  
                 <a href="{{ path('equipement_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'equipement_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
@@ -175,52 +193,29 @@
                 </a>
                 {# ── FIN MARKETPLACE ── #}
 
-                {% if is_granted('ROLE_ADMIN') %}
-                    <hr class="my-3 border-secondary">
-                    <div class="px-3 py-2 text-muted text-uppercase small fw-semibold" style="letter-spacing: 0.05em;">
-                        Administration
-                    </div>
-                    
-                    <a href="{{ path('admin_dashboard') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') == 'admin_dashboard' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
-                        <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        <span class="small fw-medium">Tableau de bord admin</span>
-                    </a>
-                    
-                    <a href="{{ path('admin_users_list') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'admin_users' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
-                        <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                        <span class="small fw-medium">Gestion des utilisateurs</span>
-                    </a>
-
-                    <a href="{{ path('admin_security_logs') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'admin_security' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
-                        <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                        <span class="small fw-medium">Sécurité</span>
-                    </a>
-                {% endif %}
             </nav>
         </div>
     </div>
 
     <div class="d-flex">
         {# Desktop Sidebar #}
-        <aside class="d-none d-lg-flex flex-shrink-0 position-fixed top-0 bottom-0" style="z-index: 1040;">
-            <div class="d-flex flex-column" style="width: 16rem;">
-                <div class="d-flex flex-column h-100 bg-white border-end border-secondary">
+        <aside id="desktop-sidebar" class="d-none d-lg-flex flex-shrink-0 position-fixed top-0 bottom-0" style="z-index: 1040; width: 16rem; transition: width 0.25s ease; overflow: hidden;">
+            <div class="d-flex flex-column h-100 bg-white border-end border-secondary" style="width: 100%; min-width: 0;">
                     {# Logo #}
-                    <div class="d-flex align-items-center px-4 border-bottom border-secondary" style="height: 4rem;">
-                        <a href="{{ path('app_dashboard') }}" class="d-flex align-items-center gap-2 text-decoration-none">
-                            <img src="{{ asset('logo_without_text.png') }}" alt="AgriLink" class="logo logo-nav">
-                            <span class="fs-4 fw-bold text-success">AgriLink</span>
+                    <div class="d-flex align-items-center justify-content-between px-3 border-bottom border-secondary flex-shrink-0" style="height: 4rem;">
+                        <a href="{{ path('app_dashboard') }}" class="d-flex align-items-center gap-2 text-decoration-none sidebar-logo-link">
+                            <img src="{{ asset('logo_without_text.png') }}" alt="AgriLink" class="logo logo-nav flex-shrink-0">
+                            <span class="fs-4 fw-bold text-success sidebar-hide">AgriLink</span>
                         </a>
+                        <button type="button" id="sidebar-toggle" class="btn btn-link text-secondary p-1 flex-shrink-0" title="Réduire/Agrandir">
+                            <svg id="sidebar-toggle-icon" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                            </svg>
+                        </button>
                     </div>
 
                     {# User info in sidebar #}
-                    <div class="px-4 py-4 border-bottom border-secondary">
+                    <div class="px-4 py-4 border-bottom border-secondary sidebar-hide">
                         <div class="d-flex align-items-center gap-3">
                             {{ include('components/_avatar.html.twig', {user: app.user, size: 'medium'}) }}
                             <div class="flex-fill text-truncate">
@@ -247,21 +242,46 @@
                     </div>
 
                     {# Navigation #}
-                    <nav class="flex-fill px-2 py-3 overflow-auto">
+                    <nav id="sidebar-nav" class="flex-fill px-2 py-3 overflow-auto">
+                        {# Admin section first for administrators #}
+                        {% if is_granted('ROLE_ADMIN') %}
+                            <div class="px-3 py-1 text-danger text-uppercase fw-semibold sidebar-hide" style="font-size:0.65rem; letter-spacing:0.05em;">
+                                Administration
+                            </div>
+                            <a href="{{ path('admin_dashboard') }}" title="Tableau de bord admin" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') == 'admin_dashboard' ? 'bg-danger bg-opacity-10 text-danger fw-medium' : 'text-dark' }}">
+                                <svg class="me-3 flex-shrink-0" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                <span class="small fw-medium sidebar-hide">Tableau de bord admin</span>
+                            </a>
+                            <a href="{{ path('admin_users_list') }}" title="Gestion des utilisateurs" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'admin_users' ? 'bg-danger bg-opacity-10 text-danger fw-medium' : 'text-dark' }}">
+                                <svg class="me-3 flex-shrink-0" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                <span class="small fw-medium sidebar-hide">Gestion des utilisateurs</span>
+                            </a>
+                            <a href="{{ path('admin_security_logs') }}" title="Centre de Sécurité" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'admin_security' ? 'bg-danger bg-opacity-10 text-danger fw-medium' : 'text-dark' }}">
+                                <svg class="me-3 flex-shrink-0" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                                <span class="small fw-medium sidebar-hide">Centre de Sécurité</span>
+                            </a>
+                            <hr class="my-2 border-secondary opacity-25">
+                        {% endif %}
                         {# Dashboard link #}
-                        <a href="{{ path('app_dashboard') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') == 'app_dashboard' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('app_dashboard') }}" title="Tableau de bord" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') == 'app_dashboard' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                             </svg>
-                            <span class="small fw-medium">Tableau de bord</span>
+                            <span class="small fw-medium sidebar-hide">Tableau de bord</span>
                         </a>
 
                         {# Profile link #}
-                        <a href="{{ path('app_profile') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'app_profile' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('app_profile') }}" title="Mon profil" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'app_profile' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                             </svg>
-                            <span class="small fw-medium">Mon profil</span>
+                            <span class="small fw-medium sidebar-hide">Mon profil</span>
                         </a>
 
                         <hr class="my-2 border-secondary opacity-25">
@@ -280,14 +300,14 @@
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V7m0 9v-1m0-11a9 9 0 100 18 9 9 0 000-18z" />
                             </svg>
-                            <span class="small fw-medium">Activités</span>
+                            <span class="small fw-medium sidebar-hide">Activités</span>
                         </a>
 
-                        <a href="{{ path('evenement_list') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'evenement_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('evenement_list') }}" title="Événements" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'evenement_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
-                            <span class="small fw-medium">Événements</span>
+                            <span class="small fw-medium sidebar-hide">Événements</span>
                         </a>
 
                         <a href="{{ path('weather_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'weather_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
@@ -303,18 +323,18 @@
                             Forum & Communauté
                         </div>
 
-                        <a href="{{ path('forum_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'forum_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('forum_index') }}" title="Forum" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'forum_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                             </svg>
-                            <span class="small fw-medium">Forum</span>
+                            <span class="small fw-medium sidebar-hide">Forum</span>
                         </a>
 
-                        <a href="{{ path('annonce_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'annonce_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('annonce_index') }}" title="Annonces" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'annonce_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a6 6 0 001-11.933M5.228 6.228A10 10 0 0119.5 12c0 5.477-4.507 9.969-10.05 9.969C6.872 21.969 2.5 17.61 2.5 12c0-2.718.78-5.274 2.228-7.45" />
                             </svg>
-                            <span class="small fw-medium">Annonces</span>
+                            <span class="small fw-medium sidebar-hide">Annonces</span>
                         </a>
 
                        {# ── GESTION AGRICOLE ── #}
@@ -322,41 +342,43 @@
                         <div class="px-3 py-1 text-muted text-uppercase small fw-semibold" style="letter-spacing: 0.05em; font-size: 0.65rem;">
                             Gestion Agricole
                         </div>
-                        <a href="{{ path('exploitation_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'exploitation' or app.request.attributes.get('_route') starts with 'parcelle' or app.request.attributes.get('_route') starts with 'culture' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('exploitation_index') }}" title="Exploitations agricoles" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'exploitation' or app.request.attributes.get('_route') starts with 'parcelle' or app.request.attributes.get('_route') starts with 'culture' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22V12m0 0C12 7 7 4 3 5c0 5 3 9 9 7m0 0c0-5 5-8 9-7-1 5-4 8-9 7"/>
                             </svg>
-                            <span class="small fw-medium">Exploitations agricoles</span>
+                            <span class="small fw-medium sidebar-hide">Exploitations agricoles</span>
                         </a>
-                        {# <a href="#" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'carte' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('carte_index') }}" title="Carte Exploitations" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'carte' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
                             </svg>
-                            <span class="small fw-medium">Carte Exploitations</span>
+                            <span class="small fw-medium sidebar-hide">Carte Exploitations</span>
                         </a>
-                        <a href="#" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'statistique' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('statistiques_index') }}" title="Statistiques Agricoles" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'statistique' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
-                            <span class="small fw-medium">Statistiques Agricoles</span>
-                        </a> #}
-                        <a href="{{ path('equipement_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'equipement_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                            <span class="small fw-medium sidebar-hide">Statistiques Agricoles</span>
+                        </a>
+                         <hr class="my-2 border-secondary opacity-25">
+                         
+                        <a href="{{ path('equipement_index') }}" title="Équipements" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'equipement_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
                             </svg>
-                            <span class="small fw-medium">Équipements</span>
+                            <span class="small fw-medium sidebar-hide">Équipements</span>
                         </a>
-                        <a href="{{ path('maintenance_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'maintenance_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('maintenance_index') }}" title="Maintenances" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'maintenance_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                             </svg>
-                            <span class="small fw-medium">Maintenances</span>
+                            <span class="small fw-medium sidebar-hide">Maintenances</span>
                         </a>
-                        <a href="{{ path('equipement_stats_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'equipement_stats_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('equipement_stats_index') }}" title="Statistiques" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'equipement_stats_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                             </svg>
-                            <span class="small fw-medium">Statistiques</span>
+                            <span class="small fw-medium sidebar-hide">Statistiques</span>
                         </a>
                         {# ── FIN ── #}
 
@@ -365,68 +387,38 @@
                         <div class="px-3 py-1 text-muted text-uppercase small fw-semibold" style="letter-spacing: 0.05em; font-size: 0.65rem;">
                             Marketplace
                         </div>
-                        <a href="{{ path('marketplace_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'marketplace_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('marketplace_index') }}" title="Marketplace" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'marketplace_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
-                            <span class="small fw-medium">Marketplace</span>
+                            <span class="small fw-medium sidebar-hide">Marketplace</span>
                         </a>
                         {% if app.user.isFournisseur or app.user.isAgriculteur %}
-                        <a href="{{ path('boutique_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'boutique_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('boutique_index') }}" title="Ma Boutique" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'boutique_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                             </svg>
-                            <span class="small fw-medium">Ma Boutique</span>
+                            <span class="small fw-medium sidebar-hide">Ma Boutique</span>
                         </a>
                         {% endif %}
-                        <a href="{{ path('mes_commandes_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'mes_commandes_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                        <a href="{{ path('mes_commandes_index') }}" title="Mes commandes" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'mes_commandes_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
                             </svg>
-                            <span class="small fw-medium">{% if is_granted('ROLE_ADMIN') %}Gestion des commandes{% else %}Mes commandes{% endif %}</span>
+                            <span class="small fw-medium sidebar-hide">{% if is_granted('ROLE_ADMIN') %}Gestion des commandes{% else %}Mes commandes{% endif %}</span>
                         </a>
                         {# ── FIN MARKETPLACE ── #}
-
-                        {# Admin section - only show if user is admin #}
-                        {% if is_granted('ROLE_ADMIN') %}
-                            <hr class="my-3 border-secondary">
-                            <div class="px-3 py-2 text-muted text-uppercase small fw-semibold" style="letter-spacing: 0.05em;">
-                                Administration
-                            </div>
-                            
-                            <a href="{{ path('admin_dashboard') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') == 'admin_dashboard' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
-                                <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                </svg>
-                                <span class="small fw-medium">Tableau de bord admin</span>
-                            </a>
-                            
-                            <a href="{{ path('admin_users_list') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'admin_users' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
-                                <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                                <span class="small fw-medium">Gestion des utilisateurs</span>
-                            </a>
-
-                            <a href="{{ path('admin_security_logs') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'admin_security' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
-                                <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                </svg>
-                                <span class="small fw-medium">Sécurité</span>
-                            </a>
-                        {% endif %}
                     </nav>
 
                     {# Logout at bottom #}
-                    <div class="border-top border-secondary p-4">
-                        <a href="{{ path('app_logout') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none text-danger rounded">
-                            <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div class="sidebar-logout border-top border-secondary p-3 flex-shrink-0">
+                        <a href="{{ path('app_logout') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none text-danger rounded sidebar-logout-link">
+                            <svg class="me-3 flex-shrink-0" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
-                            <span class="small fw-medium">Déconnexion</span>
+                            <span class="small fw-medium sidebar-hide">Déconnexion</span>
                         </a>
                     </div>
-                </div>
             </div>
         </aside>
 
@@ -436,6 +428,10 @@
                 @media (min-width: 992px) {
                     .dashboard-main-content {
                         margin-left: 16rem;
+                        transition: margin-left 0.25s ease;
+                    }
+                    .dashboard-main-content.sidebar-collapsed {
+                        margin-left: 4rem;
                     }
                 }
             </style>
@@ -476,9 +472,12 @@
                 </header>
 
                 {# Main content #}
-                <main class="flex-fill" style="padding-top: 4rem;">
+                <main class="flex-fill dashboard-main" style="padding-top: 4rem;">
                     <style>
                         @media (min-width: 992px) {
+                            .dashboard-main-content .dashboard-main {
+                                padding-top: 0 !important;
+                            }
                             .dashboard-main-wrapper {
                                 padding-top: 0 !important;
                             }
@@ -532,4 +531,158 @@
         </div>
     </div>
 </div>
+
+<style>
+/* ── Sidebar Collapse ── */
+#desktop-sidebar {
+    overflow: hidden !important;
+    transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+#desktop-sidebar.collapsed {
+    width: 4rem !important;
+}
+
+/* Collapsed nav items – uniform icon buttons */
+#desktop-sidebar.collapsed #sidebar-nav a {
+    justify-content: center !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    padding: 0 !important;
+    margin: 2px auto !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+#desktop-sidebar.collapsed #sidebar-nav a svg {
+    margin-right: 0 !important;
+    flex-shrink: 0;
+}
+#desktop-sidebar.collapsed #sidebar-nav a .small {
+    display: none !important;
+}
+/* Show thin HRs as group separators when collapsed */
+#desktop-sidebar.collapsed #sidebar-nav hr {
+    display: block !important;
+    margin: 6px 10px !important;
+    opacity: 0.25 !important;
+}
+/* Hide section label divs */
+#desktop-sidebar.collapsed #sidebar-nav > div {
+    display: none !important;
+}
+/* Hide user info & logo text */
+#desktop-sidebar.collapsed .sidebar-hide {
+    display: none !important;
+}
+/* Logo centering when collapsed */
+#desktop-sidebar.collapsed .sidebar-logo-link {
+    justify-content: center !important;
+}
+/* Logout centered when collapsed */
+#desktop-sidebar.collapsed .sidebar-logout-link {
+    justify-content: center !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+#desktop-sidebar.collapsed .sidebar-logout-link svg {
+    margin-right: 0 !important;
+}
+/* Toggle icon flip when collapsed */
+#desktop-sidebar.collapsed #sidebar-toggle-icon {
+    transform: scaleX(-1);
+}
+/* Tooltip on collapsed nav items */
+#desktop-sidebar.collapsed #sidebar-nav a {
+    position: relative;
+}
+#desktop-sidebar.collapsed #sidebar-nav a[title]:hover::after {
+    content: attr(title);
+    position: fixed;
+    left: 4.5rem;
+    background: #1f2937;
+    color: #fff;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 9999;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+/* Dashboard main content transition */
+.dashboard-main-content {
+    transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+</style>
+
+<script>
+(function () {
+    // ── Sidebar collapse ──
+    const sidebar = document.getElementById('desktop-sidebar');
+    const mainContent = document.querySelector('.dashboard-main-content');
+    const nav = document.getElementById('sidebar-nav');
+    const toggleBtn = document.getElementById('sidebar-toggle');
+
+    function applySidebarState(collapsed, animate) {
+        if (!sidebar || !mainContent) return;
+        if (collapsed) {
+            sidebar.classList.add('collapsed');
+            sidebar.style.width = '4rem';
+            mainContent.classList.add('sidebar-collapsed');
+        } else {
+            sidebar.classList.remove('collapsed');
+            sidebar.style.width = '16rem';
+            mainContent.classList.remove('sidebar-collapsed');
+        }
+    }
+
+    // Init from localStorage
+    var isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+    // Disable transitions on initial load to avoid flash
+    if (sidebar) sidebar.style.transition = 'none';
+    if (mainContent) mainContent.style.transition = 'none';
+    applySidebarState(isCollapsed, false);
+    // Re-enable transitions after initial paint
+    requestAnimationFrame(function () {
+        requestAnimationFrame(function () {
+            if (sidebar) sidebar.style.transition = '';
+            if (mainContent) mainContent.style.transition = '';
+        });
+    });
+
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function () {
+            var nowCollapsed = !sidebar.classList.contains('collapsed');
+            localStorage.setItem('sidebarCollapsed', nowCollapsed ? 'true' : 'false');
+            applySidebarState(nowCollapsed, true);
+        });
+    }
+
+    // ── Sidebar scroll position persistence ──
+    var scrollKey = 'sidebarScrollTop';
+    if (nav) {
+        // Restore scroll position
+        var savedScroll = parseInt(localStorage.getItem(scrollKey) || '0', 10);
+        nav.scrollTop = savedScroll;
+
+        // Save scroll position on every scroll
+        nav.addEventListener('scroll', function () {
+            localStorage.setItem(scrollKey, nav.scrollTop);
+        });
+    }
+
+    // Scroll to active link if not already visible
+    if (nav) {
+        var activeLink = nav.querySelector('a.text-success, a.fw-medium.text-success');
+        if (activeLink && savedScroll === 0) {
+            activeLink.scrollIntoView({ block: 'nearest' });
+        }
+    }
+})();
+</script>
 {% endblock %}

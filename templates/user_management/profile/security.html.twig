@@ -283,6 +283,62 @@
             </div>
         </div>
 
+        {# ── Phone verification ── #}
+        <div class="sec-card">
+            <div class="sec-card-header">
+                <div class="sec-icon {% if app.user.phoneVerified %}bg-success bg-opacity-10{% else %}bg-info bg-opacity-10{% endif %}">
+                    <svg fill="none" stroke="{% if app.user.phoneVerified %}#198754{% else %}#0dcaf0{% endif %}" viewBox="0 0 24 24" width="18" height="18">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M3 5a2 2 0 012-2h3.28a1 1 0 00.948.684l1.498 4.493a1 1 0 00.502.756l2.048 1.022a11.04 11.04 0 01-5.693 5.653l-1.022-2.047a1 1 0 00-.756-.502l-4.493-1.498a1 1 0 00-.684-.948V5z"/>
+                    </svg>
+                </div>
+                <div class="flex-fill">
+                    <span class="fw-semibold d-block" style="font-size:.9rem;">Vérification du téléphone</span>
+                    <span class="text-muted" style="font-size:.75rem;">Recevez les codes de sécurité par SMS</span>
+                </div>
+                {% if app.user.phoneVerified %}
+                    <span class="badge bg-success-subtle text-success" style="font-size:.7rem;">Vérifiée</span>
+                {% else %}
+                    <span class="badge bg-secondary-subtle text-secondary" style="font-size:.7rem;">Non vérifiée</span>
+                {% endif %}
+            </div>
+            <div class="sec-card-body">
+                <div class="row g-3 align-items-center">
+                    <div class="col-sm-8">
+                        {% if app.user.phoneVerified %}
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <svg fill="currentColor" viewBox="0 0 20 20" width="16" height="16" class="text-success flex-shrink-0">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                </svg>
+                                <span class="fw-semibold text-success" style="font-size:.875rem;">Votre numéro est vérifié</span>
+                            </div>
+                            <p class="text-muted mb-0" style="font-size:.8125rem; line-height:1.5;">
+                                Votre numéro de téléphone <strong>{{ app.user.telephone }}</strong> est vérifiée.
+                                Vous pouvez recevoir les codes de sécurité par SMS.
+                            </p>
+                        {% else %}
+                            <p class="fw-medium mb-1" style="font-size:.875rem;">Pourquoi vérifier votre téléphone ?</p>
+                            <ul class="list-unstyled mb-0">
+                                <li class="req-item ok"><span class="req-dot ok"></span>Reçois les codes de sécurité par SMS</li>
+                                <li class="req-item ok"><span class="req-dot ok"></span>Authentification à deux facteurs SMS</li>
+                                <li class="req-item ok"><span class="req-dot ok"></span>Alerts de sécurité en temps réel</li>
+                            </ul>
+                        {% endif %}
+                    </div>
+                    <div class="col-sm-4 text-sm-center">
+                        <a href="{{ path('app_profile_verify_phone') }}"
+                           class="btn btn-{% if app.user.phoneVerified %}outline-success{% else %}info{% endif %} d-flex align-items-center justify-content-center gap-2 fw-semibold">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="{% if app.user.phoneVerified %}M13 10V3L4 14h7v7l9-11h-7z{% else %}M12 4v16m8-8H4{% endif %}"/>
+                            </svg>
+                            {% if app.user.phoneVerified %}Modifier{% else %}Vérifier{% endif %}
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {# ── Recent activity ── #}
         <div class="sec-card">
             <div class="sec-card-header">
@@ -323,7 +379,11 @@
                         'OAUTH_REGISTER'     : 'Inscription via OAuth',
                         'SESSION_REVOKED'    : 'Session révoquée',
                         'LOGOUT'             : 'Déconnexion',
-                        'SUSPICIOUS_ACTIVITY': 'Activité suspecte détectée'
+                        'SUSPICIOUS_ACTIVITY': 'Activité suspecte détectée',
+                        'ACCOUNT_BANNED'     : 'Compte banni',
+                        'ACCOUNT_UNBANNED'   : 'Compte débanni',
+                        'BACKUP_CODE_USED'   : 'Code de secours utilisé',
+                        'EMAIL_CHANGE_REQUESTED': 'Changement d\'email demandé'
                     } %}
                     <ul class="list-unstyled mb-0">
                     {% for event in recentEvents %}
@@ -512,6 +572,40 @@
             </div>
         </div>
 
+        {# ── Backup codes (Feature 7) ── #}
+        {% if app.user.twoFactorEnabled %}
+        <div class="sec-card">
+            <div class="sec-card-header">
+                <div class="sec-icon bg-success bg-opacity-10">
+                    <svg fill="none" stroke="#198754" viewBox="0 0 24 24" width="18" height="18">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+                    </svg>
+                </div>
+                <div class="flex-fill">
+                    <span class="fw-semibold d-block" style="font-size:.9rem;">Codes de secours</span>
+                    <span class="text-muted" style="font-size:.75rem;">Alternative si vous n'avez pas accès à votre email</span>
+                </div>
+                <span class="badge {{ backupCodesRemaining > 2 ? 'bg-success-subtle text-success' : (backupCodesRemaining > 0 ? 'bg-warning-subtle text-warning' : 'bg-danger-subtle text-danger') }}" style="font-size:.7rem;">
+                    {{ backupCodesRemaining }} restant(s)
+                </span>
+            </div>
+            <div class="sec-card-body">
+                <p class="text-muted mb-3" style="font-size:.8125rem;">
+                    Les codes de secours vous permettent de vous connecter si vous n'avez pas accès à votre email pour la 2FA.
+                </p>
+                <a href="{{ path('app_profile_backup_codes') }}"
+                   class="btn btn-outline-success btn-sm w-100 d-flex align-items-center justify-content-center gap-2">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    Voir les codes de secours
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
         {# ── Quick actions ── #}
         <div class="sec-card">
             <div class="sec-card-header">
@@ -533,6 +627,26 @@
                         </svg>
                         Changer le mot de passe
                     </a>
+                    <a href="{{ path('app_profile_login_history') }}"
+                       class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 text-start">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Historique de connexion
+                    </a>
+                    <form method="post" action="{{ path('app_profile_revoke_all_sessions') }}" class="d-grid">
+                        <input type="hidden" name="_token" value="{{ csrf_token('revoke_all_sessions') }}">
+                        <button type="submit"
+                                class="btn btn-outline-danger btn-sm d-flex align-items-center gap-2 text-start"
+                                onclick="return confirm('Déconnecter tous les appareils ? Vous devrez vous reconnecter partout.')">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                            </svg>
+                            Déconnecter tous les appareils
+                        </button>
+                    </form>
                     <a href="{{ path('app_profile_edit') }}"
                        class="btn btn-outline-secondary btn-sm d-flex align-items-center gap-2 text-start">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
