@@ -29,6 +29,14 @@
                                 </div>
                             </div>
                             <div class="d-flex flex-wrap gap-2 ms-lg-auto">
+                                <button type="button" 
+                                    class="btn btn-outline-secondary btn-sm"
+                                    data-action="show-qr"
+                                    data-qr-url="{{ path('qr_event', {'id': evenement.id}) }}"
+                                    data-qr-type="event"
+                                    data-qr-item="{{ evenement.titre }}">
+                                    📱 QR
+                                </button>
                                 <a href="{{ path('evenement_show', {'id': evenement.id}) }}" class="btn btn-outline-success btn-sm">Voir</a>
                                 {% if canManage %}
                                     <a href="{{ path('evenement_edit', {'id': evenement.id}) }}" class="btn btn-success btn-sm">Modifier</a>
