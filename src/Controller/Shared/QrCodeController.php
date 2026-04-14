@@ -21,7 +21,7 @@ class QrCodeController extends AbstractController
     }
 
     /**
-     * Generate QR code for an event pointing to agrilink-gr/event.html
+        * Generate QR code for an event deep link.
      */
     #[Route('/event/{id}', name: 'qr_event', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function generateEventQr(Evenement $evenement): JsonResponse
@@ -32,7 +32,7 @@ class QrCodeController extends AbstractController
             $date = $dateEvenement?->format('d/m/Y') ?? '';
             $heure = $dateEvenement?->format('H:i') ?? '';
 
-            // Build parameters array for QR code URL
+            // Build deep-link parameters for event.html
             $params = [
                 'titre' => $evenement->getTitre() ?? '',
                 'date' => $date,
@@ -60,19 +60,19 @@ class QrCodeController extends AbstractController
     }
 
     /**
-     * Generate QR code for an activity pointing to agrilink-gr/event.html
+        * Generate QR code for an activity deep link.
      */
     #[Route('/activity/{id}', name: 'qr_activity', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function generateActivityQr(Activite $activite): JsonResponse
     {
         try {
-            // Extract dates from activity
+            // Extract date-time values from activity
             $dateDebut = $activite->getDateDebut();
             $dateFin = $activite->getDateFin();
-            $debut = $dateDebut?->format('d/m/Y') ?? '';
-            $fin = $dateFin?->format('d/m/Y') ?? '';
+            $debut = $dateDebut?->format('d/m/Y H:i') ?? '';
+            $fin = $dateFin?->format('d/m/Y H:i') ?? 'En cours';
 
-            // Build parameters array for QR code URL
+            // Build deep-link parameters for event.html
             $params = [
                 'titre' => $activite->getTitre() ?? '',
                 'type_act' => $activite->getTypeActivite() ?? '',

@@ -2,60 +2,58 @@
 
 namespace App\Service;
 
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
-
 class QrCodeService
 {
-    public function __construct(
-        #[Autowire('%env(APP_URL)%')]
-        private readonly string $appUrl,
-    ) {
-    }
+    private const BASE_DEEP_LINK_URL = 'https://stately-rugelach-afdc78.netlify.app/event.html';
 
     /**
-     * Generate QR code URL for an event pointing to agrilink-gr/event.html with all parameters
-     * @param array $params Array containing: titre, date (dd/mm/yyyy), heure, lieu, type, desc
+     * Generate QR code URL for an event deep link with UTF-8 encoded parameters.
+     * @param array $params Array containing: titre, date, heure, lieu, type, desc
      */
     public function generateQrCodeForEvent(array $params): string
     {
-        // Build query string for event.html viewer
-        $queryParams = [
-            'titre' => $params['titre'] ?? '',
-            'date' => $params['date'] ?? '',
-            'heure' => $params['heure'] ?? '',
-            'lieu' => $params['lieu'] ?? '',
-            'type' => $params['type'] ?? '',
-        ];
-        
-        if (!empty($params['desc'])) {
-            $queryParams['desc'] = $params['desc'];
-        }
+        $deepLinkUrl = $this->buildDeepLink([
+            'titre' => (string) ($params['titre'] ?? ''),
+            'date' => (string) ($params['date'] ?? ''),
+            'heure' => (string) ($params['heure'] ?? ''),
+            'lieu' => (string) ($params['lieu'] ?? ''),
+            'type' => (string) ($params['type'] ?? ''),
+            'desc' => (string) ($params['desc'] ?? ''),
+        ]);
 
-        $eventHtmlUrl = $this->appUrl . '/agrilink-gr/event.html?' . http_build_query($queryParams);
-        return $this->generateQrCodeFromUrl($eventHtmlUrl);
+        return $this->generateQrCodeFromUrl($deepLinkUrl);
     }
 
     /**
-     * Generate QR code URL for an activity pointing to agrilink-gr/event.html with all parameters
-     * @param array $params Array containing: titre, type_act, debut (dd/mm/yyyy), fin (dd/mm/yyyy), statut, cout
+     * Generate QR code URL for an activity deep link with UTF-8 encoded parameters.
+     * @param array $params Array containing: titre, type_act, debut, fin, statut, cout
      */
     public function generateQrCodeForActivity(array $params): string
     {
-        // Build query string for event.html viewer
-        $queryParams = [
-            'titre' => $params['titre'] ?? '',
-            'type_act' => $params['type_act'] ?? '',
-            'debut' => $params['debut'] ?? '',
-            'fin' => $params['fin'] ?? '',
-            'statut' => $params['statut'] ?? '',
-        ];
-        
-        if (!empty($params['cout'])) {
-            $queryParams['cout'] = $params['cout'];
+        $deepLinkUrl = $this->buildDeepLink([
+            'titre' => (string) ($params['titre'] ?? ''),
+            'type_act' => (string) ($params['type_act'] ?? ''),
+            'debut' => (string) ($params['debut'] ?? ''),
+            'fin' => (string) ($params['fin'] ?? ''),
+            'statut' => (string) ($params['statut'] ?? ''),
+            'cout' => (string) ($params['cout'] ?? ''),
+        ]);
+
+        return $this->generateQrCodeFromUrl($deepLinkUrl);
+    }
+
+    /**
+     * Build the final deep-link URL with UTF-8 URL-encoded parameters.
+     */
+    public function buildDeepLink(array $params): string
+    {
+        $encoded = [];
+
+        foreach ($params as $key => $value) {
+            $encoded[] = $key . '=' . urlencode((string) $value);
         }
 
-        $eventHtmlUrl = $this->appUrl . '/agrilink-gr/event.html?' . http_build_query($queryParams);
-        return $this->generateQrCodeFromUrl($eventHtmlUrl);
+        return self::BASE_DEEP_LINK_URL . '?' . implode('&', $encoded);
     }
 
     /**
@@ -95,9 +93,23 @@ class QrCodeService
     public function getQrCodeImageUrl(int $entityId, string $type, string $title): string
     {
         if ($type === 'event') {
-            return $this->generateQrCodeForEvent($entityId, $title);
+            return $this->generateQrCodeForEvent([
+                'titre' => $title,
+                'date' => '',
+                'heure' => '',
+                'lieu' => '',
+                'type' => '',
+                'desc' => '',
+            ]);
         } elseif ($type === 'activity') {
-            return $this->generateQrCodeForActivity($entityId, $title);
+            return $this->generateQrCodeForActivity([
+                'titre' => $title,
+                'type_act' => '',
+                'debut' => '',
+                'fin' => '',
+                'statut' => '',
+                'cout' => '',
+            ]);
         }
 
         throw new \InvalidArgumentException("Invalid QR type: {$type}");
