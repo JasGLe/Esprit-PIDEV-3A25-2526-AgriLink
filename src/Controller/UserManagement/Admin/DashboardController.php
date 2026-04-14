@@ -100,6 +100,7 @@ class DashboardController extends AbstractController
             'growthRate' => $growthRate,
             'currentPeriodStats' => $currentPeriodStats,
             'date' => new \DateTime(),
+            'page_count' => 1,
         ]);
 
         $options = new Options();
@@ -152,7 +153,7 @@ class DashboardController extends AbstractController
         $sheet->mergeCells('A1:D1');
         $sheet->setCellValue('A1', 'RAPPORT AGRILINK - ' . date('d/m/Y'));
         $sheet->getStyle('A1')->applyFromArray($titleStyle);
-        $sheet->setRowDimension(1, 25);
+        $sheet->getRowDimension(1)->setRowHeight(25);
 
         $currentRow = 3;
 
@@ -160,7 +161,7 @@ class DashboardController extends AbstractController
         $sheet->mergeCells('A' . $currentRow . ':D' . $currentRow);
         $sheet->setCellValue('A' . $currentRow, '📊 STATISTIQUES UTILISATEURS');
         $sheet->getStyle('A' . $currentRow)->applyFromArray($headerStyle);
-        $sheet->setRowDimension($currentRow, 20);
+        $sheet->getRowDimension($currentRow)->setRowHeight(20);
         $currentRow++;
 
         $userHeaders = ['Catégorie', 'Nombre', 'Pourcentage'];
@@ -199,7 +200,7 @@ class DashboardController extends AbstractController
         $sheet->mergeCells('A' . $currentRow . ':C' . $currentRow);
         $sheet->setCellValue('A' . $currentRow, '🔒 SÉCURITÉ (30 DERNIERS JOURS)');
         $sheet->getStyle('A' . $currentRow)->applyFromArray($headerStyle);
-        $sheet->setRowDimension($currentRow, 20);
+        $sheet->getRowDimension($currentRow)->setRowHeight(20);
         $currentRow++;
 
         $secHeaders = ['Événement', 'Nombre'];
@@ -236,7 +237,7 @@ class DashboardController extends AbstractController
         $sheet->mergeCells('A' . $currentRow . ':B' . $currentRow);
         $sheet->setCellValue('A' . $currentRow, '📈 CROISSANCE');
         $sheet->getStyle('A' . $currentRow)->applyFromArray($headerStyle);
-        $sheet->setRowDimension($currentRow, 20);
+        $sheet->getRowDimension($currentRow)->setRowHeight(20);
         $currentRow++;
 
         $growthData = ['Taux croissance (30j)', round($growthRate, 1) . '%'];

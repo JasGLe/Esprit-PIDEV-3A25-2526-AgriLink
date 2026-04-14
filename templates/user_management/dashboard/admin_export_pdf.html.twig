@@ -3,261 +3,406 @@
 <head>
     <meta charset="utf-8">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { 
-            font-family: 'DejaVu Sans', sans-serif; 
-            color: #111827; 
-            width: 100%;
-            height: auto;
-        }
         body {
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 10px;
+            color: #1f2937;
             margin: 0;
             padding: 0;
         }
-        
-        .page {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 15mm 20mm;
-            margin: 0;
-            page-break-after: always;
-            background: white;
+
+        .header {
+            background: #0f172a;
+            color: white;
+            padding: 14px 18px;
+            border-bottom: 4px solid #22c55e;
         }
-        
-        .page:last-child {
-            page-break-after: avoid;
+
+        .header-table {
+            width: 100%;
         }
-        
-        .header { 
-            text-align: center; 
-            margin-bottom: 20px; 
-            border-bottom: 3px solid #1f2937; 
-            padding-bottom: 12px; 
+
+        .logo {
+            width: 50px;
         }
-        .header h1 { font-size: 22px; color: #1f2937; margin-bottom: 3px; }
-        .header p { color: #6b7280; font-size: 10px; }
-        .date { text-align: right; color: #9ca3af; font-size: 9px; margin-bottom: 15px; }
-        
-        .section { 
-            margin-bottom: 18px; 
-            page-break-inside: avoid;
-        }
-        
-        .section-title { 
-            background-color: #1f2937; 
-            color: white; 
-            padding: 8px 10px; 
-            font-size: 11px; 
-            font-weight: bold; 
-            margin-bottom: 10px;
-            border-radius: 3px;
-        }
-        
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 8px; 
-            margin-bottom: 12px; 
-        }
-        
-        .stat-box { 
-            background: #f9fafb; 
-            border: 1px solid #e5e7eb; 
-            padding: 8px; 
-            border-radius: 3px; 
-            page-break-inside: avoid;
-        }
-        .stat-label { 
-            font-size: 9px; 
-            color: #6b7280; 
-            text-transform: uppercase; 
-            letter-spacing: 0.4px; 
-            margin-bottom: 2px; 
-        }
-        .stat-value { 
-            font-size: 16px; 
-            font-weight: bold; 
-            color: #1f2937; 
-        }
-        
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 8px;
-            font-size: 9px;
-        }
-        table thead { background-color: #6b7280; color: white; }
-        table th { 
-            padding: 6px; 
-            text-align: left; 
-            font-size: 9px; 
+
+        .title {
+            font-size: 16px;
             font-weight: bold;
+            margin: 0;
+            color: #22c55e;
+        }
+
+        .subtitle {
+            font-size: 9px;
+            color: #cbd5e1;
+            margin: 2px 0 0 0;
+        }
+
+        .stats {
+            margin: 12px 18px;
+            padding: 0;
+        }
+
+        .stat {
+            display: inline-block;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            padding: 5px 8px;
+            margin-right: 6px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            font-size: 8px;
+            color: #166534;
+            font-weight: 500;
+        }
+
+        .content {
+            padding: 0 18px 18px 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 8px;
+        }
+
+        thead {
+            background: #374151;
+            color: white;
+        }
+
+        th {
+            padding: 6px 8px;
+            font-size: 8px;
+            font-weight: bold;
+            text-align: left;
             border: 1px solid #d1d5db;
         }
-        table td { 
-            padding: 6px; 
-            border: 1px solid #e5e7eb; 
-            font-size: 9px; 
+
+        td {
+            padding: 6px 8px;
+            border: 1px solid #e5e7eb;
+            font-size: 8px;
         }
-        table tbody tr:nth-child(even) { background-color: #f9fafb; }
-        table tbody tr:nth-child(odd) { background-color: #ffffff; }
-        
-        .footer { 
-            margin-top: 20px; 
-            padding-top: 10px; 
-            border-top: 1px solid #e5e7eb; 
-            text-align: center; 
-            color: #9ca3af; 
-            font-size: 8px; 
+
+        tr.even {
+            background: #f9fafb;
         }
-        
+
+        tr.odd {
+            background: #ffffff;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 8px;
+            background: #dcfce7;
+            color: #166534;
+            font-weight: 500;
+        }
+
+        .section {
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            padding: 8px 10px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+
+        .small {
+            font-size: 8px;
+            color: #6b7280;
+        }
+
+        .footer {
+            margin-top: 14px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 7px;
+            color: #9ca3af;
+        }
+
         @media print {
-            html, body {
-                width: 210mm;
-                height: 297mm;
-            }
-            .page {
-                page-break-after: always;
-            }
+            body { margin: 0; padding: 0; }
+            .page { page-break-after: always; }
         }
     </style>
 </head>
 <body>
-    <div class="page">
-        <div class="header">
-            <h1>Rapport AgriLink</h1>
-            <p>Tableau de bord administrateur</p>
-        </div>
-        
-        <div class="date">Généré le {{ date|date('d/m/Y \\à H:i') }}</div>
-        
-        <!-- User Statistics -->
-        <div class="section">
-            <div class="section-title">📊 STATISTIQUES UTILISATEURS</div>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-label">Total utilisateurs</div>
-                    <div class="stat-value">{{ stats.total ?? 0 }}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Agriculteurs</div>
-                    <div class="stat-value">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Fournisseurs</div>
-                    <div class="stat-value">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">AgriPlus</div>
-                    <div class="stat-value">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</div>
-                </div>
-            </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Catégorie</th>
-                        <th>Nombre</th>
-                        <th>Pourcentage</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Agriculteurs</td>
-                        <td>{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</td>
-                        <td>{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRICULTEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
-                    </tr>
-                    <tr>
-                        <td>Fournisseurs</td>
-                        <td>{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</td>
-                        <td>{{ stats.total > 0 ? ((stats.by_role.ROLE_FOURNISSEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
-                    </tr>
-                    <tr>
-                        <td>AgriPlus</td>
-                        <td>{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</td>
-                        <td>{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRIPLUS ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
-                    </tr>
-                    <tr>
-                        <td>Utilisateurs standard</td>
-                        <td>{{ stats.by_role.ROLE_USER ?? 0 }}</td>
-                        <td>{{ stats.total > 0 ? ((stats.by_role.ROLE_USER ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Security Statistics -->
-        <div class="section">
-            <div class="section-title">🔒 SÉCURITÉ (30 DERNIERS JOURS)</div>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-label">Connexions réussies</div>
-                    <div class="stat-value">{{ securityStats.loginSuccess ?? 0 }}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Connexions échouées</div>
-                    <div class="stat-value">{{ securityStats.loginFailed ?? 0 }}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Comptes verrouillés</div>
-                    <div class="stat-value">{{ securityStats.accountLocked ?? 0 }}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">2FA réussi</div>
-                    <div class="stat-value">{{ securityStats.twoFaSuccess ?? 0 }}</div>
-                </div>
-            </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Événement</th>
-                        <th>Nombre</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Connexions réussies</td>
-                        <td>{{ securityStats.loginSuccess ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>Connexions échouées</td>
-                        <td>{{ securityStats.loginFailed ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>Comptes verrouillés</td>
-                        <td>{{ securityStats.accountLocked ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>Changements de mot de passe</td>
-                        <td>{{ securityStats.passwordChanged ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>2FA réussi</td>
-                        <td>{{ securityStats.twoFaSuccess ?? 0 }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Growth -->
-        <div class="section">
-            <div class="section-title">📈 CROISSANCE</div>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-label">Taux croissance (30j)</div>
-                    <div class="stat-value">{{ growthRate|round(1) }}%</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Inscriptions (7j)</div>
-                    <div class="stat-value">{{ recentUsers|length }}</div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <p>AgriLink - Rapport généré automatiquement - Page {{ page_count }}</p>
-        </div>
-    </div>
+
+<div class="header">
+    <table class="header-table">
+        <tr>
+            <td width="60">
+                <p class="title">📊 Rapport Tableau de Bord</p>
+            </td>
+            <td>
+                <p style="color: #cbd5e1; font-size: 9px; margin: 2px 0;">Statistiques administrateur - Généré le {{ date|date('d/m/Y H:i') }}</p>
+            </td>
+            <td style="text-align: right; width: 100px;">
+                <p class="subtitle" style="margin: 0;">AgriLink Admin<br/>Dashboard</p>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="stats">
+    <span class="stat">👥 Total: {{ stats.total ?? 0 }}</span>
+    <span class="stat">🌾 Agriculteurs: {{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</span>
+    <span class="stat">🏪 Fournisseurs: {{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</span>
+    <span class="stat">⭐ AgriPlus: {{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</span>
+</div>
+
+<div class="content">
+
+<!-- User Statistics -->
+<div class="section">
+    <div class="section-title">📊 STATISTIQUES UTILISATEURS</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Catégorie</th>
+                <th>Nombre</th>
+                <th>Pourcentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Agriculteurs</td>
+                <td style="text-align: center;">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</td>
+                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRICULTEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+            </tr>
+            <tr class="even">
+                <td>Fournisseurs</td>
+                <td style="text-align: center;">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</td>
+                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_FOURNISSEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+            </tr>
+            <tr>
+                <td>AgriPlus</td>
+                <td style="text-align: center;">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</td>
+                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRIPLUS ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+            </tr>
+            <tr class="even">
+                <td>Utilisateurs standard</td>
+                <td style="text-align: center;">{{ stats.by_role.ROLE_USER ?? 0 }}</td>
+                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_USER ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Security Statistics -->
+<div class="section">
+    <div class="section-title">🔒 SÉCURITÉ (30 DERNIERS JOURS)</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Événement</th>
+                <th>Nombre</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Connexions réussies</td>
+                <td style="text-align: center;">{{ securityStats.loginSuccess ?? 0 }}</td>
+            </tr>
+            <tr class="even">
+                <td>Connexions échouées</td>
+                <td style="text-align: center;">{{ securityStats.loginFailed ?? 0 }}</td>
+            </tr>
+            <tr>
+                <td>Comptes verrouillés</td>
+                <td style="text-align: center;">{{ securityStats.accountLocked ?? 0 }}</td>
+            </tr>
+            <tr class="even">
+                <td>Changements de mot de passe</td>
+                <td style="text-align: center;">{{ securityStats.passwordChanged ?? 0 }}</td>
+            </tr>
+            <tr>
+                <td>2FA réussi</td>
+                <td style="text-align: center;">{{ securityStats.twoFaSuccess ?? 0 }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Growth -->
+<div class="section">
+    <div class="section-title">📈 CROISSANCE</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Métrique</th>
+                <th>Valeur</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Taux croissance (30j)</td>
+                <td style="text-align: center; font-weight: bold; color: #22c55e;">{{ growthRate|round(1) }}%</td>
+            </tr>
+            <tr class="even">
+                <td>Inscriptions (7j)</td>
+                <td style="text-align: center;">{{ recentUsers|length }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</div>
+
+<div class="footer">
+    AgriLink - Rapport de tableau de bord administrateur · Généré le {{ date|date('d/m/Y \\à H:i') }}
+</div>
+
 </body>
+</html>
+<body>
+
+<div class="header">
+    <table class="header-table">
+        <tr>
+            <td width="60">
+                <p class="title">📊 Rapport Tableau de Bord</p>
+            </td>
+            <td>
+                <p style="color: #cbd5e1; font-size: 9px; margin: 2px 0;">Statistiques administrateur - Généré le {{ date|date('d/m/Y H:i') }}</p>
+            </td>
+            <td style="text-align: right; width: 100px;">
+                <p class="subtitle" style="margin: 0;">AgriLink Admin<br/>Dashboard</p>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="stats">
+    <span class="stat">👥 Total: {{ stats.total ?? 0 }}</span>
+    <span class="stat">🌾 Agriculteurs: {{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</span>
+    <span class="stat">🏪 Fournisseurs: {{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</span>
+    <span class="stat">⭐ AgriPlus: {{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</span>
+</div>
+
+<div class="content">
+
+<!-- User Statistics -->
+<div class="section">
+    <div class="section-title">📊 STATISTIQUES UTILISATEURS</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Catégorie</th>
+                <th>Nombre</th>
+                <th>Pourcentage</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Agriculteurs</td>
+                <td style="text-align: center;">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</td>
+                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRICULTEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+            </tr>
+            <tr class="even">
+                <td>Fournisseurs</td>
+                <td style="text-align: center;">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</td>
+                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_FOURNISSEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+            </tr>
+            <tr>
+                <td>AgriPlus</td>
+                <td style="text-align: center;">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</td>
+                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRIPLUS ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+            </tr>
+            <tr class="even">
+                <td>Utilisateurs standard</td>
+                <td style="text-align: center;">{{ stats.by_role.ROLE_USER ?? 0 }}</td>
+                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_USER ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Security Statistics -->
+<div class="section">
+    <div class="section-title">🔒 SÉCURITÉ (30 DERNIERS JOURS)</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Événement</th>
+                <th>Nombre</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Connexions réussies</td>
+                <td style="text-align: center;">{{ securityStats.loginSuccess ?? 0 }}</td>
+            </tr>
+            <tr class="even">
+                <td>Connexions échouées</td>
+                <td style="text-align: center;">{{ securityStats.loginFailed ?? 0 }}</td>
+            </tr>
+            <tr>
+                <td>Comptes verrouillés</td>
+                <td style="text-align: center;">{{ securityStats.accountLocked ?? 0 }}</td>
+            </tr>
+            <tr class="even">
+                <td>Changements de mot de passe</td>
+                <td style="text-align: center;">{{ securityStats.passwordChanged ?? 0 }}</td>
+            </tr>
+            <tr>
+                <td>2FA réussi</td>
+                <td style="text-align: center;">{{ securityStats.twoFaSuccess ?? 0 }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Growth -->
+<div class="section">
+    <div class="section-title">📈 CROISSANCE</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Métrique</th>
+                <th>Valeur</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Taux croissance (30j)</td>
+                <td style="text-align: center; font-weight: bold; color: #22c55e;">{{ growthRate|round(1) }}%</td>
+            </tr>
+            <tr class="even">
+                <td>Inscriptions (7j)</td>
+                <td style="text-align: center;">{{ recentUsers|length }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</div>
+
+<div class="footer">
+    AgriLink - Rapport de tableau de bord administrateur · Généré le {{ date|date('d/m/Y \\à H:i') }}
+</div>
+
+</body>
+</html>
 </html>

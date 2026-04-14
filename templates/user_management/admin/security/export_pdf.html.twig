@@ -3,276 +3,272 @@
 <head>
     <meta charset="utf-8">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { 
-            font-family: 'DejaVu Sans', sans-serif; 
-            color: #111827; 
-            width: 100%;
-            height: auto;
-        }
         body {
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 10px;
+            color: #1f2937;
             margin: 0;
             padding: 0;
         }
-        
-        .page {
-            width: 210mm;
-            min-height: 297mm;
-            padding: 15mm 20mm;
-            margin: 0;
-            page-break-after: always;
-            background: white;
+
+        .header {
+            background: #7f1d1d;
+            color: white;
+            padding: 14px 18px;
+            border-bottom: 4px solid #ef4444;
         }
-        
-        .page:last-child {
-            page-break-after: avoid;
+
+        .header-table {
+            width: 100%;
         }
-        
-        .header { 
-            text-align: center; 
-            margin-bottom: 20px; 
-            border-bottom: 3px solid #1f2937; 
-            padding-bottom: 12px; 
+
+        .logo {
+            width: 50px;
         }
-        .header h1 { font-size: 22px; color: #1f2937; margin-bottom: 3px; }
-        .header p { color: #6b7280; font-size: 10px; }
-        .date { text-align: right; color: #9ca3af; font-size: 9px; margin-bottom: 15px; }
-        
-        .section { 
-            margin-bottom: 18px; 
-            page-break-inside: avoid;
-        }
-        
-        .section-title { 
-            background-color: #1f2937; 
-            color: white; 
-            padding: 8px 10px; 
-            font-size: 11px; 
-            font-weight: bold; 
-            margin-bottom: 10px;
-            border-radius: 3px;
-        }
-        
-        .stats-grid { 
-            display: grid; 
-            grid-template-columns: repeat(3, 1fr); 
-            gap: 8px; 
-            margin-bottom: 12px; 
-        }
-        
-        .stat-box { 
-            background: #f9fafb; 
-            border: 1px solid #e5e7eb; 
-            padding: 8px; 
-            border-radius: 3px; 
-            page-break-inside: avoid;
-        }
-        .stat-label { 
-            font-size: 8px; 
-            color: #6b7280; 
-            text-transform: uppercase; 
-            letter-spacing: 0.3px; 
-            margin-bottom: 2px; 
-        }
-        .stat-value { 
-            font-size: 14px; 
-            font-weight: bold; 
-            color: #1f2937; 
-        }
-        
-        table { 
-            width: 100%; 
-            border-collapse: collapse; 
-            margin-top: 8px;
-            font-size: 9px;
-            page-break-inside: avoid;
-        }
-        table thead { background-color: #6b7280; color: white; }
-        table th { 
-            padding: 5px; 
-            text-align: left; 
-            font-size: 9px; 
+
+        .title {
+            font-size: 16px;
             font-weight: bold;
+            margin: 0;
+            color: #ef4444;
+        }
+
+        .subtitle {
+            font-size: 9px;
+            color: #fecaca;
+            margin: 2px 0 0 0;
+        }
+
+        .stats {
+            margin: 12px 18px;
+            padding: 0;
+        }
+
+        .stat {
+            display: inline-block;
+            background: #fee2e2;
+            border: 1px solid #fecaca;
+            padding: 5px 8px;
+            margin-right: 6px;
+            margin-bottom: 4px;
+            border-radius: 4px;
+            font-size: 8px;
+            color: #991b1b;
+            font-weight: 500;
+        }
+
+        .content {
+            padding: 0 18px 18px 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 8px;
+        }
+
+        thead {
+            background: #7f1d1d;
+            color: white;
+        }
+
+        th {
+            padding: 6px 8px;
+            font-size: 8px;
+            font-weight: bold;
+            text-align: left;
             border: 1px solid #d1d5db;
         }
-        table td { 
-            padding: 5px; 
-            border: 1px solid #e5e7eb; 
-            font-size: 8px; 
+
+        td {
+            padding: 6px 8px;
+            border: 1px solid #e5e7eb;
+            font-size: 8px;
         }
-        table tbody tr:nth-child(even) { background-color: #f9fafb; }
-        table tbody tr:nth-child(odd) { background-color: #ffffff; }
-        
-        .footer { 
-            margin-top: 20px; 
-            padding-top: 10px; 
-            border-top: 1px solid #e5e7eb; 
-            text-align: center; 
-            color: #9ca3af; 
-            font-size: 8px; 
+
+        tr.even {
+            background: #fef2f2;
         }
-        
+
+        tr.odd {
+            background: #ffffff;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 8px;
+            background: #fee2e2;
+            color: #991b1b;
+            font-weight: 500;
+        }
+
+        .section {
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .section-title {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 8px 10px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+
+        .small {
+            font-size: 8px;
+            color: #6b7280;
+        }
+
+        .footer {
+            margin-top: 14px;
+            padding-top: 8px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            font-size: 7px;
+            color: #9ca3af;
+        }
+
         @media print {
-            html, body {
-                width: 210mm;
-                height: 297mm;
-            }
-            .page {
-                page-break-after: always;
-            }
+            body { margin: 0; padding: 0; }
+            .page { page-break-after: always; }
         }
     </style>
 </head>
 <body>
-    <div class="page">
-        <div class="header">
-            <h1>Rapport de Sécurité AgriLink</h1>
-            <p>Centre de sécurité administrateur</p>
-        </div>
-        
-        <div class="date">Généré le {{ date|date('d/m/Y \\à H:i') }}</div>
-        
-        <!-- 30 Days Statistics -->
-        <div class="section">
-            <div class="section-title">📊 STATISTIQUES 30 DERNIERS JOURS</div>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-label">Connexions réussies</div>
-                    <div class="stat-value">{{ stats30d.loginSuccess ?? 0 }}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Connexions échouées</div>
-                    <div class="stat-value">{{ stats30d.loginFailed ?? 0 }}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">2FA réussi</div>
-                    <div class="stat-value">{{ stats30d.twoFaSuccess ?? 0 }}</div>
-                </div>
-            </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Événement</th>
-                        <th>Nombre</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Connexions réussies</td>
-                        <td>{{ stats30d.loginSuccess ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>Connexions échouées</td>
-                        <td>{{ stats30d.loginFailed ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>2FA réussi</td>
-                        <td>{{ stats30d.twoFaSuccess ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>Comptes verrouillés</td>
-                        <td>{{ stats30d.accountLocked ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>Mots de passe changés</td>
-                        <td>{{ stats30d.passwordChanged ?? 0 }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- 24 Hours Statistics -->
-        <div class="section">
-            <div class="section-title">⏱️ STATISTIQUES 24H</div>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-label">Connexions réussies</div>
-                    <div class="stat-value">{{ stats24h.loginSuccess ?? 0 }}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Connexions échouées</div>
-                    <div class="stat-value">{{ stats24h.loginFailed ?? 0 }}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Total événements</div>
-                    <div class="stat-value">{{ stats24h.total ?? 0 }}</div>
-                </div>
-            </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Événement</th>
-                        <th>Nombre</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Connexions réussies</td>
-                        <td>{{ stats24h.loginSuccess ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>Connexions échouées</td>
-                        <td>{{ stats24h.loginFailed ?? 0 }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Account Overview -->
-        <div class="section">
-            <div class="section-title">👥 APERÇU COMPTES</div>
-            <div class="stats-grid">
-                <div class="stat-box">
-                    <div class="stat-label">Total comptes</div>
-                    <div class="stat-value">{{ accountStats.total ?? 0 }}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Actifs</div>
-                    <div class="stat-value">{{ accountStats.active ?? 0 }}</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Verrouillés</div>
-                    <div class="stat-value">{{ accountStats.lockedNow ?? 0 }}</div>
-                </div>
-            </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>Statistique</th>
-                        <th>Nombre</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Total comptes</td>
-                        <td>{{ accountStats.total ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>Comptes actifs</td>
-                        <td>{{ accountStats.active ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>Emails vérifiés</td>
-                        <td>{{ accountStats.verified ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>2FA activé</td>
-                        <td>{{ accountStats.twoFactorEnabled ?? 0 }}</td>
-                    </tr>
-                    <tr>
-                        <td>Comptes verrouillés actuellement</td>
-                        <td>{{ accountStats.lockedNow ?? 0 }}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        
-        <div class="footer">
-            <p>AgriLink - Rapport généré automatiquement</p>
-        </div>
-    </div>
+
+<div class="header">
+    <table class="header-table">
+        <tr>
+            <td width="60">
+                <p class="title">🔒 Rapport Sécurité</p>
+            </td>
+            <td>
+                <p style="color: #fecaca; font-size: 9px; margin: 2px 0;">Centre de sécurité - Généré le {{ date|date('d/m/Y H:i') }}</p>
+            </td>
+            <td style="text-align: right; width: 100px;">
+                <p class="subtitle" style="margin: 0;">AgriLink Security<br/>Report</p>
+            </td>
+        </tr>
+    </table>
+</div>
+
+<div class="stats">
+    <span class="stat">🔐 Connexions réussies: {{ stats30d.loginSuccess ?? 0 }}</span>
+    <span class="stat">⚠️ Connexions échouées: {{ stats30d.loginFailed ?? 0 }}</span>
+    <span class="stat">🔒 2FA: {{ stats30d.twoFaSuccess ?? 0 }}</span>
+    <span class="stat">🚫 Verrouillés: {{ stats30d.accountLocked ?? 0 }}</span>
+</div>
+
+<div class="content">
+
+<!-- 30 Days Statistics -->
+<div class="section">
+    <div class="section-title">📊 STATISTIQUES 30 DERNIERS JOURS</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Événement</th>
+                <th>Nombre</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Connexions réussies</td>
+                <td style="text-align: center;">{{ stats30d.loginSuccess ?? 0 }}</td>
+            </tr>
+            <tr class="even">
+                <td>Connexions échouées</td>
+                <td style="text-align: center;">{{ stats30d.loginFailed ?? 0 }}</td>
+            </tr>
+            <tr>
+                <td>2FA réussi</td>
+                <td style="text-align: center;">{{ stats30d.twoFaSuccess ?? 0 }}</td>
+            </tr>
+            <tr class="even">
+                <td>Comptes verrouillés</td>
+                <td style="text-align: center;">{{ stats30d.accountLocked ?? 0 }}</td>
+            </tr>
+            <tr>
+                <td>Mots de passe changés</td>
+                <td style="text-align: center;">{{ stats30d.passwordChanged ?? 0 }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- 24 Hours Statistics -->
+<div class="section">
+    <div class="section-title">⏱️ STATISTIQUES 24 HEURES</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Événement</th>
+                <th>Nombre</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Connexions réussies</td>
+                <td style="text-align: center;">{{ stats24h.loginSuccess ?? 0 }}</td>
+            </tr>
+            <tr class="even">
+                <td>Connexions échouées</td>
+                <td style="text-align: center;">{{ stats24h.loginFailed ?? 0 }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Account Overview -->
+<div class="section">
+    <div class="section-title">👥 APERÇU COMPTES</div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Statistique</th>
+                <th>Nombre</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Total comptes</td>
+                <td style="text-align: center;">{{ accountStats.total ?? 0 }}</td>
+            </tr>
+            <tr class="even">
+                <td>Comptes actifs</td>
+                <td style="text-align: center;">{{ accountStats.active ?? 0 }}</td>
+            </tr>
+            <tr>
+                <td>Emails vérifiés</td>
+                <td style="text-align: center;">{{ accountStats.verified ?? 0 }}</td>
+            </tr>
+            <tr class="even">
+                <td>2FA activé</td>
+                <td style="text-align: center;">{{ accountStats.twoFactorEnabled ?? 0 }}</td>
+            </tr>
+            <tr>
+                <td>Comptes verrouillés actuellement</td>
+                <td style="text-align: center;">{{ accountStats.lockedNow ?? 0 }}</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+</div>
+
+<div class="footer">
+    AgriLink - Rapport de sécurité · Généré le {{ date|date('d/m/Y \\à H:i') }}
+</div>
+
 </body>
 </html>
