@@ -3,7 +3,9 @@
 namespace App\Controller\UserManagement;
 
 use App\Entity\UserManagement\User;
+use App\Repository\Activity\ActiviteRepository;
 use App\Repository\Activity\EvenementRepository;
+use App\Service\OpenWeatherMapService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -12,6 +14,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class DashboardController extends AbstractController
 {
+    public function __construct(
+        private readonly OpenWeatherMapService $openWeatherMapService,
+    ) {
+    }
+
     #[Route('/dashboard', name: 'app_dashboard')]
     public function index(): Response
     {
@@ -39,14 +46,65 @@ class DashboardController extends AbstractController
 
     #[Route('/dashboard/agriculteur', name: 'app_dashboard_agriculteur')]
     #[IsGranted('ROLE_AGRICULTEUR')]
-    public function agriculteurDashboard(EvenementRepository $evenementRepository): Response
+    public function agriculteurDashboard(
+        EvenementRepository $evenementRepository,
+        ActiviteRepository $activiteRepository,
+    ): Response
     {
         /** @var User $user */
         $user = $this->getUser();
+        $userCity = $user->getVille();
+        $weather = $this->openWeatherMapService->getCurrentWeatherForCity($userCity);
+        $events = [];
+
+        $todayStart = new \DateTimeImmutable('today 00:00:00');
+        $todayEnd = new \DateTimeImmutable('today 23:59:59');
+
+        $todayActivites = $activiteRepository->findBetweenDates($todayStart, $todayEnd);
+        foreach ($todayActivites as $activite) {
+            if ($activite->getIdAgriculteur() !== $user->getId()) {
+                continue;
+            }
+
+            $start = $activite->getDateDebut();
+            $events[] = [
+                'type' => 'ACTIVITY',
+                'typeLabel' => 'Activité',
+                'title' => $activite->getTitre(),
+                'time' => $start?->format('H:i'),
+                'sortKey' => $start?->getTimestamp() ?? PHP_INT_MAX,
+            ];
+        }
+
+        $todayEvenements = $evenementRepository->findBetweenDates($todayStart, $todayEnd);
+        foreach ($todayEvenements as $evenement) {
+            if ($evenement->getOrganisateur()?->getId() !== $user->getId()) {
+                continue;
+            }
+
+            $eventDate = $evenement->getDateEvenement();
+            $events[] = [
+                'type' => 'EVENT',
+                'typeLabel' => 'Événement',
+                'title' => $evenement->getTitre(),
+                'time' => $eventDate?->format('H:i'),
+                'sortKey' => $eventDate?->getTimestamp() ?? PHP_INT_MAX,
+            ];
+        }
+
+        usort(
+            $events,
+            static fn (array $a, array $b): int => $a['sortKey'] <=> $b['sortKey']
+        );
 
         return $this->render('user_management/dashboard/agriculteur.html.twig', [
             'myEvenementsCount' => $evenementRepository->countByOrganisateurId((int) $user->getId()),
             'myEvenements' => $evenementRepository->findLatestByOrganisateurId((int) $user->getId(), 6),
+            'temperature' => $weather['temperature'] ?? null,
+            'weatherIcon' => $weather['icon'] ?? null,
+            'weatherDescription' => $weather['description'] ?? null,
+            'userCity' => $userCity,
+            'events' => $events,
         ]);
     }
 
@@ -79,4 +137,5 @@ class DashboardController extends AbstractController
 
         return $this->render('user_management/home/landing.html.twig');
     }
+
 }

@@ -15,11 +15,19 @@
             <h2 class="fs-3 fw-bold text-dark mb-1">Événements</h2>
             <p class="text-muted mb-0">Gérez vos événements et leurs invitations.</p>
         </div>
-        <a href="{{ path('evenement_new') }}" class="btn btn-success px-4">
-            <span class="me-2">➕</span>
-            Nouvel événement
-        </a>
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-success px-4" data-bs-toggle="modal" data-bs-target="#invitationMailModal">
+                <span class="me-2">📧</span>
+                Invitation par mail
+            </button>
+            <a href="{{ path('evenement_new', {'redirect': app.request.uri}) }}" class="btn btn-success px-4">
+                <span class="me-2">➕</span>
+                Nouvel événement
+            </a>
+        </div>
     </div>
+
+    <div id="invitationMailSuccess" class="alert alert-success d-none" role="alert"></div>
 
     <form id="evenement-filters" method="get" class="card border-0 shadow-sm mb-4" autocomplete="off">
         <div class="card-body p-3 p-lg-4">
@@ -47,6 +55,51 @@
             stats: stats
         } only %}
     </div>
+
+    <div class="modal fade" id="invitationMailModal" tabindex="-1" aria-labelledby="invitationMailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="invitationMailModalLabel">Invitation par mail</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+
+                {{ form_start(invitationMailForm, {
+                    attr: {
+                        id: 'invitationMailForm',
+                        novalidate: 'novalidate',
+                        enctype: 'multipart/form-data'
+                    },
+                    action: path('evenement_send_invitation_mail'),
+                    method: 'POST'
+                }) }}
+                    <div class="modal-body">
+                        <div id="invitationMailErrors" class="alert alert-danger d-none" role="alert"></div>
+
+                        <div class="mb-3">
+                            {{ form_label(invitationMailForm.email, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                            {{ form_widget(invitationMailForm.email, {'attr': {'class': 'form-control', 'required': true}}) }}
+                        </div>
+
+                        <div class="mb-0">
+                            {{ form_label(invitationMailForm.pdfFile, null, {'label_attr': {'class': 'form-label fw-semibold'}}) }}
+                            {{ form_widget(invitationMailForm.pdfFile, {'attr': {'class': 'form-control', 'accept': 'application/pdf,.pdf', 'required': true}}) }}
+                            <div class="form-text">Format accepté: PDF uniquement.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-success" id="invitationMailSubmitBtn">
+                            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            <span class="btn-text">Envoyer invitation</span>
+                        </button>
+                    </div>
+                {{ form_end(invitationMailForm) }}
+            </div>
+        </div>
+    </div>
+
+    {{ include('components/qr_modal.html.twig') }}
 
     <script>
         (() => {
@@ -88,6 +141,74 @@
 
             form.addEventListener('change', fetchResults);
             form.addEventListener('submit', (event) => event.preventDefault());
+
+            const invitationForm = document.getElementById('invitationMailForm');
+            const invitationErrors = document.getElementById('invitationMailErrors');
+            const invitationSuccess = document.getElementById('invitationMailSuccess');
+            const submitBtn = document.getElementById('invitationMailSubmitBtn');
+
+            if (!invitationForm || !submitBtn) {
+                return;
+            }
+
+            const spinner = submitBtn.querySelector('.spinner-border');
+            const btnText = submitBtn.querySelector('.btn-text');
+            const modalElement = document.getElementById('invitationMailModal');
+
+            const showInvitationErrors = (messages) => {
+                invitationErrors.innerHTML = Array.isArray(messages)
+                    ? messages.map((msg) => `<div>${msg}</div>`).join('')
+                    : '<div>Une erreur est survenue.</div>';
+                invitationErrors.classList.remove('d-none');
+            };
+
+            const toggleInvitationLoading = (loading) => {
+                submitBtn.disabled = loading;
+                spinner?.classList.toggle('d-none', !loading);
+                if (btnText) {
+                    btnText.textContent = loading ? 'Envoi...' : 'Envoyer invitation';
+                }
+            };
+
+            invitationForm.addEventListener('submit', (event) => {
+                event.preventDefault();
+
+                invitationErrors.classList.add('d-none');
+                invitationSuccess.classList.add('d-none');
+
+                const formData = new FormData(invitationForm);
+                toggleInvitationLoading(true);
+
+                fetch(invitationForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData
+                })
+                    .then(async (response) => {
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) {
+                            throw data;
+                        }
+
+                        invitationForm.reset();
+
+                        if (window.bootstrap && modalElement) {
+                            const modal = bootstrap.Modal.getInstance(modalElement) || new bootstrap.Modal(modalElement);
+                            modal.hide();
+                        }
+
+                        invitationSuccess.textContent = data.message || 'Invitation envoyée avec succès.';
+                        invitationSuccess.classList.remove('d-none');
+                    })
+                    .catch((errorPayload) => {
+                        showInvitationErrors(errorPayload.errors || ['Erreur lors de l\'envoi de l\'invitation.']);
+                    })
+                    .finally(() => {
+                        toggleInvitationLoading(false);
+                    });
+            });
         })();
     </script>
     </section>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitation à un événement - AgriLink</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f1f5f1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f1f5f1;">
+        <tr>
+            <td align="center" style="padding:40px 16px;">
+                <table role="presentation" width="100%" style="max-width:600px;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);" cellpadding="0" cellspacing="0">
+
+                    {# Logo Header #}
+                    <tr>
+                        <td style="background-color:#ffffff;padding:28px 40px 20px;text-align:center;border-bottom:3px solid #16a34a;">
+                            <img src="{{ appUrl }}/logo_with_text.png" alt="AgriLink" style="height:56px;width:auto;display:block;margin:0 auto;" />
+                        </td>
+                    </tr>
+
+                    {# Icon Banner #}
+                    <tr>
+                        <td style="background-color:#166534;padding:24px 40px;text-align:center;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" align="center">
+                                <tr>
+                                    <td style="background-color:rgba(255,255,255,0.15);border-radius:50%;width:52px;height:52px;text-align:center;vertical-align:middle;">
+                                        <svg width="28" height="28" fill="none" stroke="#ffffff" viewBox="0 0 24 24" style="display:inline-block;vertical-align:middle;margin-top:12px;">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 00.948-.684l1.498-4.493a1 1 0 011.502-.684l1.498 4.493a1 1 0 00.948.684H19a2 2 0 012 2v2a2 2 0 01-2 2H5a2 2 0 01-2-2V5z"/>
+                                        </svg>
+                                    </td>
+                                    <td style="padding-left:14px;text-align:left;">
+                                        <p style="margin:0;color:#ffffff;font-size:18px;font-weight:700;letter-spacing:-0.01em;">Invitation à un événement</p>
+                                        <p style="margin:4px 0 0;color:rgba(255,255,255,0.75);font-size:13px;">Consultez les informations en pièce jointe</p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    {# Body #}
+                    <tr>
+                        <td style="background-color:#ffffff;padding:36px 40px;">
+                            <p style="margin:0 0 8px;font-size:15px;color:#374151;">Bonjour,</p>
+                            <p style="margin:0 0 28px;font-size:15px;color:#374151;line-height:1.6;">
+                                Vous avez reçu une invitation à un événement organisé par <strong>AgriLink</strong>. Tous les détails sont disponibles dans le document joint.
+                            </p>
+
+                            {# Info box #}
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:24px;">
+                                <tr>
+                                    <td style="background-color:#f0fdf4;border-left:4px solid #16a34a;border-radius:0 8px 8px 0;padding:16px 18px;">
+                                        <table role="presentation" cellpadding="0" cellspacing="0">
+                                            <tr>
+                                                <td style="vertical-align:top;padding-right:10px;padding-top:2px;">
+                                                    <svg width="18" height="18" fill="none" stroke="#16a34a" viewBox="0 0 24 24" style="display:block;">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m7 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                                    </svg>
+                                                </td>
+                                                <td style="color:#166534;font-size:14px;line-height:1.6;">
+                                                    <strong style="display:block;margin-bottom:4px;color:#166534;">Document joint</strong>
+                                                    Le PDF contient tous les détails de votre invitation et de l'événement.
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            {# Support text #}
+                            <p style="margin:0;font-size:14px;color:#6b7280;line-height:1.6;">
+                                Si vous rencontrez des problèmes pour ouvrir le document ou avez des questions, n'hésitez pas à nous <a href="mailto:support@agrilink.com" style="color:#16a34a;text-decoration:none;font-weight:600;">contacter</a>.
+                            </p>
+                        </td>
+                    </tr>
+
+                    {# Footer #}
+                    <tr>
+                        <td style="background-color:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center;">
+                            <p style="margin:0 0 4px;font-size:12px;color:#6b7280;">Cet email a été envoyé automatiquement par AgriLink.</p>
+                            <p style="margin:12px 0 0;font-size:11px;color:#d1d5db;">&copy; {{ "now"|date("Y") }} AgriLink — La plateforme agricole de confiance</p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

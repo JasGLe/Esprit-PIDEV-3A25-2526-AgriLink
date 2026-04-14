@@ -96,4 +96,23 @@ class EvenementRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * Find events between two dates for calendar
+     * @return Evenement[]
+     */
+    public function findBetweenDates(
+        \DateTimeInterface $startDate,
+        \DateTimeInterface $endDate,
+    ): array {
+        return $this->createQueryBuilder('e')
+            ->andWhere('e.dateEvenement >= :startDate')
+            ->andWhere('e.dateEvenement <= :endDate')
+            ->setParameter('startDate', $startDate)
+            ->setParameter('endDate', $endDate)
+            ->orderBy('e.dateEvenement', 'ASC')
+            ->addOrderBy('e.idEvenement', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }
