@@ -383,15 +383,7 @@
                             <div class="text-muted" style="font-size:0.73rem;">Données brutes tabulaires</div>
                         </div>
                     </div>
-                    <div class="col-12 col-md-4">
-                        <div class="p-3 rounded-3 border h-100 text-center" style="cursor:pointer;" onclick="exportChartsPNG()" onmouseover="this.style.borderColor='#3b82f6'" onmouseout="this.style.borderColor=''">
-                            <div class="d-flex align-items-center justify-content-center rounded-circle mx-auto mb-2" style="width:48px;height:48px;background:rgba(59,130,246,0.1);">
-                                <svg style="color:#3b82f6;" width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                            </div>
-                            <div class="fw-semibold text-dark small">Graphiques PNG</div>
-                            <div class="text-muted" style="font-size:0.73rem;">Images des graphiques pour audit</div>
-                        </div>
-                    </div>
+
                 </div>
             </div>
         </div>
@@ -404,6 +396,13 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Wrap chart initialization in requestAnimationFrame to ensure layout is complete
+    requestAnimationFrame(() => {
+        initializeAdminCharts();
+    });
+});
+
+function initializeAdminCharts() {
     // ── Role Distribution Donut ──────────────────────────────────────
     const roleCtx = document.getElementById('roleDistChart');
     if (roleCtx) {
@@ -479,62 +478,18 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-});
+}
 
 // ── Export functions ─────────────────────────────────────────────────────
 function exportPDF() {
-    window.print();
+    window.location.href = '{{ path('admin_export_pdf') }}';
 }
 
 function exportExcel() {
-    const date = new Date().toLocaleDateString('fr-FR');
-    const rows = [
-        ['Rapport AgriLink - ' + date],
-        [],
-        ['=== STATISTIQUES UTILISATEURS ==='],
-        ['Catégorie', 'Nombre', 'Pourcentage'],
-        ['Total Utilisateurs', {{ stats.total ?? 0 }}, '100%'],
-        ['Agriculteurs', {{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}, '{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRICULTEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%'],
-        ['Fournisseurs', {{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}, '{{ stats.total > 0 ? ((stats.by_role.ROLE_FOURNISSEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%'],
-        ['AgriPlus', {{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}, '{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRIPLUS ?? 0) / stats.total * 100)|round(1) : 0 }}%'],
-        ['Utilisateurs standard', {{ stats.by_role.ROLE_USER ?? 0 }}, '{{ stats.total > 0 ? ((stats.by_role.ROLE_USER ?? 0) / stats.total * 100)|round(1) : 0 }}%'],
-        [],
-        ['=== SÉCURITÉ (30 DERNIERS JOURS) ==='],
-        ['Événement', 'Nombre'],
-        ['Connexions réussies', {{ securityStats.loginSuccess ?? 0 }}],
-        ['Connexions échouées', {{ securityStats.loginFailed ?? 0 }}],
-        ['Comptes verrouillés', {{ securityStats.accountLocked ?? 0 }}],
-        ['Changements de mot de passe', {{ securityStats.passwordChanged ?? 0 }}],
-        ['2FA réussi', {{ securityStats.twoFaSuccess ?? 0 }}],
-        [],
-        ['=== CROISSANCE ==='],
-        ['Indicateur', 'Valeur'],
-        ['Taux de croissance (30j)', '{{ growthRate|round(1) }}%'],
-        ['Nouvelles inscriptions (7j)', {{ recentUsers|length }}],
-    ];
-    const csvContent = rows.map(r => r.join(';')).join('\n');
-    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = 'rapport-agrilink-' + new Date().toISOString().slice(0,10) + '.csv';
-    link.click();
+    window.location.href = '{{ path('admin_export_excel') }}';
 }
 
-function exportChartsPNG() {
-    const charts = [
-        { id: 'roleDistChart', name: 'repartition-roles' },
-        { id: 'securityOverviewChart', name: 'apercu-securite' }
-    ];
-    charts.forEach(function(c) {
-        const canvas = document.getElementById(c.id);
-        if (canvas) {
-            const link = document.createElement('a');
-            link.download = 'agrilink-' + c.name + '-' + new Date().toISOString().slice(0,10) + '.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        }
-    });
-}
+
 </script>
 <style>
 @media print {
