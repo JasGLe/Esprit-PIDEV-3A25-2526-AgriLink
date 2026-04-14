@@ -141,6 +141,7 @@ class OpenWeatherMapService
         }
 
         $dailyBest = [];
+        $dailyStats = [];
 
         foreach ($items as $item) {
             if (
@@ -162,6 +163,7 @@ class OpenWeatherMapService
             $hour = (int) $date->format('H');
             $distanceToNoon = abs(12 - $hour);
 
+            // Track the representative point for display (closest to noon)
             if (!isset($dailyBest[$dayKey]) || $distanceToNoon < $dailyBest[$dayKey]['distanceToNoon']) {
                 $dailyBest[$dayKey] = [
                     'distanceToNoon' => $distanceToNoon,
@@ -169,6 +171,20 @@ class OpenWeatherMapService
                     'entry' => $item,
                 ];
             }
+
+            // Calculate actual daily min/max across all day points
+            if (!isset($dailyStats[$dayKey])) {
+                $dailyStats[$dayKey] = [
+                    'tempMin' => PHP_FLOAT_MAX,
+                    'tempMax' => PHP_FLOAT_MIN,
+                ];
+            }
+
+            $tempMin = (float) $item['main']['temp_min'];
+            $tempMax = (float) $item['main']['temp_max'];
+
+            $dailyStats[$dayKey]['tempMin'] = min($dailyStats[$dayKey]['tempMin'], $tempMin);
+            $dailyStats[$dayKey]['tempMax'] = max($dailyStats[$dayKey]['tempMax'], $tempMax);
         }
 
         ksort($dailyBest);
@@ -179,13 +195,15 @@ class OpenWeatherMapService
             $date = $dailyData['date'];
             /** @var array<string, mixed> $entry */
             $entry = $dailyData['entry'];
+            $dayKey = $date->format('Y-m-d');
 
             $forecast[] = [
-                'dateLabel' => $this->formatFrenchDateLabel($date),
+                'dateKey' => $dayKey, // Format: YYYY-MM-DD (for FullCalendar data-date matching)
+                'dateLabel' => $this->formatFrenchDateLabel($date), // Format: Lun 14 janv (for UI display)
                 'icon' => (string) $entry['weather'][0]['icon'],
                 'description' => ucfirst((string) $entry['weather'][0]['description']),
-                'tempMin' => (float) $entry['main']['temp_min'],
-                'tempMax' => (float) $entry['main']['temp_max'],
+                'tempMin' => $dailyStats[$dayKey]['tempMin'] ?? (float) $entry['main']['temp_min'],
+                'tempMax' => $dailyStats[$dayKey]['tempMax'] ?? (float) $entry['main']['temp_max'],
                 'humidity' => (int) $entry['main']['humidity'],
                 'windSpeed' => (float) $entry['wind']['speed'],
                 'condition' => (string) ($entry['weather'][0]['main'] ?? ''),

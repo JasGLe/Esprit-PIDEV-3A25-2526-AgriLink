@@ -4,15 +4,12 @@ namespace App\Controller\Activity;
 
 use App\Repository\Activity\ActiviteRepository;
 use App\Repository\Activity\EvenementRepository;
-use App\Entity\UserManagement\User;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[Route('/calendar')]
 #[IsGranted('ROLE_USER')]
@@ -21,11 +18,6 @@ class CalendarController extends AbstractController
     public function __construct(
         private readonly ActiviteRepository $activiteRepository,
         private readonly EvenementRepository $evenementRepository,
-        private readonly HttpClientInterface $httpClient,
-        #[Autowire('%env(OPENWEATHER_API_KEY)%')]
-        private readonly string $openWeatherApiKey,
-        #[Autowire('%env(OPENWEATHER_BASE_URL)%')]
-        private readonly string $openWeatherBaseUrl,
     ) {
     }
 
@@ -37,31 +29,17 @@ class CalendarController extends AbstractController
     {
         $this->assertModuleAccess();
 
-        $user = $this->getUser();
-        $userCity = $user instanceof User ? $user->getVille() : null;
-        $forecast = [];
-
-        if ($userCity) {
-            try {
-                $forecast = $this->fetchForecastForCity($userCity);
-            } catch (\Throwable) {
-                $forecast = [];
-            }
-        }
-
         return $this->render('activity/calendar/index.html.twig', [
             'page_title' => 'Calendrier Agricole',
-            'weatherForecast' => $forecast,
-            'userCity' => $userCity,
         ]);
     }
 
     /**
      * Get events for FullCalendar (JSON API)
-     * 
+     *
      * IMPORTANT CONSTRAINT: Events are displayed ONLY on their start date.
      * Multi-day activities/events appear only on the start date, not repeated.
-     * 
+     *
      * @param Request $request
      * @return JsonResponse
      */
@@ -82,18 +60,14 @@ class CalendarController extends AbstractController
 
         $events = [];
 
-        // Get activities for the date range
-        // Display ONLY on start date, not repeated on end date
         $activites = $this->activiteRepository->findBetweenDates($startDate, $endDate);
         foreach ($activites as $activite) {
             if ($activite->getDateDebut()) {
                 $events[] = [
                     'id' => 'activite_' . $activite->getId(),
                     'title' => $activite->getTitre(),
-                    // CONSTRAINT: Only use start date, ignore end date for display
-                    // This ensures multi-day events appear only once (on start date)
                     'start' => $activite->getDateDebut()->format('Y-m-d\TH:i:s'),
-                    'backgroundColor' => '#22c55e', // Green for activities
+                    'backgroundColor' => '#22c55e',
                     'borderColor' => '#16a34a',
                     'extendedProps' => [
                         'type' => 'activite',
@@ -105,17 +79,14 @@ class CalendarController extends AbstractController
             }
         }
 
-        // Get events for the date range
-        // Display ONLY on start date, not repeated
         $evenements = $this->evenementRepository->findBetweenDates($startDate, $endDate);
         foreach ($evenements as $evenement) {
             if ($evenement->getDateEvenement()) {
                 $events[] = [
                     'id' => 'evenement_' . $evenement->getId(),
                     'title' => $evenement->getTitre(),
-                    // CONSTRAINT: Only use event date for display
                     'start' => $evenement->getDateEvenement()->format('Y-m-d\TH:i:s'),
-                    'backgroundColor' => '#3b82f6', // Blue for events
+                    'backgroundColor' => '#3b82f6',
                     'borderColor' => '#1d4ed8',
                     'extendedProps' => [
                         'type' => 'evenement',
@@ -128,127 +99,6 @@ class CalendarController extends AbstractController
         }
 
         return new JsonResponse($events);
-    }
-
-    /**
-     * Get weather forecast as JSON for calendar overlay
-     */
-    #[Route('/api/weather', name: 'calendar_api_weather', methods: ['GET'])]
-    public function apiWeather(Request $request): JsonResponse
-    {
-        $this->assertModuleAccess();
-
-        $city = $request->query->get('city');
-        if (!$city) {
-            $user = $this->getUser();
-            $city = $user instanceof User ? $user->getVille() : null;
-        }
-
-        if (!$city) {
-            return new JsonResponse(['error' => 'City not specified'], 400);
-        }
-
-        try {
-            $forecast = $this->fetchForecastForCity($city);
-            $weatherMap = [];
-            foreach ($forecast as $day) {
-                $dateKey = $day['dateLabel'];
-                $weatherMap[$dateKey] = [
-                    'icon' => $day['icon'],
-                    'tempMax' => $day['tempMax'],
-                    'tempMin' => $day['tempMin'],
-                    'description' => $day['description'],
-                ];
-            }
-            return new JsonResponse($weatherMap);
-        } catch (\Throwable $e) {
-            return new JsonResponse(['error' => 'Unable to fetch weather'], 500);
-        }
-    }
-
-    /**
-     * @return list<array{
-     *     dateLabel: string,
-     *     icon: string,
-     *     description: string,
-     *     tempMin: float,
-     *     tempMax: float,
-     *     humidity: int,
-     *     windSpeed: float,
-     *     condition: string
-     * }>
-     */
-    private function fetchForecastForCity(string $city): array
-    {
-        $response = $this->httpClient->request('GET', rtrim($this->openWeatherBaseUrl, '/') . '/forecast', [
-            'query' => [
-                'q' => sprintf('%s,TN', $city),
-                'appid' => trim($this->openWeatherApiKey),
-                'units' => 'metric',
-                'lang' => 'fr',
-            ],
-        ]);
-
-        if ($response->getStatusCode() !== 200) {
-            throw new \RuntimeException('Unable to retrieve forecast data.');
-        }
-
-        $payload = $response->toArray(false);
-        $items = $payload['list'] ?? null;
-        if (!is_array($items)) {
-            throw new \RuntimeException('Unexpected forecast payload.');
-        }
-
-        $dailyBest = [];
-        foreach ($items as $item) {
-            if (
-                !isset(
-                    $item['dt'],
-                    $item['main']['temp_min'],
-                    $item['main']['temp_max'],
-                    $item['main']['humidity'],
-                    $item['wind']['speed'],
-                    $item['weather'][0]['description'],
-                    $item['weather'][0]['icon']
-                )
-            ) {
-                continue;
-            }
-
-            $date = (new \DateTimeImmutable())->setTimestamp((int) $item['dt']);
-            $dayKey = $date->format('Y-m-d');
-            $hour = (int) $date->format('H');
-            $distanceToNoon = abs(12 - $hour);
-
-            if (!isset($dailyBest[$dayKey]) || $distanceToNoon < $dailyBest[$dayKey]['distanceToNoon']) {
-                $dailyBest[$dayKey] = [
-                    'distanceToNoon' => $distanceToNoon,
-                    'date' => $date,
-                    'entry' => $item,
-                ];
-            }
-        }
-
-        ksort($dailyBest);
-
-        $forecast = [];
-        foreach (array_slice($dailyBest, 0, 5) as $dailyData) {
-            $date = $dailyData['date'];
-            $entry = $dailyData['entry'];
-
-            $forecast[] = [
-                'dateLabel' => $date->format('Y-m-d'),
-                'icon' => (string) $entry['weather'][0]['icon'],
-                'description' => ucfirst((string) $entry['weather'][0]['description']),
-                'tempMin' => (float) $entry['main']['temp_min'],
-                'tempMax' => (float) $entry['main']['temp_max'],
-                'humidity' => (int) $entry['main']['humidity'],
-                'windSpeed' => (float) $entry['wind']['speed'],
-                'condition' => (string) ($entry['weather'][0]['main'] ?? ''),
-            ];
-        }
-
-        return $forecast;
     }
 
     /**
