@@ -159,18 +159,6 @@
                                 <span class="profile-info-label">Date de naissance</span>
                                 <span class="profile-info-value">{{ app.user.dateNaissance ? app.user.dateNaissance|date('d/m/Y') : 'Non renseigné' }}</span>
                             </div>
-                            <div class="profile-info-item">
-                                <span class="profile-info-label">Genre</span>
-                                <span class="profile-info-value">
-                                    {% if app.user.genre == 'M' %}
-                                        Masculin
-                                    {% elseif app.user.genre == 'F' %}
-                                        Féminin
-                                    {% else %}
-                                        Non renseigné
-                                    {% endif %}
-                                </span>
-                            </div>
                         </div>
                     </div>
                 </div>
