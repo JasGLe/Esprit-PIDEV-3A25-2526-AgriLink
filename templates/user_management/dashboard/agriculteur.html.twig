@@ -211,13 +211,38 @@
                         <div class="ms-3 flex-grow-1">
                             <dl>
                                 <dt class="small fw-medium text-muted text-truncate">Météo</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">--°C</dd>
+                                {% set weatherEmoji = '🌤️' %}
+                                {% if weatherIcon is defined and weatherIcon %}
+                                    {% if weatherIcon starts with '01' %}
+                                        {% set weatherEmoji = '☀️' %}
+                                    {% elseif weatherIcon starts with '02' %}
+                                        {% set weatherEmoji = '⛅' %}
+                                    {% elseif weatherIcon starts with '03' or weatherIcon starts with '04' %}
+                                        {% set weatherEmoji = '☁️' %}
+                                    {% elseif weatherIcon starts with '09' or weatherIcon starts with '10' %}
+                                        {% set weatherEmoji = '🌧️' %}
+                                    {% elseif weatherIcon starts with '11' %}
+                                        {% set weatherEmoji = '⛈️' %}
+                                    {% elseif weatherIcon starts with '13' %}
+                                        {% set weatherEmoji = '❄️' %}
+                                    {% endif %}
+                                {% endif %}
+                                <dd class="fs-5 fw-semibold text-dark mb-0">
+                                    {% if temperature is defined and temperature is not null %}
+                                        {{ weatherEmoji }} {{ temperature|round }}°C
+                                    {% else %}
+                                        --°C
+                                    {% endif %}
+                                </dd>
+                                {% if weatherDescription is defined and weatherDescription %}
+                                    <dd class="small text-muted mb-0">{{ weatherDescription }}</dd>
+                                {% endif %}
                             </dl>
                         </div>
                     </div>
                 </div>
                 <div class="card-footer bg-light p-3">
-                    <span class="small text-muted">{{ app.user.ville|default('Non défini') }}</span>
+                    <span class="small text-muted">{{ userCity|default('Non défini') }}</span>
                 </div>
             </div>
         </div>
@@ -262,28 +287,11 @@
 
     {# Main content grid #}
     <div class="row g-4">
-        {# Quick Actions + Weather #}
+        {# Quick Actions #}
         <div class="col-12 col-lg-6">
         {% embed 'components/_card.html.twig' %}
             {% block card_title %}Actions rapides{% endblock %}
             {% block card_content %}
-                {% if weather %}
-                <div class="mb-4 p-3 rounded" style="background-color: #f9fafb; border: 1px solid #e5e7eb;">
-                    <div class="d-flex justify-content-between align-items-start">
-                        <div>
-                            <div class="small fw-medium text-muted mb-2">☀️ Météo • {{ userCity }}</div>
-                            <div class="d-flex align-items-baseline gap-1">
-                                <span class="fs-4 fw-bold text-dark">{{ weather.temp|round }}°C</span>
-                                <span class="small text-muted">{{ weather.description }}</span>
-                            </div>
-                            <div class="small text-muted mt-2">
-                                💧 {{ weather.humidity }}% | 💨 {{ weather.windSpeed|round(1) }} m/s
-                            </div>
-                        </div>
-                        <a href="{{ path('weather_index') }}" class="btn btn-sm btn-outline-success">Détail</a>
-                    </div>
-                </div>
-                {% endif %}
                 <div class="d-flex flex-column gap-2">
                     <a href="#" class="d-flex align-items-center p-3 rounded border border-light-subtle text-decoration-none">
                         <div class="d-flex align-items-center justify-content-center rounded" style="width: 40px; height: 40px; background-color: #dcfce7; margin-right: 1rem;">
@@ -330,36 +338,23 @@
         {% embed 'components/_card.html.twig' %}
             {% block card_title %}Calendrier agricole{% endblock %}
             {% block card_content %}
-                {% if weatherForecast is defined and weatherForecast|length > 0 %}
-                <div class="mb-4">
-                    <div class="small fw-medium text-muted mb-2">Prévisions 5 jours</div>
-                    <div class="d-flex gap-2" style="overflow-x: auto;">
-                        {% for day in weatherForecast[:5] %}
-                        <div class="p-2 rounded text-center" style="background-color: #f9fafb; border: 1px solid #e5e7eb; min-width: 70px;">
-                            <div class="small fw-medium text-dark">{{ day.dateLabel|date('d/m') }}</div>
-                            <div class="fs-5 my-1">
-                                {%- if day.icon starts with '01' -%}☀️
-                                {%- elseif day.icon starts with '02' -%}⛅
-                                {%- elseif day.icon starts with '03' or day.icon starts with '04' -%}☁️
-                                {%- elseif day.icon starts with '09' or day.icon starts with '10' -%}🌧️
-                                {%- elseif day.icon starts with '11' -%}⛈️
-                                {%- elseif day.icon starts with '13' -%}❄️
-                                {%- else -%}🌤️
-                                {%- endif -%}
-                            </div>
-                            <div class="small text-muted">{{ day.tempMax|round }}°C</div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-                {% endif %}
                 <div class="text-center py-3">
-                    <div class="d-flex align-items-center justify-content-center rounded-circle mx-auto mb-3" style="width: 64px; height: 64px; background-color: #f3f4f6;">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #9ca3af;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                    </div>
-                    <p class="text-muted small mb-3">Aucune tâche programmée pour aujourd'hui</p>
+                    {% if events is defined and events|length > 0 %}
+                        <div class="text-start">
+                            <p class="small fw-medium text-dark mb-2">Tâches / événements du jour</p>
+                            <ul class="list-unstyled mb-0">
+                                {% for event in events %}
+                                    <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-light-subtle">
+                                        <div>
+                                            <p class="small fw-medium text-dark mb-0">{{ event.title }}</p>
+                                            <p class="small text-muted mb-0">{{ event.typeLabel }}</p>
+                                        </div>
+                                        <span class="small text-muted">{{ event.time ?? '--:--' }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
                     <a href="{{ path('calendar_index') }}" class="btn btn-success btn-sm">Voir le calendrier</a>
                 </div>
             {% endblock %}

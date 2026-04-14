@@ -3,23 +3,18 @@
 namespace App\Controller\Activity;
 
 use App\Entity\UserManagement\User;
+use App\Service\OpenWeatherMapService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[Route('/meteo')]
 #[IsGranted('ROLE_USER')]
 class WeatherController extends AbstractController
 {
     private const DEFAULT_CITY = 'Tunis';
-    private const COUNTRY_CODE = 'TN';
-    private const UNITS = 'metric';
-    private const LANG = 'fr';
 
     /**
      * @var array<string, string>
@@ -48,11 +43,7 @@ class WeatherController extends AbstractController
     ];
 
     public function __construct(
-        private readonly HttpClientInterface $httpClient,
-        #[Autowire('%env(OPENWEATHER_API_KEY)%')]
-        private readonly string $openWeatherApiKey,
-        #[Autowire('%env(OPENWEATHER_BASE_URL)%')]
-        private readonly string $openWeatherBaseUrl,
+        private readonly OpenWeatherMapService $openWeatherMapService,
     ) {
     }
 
@@ -74,8 +65,12 @@ class WeatherController extends AbstractController
         $error = null;
 
         try {
-            $weather = $this->fetchWeatherForCity($city);
-            $forecast = $this->fetchForecastForCity($city);
+            $weather = $this->openWeatherMapService->getDetailedWeatherForCity($city);
+            $forecast = $this->openWeatherMapService->getForecastForCity($city);
+
+            if ($weather === null) {
+                throw new \RuntimeException('Impossible de récupérer les données météo.');
+            }
         } catch (\Throwable $exception) {
             $error = 'Impossible de récupérer les données météo pour le moment.';
             $this->addFlash('error', $error);
@@ -96,160 +91,6 @@ class WeatherController extends AbstractController
             'agriInsights' => $agriInsights,
             'weatherError' => $error,
         ]);
-    }
-
-    /**
-     * @return array{
-     *     city: string,
-     *     temperature: float,
-     *     description: string,
-     *     condition: string,
-     *     icon: string,
-     *     humidity: int,
-     *     windSpeed: float,
-     *     feelsLike: float,
-     *     pressure: int,
-     *     visibilityKm: float,
-     *     updatedAt: \DateTimeImmutable
-     * }
-     */
-    private function fetchWeatherForCity(string $city): array
-    {
-        if (trim($this->openWeatherApiKey) === '') {
-            throw new BadRequestHttpException('OpenWeather API key is not configured.');
-        }
-
-        $response = $this->httpClient->request('GET', rtrim($this->openWeatherBaseUrl, '/') . '/weather', [
-            'query' => [
-                'q' => sprintf('%s,%s', $city, self::COUNTRY_CODE),
-                'appid' => trim($this->openWeatherApiKey),
-                'units' => self::UNITS,
-                'lang' => self::LANG,
-            ],
-        ]);
-
-        $statusCode = $response->getStatusCode();
-        if ($statusCode !== Response::HTTP_OK) {
-            throw new \RuntimeException(sprintf('OpenWeather responded with status %d', $statusCode));
-        }
-
-        $payload = $response->toArray(false);
-        if (
-            !isset(
-                $payload['main']['temp'],
-                $payload['main']['humidity'],
-                $payload['main']['pressure'],
-                $payload['wind']['speed'],
-                $payload['weather'][0]['description'],
-                $payload['weather'][0]['icon']
-            )
-        ) {
-            throw new \RuntimeException('Unexpected weather payload.');
-        }
-
-        $updatedAt = isset($payload['dt']) ? (new \DateTimeImmutable())->setTimestamp((int) $payload['dt']) : new \DateTimeImmutable();
-
-        return [
-            'city' => (string) ($payload['name'] ?? $city),
-            'temperature' => (float) $payload['main']['temp'],
-            'description' => ucfirst((string) $payload['weather'][0]['description']),
-            'condition' => (string) ($payload['weather'][0]['main'] ?? ''),
-            'icon' => (string) $payload['weather'][0]['icon'],
-            'humidity' => (int) $payload['main']['humidity'],
-            'windSpeed' => (float) $payload['wind']['speed'],
-            'feelsLike' => (float) ($payload['main']['feels_like'] ?? $payload['main']['temp']),
-            'pressure' => (int) $payload['main']['pressure'],
-            'visibilityKm' => round(((float) ($payload['visibility'] ?? 0)) / 1000, 1),
-            'updatedAt' => $updatedAt,
-        ];
-    }
-
-    /**
-     * @return list<array{
-     *     dateLabel: string,
-     *     icon: string,
-     *     description: string,
-     *     tempMin: float,
-     *     tempMax: float,
-     *     humidity: int,
-     *     windSpeed: float,
-     *     condition: string
-     * }>
-     */
-    private function fetchForecastForCity(string $city): array
-    {
-        $response = $this->httpClient->request('GET', rtrim($this->openWeatherBaseUrl, '/') . '/forecast', [
-            'query' => [
-                'q' => sprintf('%s,%s', $city, self::COUNTRY_CODE),
-                'appid' => trim($this->openWeatherApiKey),
-                'units' => self::UNITS,
-                'lang' => self::LANG,
-            ],
-        ]);
-
-        if ($response->getStatusCode() !== Response::HTTP_OK) {
-            throw new \RuntimeException('Unable to retrieve forecast data.');
-        }
-
-        $payload = $response->toArray(false);
-        $items = $payload['list'] ?? null;
-        if (!is_array($items)) {
-            throw new \RuntimeException('Unexpected forecast payload.');
-        }
-
-        $dailyBest = [];
-
-        foreach ($items as $item) {
-            if (
-                !isset(
-                    $item['dt'],
-                    $item['main']['temp_min'],
-                    $item['main']['temp_max'],
-                    $item['main']['humidity'],
-                    $item['wind']['speed'],
-                    $item['weather'][0]['description'],
-                    $item['weather'][0]['icon']
-                )
-            ) {
-                continue;
-            }
-
-            $date = (new \DateTimeImmutable())->setTimestamp((int) $item['dt']);
-            $dayKey = $date->format('Y-m-d');
-            $hour = (int) $date->format('H');
-            $distanceToNoon = abs(12 - $hour);
-
-            if (!isset($dailyBest[$dayKey]) || $distanceToNoon < $dailyBest[$dayKey]['distanceToNoon']) {
-                $dailyBest[$dayKey] = [
-                    'distanceToNoon' => $distanceToNoon,
-                    'date' => $date,
-                    'entry' => $item,
-                ];
-            }
-        }
-
-        ksort($dailyBest);
-
-        $forecast = [];
-        foreach (array_slice($dailyBest, 0, 5) as $dailyData) {
-            /** @var \DateTimeImmutable $date */
-            $date = $dailyData['date'];
-            /** @var array<string, mixed> $entry */
-            $entry = $dailyData['entry'];
-
-            $forecast[] = [
-                'dateLabel' => $this->formatFrenchDateLabel($date),
-                'icon' => (string) $entry['weather'][0]['icon'],
-                'description' => ucfirst((string) $entry['weather'][0]['description']),
-                'tempMin' => (float) $entry['main']['temp_min'],
-                'tempMax' => (float) $entry['main']['temp_max'],
-                'humidity' => (int) $entry['main']['humidity'],
-                'windSpeed' => (float) $entry['wind']['speed'],
-                'condition' => (string) ($entry['weather'][0]['main'] ?? ''),
-            ];
-        }
-
-        return $forecast;
     }
 
     /**
@@ -413,39 +254,6 @@ class WeatherController extends AbstractController
         }
 
         return ucwords(strtolower($normalized));
-    }
-
-    private function formatFrenchDateLabel(\DateTimeImmutable $date): string
-    {
-        $days = [
-            'Mon' => 'Lun',
-            'Tue' => 'Mar',
-            'Wed' => 'Mer',
-            'Thu' => 'Jeu',
-            'Fri' => 'Ven',
-            'Sat' => 'Sam',
-            'Sun' => 'Dim',
-        ];
-
-        $months = [
-            'Jan' => 'janv',
-            'Feb' => 'fevr',
-            'Mar' => 'mars',
-            'Apr' => 'avr',
-            'May' => 'mai',
-            'Jun' => 'juin',
-            'Jul' => 'juil',
-            'Aug' => 'aout',
-            'Sep' => 'sept',
-            'Oct' => 'oct',
-            'Nov' => 'nov',
-            'Dec' => 'dec',
-        ];
-
-        $day = $days[$date->format('D')] ?? $date->format('D');
-        $month = $months[$date->format('M')] ?? $date->format('M');
-
-        return sprintf('%s %s %s', $day, $date->format('d'), $month);
     }
 
 }
