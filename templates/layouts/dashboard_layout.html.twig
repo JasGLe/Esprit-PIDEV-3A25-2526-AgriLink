@@ -443,11 +443,115 @@
                     </div>
                     <div class="d-flex align-items-center gap-3">
                         {# Notifications placeholder #}
-                        <button type="button" class="btn btn-link text-secondary p-0">
-                            <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                        </button>
+                       
+                        <div class="dropdown">
+                            <button class="btn btn-link text-secondary p-0 position-relative"
+                                    data-bs-toggle="dropdown" id="notifDropdown">
+                                <svg style="width:1.4rem;height:1.4rem;" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                                </svg>
+                                {# Badge rouge avec compteur #}
+                                {% set nbNotifs = notif_count|default(0) %}
+                                {% if nbNotifs > 0 %}
+                                    <span class="position-absolute top-0 start-100
+                                                translate-middle badge rounded-pill bg-danger"
+                                        style="font-size:0.6rem;padding:3px 5px;">
+                                        {{ nbNotifs > 9 ? '9+' : nbNotifs }}
+                                    </span>
+                                {% endif %}
+                            </button>
+
+                            <div class="dropdown-menu dropdown-menu-end shadow border-0"
+                                style="min-width:320px;border-radius:12px;overflow:hidden;">
+
+                                <div class="px-3 py-2 border-bottom d-flex align-items-center
+                                            justify-content-between"
+                                    style="background:#f8fafc;">
+                                    <span class="fw-semibold small text-dark">Notifications</span>
+                                    {% if nbNotifs > 0 %}
+                                        <button class="btn btn-link btn-sm text-success p-0"
+                                                style="font-size:0.75rem;"
+                                                onclick="toutLireNotifs()">
+                                            Tout marquer comme lu
+                                        </button>
+                                    {% endif %}
+                                </div>
+
+                                  {% if notifs_recentes|default([])|length > 0 %}
+
+                                <div style="max-height:320px;overflow-y:auto;">
+
+                                    {% for notif in notifs_recentes|default([]) %}
+                                        <div class="px-3 py-2 border-bottom notif-item
+                                                    {{ notif.readAt is null ? 'notif-unread' : '' }}"
+                                            data-id="{{ notif.id }}"
+                                            style="{% if notif.readAt is null %}
+                                                        background:rgba(22,163,74,0.04);
+                                                    {% endif %}
+                                                    cursor:pointer;transition:background 0.15s;">
+
+                                            <div class="d-flex align-items-start gap-2">
+
+                                                <span style="font-size:1rem;flex-shrink:0;">
+                                                    {{ notif.type == 'MODERATION_APPROUVE' ? '✅' :
+                                                    notif.type == 'MODERATION_REJETE'   ? '❌' :
+                                                    notif.type == 'MODERATION_ATTENTE'  ? '⏳' : '🔔' }}
+                                                </span>
+
+                                                <div class="flex-fill">
+
+                                                    <div class="fw-semibold"
+                                                        style="font-size:0.78rem;color:#111827;">
+                                                        {{ notif.title }}
+                                                    </div>
+
+                                                    <div class="text-muted"
+                                                        style="font-size:0.72rem;line-height:1.4;">
+                                                        {{ notif.body|slice(0, 80) }}
+                                                        {{ notif.body|length > 80 ? '…' : '' }}
+                                                    </div>
+
+                                                    <div class="text-muted mt-1"
+                                                        style="font-size:0.65rem;">
+                                                        {{ notif.createdAt|date('d/m/Y à H:i') }}
+                                                    </div>
+
+                                                </div>
+
+                                                {% if notif.readAt is null %}
+                                                    <div style="width:7px;height:7px;border-radius:50%;
+                                                                background:#16a34a;flex-shrink:0;
+                                                                margin-top:4px;"></div>
+                                                {% endif %}
+
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+
+                                </div>
+
+                            {% else %}
+
+                                <div class="px-3 py-4 text-center text-muted small">
+                                    Aucune notification
+                                </div>
+
+                            {% endif %}
+
+                            <div class="px-3 py-2 text-center border-top"
+                                style="background:#f8fafc;">
+
+                                <a href="{{ path('notifications_index') }}"
+                                class="text-success small fw-medium text-decoration-none">
+                                    Voir toutes les notifications
+                                </a>
+
+                            </div>
+                            </div>
+                        </div>
 
                         {# User dropdown #}
                         <div class="dropdown">
@@ -684,5 +788,31 @@
         }
     }
 })();
+
+// Ajouter dans le bloc javascripts du layout
+function toutLireNotifs() {
+    fetch('{{ path("notifications_tout_lire") }}', { method: 'POST',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    }).then(() => location.reload());
+}
+
+document.querySelectorAll('.notif-item').forEach(item => {
+    item.addEventListener('click', function() {
+        const id = this.dataset.id;
+        fetch(`/notifications/${id}/lire`, { method: 'POST' })
+            .then(() => {
+                this.classList.remove('notif-unread');
+                this.style.background = '';
+                const dot = this.querySelector('[style*="border-radius:50%"]');
+                if (dot) dot.remove();
+                const badge = document.querySelector('.badge.bg-danger');
+                if (badge) {
+                    const count = parseInt(badge.textContent) - 1;
+                    if (count <= 0) badge.remove();
+                    else badge.textContent = count;
+                }
+            });
+    });
+});
 </script>
 {% endblock %}

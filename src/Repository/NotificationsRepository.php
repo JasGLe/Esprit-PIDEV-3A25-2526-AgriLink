@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Entity\Notifications;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use App\Entity\UserManagement\User;
 
 /**
  * @extends ServiceEntityRepository<Notifications>
@@ -37,5 +38,37 @@ class NotificationsRepository extends ServiceEntityRepository
         if ($flush) {
             $this->getEntityManager()->flush();
         }
+    }
+
+    public function findUnreadByUser(User $user): array
+    {
+        return $this->createQueryBuilder('n')
+            ->where('n.userId = :userId')  
+            ->andWhere('n.readAt IS NULL')
+            ->setParameter('userId', $user->getId()) 
+            ->orderBy('n.createdAt', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+    public function countUnreadByUser($user): int
+    {
+        return $this->createQueryBuilder('n')
+            ->select('COUNT(n.id)')
+            ->where('n.userId = :userId')  
+            ->andWhere('n.readAt IS NULL')
+            ->setParameter('userId', $user->getId()) 
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function findRecentByUser(User $user, int $limit = 10): array
+    {
+        return $this->createQueryBuilder('n')
+            ->where('n.userId = :userId')  
+            ->setParameter('userId', $user->getId()) 
+            ->orderBy('n.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
     }
 }
