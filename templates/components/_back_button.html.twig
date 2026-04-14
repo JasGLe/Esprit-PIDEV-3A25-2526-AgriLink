@@ -1,0 +1,20 @@
+{% set label = label|default('<- Retour') %}
+{% set icon = icon|default('') %}
+{% set className = className|default('btn btn-light border shadow-sm d-inline-flex align-items-center gap-1 px-3 py-2') %}
+{% set fallbackUrl = fallback_url|default(path(fallback_route|default('calendar_index'))) %}
+{% set referer = app.request.headers.get('referer') %}
+{% set currentUrl = app.request.uri %}
+{% set isSameOriginReferer = referer and (referer starts with app.request.schemeAndHttpHost) %}
+{% set targetUrl = (isSameOriginReferer and referer != currentUrl) ? referer : fallbackUrl %}
+
+<a
+    href="{{ targetUrl }}"
+    class="{{ className }}"
+    data-fallback-url="{{ fallbackUrl }}"
+    onclick="const sameOriginRef = document.referrer && document.referrer.startsWith(window.location.origin); if (sameOriginRef && window.history.length > 1) { window.history.back(); return false; } return true;"
+>
+    {% if icon %}
+        <i class="{{ icon }}" aria-hidden="true"></i>
+    {% endif %}
+    <span>{{ label }}</span>
+</a>

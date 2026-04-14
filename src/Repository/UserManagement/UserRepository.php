@@ -193,6 +193,19 @@ class UserRepository extends ServiceEntityRepository
     }
 
     /**
+     * Find all users with a specific role
+     */
+    public function findByRole(string $role): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.role = :role')
+            ->setParameter('role', $role)
+            ->orderBy('u.email', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Find locked accounts
      */
     public function findLockedAccounts(): array

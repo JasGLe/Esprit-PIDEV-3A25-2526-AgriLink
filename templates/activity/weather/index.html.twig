@@ -1,0 +1,166 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Météo - AgriLink{% endblock %}
+{% block page_title %}Météo{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/bootstrap-custom2.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/weather.css') }}">
+{% endblock %}
+
+{% block dashboard_content %}
+    <section class="activity-theme weather-app">
+        <div class="weather-app__hero card border-0 shadow-sm mb-4">
+            <div class="card-body p-4 p-lg-5">
+                <div class="d-flex flex-column flex-xl-row justify-content-between align-items-xl-center gap-4">
+                    <div>
+                        <span class="weather-chip mb-2 d-inline-flex">Agri-Météo • Tunisie</span>
+                        <h2 class="fs-2 fw-bold mb-1">Tableau d’aide à la décision agricole</h2>
+                        <p class="mb-0">Conditions météo orientées cultures, irrigation et travaux agricoles.</p>
+                    </div>
+
+                    <form method="get" class="weather-toolbar">
+                        <div class="weather-toolbar__search">
+                            <label for="q" class="visually-hidden">Rechercher une ville</label>
+                            <input id="q" name="q" class="form-control" type="search" placeholder="Rechercher une ville tunisienne" value="{{ searchQuery|default('') }}">
+                        </div>
+
+                        <div class="weather-toolbar__select">
+                            <label for="city" class="visually-hidden">Ville</label>
+                            <select id="city" name="city" class="form-select">
+                                {% for city in cityOptions %}
+                                    <option value="{{ city }}" {{ city == selectedCity ? 'selected' : '' }}>{{ city }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-dark fw-semibold weather-toolbar__button">Actualiser</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if weather or forecast is not empty %}
+            <div class="weather-grid weather-grid--minimal">
+                {% if weather %}
+                <article class="weather-main card border-0 shadow-sm">
+                    <div class="card-body p-4 p-lg-5">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                            <div>
+                                <p class="text-uppercase weather-main__subtitle mb-1">Conditions actuelles</p>
+                                <h3 class="weather-main__city mb-1">{{ weather.city }}</h3>
+                                <p class="weather-main__description mb-0">{{ weather.description }}</p>
+                            </div>
+
+                            <div class="d-flex align-items-center gap-3">
+                                <img
+                                    src="https://openweathermap.org/img/wn/{{ weather.icon }}@2x.png"
+                                    alt="{{ weather.description }}"
+                                    width="80"
+                                    height="80"
+                                    loading="lazy"
+                                >
+                                <div class="weather-main__temp">{{ weather.temperature|round }}°C</div>
+                            </div>
+                        </div>
+
+                        <div class="weather-metrics-grid mt-4">
+                            <div class="weather-metric-card">
+                                <span class="weather-metric-card__label">Ressenti</span>
+                                <strong class="weather-metric-card__value">{{ weather.feelsLike|round }}°C</strong>
+                            </div>
+                            <div class="weather-metric-card">
+                                <span class="weather-metric-card__label">Humidité</span>
+                                <strong class="weather-metric-card__value">{{ weather.humidity }}%</strong>
+                            </div>
+                            <div class="weather-metric-card">
+                                <span class="weather-metric-card__label">Vent</span>
+                                <strong class="weather-metric-card__value">{{ weather.windSpeed|number_format(1, ',', ' ') }} m/s</strong>
+                            </div>
+                            <div class="weather-metric-card">
+                                <span class="weather-metric-card__label">Visibilité</span>
+                                <strong class="weather-metric-card__value">{{ weather.visibilityKm|number_format(1, ',', ' ') }} km</strong>
+                            </div>
+                            <div class="weather-metric-card">
+                                <span class="weather-metric-card__label">Pression</span>
+                                <strong class="weather-metric-card__value">{{ weather.pressure }} hPa</strong>
+                            </div>
+                            <div class="weather-metric-card">
+                                <span class="weather-metric-card__label">Mise à jour</span>
+                                <strong class="weather-metric-card__value">{{ weather.updatedAt|date('H:i', 'Africa/Tunis') }}</strong>
+                            </div>
+                        </div>
+
+                        {% if agriInsights %}
+                            <div class="agri-insights mt-4">
+                                <article class="agri-insight-card {{ agriInsights.suitabilityClass }}">
+                                    <div class="agri-insight-card__icon">{{ agriInsights.suitabilityIcon }}</div>
+                                    <div>
+                                        <p class="agri-insight-card__label">Aptitude travaux agricoles</p>
+                                        <p class="agri-insight-card__value mb-0">{{ agriInsights.suitability }}</p>
+                                    </div>
+                                </article>
+
+                                <article class="agri-insight-card">
+                                    <div class="agri-insight-card__icon">{{ agriInsights.irrigationIcon }}</div>
+                                    <div>
+                                        <p class="agri-insight-card__label">Recommandation irrigation</p>
+                                        <p class="agri-insight-card__value mb-0">{{ agriInsights.irrigation }}</p>
+                                    </div>
+                                </article>
+
+                                <article class="agri-insight-card">
+                                    <div class="agri-insight-card__icon">{{ agriInsights.cropFriendlyIcon }}</div>
+                                    <div>
+                                        <p class="agri-insight-card__label">Indicateur cultures</p>
+                                        <p class="agri-insight-card__value mb-0">{{ agriInsights.cropFriendly }}</p>
+                                    </div>
+                                </article>
+                            </div>
+
+                            <div class="agri-advice mt-3">
+                                <span class="me-2">🧑‍🌾</span>{{ agriInsights.advice }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </article>
+                {% endif %}
+
+                <aside class="weather-side card border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <h4 class="weather-side__title mb-3">Prévisions agricoles (5 jours)</h4>
+
+                        {% if forecast is not empty %}
+                            <div class="forecast-grid">
+                                {% for day in forecast %}
+                                    <article class="forecast-card">
+                                        <div>
+                                            <p class="forecast-card__day mb-1">{{ day.dateLabel }}</p>
+                                            <p class="forecast-card__desc mb-0">{{ day.description }}</p>
+                                            <p class="forecast-card__advice mb-0 mt-1">{{ day.agriAdvice }}</p>
+                                            <div class="forecast-card__kpis mt-2">
+                                                <span>Humidité {{ day.humidity }}%</span>
+                                                <span>Vent {{ day.windSpeed|number_format(1, ',', ' ') }} m/s</span>
+                                            </div>
+                                        </div>
+                                        <div class="forecast-card__meta">
+                                            <img src="https://openweathermap.org/img/wn/{{ day.icon }}.png" alt="{{ day.description }}" width="42" height="42" loading="lazy">
+                                            <span class="forecast-card__temp">{{ day.tempMax|round }}° / {{ day.tempMin|round }}°</span>
+                                        </div>
+                                    </article>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <p class="text-muted mb-0">Prévisions indisponibles.</p>
+                        {% endif %}
+                    </div>
+                </aside>
+            </div>
+        {% elseif weatherError %}
+            <div class="alert alert-danger border-0 shadow-sm" role="alert">
+                {{ weatherError }}
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

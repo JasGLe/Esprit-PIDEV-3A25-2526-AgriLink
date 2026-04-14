@@ -5,7 +5,10 @@
 
 {% block dashboard_content %}
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
-        <a href="{{ path('evenement_list') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
+        {{ include('components/_back_button.html.twig', {
+            label: '<- Retour',
+            fallback_route: 'evenement_list'
+        }) }}
         {% if canManage %}
             <div class="d-flex flex-wrap gap-2">
                 <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exportInvitationModal">
@@ -14,6 +17,7 @@
                 <a href="{{ path('evenement_edit', {'id': evenement.id}) }}" class="btn btn-success">Modifier</a>
                 <form method="post" action="{{ path('evenement_delete', {'id': evenement.id}) }}" onsubmit="return confirm('Supprimer cet événement ?');" class="d-inline">
                     <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.id) }}">
+                    <input type="hidden" name="redirect" value="{{ app.request.headers.get('referer') ?: path('evenement_list') }}">
                     <button type="submit" class="btn btn-danger">Supprimer</button>
                 </form>
             </div>

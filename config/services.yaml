@@ -20,6 +20,8 @@ services:
         bind:
             string $uploadsBaseDir: '%env(UPLOADS_BASE_DIR)%'
             string $appUrl: '%env(APP_URL)%'
+            string $openWeatherApiKey: '%env(OPENWEATHER_API_KEY)%'
+            string $openWeatherBaseUrl: '%env(OPENWEATHER_BASE_URL)%'
             string $recaptchaSiteKey: '%env(RECAPTCHA_SITE_KEY)%'
             string $recaptchaSecretKey: '%env(RECAPTCHA_SECRET_KEY)%'
             string $mapboxToken: '%env(MAPBOX_TOKEN)%'
