@@ -71,4 +71,16 @@ class NotificationsRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    public function findUnreadByUserId(int $userId, int $limit = 10): array
+    {
+        return $this->createQueryBuilder('n')
+            ->where('n.userId = :userId')  
+            ->andWhere('n.readAt IS NULL')
+            ->setParameter('userId', $userId) 
+            ->orderBy('n.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }
