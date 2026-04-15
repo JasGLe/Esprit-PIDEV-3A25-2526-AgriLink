@@ -11,6 +11,412 @@
         body.marketplace-tropical {
             --tropical-bg-image: url("{{ asset('images/marketplace/marketplace-background.jpg') }}");
         }
+        /* ── Modal dialog — no side gaps ── */
+#marketplaceRentalRequestModal {
+    padding: 0 !important;
+}
+#marketplaceRentalRequestModal .modal-dialog {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) !important;
+    margin: 0;
+    width: min(900px, 100vw);
+    max-width: 900px;
+}
+
+/* ── Content shell ── */
+.modal-rental__content {
+    border: 0;
+    border-radius: 1.25rem;
+    overflow: hidden;
+    max-height: calc(100vh - 1rem);
+    background: #fff;
+    box-shadow: 0 32px 80px rgba(15, 23, 42, .4);
+    display: flex;
+    flex-direction: column;
+}
+
+/* ── Header — bright gradient ── */
+.modal-rental__header {
+    border: 0;
+    background: linear-gradient(120deg, #14532d 0%, #16a34a 55%, #22c55e 100%);
+    color: #fff;
+    padding: 1.1rem 1.5rem .9rem;
+}
+.modal-rental__header .modal-title { font-weight: 800; color: #fff; font-size: 1.15rem; }
+.modal-rental__header .btn-close { filter: invert(1) brightness(2); }
+
+/* ── Progress bar ── */
+.modal-rental__progress {
+    height: .38rem;
+    border-radius: 0;
+    background: #dcfce7;
+    overflow: hidden;
+    margin: 0;
+    flex-shrink: 0;
+}
+.modal-rental__progress-bar {
+    height: 100%;
+    border-radius: 0;
+    background: linear-gradient(90deg, #22c55e, #84cc16);
+    transition: width .3s ease;
+}
+
+/* ── Stepper badges — white/light strip ── */
+#rentalStepper {
+    background: #f0fdf4;
+    padding: .7rem 1.5rem;
+    gap: .5rem !important;
+    margin: 0 !important;
+    flex-shrink: 0;
+    border-bottom: 1px solid #bbf7d0;
+}
+#rentalStepper .badge {
+    border-radius: .5rem;
+    padding: .45rem .8rem;
+    font-size: .78rem;
+    font-weight: 600;
+}
+#rentalStepper .text-bg-success {
+    background: linear-gradient(120deg, #22c55e, #16a34a) !important;
+    color: #fff !important;
+}
+#rentalStepper .text-bg-secondary {
+    background: #e2e8f0 !important;
+    color: #64748b !important;
+}
+
+/* ── Step body — white with comfortable padding ── */
+.modal-rental__body {
+    padding: 0;
+    overflow-y: auto;
+    max-height: calc(100vh - 230px);
+    background: #fff;
+}
+
+/* ── Step panels ── */
+.rental-step {
+    border: none;
+    border-radius: 0;
+    padding: 1.5rem 1.75rem;
+    background: #fff;
+}
+
+/* ── Form labels ── */
+.rental-step .form-label {
+    font-size: .82rem;
+    font-weight: 700;
+    color: #15803d;
+    margin-bottom: .3rem;
+}
+
+/* ── Inputs — squarer, more balanced aspect ratio ── */
+.rental-step .form-control,
+.rental-step .form-select {
+    padding: .6rem .85rem;
+    font-size: .93rem;
+    border-radius: .55rem;           /* less round = more square feel */
+    border: 1.5px solid #bbf7d0;
+    background: #f0fdf4;
+    min-height: unset;
+    height: 2.65rem;                 /* fixed height keeps all fields same square proportion */
+    transition: border-color .2s, box-shadow .2s, background .2s;
+    color: #14532d;
+}
+.rental-step .form-control:focus,
+.rental-step .form-select:focus {
+    border-color: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, .18);
+    background: #fff;
+    outline: none;
+}
+.rental-step textarea.form-control {
+    height: auto;
+    min-height: 82px;
+}
+.rental-step input[type="datetime-local"] {
+    background: #fff;
+    border-color: #d1d5db;
+    color: #111827;
+}
+.rental-step input[type="datetime-local"]:focus {
+    border-color: #9ca3af;
+    box-shadow: 0 0 0 3px rgba(156, 163, 175, .18);
+    background: #fff;
+}
+.rental-step input[type="datetime-local"].is-valid,
+.rental-step .was-validated input[type="datetime-local"]:valid {
+    border-color: #d1d5db !important;
+    background-color: #fff !important;
+    color: #111827 !important;
+    box-shadow: none !important;
+    background-image: none !important;
+    padding-right: .85rem !important;
+}
+.rental-step .mb-3 { margin-bottom: .7rem !important; }
+.rental-step .row { --bs-gutter-y: .55rem; }
+
+
+/* ── Checkboxes ── */
+.rental-step .form-check { margin-bottom: .35rem; min-height: 1.4rem; }
+.rental-step .form-check-label { font-size: .9rem; color: #166534; }
+.rental-step .form-check-input:checked {
+    background-color: #16a34a;
+    border-color: #16a34a;
+}
+
+/* ── Step 1 grid ── */
+.rental-step--user .rental-step__grid-compact {
+    max-width: 100%;
+    --bs-gutter-x: 1rem;
+    justify-content: flex-start;
+}
+
+/* ── Footer — light, clean, no dark green ── */
+.modal-rental__footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: #f0fdf4;
+    padding: .8rem 1.5rem;
+    border-top: 1px solid #bbf7d0;
+    display: flex;
+    justify-content: flex-end;
+    gap: .6rem;
+}
+.modal-rental__footer .btn {
+    min-width: 120px;
+    font-weight: 600;
+    border-radius: .55rem;
+    height: 2.55rem;
+}
+.modal-rental__footer .btn-outline-secondary {
+    color: #64748b;
+    border-color: #cbd5e1;
+    background: #fff;
+}
+.modal-rental__footer .btn-outline-secondary:hover {
+    background: #f8fafc;
+    color: #334155;
+}
+.modal-rental__footer .btn-success,
+.modal-rental__footer .btn-primary {
+    background: linear-gradient(120deg, #22c55e, #16a34a);
+    border: none;
+    color: #fff;
+    min-width: 140px;
+}
+.modal-rental__footer .btn-success:hover,
+.modal-rental__footer .btn-primary:hover {
+    background: linear-gradient(120deg, #16a34a, #15803d);
+}
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+    #marketplaceRentalRequestModal .modal-dialog {
+        width: 100vw;
+        max-width: 100vw;
+    }
+    .modal-rental__content { max-height: 100svh; border-radius: 0; }
+    .modal-rental__body { max-height: calc(100svh - 200px); }
+    .rental-step { padding: 1rem 1rem; }
+    .modal-rental__footer { padding: .65rem 1rem; }
+    #rentalStepper { padding: .6rem 1rem; }
+    #rentalStepper .badge { font-size: .69rem; padding: .35rem .5rem; }
+}
+/* ── Custom Date-Time Picker ── */
+.custom-dt-wrap { position: relative; }
+
+.custom-dt-trigger {
+    cursor: pointer;
+    color: #111827;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: .55rem;
+    height: 2.65rem;
+    display: flex;
+    align-items: center;
+    font-size: .93rem;
+    transition: border-color .2s, box-shadow .2s;
+}
+.custom-dt-trigger:hover,
+.custom-dt-trigger:focus {
+    border-color: #111827;
+    box-shadow: 0 0 0 2px rgba(17,24,39,.12);
+    background: #fff;
+    outline: none;
+}
+.custom-dt-trigger.is-invalid { border-color: #dc2626; }
+
+.custom-dt-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 20000;
+    background: #ffffff;
+    border: 1px solid #d1d5db;
+    border-radius: .85rem;
+    box-shadow: 0 20px 50px rgba(15,23,42,.28);
+    padding: .9rem;
+    min-width: 320px;
+    animation: dtFadeIn .15s ease;
+}
+@keyframes dtFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Calendar grid */
+.cdt-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: .6rem;
+}
+.cdt-header .cdt-month-label {
+    font-weight: 700;
+    color: #111827;
+    font-size: .95rem;
+}
+.cdt-header button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #111827;
+    font-size: 1.1rem;
+    padding: .2rem .4rem;
+    border-radius: .35rem;
+}
+.cdt-header button:hover { background: #f3f4f6; }
+
+.cdt-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: .72rem;
+    font-weight: 700;
+    color: #9ca3af;
+    margin-bottom: .3rem;
+    text-transform: uppercase;
+}
+
+.cdt-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+.cdt-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .85rem;
+    border-radius: .4rem;
+    cursor: pointer;
+    color: #111827;
+    font-weight: 500;
+    transition: background .1s;
+    border: none;
+    background: none;
+}
+.cdt-day:hover:not(.cdt-day--disabled):not(.cdt-day--selected) {
+    background: #f3f4f6;
+}
+.cdt-day--today {
+    border: 1.5px solid #111827;
+    color: #111827;
+    font-weight: 700;
+}
+.cdt-day--selected {
+    background: #111827;
+    color: #fff !important;
+    font-weight: 700;
+}
+.cdt-day--disabled {
+    color: #9ca3af;
+    background: #f3f4f6;
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: .95;
+}
+.cdt-day--empty { cursor: default; }
+
+/* Time row */
+.cdt-time {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    margin-top: .75rem;
+    padding-top: .65rem;
+    border-top: 1px solid #e5e7eb;
+}
+.cdt-time label {
+    font-size: .8rem;
+    font-weight: 700;
+    color: #111827;
+    white-space: nowrap;
+    margin: 0;
+}
+.cdt-time select {
+    flex: 1;
+    padding: .2rem .45rem;
+    border-radius: .45rem;
+    border: 1px solid #d1d5db;
+    background: #fff;
+    color: #111827;
+    font-size: .82rem;
+    cursor: pointer;
+    height: 1.9rem;
+    max-height: 1.9rem;
+    line-height: 1.15;
+}
+.cdt-time select:focus {
+    border-color: #111827;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(17,24,39,.12);
+}
+.cdt-time select option {
+    font-size: .82rem;
+    padding: .2rem .3rem;
+}
+
+.cdt-confirm {
+    margin-top: .75rem;
+    width: 100%;
+    background: #111827;
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    border-radius: .5rem;
+    padding: .45rem;
+    cursor: pointer;
+    font-size: .9rem;
+    transition: background .15s;
+}
+.cdt-confirm:hover { background: #000; }
+
+/* Step 3 legal conditions block */
+.rental-terms-box {
+    background: #374151;
+    color: #f9fafb;
+    border: 1px solid #4b5563;
+    border-radius: .75rem;
+    padding: .85rem 1rem;
+}
+.rental-terms-box__title {
+    font-size: .92rem;
+    font-weight: 700;
+    margin-bottom: .45rem;
+    color: #ffffff;
+}
+.rental-terms-box__list {
+    margin: 0;
+    padding-left: 1rem;
+    font-size: .86rem;
+    line-height: 1.45;
+}
+.rental-terms-box__list li { margin-bottom: .28rem; }
     </style>
 {% endblock %}
 
@@ -237,6 +643,1000 @@
         {% endif %}
     </div>
 </section>
+
+{% if is_granted('ROLE_USER') %}
+<div class="modal fade" id="marketplaceRentalRequestModal" tabindex="-1" aria-labelledby="marketplaceRentalRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+        <div class="modal-content modal-rental__content">
+            <div class="modal-header modal-rental__header">
+                <div>
+                    <h5 class="modal-title" id="marketplaceRentalRequestModalLabel">Demande de location</h5>
+                    <small class="opacity-75">
+                        <span id="rentalRequestProductName">Equipement</span> - <span id="rentalRequestDailyPrice">0,000 DT/jour</span>
+                    </small>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+
+            {{ form_start(rental_request_form, {
+                action: path('marketplace_rental_request_submit', query_params),
+                attr: {
+                    id: 'marketplaceRentalRequestForm',
+                    class: 'needs-validation',
+                    novalidate: 'novalidate',
+                    'data-server-errors': (not rental_request_form.vars.valid and rental_request_form.vars.submitted) ? '1' : '0'
+                }
+            }) }}
+                <div class="modal-body modal-rental__body">
+                    {{ form_widget(rental_request_form.produit_id, { attr: { id: 'rentalRequestProductId' } }) }}
+                    <input type="hidden"
+                           id="rentalRequestProductFallback"
+                           name="rental_target_product_id_fallback"
+                           value="{{ rental_target_product_id|default('') }}">
+                    {{ form_widget(rental_request_form._token) }}
+                    {% if rental_request_form.vars.submitted and not rental_request_form.vars.valid %}
+                        <div class="alert alert-danger py-2 px-3 mb-3" role="alert">
+                            <strong>La demande n'a pas ete enregistree.</strong>
+                            <ul class="mb-0 mt-2 ps-3 small">
+                                {% for error in rental_request_form.vars.errors %}
+                                    <li>{{ error.message }}</li>
+                                {% endfor %}
+                                {% for child in rental_request_form %}
+                                    {% for error in child.vars.errors %}
+                                        <li>{{ (child.vars.label ?: child.vars.name) }}: {{ error.message }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <div class="modal-rental__progress">
+                        <div class="modal-rental__progress-bar" id="rentalProgressBar"></div>
+                    </div>
+
+                    <div class="d-flex flex-wrap gap-2 mb-3" id="rentalStepper">
+                        <span class="badge text-bg-success" data-step-indicator="1">1. Infos utilisateur</span>
+                        <span class="badge text-bg-secondary" data-step-indicator="2">2. Détails location</span>
+                        <span class="badge text-bg-secondary" data-step-indicator="3">3. Engagements</span>
+                        <span class="badge text-bg-secondary" data-step-indicator="4">4. Confirmation</span>
+                    </div>
+
+                    <div class="rental-step rental-step--user" data-step="1">
+                        <div class="row g-2 rental-step__grid-compact">
+                            <div class="col-xl-5 col-lg-5 col-md-6">{{ form_row(rental_request_form.fullName) }}</div>
+                            <div class="col-xl-5 col-lg-5 col-md-6">{{ form_row(rental_request_form.email) }}</div>
+                            <div class="col-xl-5 col-lg-5 col-md-6">{{ form_row(rental_request_form.phone) }}</div>
+                            <div class="col-xl-5 col-lg-5 col-md-6">{{ form_row(rental_request_form.dateNaissance) }}</div>
+                            <div class="col-xl-5 col-lg-5 col-md-6">{{ form_row(rental_request_form.address) }}</div>
+                            <div class="col-xl-5 col-lg-5 col-md-6">{{ form_row(rental_request_form.identityNumber) }}</div>
+                        </div>
+                    </div>
+
+                    <div class="rental-step d-none" data-step="2">
+                        <div class="row g-2 rental-step__grid-compact">
+                            <div class="col-md-6">
+                                <label class="form-label" for="startDtTrigger">Début location <span class="text-danger">*</span></label>
+                                <div class="custom-dt-wrap" id="startDtWrap">
+                                    <input type="hidden" name="{{ rental_request_form.rentalStartAt.vars.full_name }}" id="rentalStartAt" value="{{ rental_request_form.rentalStartAt.vars.value ?? '' }}">
+                                    <button type="button" class="form-control custom-dt-trigger text-start" id="startDtTrigger">
+                                        <i class="bi bi-calendar3 me-2"></i><span id="startDtLabel">Sélectionner une date</span>
+                                    </button>
+                                    <div class="custom-dt-popup d-none" id="startDtPopup"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="endDtTrigger">Fin location <span class="text-danger">*</span></label>
+                                <div class="custom-dt-wrap" id="endDtWrap">
+                                    <input type="hidden" name="{{ rental_request_form.rentalEndAt.vars.full_name }}" id="rentalEndAt" value="{{ rental_request_form.rentalEndAt.vars.value ?? '' }}">
+                                    <button type="button" class="form-control custom-dt-trigger text-start" id="endDtTrigger">
+                                        <i class="bi bi-calendar3 me-2"></i><span id="endDtLabel">Sélectionner une date</span>
+                                    </button>
+                                    <div class="custom-dt-popup d-none" id="endDtPopup"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="rentalDurationPreview" class="form-label">Durée estimée</label>
+                                <input type="text" class="form-control" id="rentalDurationPreview" placeholder="Calcul automatique" readonly>
+                            </div>
+                            <div class="col-md-6">{{ form_row(rental_request_form.paymentMethod) }}</div>
+                            <div class="col-md-6">{{ form_row(rental_request_form.usageLocation) }}</div>
+                            <div class="col-md-6">
+                                {{ form_row(rental_request_form.transportResponsibility) }}
+                                <div class="alert alert-warning py-2 px-3 mt-2 d-none" id="transportFeeNotice" role="alert">
+                                    Le vendeur prend en charge le transport : <strong>+10 DT</strong> seront ajoutés au montant à payer.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rental-step d-none" data-step="3">
+                        <div class="row g-2 rental-step__grid-compact">
+                            <div class="col-12">
+                                <div class="rental-terms-box">
+                                    <div class="rental-terms-box__title">Conditions de location à accepter</div>
+                                    <ul class="rental-terms-box__list">
+                                        <li>Le locataire est responsable en cas de dommage, perte, vol et réparation/remplacement de l’équipement.</li>
+                                        <li>Tout retard de restitution entraîne une pénalité de <strong>10 DT par heure de retard</strong>.</li>
+                                        <li>Si le transport est assuré par le vendeur, un supplément de <strong>10 DT</strong> est ajouté.</li>
+                                        <li>La demande n’est validée qu’après acceptation explicite des conditions ci-dessous.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check p-3 border rounded-3">
+                                    <input class="form-check-input" type="checkbox" id="rentalAcceptAllConditions">
+                                    <label class="form-check-label fw-semibold" for="rentalAcceptAllConditions">
+                                        J'accepte toutes les conditions ci-dessus (dommage, perte, vol, réparation/remplacement).
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-check p-3 border rounded-3">
+                                    <input class="form-check-input" type="checkbox" id="rentalAcceptLatePenalty">
+                                    <label class="form-check-label fw-semibold" for="rentalAcceptLatePenalty">
+                                        J'accepte la pénalité de retard: <strong>10 DT par heure de retard</strong>.
+                                    </label>
+                                </div>
+                            </div>
+
+                            {# Keep backend-required fields mapped but hidden #}
+                        </div>
+                    </div>
+
+                    <div class="rental-step d-none" data-step="4">
+                        <div class="alert alert-success mb-2">
+                            Vérifiez vos informations puis cliquez sur <strong>Envoyer la demande</strong>.
+                        </div>
+                        <p class="small text-muted mb-0">
+                            Votre demande sera transmise au vendeur pour validation.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="modal-footer modal-rental__footer">
+                    <button type="button" class="btn btn-outline-secondary" id="rentalPrevStepBtn">Précédent</button>
+                    <button type="button" class="btn btn-success" id="rentalNextStepBtn">Suivant</button>
+                    <button type="submit" class="btn btn-primary" id="rentalSubmitBtn" style="display:none;">Envoyer la demande</button>
+                </div>
+            {{ form_end(rental_request_form, { render_rest: false }) }}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% if is_granted('ROLE_USER') %}
+<script>
+(function () {
+    'use strict';
+
+    // ── Element references ────────────────────────────────────────────────────
+    var modalEl      = document.getElementById('marketplaceRentalRequestModal');
+    if (!modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) return;
+
+    var productIdInput = document.getElementById('rentalRequestProductId');
+    var productFallbackInput = document.getElementById('rentalRequestProductFallback');
+    var productNameEl  = document.getElementById('rentalRequestProductName');
+    var dailyPriceEl   = document.getElementById('rentalRequestDailyPrice');
+    var startInput     = document.getElementById('rentalStartAt');
+    var endInput       = document.getElementById('rentalEndAt');
+    var durationEl     = document.getElementById('rentalDurationPreview');
+    var prevBtn        = document.getElementById('rentalPrevStepBtn');
+    var nextBtn        = document.getElementById('rentalNextStepBtn');
+    var submitBtn      = document.getElementById('rentalSubmitBtn');
+    var formEl         = document.getElementById('marketplaceRentalRequestForm');
+    var progressBar    = document.getElementById('rentalProgressBar');
+    var transportFeeNotice = document.getElementById('transportFeeNotice');
+    var steps          = Array.prototype.slice.call(document.querySelectorAll('.rental-step'));
+    var indicators     = Array.prototype.slice.call(document.querySelectorAll('[data-step-indicator]'));
+    var currentStep    = 1;
+    var startPicker    = null;
+    var endPicker      = null;
+
+    function applyProductContext(produitId, produitNom, rentalPrice) {
+        var pid = String(produitId || '').trim();
+        if (pid !== '') {
+            if (productIdInput) productIdInput.value = pid;
+            if (productFallbackInput) productFallbackInput.value = pid;
+        }
+        if (produitNom && productNameEl) {
+            productNameEl.textContent = produitNom;
+        }
+        if (rentalPrice !== undefined && rentalPrice !== null && dailyPriceEl) {
+            var price = String(rentalPrice || '0.000');
+            dailyPriceEl.textContent = price.replace('.', ',') + ' DT/jour';
+        }
+    }
+
+    // ── Error UI helpers ──────────────────────────────────────────────────────
+
+    /**
+     * Show a custom validation error beneath a field.
+     * Uses a <div class="invalid-feedback"> element appended once, then reused.
+     */
+    function showFieldError(field, message) {
+        field.classList.add('is-invalid');
+        var fb = field.parentElement.querySelector('.invalid-feedback');
+        if (!fb) {
+            fb = document.createElement('div');
+            fb.className = 'invalid-feedback';
+            field.parentElement.appendChild(fb);
+        }
+        fb.textContent = message;
+    }
+
+    function clearFieldError(field) {
+        field.classList.remove('is-invalid');
+        field.classList.remove('is-valid');
+        var fb = field.parentElement ? field.parentElement.querySelector('.invalid-feedback') : null;
+        if (fb) fb.textContent = '';
+    }
+
+    function markFieldValid(field) {
+        field.classList.remove('is-invalid');
+        field.classList.add('is-valid');
+    }
+
+    function clearAllErrorsInStep(stepEl) {
+        stepEl.querySelectorAll('.is-invalid, .is-valid').forEach(function (el) {
+            el.classList.remove('is-invalid', 'is-valid');
+        });
+        stepEl.querySelectorAll('.invalid-feedback').forEach(function (el) {
+            el.textContent = '';
+        });
+    }
+
+    // ── Validators per step ───────────────────────────────────────────────────
+    // Each function returns true when the step is valid, false otherwise.
+    // They also show/clear per-field error messages.
+
+    function syncStep3BackendFields() {
+        var stepEl = document.querySelector('.rental-step[data-step="3"]');
+        if (!stepEl) return;
+        var acceptAll = document.getElementById('rentalAcceptAllConditions');
+        var acceptPenalty = document.getElementById('rentalAcceptLatePenalty');
+        var agreeDamage = stepEl.querySelector('input[type="checkbox"][name$="[agreeDamage]"]');
+        var agreeLoss = stepEl.querySelector('input[type="checkbox"][name$="[agreeLoss]"]');
+        var agreeTheft = stepEl.querySelector('input[type="checkbox"][name$="[agreeTheft]"]');
+        var agreeRepair = stepEl.querySelector('input[type="checkbox"][name$="[agreeRepairReplacement]"]');
+        var penaltyText = stepEl.querySelector('[name$="[lateReturnPenalty]"]');
+
+        var allChecked = !!(acceptAll && acceptAll.checked);
+        if (agreeDamage) agreeDamage.checked = allChecked;
+        if (agreeLoss) agreeLoss.checked = allChecked;
+        if (agreeTheft) agreeTheft.checked = allChecked;
+        if (agreeRepair) agreeRepair.checked = allChecked;
+        if (penaltyText) {
+            penaltyText.value = (acceptPenalty && acceptPenalty.checked)
+                ? 'Le locataire accepte une pénalité de 10 DT par heure de retard.'
+                : '';
+        }
+    }
+
+    var VALIDATORS = {
+
+        // Step 1 — user information
+        1: function () {
+            var stepEl = document.querySelector('.rental-step[data-step="1"]');
+            var ok = true;
+
+            // fullName
+            var fullName = stepEl.querySelector('[name$="[fullName]"]');
+            if (fullName) {
+                var nameVal = fullName.value.trim();
+                if (nameVal === '') {
+                    showFieldError(fullName, 'Le nom complet est obligatoire.');
+                    ok = false;
+                } else if (nameVal.length < 2) {
+                    showFieldError(fullName, 'Le nom doit comporter au moins 2 caractères.');
+                    ok = false;
+                } else if (!/^[\p{L}\s'\-.]+$/u.test(nameVal)) {
+                    showFieldError(fullName, 'Le nom ne peut contenir que des lettres, espaces, apostrophes et tirets.');
+                    ok = false;
+                } else {
+                    clearFieldError(fullName);
+                    markFieldValid(fullName);
+                }
+            }
+
+            // email
+            var email = stepEl.querySelector('[name$="[email]"]');
+            if (email) {
+                var emailVal = email.value.trim();
+                var emailRx  = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+                if (emailVal === '') {
+                    showFieldError(email, 'L\'adresse e-mail est obligatoire.');
+                    ok = false;
+                } else if (!emailRx.test(emailVal)) {
+                    showFieldError(email, 'L\'adresse e-mail n\'est pas valide.');
+                    ok = false;
+                } else {
+                    clearFieldError(email);
+                    markFieldValid(email);
+                }
+            }
+
+            // phone
+            var phone = stepEl.querySelector('[name$="[phone]"]');
+            if (phone) {
+                var phoneVal = phone.value.trim();
+                var phoneRx  = /^\+?[\d\s\-()]{6,20}$/;
+                if (phoneVal === '') {
+                    showFieldError(phone, 'Le numéro de téléphone est obligatoire.');
+                    ok = false;
+                } else if (!phoneRx.test(phoneVal)) {
+                    showFieldError(phone, 'Le numéro de téléphone n\'est pas valide.');
+                    ok = false;
+                } else {
+                    clearFieldError(phone);
+                    markFieldValid(phone);
+                }
+            }
+
+            // dateNaissance — must be non-empty, valid date, and user must be >= 18
+            var dob = stepEl.querySelector('[name$="[dateNaissance]"]');
+            if (dob) {
+                var dobVal = dob.value.trim();
+                if (dobVal === '') {
+                    showFieldError(dob, 'La date de naissance est obligatoire.');
+                    ok = false;
+                } else if (!/^\d{4}-\d{2}-\d{2}$/.test(dobVal)) {
+                    showFieldError(dob, 'Format attendu : YYYY-MM-DD.');
+                    ok = false;
+                } else {
+                    var dobDate   = new Date(dobVal);
+                    var today     = new Date();
+                    var age18     = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+                    var age120    = new Date(today.getFullYear() - 120, today.getMonth(), today.getDate());
+                    if (isNaN(dobDate.getTime())) {
+                        showFieldError(dob, 'La date de naissance n\'est pas valide.');
+                        ok = false;
+                    } else if (dobDate > age18) {
+                        showFieldError(dob, 'Vous devez avoir au moins 18 ans.');
+                        ok = false;
+                    } else if (dobDate < age120) {
+                        showFieldError(dob, 'La date de naissance semble incorrecte.');
+                        ok = false;
+                    } else {
+                        clearFieldError(dob);
+                        markFieldValid(dob);
+                    }
+                }
+            }
+
+            // address
+            var address = stepEl.querySelector('[name$="[address]"]');
+            if (address) {
+                var addrVal = address.value.trim();
+                if (addrVal === '') {
+                    showFieldError(address, 'L\'adresse est obligatoire.');
+                    ok = false;
+                } else if (addrVal.length < 5) {
+                    showFieldError(address, 'L\'adresse doit comporter au moins 5 caractères.');
+                    ok = false;
+                } else {
+                    clearFieldError(address);
+                    markFieldValid(address);
+                }
+            }
+
+            // identityNumber
+            var id = stepEl.querySelector('[name$="[identityNumber]"]');
+            if (id) {
+                var idVal = id.value.trim();
+                if (idVal === '') {
+                    showFieldError(id, 'Le numéro d\'identité est obligatoire.');
+                    ok = false;
+                } else if (idVal.length < 5) {
+                    showFieldError(id, 'Le numéro d\'identité doit comporter au moins 5 caractères.');
+                    ok = false;
+                } else if (!/^[A-Za-z0-9\-\/]+$/.test(idVal)) {
+                    showFieldError(id, 'Caractères autorisés : lettres, chiffres, tirets, slashes.');
+                    ok = false;
+                } else {
+                    clearFieldError(id);
+                    markFieldValid(id);
+                }
+            }
+
+            return ok;
+        },
+
+        // Step 2 — rental details
+        2: function () {
+            var stepEl = document.querySelector('.rental-step[data-step="2"]');
+            var ok     = true;
+            var now    = new Date();
+
+            // rentalStartAt
+            var startEl = document.getElementById('rentalStartAt');
+            var startDate = null;
+            if (startEl) {
+                var startVal = startEl.value.trim();
+                if (startVal === '') {
+                    showFieldError(startEl, 'La date de début est obligatoire.');
+                    ok = false;
+                } else if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(startVal)) {
+                    showFieldError(startEl, 'Format invalide (YYYY-MM-DDTHH:MM).');
+                    ok = false;
+                } else {
+                    startDate = parseDateInput(startVal);
+                    if (isNaN(startDate.getTime())) {
+                        showFieldError(startEl, 'La date de début n\'est pas valide.');
+                        ok = false;
+                    } else if (startDate <= now) {
+                        showFieldError(startEl, 'La date de début doit être dans le futur.');
+                        ok = false;
+                    } else {
+                        clearFieldError(startEl);
+                    }
+                }
+            }
+
+            // rentalEndAt — must be on/after the next calendar day
+            var endEl = document.getElementById('rentalEndAt');
+            if (endEl) {
+                var endVal = endEl.value.trim();
+                if (endVal === '') {
+                    showFieldError(endEl, 'La date de fin est obligatoire.');
+                    ok = false;
+                } else if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(endVal)) {
+                    showFieldError(endEl, 'Format invalide (YYYY-MM-DDTHH:MM).');
+                    ok = false;
+                } else {
+                    var endDate = parseDateInput(endVal);
+                    if (isNaN(endDate.getTime())) {
+                        showFieldError(endEl, 'La date de fin n\'est pas valide.');
+                        ok = false;
+                    } else if (startDate) {
+                        var minEndByDay = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 1, 0, 0, 0, 0);
+                        if (endDate < minEndByDay) {
+                            showFieldError(endEl, 'La date de fin doit être à partir du jour suivant la date de début.');
+                            ok = false;
+                        } else {
+                            clearFieldError(endEl);
+                        }
+                    } else {
+                        clearFieldError(endEl);
+                    }
+                }
+            }
+
+            // paymentMethod — select, must not be blank/placeholder
+            var payment = stepEl.querySelector('[name$="[paymentMethod]"]');
+            if (payment) {
+                if (!payment.value || payment.value === '') {
+                    showFieldError(payment, 'Le mode de paiement est obligatoire.');
+                    ok = false;
+                } else {
+                    clearFieldError(payment);
+                    markFieldValid(payment);
+                }
+            }
+
+            // usageLocation
+            var usage = stepEl.querySelector('[name$="[usageLocation]"]');
+            if (usage) {
+                var usageVal = usage.value.trim();
+                if (usageVal === '') {
+                    showFieldError(usage, 'Le lieu d\'utilisation est obligatoire.');
+                    ok = false;
+                } else if (usageVal.length < 3) {
+                    showFieldError(usage, 'Le lieu d\'utilisation doit comporter au moins 3 caractères.');
+                    ok = false;
+                } else {
+                    clearFieldError(usage);
+                    markFieldValid(usage);
+                }
+            }
+
+            // transportResponsibility — select, must not be blank
+            var transport = stepEl.querySelector('[name$="[transportResponsibility]"]');
+            if (transport) {
+                if (!transport.value || transport.value === '') {
+                    showFieldError(transport, 'La responsabilité du transport est obligatoire.');
+                    ok = false;
+                } else {
+                    clearFieldError(transport);
+                    markFieldValid(transport);
+                }
+            }
+
+            return ok;
+        },
+
+        // Step 3 — commitments
+        3: function () {
+            var stepEl = document.querySelector('.rental-step[data-step="3"]');
+            var ok     = true;
+
+            var acceptAll = document.getElementById('rentalAcceptAllConditions');
+            var acceptPenalty = document.getElementById('rentalAcceptLatePenalty');
+
+            if (!acceptAll || !acceptAll.checked) {
+                if (acceptAll) showFieldError(acceptAll, 'Vous devez accepter toutes les conditions.');
+                ok = false;
+            } else {
+                clearFieldError(acceptAll);
+            }
+
+            if (!acceptPenalty || !acceptPenalty.checked) {
+                if (acceptPenalty) showFieldError(acceptPenalty, 'Vous devez accepter la pénalité de retard.');
+                ok = false;
+            } else {
+                clearFieldError(acceptPenalty);
+            }
+
+            // Sync hidden backend-required fields
+            syncStep3BackendFields();
+
+            return ok;
+        },
+
+        // Step 4 — confirmation, no extra client-side check needed (server covers it)
+        4: function () { return true; },
+    };
+
+    // ── Duration preview ──────────────────────────────────────────────────────
+    function updateDuration() {
+        if (!startInput || !endInput || !durationEl) return;
+        if (!startInput.value || !endInput.value) { durationEl.value = ''; return; }
+        var start = getInputDate(startInput);
+        var end   = getInputDate(endInput);
+        if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) { durationEl.value = ''; return; }
+        var ms = end.getTime() - start.getTime();
+        var daysFloat = ms / 86400000;
+        var hoursFloat = ms / 3600000;
+        var daysText = Number.isInteger(daysFloat) ? String(daysFloat) : String(Number(daysFloat.toFixed(2)));
+        var hoursText = Number.isInteger(hoursFloat) ? String(hoursFloat) : String(Number(hoursFloat.toFixed(1)));
+        durationEl.value = daysText + ' jour(s) (' + hoursText + ' h)';
+    }
+
+    // ── Step rendering ────────────────────────────────────────────────────────
+    function renderStep() {
+        steps.forEach(function (el) {
+            var n = parseInt(el.getAttribute('data-step') || '1', 10);
+            el.classList.toggle('d-none', n !== currentStep);
+        });
+        indicators.forEach(function (el) {
+            var n = parseInt(el.getAttribute('data-step-indicator') || '1', 10);
+            el.classList.toggle('text-bg-success', n <= currentStep);
+            el.classList.toggle('text-bg-secondary', n > currentStep);
+        });
+        if (progressBar) progressBar.style.width = (25 * currentStep) + '%';
+        if (prevBtn)   prevBtn.style.display   = currentStep === 1 ? 'none' : 'inline-flex';
+        if (nextBtn)   nextBtn.style.display   = currentStep >= 4  ? 'none' : 'inline-flex';
+        if (submitBtn) submitBtn.style.display = currentStep < 4   ? 'none' : 'inline-flex';
+    }
+
+    function updateTransportFeeNotice() {
+        var transportSelect = document.querySelector('.rental-step[data-step="2"] [name$="[transportResponsibility]"]');
+        if (!transportSelect || !transportFeeNotice) return;
+        var value = String(transportSelect.value || '').toLowerCase();
+        var isSeller = value === 'seller' || value === 'vendeur';
+        transportFeeNotice.classList.toggle('d-none', !isSeller);
+    }
+
+    function toLocalDateTimeValue(d) {
+        var p = function (n) { return String(n).padStart(2, '0'); };
+        return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+             + 'T' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+
+    function parseDateInput(raw) {
+        if (!raw) return null;
+        var value = String(raw).trim();
+        if (!value) return null;
+
+        // Native datetime-local value
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(value)) {
+            var iso = new Date(value);
+            return isNaN(iso.getTime()) ? null : iso;
+        }
+
+        // Fallback: dd/mm/yyyy hh:mm [AM|PM]
+        var m = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})(?:\s*(AM|PM))?$/i);
+        if (!m) return null;
+
+        var day = parseInt(m[1], 10);
+        var month = parseInt(m[2], 10) - 1;
+        var year = parseInt(m[3], 10);
+        var hour = parseInt(m[4], 10);
+        var minute = parseInt(m[5], 10);
+        var ampm = (m[6] || '').toUpperCase();
+
+        if (ampm === 'PM' && hour < 12) hour += 12;
+        if (ampm === 'AM' && hour === 12) hour = 0;
+
+        var dt = new Date(year, month, day, hour, minute, 0, 0);
+        return isNaN(dt.getTime()) ? null : dt;
+    }
+
+    function getInputDate(inputEl) {
+        if (!inputEl) return null;
+        return parseDateInput(inputEl.value);
+    }
+
+    function formatDisplay(d) {
+        var p = function (n) { return String(n).padStart(2, '0'); };
+        return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+    }
+
+    function buildPicker(opts) {
+        var trigger = document.getElementById(opts.triggerId);
+        var popup = document.getElementById(opts.popupId);
+        var label = document.getElementById(opts.labelId);
+        var hidden = document.getElementById(opts.hiddenId);
+        if (!trigger || !popup || !hidden) return null;
+
+        var view = new Date();
+        var selected = getInputDate(hidden) || null;
+
+        function minDate() {
+            var d = opts.getMinDate ? opts.getMinDate() : new Date();
+            return d && !isNaN(d.getTime()) ? d : new Date();
+        }
+
+        function commitSelected(shouldClose) {
+            if (!selected) return;
+            var minDt = minDate();
+            if (selected < minDt) selected = new Date(minDt.getTime());
+            hidden.value = toLocalDateTimeValue(selected);
+            if (label) label.textContent = formatDisplay(selected);
+            if (typeof opts.onConfirm === 'function') opts.onConfirm(selected);
+            if (shouldClose) popup.classList.add('d-none');
+        }
+
+        function render() {
+            var min = minDate();
+            var minDay = new Date(min.getFullYear(), min.getMonth(), min.getDate());
+            var first = new Date(view.getFullYear(), view.getMonth(), 1);
+            var daysInMonth = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
+            var startOffset = (first.getDay() + 6) % 7;
+            var monthLabel = first.toLocaleString('fr-FR', { month: 'long', year: 'numeric' });
+
+            var h = selected ? selected.getHours() : min.getHours();
+            var m = selected ? selected.getMinutes() : (Math.ceil(min.getMinutes() / 5) * 5) % 60;
+            var hourOptions = '', minOptions = '';
+            var selectedDay = selected ? new Date(selected.getFullYear(), selected.getMonth(), selected.getDate()) : null;
+            var isMinDay = selectedDay && selectedDay.getTime() === minDay.getTime();
+            var minHour = isMinDay ? min.getHours() : 0;
+
+            for (var hh = minHour; hh < 24; hh++) {
+                hourOptions += '<option value="' + hh + '"' + (hh === h ? ' selected' : '') + '>' + String(hh).padStart(2, '0') + '</option>';
+            }
+            for (var mm = 0; mm < 60; mm += 5) {
+                minOptions += '<option value="' + mm + '"' + (mm === m ? ' selected' : '') + '>' + String(mm).padStart(2, '0') + '</option>';
+            }
+
+            var html = '<div class="cdt-header"><button type="button" id="' + opts.popupId + '_prev">&#8249;</button><span class="cdt-month-label">' + monthLabel + '</span><button type="button" id="' + opts.popupId + '_next">&#8250;</button></div>';
+            html += '<div class="cdt-weekdays"><span>lu</span><span>ma</span><span>me</span><span>je</span><span>ve</span><span>sa</span><span>di</span></div><div class="cdt-days">';
+
+            for (var i = 0; i < startOffset; i++) html += '<span class="cdt-day cdt-day--empty"></span>';
+            for (var d = 1; d <= daysInMonth; d++) {
+                var dayDate = new Date(view.getFullYear(), view.getMonth(), d);
+                var cls = 'cdt-day';
+                if (dayDate < minDay) {
+                    // show past days in gray, disabled
+                    html += '<button type="button" class="cdt-day cdt-day--disabled" disabled>' + d + '</button>';
+                    continue;
+                }
+                if (selected && dayDate.toDateString() === new Date(selected.getFullYear(), selected.getMonth(), selected.getDate()).toDateString()) cls += ' cdt-day--selected';
+                html += '<button type="button" class="' + cls + '" data-day="' + d + '">' + d + '</button>';
+            }
+            html += '</div><div class="cdt-time"><label>Heure</label><select id="' + opts.popupId + '_h">' + hourOptions + '</select><span style="font-weight:700">:</span><select id="' + opts.popupId + '_m">' + minOptions + '</select></div>';
+            html += '<button type="button" class="cdt-confirm" id="' + opts.popupId + '_ok">Confirmer</button>';
+            popup.innerHTML = html;
+
+            popup.querySelector('#' + opts.popupId + '_prev').addEventListener('click', function (e) { e.stopPropagation(); view.setMonth(view.getMonth() - 1); render(); });
+            popup.querySelector('#' + opts.popupId + '_next').addEventListener('click', function (e) { e.stopPropagation(); view.setMonth(view.getMonth() + 1); render(); });
+            popup.querySelectorAll('[data-day]').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.stopPropagation();
+                    var day = parseInt(btn.getAttribute('data-day'), 10);
+                    selected = new Date(view.getFullYear(), view.getMonth(), day, selected ? selected.getHours() : h, selected ? selected.getMinutes() : m);
+                    render();
+                });
+            });
+            var hourSelect = popup.querySelector('#' + opts.popupId + '_h');
+            var minSelect = popup.querySelector('#' + opts.popupId + '_m');
+            if (hourSelect) {
+                hourSelect.addEventListener('change', function () {
+                    if (!selected) selected = new Date(view.getFullYear(), view.getMonth(), 1, 0, 0, 0, 0);
+                    selected.setHours(parseInt(this.value, 10));
+                    render();
+                });
+            }
+            if (minSelect) {
+                minSelect.addEventListener('change', function () {
+                    if (!selected) selected = new Date(view.getFullYear(), view.getMonth(), 1, 0, 0, 0, 0);
+                    selected.setMinutes(parseInt(this.value, 10), 0, 0);
+                });
+            }
+            popup.querySelector('#' + opts.popupId + '_ok').addEventListener('click', function (e) {
+                e.stopPropagation();
+                if (!selected) return;
+                var hh = parseInt(popup.querySelector('#' + opts.popupId + '_h').value, 10);
+                var mm = parseInt(popup.querySelector('#' + opts.popupId + '_m').value, 10);
+                selected.setHours(hh, mm, 0, 0);
+                commitSelected(true);
+            });
+
+            // Make long native option lists less intrusive
+            var hourSelEl = popup.querySelector('#' + opts.popupId + '_h');
+            var minSelEl = popup.querySelector('#' + opts.popupId + '_m');
+            if (hourSelEl) hourSelEl.setAttribute('size', '1');
+            if (minSelEl) minSelEl.setAttribute('size', '1');
+        }
+
+        function positionPopup() {
+            if (popup.classList.contains('d-none')) return;
+            var rect = trigger.getBoundingClientRect();
+            var viewportW = window.innerWidth;
+            var viewportH = window.innerHeight;
+            var popupW = popup.offsetWidth || 320;
+            var popupH = popup.offsetHeight || 420;
+
+            var left = rect.left;
+            var top = rect.bottom + 8;
+            if (left + popupW > viewportW - 8) left = viewportW - popupW - 8;
+            if (left < 8) left = 8;
+            if (top + popupH > viewportH - 8) top = Math.max(8, rect.top - popupH - 8);
+
+            popup.style.left = left + 'px';
+            popup.style.top = top + 'px';
+        }
+
+        trigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            selected = getInputDate(hidden) || selected;
+            view = selected ? new Date(selected.getFullYear(), selected.getMonth(), 1) : new Date();
+            render();
+            var willOpen = popup.classList.contains('d-none');
+            popup.classList.toggle('d-none');
+            if (willOpen) requestAnimationFrame(positionPopup);
+        });
+        document.addEventListener('click', function (e) {
+            if (!popup.contains(e.target) && e.target !== trigger) popup.classList.add('d-none');
+        });
+        window.addEventListener('resize', positionPopup);
+        window.addEventListener('scroll', positionPopup, true);
+
+        if (getInputDate(hidden) && label) label.textContent = formatDisplay(getInputDate(hidden));
+        return {
+            setMinDate: function () { /* min is dynamic via opts.getMinDate */ },
+            setDate: function (d) { selected = d; hidden.value = toLocalDateTimeValue(d); if (label) label.textContent = formatDisplay(d); },
+            getDate: function () { return getInputDate(hidden); },
+            commit: function () { commitSelected(false); }
+        };
+    }
+
+    function enforceDateRules() {
+        if (!startInput || !endInput) return;
+        var endTrigger = document.getElementById('endDtTrigger');
+
+        var now = new Date();
+        startInput.min = toLocalDateTimeValue(now);
+        startInput.disabled = false;
+
+        // No start => no end selectable.
+        if (!startInput.value) {
+            // Never disable hidden input (disabled fields are not submitted).
+            endInput.disabled = false;
+            if (endTrigger) endTrigger.disabled = true;
+            endInput.min = '';
+            endInput.value = '';
+            updateDuration();
+            return;
+        }
+
+        var startDate = getInputDate(startInput);
+        if (!startDate || isNaN(startDate.getTime()) || startDate < now) {
+            startInput.value = '';
+            endInput.disabled = false;
+            if (endTrigger) endTrigger.disabled = true;
+            endInput.min = '';
+            endInput.value = '';
+            updateDuration();
+            return;
+        }
+
+        // End must be at least next calendar day (00:00).
+        var minEndDate = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate() + 1, 0, 0, 0, 0);
+        var minEndValue = toLocalDateTimeValue(minEndDate);
+        endInput.disabled = false;
+        if (endTrigger) endTrigger.disabled = false;
+        endInput.min = minEndValue;
+        var endDate = getInputDate(endInput);
+        if (!endDate || isNaN(endDate.getTime()) || endDate < minEndDate) {
+            endInput.value = '';
+        }
+
+        updateDuration();
+    }
+
+
+    // ── Modal show → seed product info + reset stepper ────────────────────────
+    document.addEventListener('click', function (event) {
+        var btn = event.target.closest('.js-open-rental-request');
+        if (!btn) return;
+        applyProductContext(
+            btn.getAttribute('data-produit-id') || '',
+            btn.getAttribute('data-produit-nom') || 'Équipement',
+            btn.getAttribute('data-rental-price') || '0.000'
+        );
+    });
+
+    modalEl.addEventListener('show.bs.modal', function (event) {
+        var btn = event.relatedTarget;
+        if (btn) {
+            applyProductContext(
+                btn.getAttribute('data-produit-id') || '',
+                btn.getAttribute('data-produit-nom') || 'Équipement',
+                btn.getAttribute('data-rental-price') || '0.000'
+            );
+        } else if ((productIdInput && productIdInput.value) || (productFallbackInput && productFallbackInput.value)) {
+            applyProductContext(
+                productIdInput ? productIdInput.value : (productFallbackInput ? productFallbackInput.value : ''),
+                '{{ rental_target_product_name|default("Équipement")|e("js") }}',
+                '{{ (rental_target_product_price is not null ? rental_target_product_price : 0)|number_format(3, ".", "") }}'
+            );
+        }
+        currentStep = 1;
+        // Clear any leftover validation state from a previous open
+        steps.forEach(function (el) { clearAllErrorsInStep(el); });
+        if (!startPicker || !endPicker) {
+            startPicker = buildPicker({
+                triggerId: 'startDtTrigger',
+                popupId: 'startDtPopup',
+                labelId: 'startDtLabel',
+                hiddenId: 'rentalStartAt',
+                getMinDate: function () { return new Date(); },
+                onConfirm: function () { enforceDateRules(); }
+            });
+            endPicker = buildPicker({
+                triggerId: 'endDtTrigger',
+                popupId: 'endDtPopup',
+                labelId: 'endDtLabel',
+                hiddenId: 'rentalEndAt',
+                getMinDate: function () {
+                    var s = getInputDate(startInput);
+                    if (!s || isNaN(s.getTime())) return new Date(Date.now() + 24 * 60 * 60 * 1000);
+                    return new Date(s.getFullYear(), s.getMonth(), s.getDate() + 1, 0, 0, 0, 0);
+                },
+                onConfirm: function () { enforceDateRules(); }
+            });
+        }
+        enforceDateRules();
+        updateDuration();
+        renderStep();
+    });
+
+    // ── Navigation: Prev (no validation needed going back) ───────────────────
+    if (prevBtn) {
+        prevBtn.addEventListener('click', function () {
+            currentStep = Math.max(1, currentStep - 1);
+            renderStep();
+        });
+    }
+
+    // ── Navigation: Next (validate current step before advancing) ────────────
+    if (nextBtn) {
+        nextBtn.addEventListener('click', function () {
+            var validator = VALIDATORS[currentStep];
+            if (typeof validator === 'function' && !validator()) {
+                // Scroll to first error in the current step
+                var firstErr = document.querySelector('.rental-step[data-step="' + currentStep + '"] .is-invalid');
+                if (firstErr) {
+                    firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    firstErr.focus({ preventScroll: true });
+                }
+                return; // Block advance
+            }
+            currentStep = Math.min(4, currentStep + 1);
+            renderStep();
+        });
+    }
+
+    // ── Date inputs: strict rules + auto duration ─────────────────────────────
+    if (startInput) {
+        startInput.addEventListener('change', enforceDateRules);
+        startInput.addEventListener('input', enforceDateRules);
+        startInput.addEventListener('blur', enforceDateRules);
+    }
+    if (endInput) {
+        endInput.addEventListener('change', enforceDateRules);
+        endInput.addEventListener('input', enforceDateRules);
+        endInput.addEventListener('blur', enforceDateRules);
+    }
+
+    var transportSelectEl = document.querySelector('.rental-step[data-step="2"] [name$="[transportResponsibility]"]');
+    if (transportSelectEl) {
+        transportSelectEl.addEventListener('change', updateTransportFeeNotice);
+        transportSelectEl.addEventListener('input', updateTransportFeeNotice);
+    }
+
+    if (formEl) {
+        formEl.addEventListener('submit', function (e) {
+            if (productIdInput && (!productIdInput.value || String(productIdInput.value).trim() === '') && productFallbackInput && String(productFallbackInput.value).trim() !== '') {
+                productIdInput.value = String(productFallbackInput.value).trim();
+            }
+            if (startPicker && typeof startPicker.commit === 'function') startPicker.commit();
+            if (endPicker && typeof endPicker.commit === 'function') endPicker.commit();
+            enforceDateRules();
+            syncStep3BackendFields();
+
+            // Final guard: validate required steps even if user submits via Enter.
+            var firstInvalidStep = null;
+            [1, 2, 3].forEach(function (n) {
+                var validator = VALIDATORS[n];
+                if (typeof validator === 'function') {
+                    var ok = validator();
+                    if (!ok && firstInvalidStep === null) firstInvalidStep = n;
+                }
+            });
+            if (firstInvalidStep !== null) {
+                e.preventDefault();
+                currentStep = firstInvalidStep;
+                renderStep();
+                var firstErr = document.querySelector('.rental-step[data-step="' + firstInvalidStep + '"] .is-invalid');
+                if (firstErr) {
+                    firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    try { firstErr.focus({ preventScroll: true }); } catch (_) {}
+                }
+            }
+        });
+    }
+
+    var acceptAllConditions = document.getElementById('rentalAcceptAllConditions');
+    var acceptLatePenalty = document.getElementById('rentalAcceptLatePenalty');
+    if (acceptAllConditions) {
+        acceptAllConditions.addEventListener('change', function () {
+            var stepEl = document.querySelector('.rental-step[data-step="3"]');
+            if (!stepEl) return;
+            var agreeDamage = stepEl.querySelector('input[type="checkbox"][name$="[agreeDamage]"]');
+            var agreeLoss = stepEl.querySelector('input[type="checkbox"][name$="[agreeLoss]"]');
+            var agreeTheft = stepEl.querySelector('input[type="checkbox"][name$="[agreeTheft]"]');
+            var agreeRepair = stepEl.querySelector('input[type="checkbox"][name$="[agreeRepairReplacement]"]');
+            if (agreeDamage) agreeDamage.checked = this.checked;
+            if (agreeLoss) agreeLoss.checked = this.checked;
+            if (agreeTheft) agreeTheft.checked = this.checked;
+            if (agreeRepair) agreeRepair.checked = this.checked;
+            syncStep3BackendFields();
+        });
+    }
+    if (acceptLatePenalty) {
+        acceptLatePenalty.addEventListener('change', function () {
+            var stepEl = document.querySelector('.rental-step[data-step="3"]');
+            if (!stepEl) return;
+            var penaltyText = stepEl.querySelector('[name$="[lateReturnPenalty]"]');
+            if (penaltyText) {
+                penaltyText.value = this.checked ? 'Le locataire accepte une pénalité de 10 DT par heure de retard.' : '';
+            }
+            syncStep3BackendFields();
+        });
+    }
+
+    // Keep "now" fresh if modal stays open.
+    setInterval(function () {
+        enforceDateRules();
+    }, 60000);
+
+    enforceDateRules();
+    updateTransportFeeNotice();
+    updateDuration();
+    renderStep();
+
+    // ── Re-open modal on server-side validation failure ───────────────────────
+    {% if open_rental_request_modal|default(false) %}
+    if (formEl && formEl.getAttribute('data-server-errors') === '1') {
+        bootstrap.Modal.getOrCreateInstance(modalEl).show();
+    }
+    {% endif %}
+
+})();
+</script>
+{% endif %}
+
 
 {# ── About ── #}
 <section id="about" class="tropical-about py-5">

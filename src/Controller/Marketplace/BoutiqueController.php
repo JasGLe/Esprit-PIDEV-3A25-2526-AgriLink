@@ -9,6 +9,7 @@ use App\Entity\Marketplace\Produits;
 use App\Entity\UserManagement\User;
 use App\Form\Marketplace\BoutiqueCultureProduitType;
 use App\Form\Marketplace\BoutiqueEquipementVenteType;
+use App\Form\Marketplace\EquipementRentalType;
 use App\Form\Marketplace\PromoCodeAssignType;
 use App\Repository\Marketplace\ProduitsRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -45,8 +46,9 @@ class BoutiqueController extends AbstractController
         $user = $this->getUser();
         $uid = (int) $user->getId();
         $promoForm = $this->createForm(PromoCodeAssignType::class);
+        $rentalForm = $this->createForm(EquipementRentalType::class);
 
-        return $this->renderBoutiqueIndex($uid, $promoForm, false);
+        return $this->renderBoutiqueIndex($uid, $promoForm, false, $rentalForm, false, null);
     }
 
     #[Route('/promo-code/assign', name: 'boutique_promo_assign', methods: ['POST'])]
@@ -117,15 +119,65 @@ class BoutiqueController extends AbstractController
         return $this->redirectToRoute('boutique_index');
     }
 
-    private function renderBoutiqueIndex(int $uid, FormInterface $promoForm, bool $openPromoModal): Response
+    #[Route('/equipement/location/activer', name: 'boutique_equipement_location_activer', methods: ['POST'])]
+    public function activateEquipmentRental(Request $request): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $uid = (int) $user->getId();
+        $promoForm = $this->createForm(PromoCodeAssignType::class);
+        $rentalForm = $this->createForm(EquipementRentalType::class);
+        $rentalForm->handleRequest($request);
+
+        if (!$rentalForm->isSubmitted() || !$rentalForm->isValid()) {
+            return $this->renderBoutiqueIndex($uid, $promoForm, false, $rentalForm, true, null);
+        }
+
+        $productId = (int) $rentalForm->get('product_id')->getData();
+        $produit = $this->produitsRepository->find($productId);
+        if (!$produit || !$this->isBoutiqueProductOwnedByUser($produit) || $produit->getEquipementId() === null) {
+            $rentalForm->get('product_id')->addError(new FormError('Équipement introuvable ou non autorisé.'));
+
+            return $this->renderBoutiqueIndex($uid, $promoForm, false, $rentalForm, true, $productId > 0 ? $productId : null);
+        }
+
+        $rentalPrice = (float) $rentalForm->get('rental_price_per_day')->getData();
+        $rentalDescriptionRaw = trim((string) $rentalForm->get('rental_description')->getData());
+        $rentalDescription = $rentalDescriptionRaw !== '' ? $rentalDescriptionRaw : null;
+
+        $produit->setIsRental(true);
+        $produit->setRentalPricePerDay($rentalPrice);
+        $produit->setRentalDescription($rentalDescription);
+        if ($rentalDescription !== null) {
+            $produit->setDescription($rentalDescription);
+        }
+        $this->entityManager->flush();
+
+        $this->addFlash('success', 'L’équipement est maintenant disponible en location.');
+
+        return $this->redirectToRoute('boutique_index');
+    }
+
+    private function renderBoutiqueIndex(
+        int $uid,
+        FormInterface $promoForm,
+        bool $openPromoModal,
+        ?FormInterface $rentalForm = null,
+        bool $openRentalModal = false,
+        ?int $rentalModalTargetId = null
+    ): Response
     {
         $produits = $this->produitsRepository->findBoutiqueByProprietaire($uid);
+        $rentalForm ??= $this->createForm(EquipementRentalType::class);
 
         return $this->render('marketplace/boutique/index.html.twig', [
             'produits' => $produits,
             'promo_form' => $promoForm->createView(),
+            'rental_form' => $rentalForm->createView(),
             'active_promos' => $this->buildActivePromos($produits),
             'open_promo_modal' => $openPromoModal,
+            'open_rental_modal' => $openRentalModal,
+            'rental_modal_target_id' => $rentalModalTargetId,
         ]);
     }
 

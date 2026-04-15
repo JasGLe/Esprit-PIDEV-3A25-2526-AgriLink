@@ -575,6 +575,10 @@ class MarketplaceCartController extends AbstractController
             return false;
         }
 
+        if ($p->isRental()) {
+            return false;
+        }
+
         return $p->getActive() && $p->getQuantite() > 0;
     }
 
