@@ -1,0 +1,224 @@
+{# User Notifications Display #}
+
+<div class="user-notifications-container" id="notificationsContainer">
+    {# Will be populated via AJAX on page load #}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Fetch unread notifications
+    fetch('/notifications/unread')
+        .then(r => r.json())
+        .then(data => {
+            if (data.notifications && data.notifications.length > 0) {
+                const container = document.getElementById('notificationsContainer');
+                const wrapper = document.createElement('div');
+                wrapper.className = 'notifications-toast-wrapper';
+                
+                const iconMap = {
+                    'user_welcome': '🌟',
+                    'email_verification_pending': '📧',
+                    'phone_verification_pending': '📱',
+                    '2fa_setup_pending': '🔐',
+                    'profile_completion_pending': '👤',
+                    'user_joined': '👤',
+                    'user_left': '👋',
+                    'role_changed': '👑',
+                    'user_deactivated': '🚫',
+                    'user_reactivated': '✅',
+                };
+                
+                data.notifications.forEach(notif => {
+                    const toast = document.createElement('div');
+                    toast.className = 'notification-toast';
+                    toast.dataset.notificationId = notif.id;
+                    toast.role = 'alert';
+                    
+                    const icon = iconMap[notif.type] || 'ℹ️';
+                    
+                    toast.innerHTML = `
+                        <div class="notification-header">
+                            <span class="notification-icon">${icon}</span>
+                            <h4 class="notification-title">${escapeHtml(notif.title)}</h4>
+                            <div class="notification-actions">
+                                <button class="notification-action" type="button" data-notification-id="${notif.id}" title="Delete" data-action="delete">
+                                    🗑️
+                                </button>
+                                <button class="notification-close" type="button" data-notification-id="${notif.id}" title="Dismiss">
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+                        <p class="notification-body">${escapeHtml(notif.body)}</p>
+                    `;
+                    
+                    wrapper.appendChild(toast);
+                    
+                    // Add delete handler
+                    toast.querySelector('[data-action="delete"]').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        deleteNotification(notif.id, toast);
+                    });
+                    
+                    // Add dismiss handler
+                    toast.querySelector('.notification-close').addEventListener('click', function(e) {
+                        e.preventDefault();
+                        toast.style.animation = 'slideOutRight 0.3s ease-in forwards';
+                        setTimeout(() => {
+                            toast.remove();
+                        }, 300);
+                        
+                        // Mark as read
+                        fetch('/notifications/' + notif.id + '/read', { method: 'POST' })
+                            .catch(err => console.log('Error marking as read'));
+                    });
+                });
+                
+                container.appendChild(wrapper);
+            }
+        })
+        .catch(err => console.log('Error loading notifications:', err));
+});
+
+function deleteNotification(notificationId, toastElement) {
+    toastElement.style.animation = 'slideOutRight 0.3s ease-in forwards';
+    setTimeout(() => {
+        toastElement.remove();
+    }, 300);
+    
+    // Delete from database
+    fetch('/notifications/' + notificationId + '/delete', { method: 'POST' })
+        .catch(err => console.log('Error deleting notification'));
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+</script>
+
+<style>
+.user-notifications-container {
+    position: relative;
+    z-index: 1000;
+}
+
+.notifications-toast-wrapper {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1050;
+    max-width: 420px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px;
+}
+
+.notification-toast {
+    background: white;
+    border: 2px solid #f59e0b;
+    border-left: 4px solid #f59e0b;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    animation: slideInRight 0.3s ease-out;
+}
+
+.notification-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.notification-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.notification-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    flex: 1;
+}
+
+.notification-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.notification-action,
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.notification-action:hover,
+.notification-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1f2937;
+}
+
+.notification-body {
+    margin: 8px 0 0 36px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #4b5563;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(400px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOutRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(400px);
+    }
+}
+
+@media (max-width: 640px) {
+    .notifications-toast-wrapper {
+        max-width: calc(100vw - 20px);
+        right: 10px;
+        left: 10px;
+        top: 70px;
+    }
+}
+</style>

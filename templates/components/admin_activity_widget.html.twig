@@ -1,0 +1,400 @@
+{# Admin Activity Notifications Widget #}
+
+<div id="admin-activity-widget" class="admin-activity-widget">
+    <div class="widget-header">
+        <h3 class="widget-title">
+            <span class="header-icon">📊</span>
+            Activité utilisateurs
+        </h3>
+        <button class="refresh-btn" title="Actualiser" onclick="location.reload()">
+            <span>🔄</span>
+        </button>
+    </div>
+
+    <div class="activity-stats" id="activity-stats">
+        <div class="stat-item loading">
+            <div class="stat-number">--</div>
+            <div class="stat-label">Nouveaux utilisateurs</div>
+        </div>
+        <div class="stat-item loading">
+            <div class="stat-number">--</div>
+            <div class="stat-label">Utilisateurs totaux</div>
+        </div>
+        <div class="stat-item loading">
+            <div class="stat-number">--</div>
+            <div class="stat-label">Actifs</div>
+        </div>
+        <div class="stat-item loading">
+            <div class="stat-number">--</div>
+            <div class="stat-label">Inactifs</div>
+        </div>
+    </div>
+
+    <div class="activity-divider"></div>
+
+    <div class="activity-list" id="activity-list">
+        <div class="activity-item loading">
+            <div class="loading-bar"></div>
+        </div>
+        <div class="activity-item loading">
+            <div class="loading-bar"></div>
+        </div>
+        <div class="activity-item loading">
+            <div class="loading-bar"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const widget = document.getElementById('admin-activity-widget');
+    const statsContainer = document.getElementById('activity-stats');
+    const listContainer = document.getElementById('activity-list');
+
+    const activityIcons = {
+        'user_joined': '👤',
+        'user_left': '👋',
+        'role_changed': '🔄',
+        'user_deactivated': '🚫',
+        'user_reactivated': '✅',
+        'bulk_operation': '📊',
+    };
+
+    const activityColors = {
+        'user_joined': '#22c55e',
+        'user_left': '#ef4444',
+        'role_changed': '#f59e0b',
+        'user_deactivated': '#ef4444',
+        'user_reactivated': '#22c55e',
+        'bulk_operation': '#3b82f6',
+    };
+
+    async function loadAdminActivity() {
+        try {
+            // Load stats
+            const statsResponse = await fetch('{{ path('app_notifications_admin_activity_summary') }}');
+            const statsData = await statsResponse.json();
+            const summary = statsData.summary;
+
+            // Load activity feed
+            const activityResponse = await fetch('{{ path('app_notifications_admin_activity') }}');
+            const activityData = await activityResponse.json();
+            const notifications = activityData.notifications || [];
+
+            // Render stats
+            statsContainer.innerHTML = `
+                <div class="stat-item">
+                    <div class="stat-number" style="color: #22c55e;">${summary.newUsersLast24h}</div>
+                    <div class="stat-label">Nouveaux (24h)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" style="color: #3b82f6;">${summary.totalUsers}</div>
+                    <div class="stat-label">Utilisateurs totaux</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" style="color: #06b6d4;">${summary.activeUsers}</div>
+                    <div class="stat-label">Actifs</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" style="color: #f59e0b;">${summary.inactiveUsers}</div>
+                    <div class="stat-label">Inactifs</div>
+                </div>
+            `;
+
+            // Render activity feed
+            if (notifications.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="empty-state">
+                        <p>✨ Aucune activité récente</p>
+                    </div>
+                `;
+            } else {
+                listContainer.innerHTML = notifications.map((notif) => {
+                    const icon = activityIcons[notif.type] || '📌';
+                    const color = activityColors[notif.type] || '#6b7280';
+                    const lines = notif.body.split('\n');
+
+                    return `
+                        <div class="activity-item" data-id="${notif.id}" data-read="${notif.isRead}">
+                            <div class="activity-icon" style="background-color: ${color};">
+                                ${icon}
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">${notif.title}</div>
+                                <div class="activity-body">${lines.join('<br>')}</div>
+                                <div class="activity-time">${formatTime(new Date(notif.createdAt))}</div>
+                            </div>
+                            ${!notif.isRead ? '<div class="unread-badge">Nouveau</div>' : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                // Add click handlers to mark as read
+                document.querySelectorAll('.activity-item').forEach(item => {
+                    item.addEventListener('click', async function() {
+                        const id = this.dataset.id;
+                        const isRead = this.dataset.read === 'true';
+
+                        if (!isRead) {
+                            try {
+                                await fetch(`/notifications/${id}/read`, { method: 'POST' });
+                                this.dataset.read = 'true';
+                                const badge = this.querySelector('.unread-badge');
+                                if (badge) badge.remove();
+                            } catch (e) {
+                                console.error('Error marking as read:', e);
+                            }
+                        }
+                    });
+                });
+            }
+
+            widget.classList.remove('loading');
+        } catch (error) {
+            console.error('Error loading admin activity:', error);
+            listContainer.innerHTML = `
+                <div class="error-state">
+                    <p>⚠️ Erreur lors du chargement</p>
+                </div>
+            `;
+        }
+    }
+
+    function formatTime(date) {
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 1) return 'À l\'instant';
+        if (diffMins < 60) return `Il y a ${diffMins}m`;
+        if (diffHours < 24) return `Il y a ${diffHours}h`;
+        if (diffDays < 7) return `Il y a ${diffDays}j`;
+
+        return date.toLocaleDateString('fr-FR');
+    }
+
+    // Load on page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadAdminActivity);
+    } else {
+        loadAdminActivity();
+    }
+
+    // Refresh every 30 seconds
+    setInterval(loadAdminActivity, 30000);
+})();
+</script>
+
+<style>
+.admin-activity-widget {
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.widget-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.widget-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.header-icon {
+    font-size: 24px;
+}
+
+.refresh-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 18px;
+}
+
+.refresh-btn:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+}
+
+.activity-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-item {
+    padding: 16px;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-radius: 12px;
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.stat-item.loading {
+    opacity: 0.6;
+}
+
+.stat-number {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 8px;
+}
+
+.stat-label {
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.activity-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #e5e7eb, transparent);
+    margin-bottom: 20px;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    background: #f9fafb;
+    border-radius: 10px;
+    border-left: 4px solid #e5e7eb;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.activity-item:hover {
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-left-color: #3b82f6;
+}
+
+.activity-item.loading {
+    pointer-events: none;
+}
+
+.activity-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    font-size: 20px;
+    flex-shrink: 0;
+    opacity: 0.9;
+}
+
+.activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.activity-body {
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin-bottom: 6px;
+}
+
+.activity-time {
+    font-size: 11px;
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+.unread-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #3b82f6;
+    color: white;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.empty-state,
+.error-state {
+    text-align: center;
+    padding: 32px 20px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.loading-bar {
+    height: 12px;
+    background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+    background-size: 200% 100%;
+    border-radius: 6px;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+@media (max-width: 640px) {
+    .admin-activity-widget {
+        padding: 16px;
+    }
+
+    .activity-stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .activity-list {
+        max-height: 300px;
+    }
+}
+</style>
