@@ -3,6 +3,7 @@
 namespace App\Repository\Marketplace;
 
 use App\Entity\Marketplace\Produits;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -58,6 +59,17 @@ class ProduitsRepository extends ServiceEntityRepository
      * @return Produits[]
      */
     public function findPublicMarketplaceCatalog(?string $search, string $cat, ?array $sellerIds, string $sort): array
+    {
+        return $this->buildPublicMarketplaceCatalogQueryBuilder($search, $cat, $sellerIds, $sort)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @param int[]|null $sellerIds restrict to these seller user ids (e.g. region filter)
+     * @param 'price_asc'|'price_desc'|'recent' $sort
+     */
+    public function buildPublicMarketplaceCatalogQueryBuilder(?string $search, string $cat, ?array $sellerIds, string $sort): QueryBuilder
     {
         $qb = $this->createQueryBuilder('p')
             ->andWhere('p.origine = :origine')
@@ -123,7 +135,8 @@ class ProduitsRepository extends ServiceEntityRepository
 
         if ($sellerIds !== null) {
             if ($sellerIds === []) {
-                return [];
+                $qb->andWhere('1 = 0');
+                return $qb;
             }
             $qb->andWhere('p.idFournisseur IN (:sids)')
                 ->setParameter('sids', $sellerIds);
@@ -135,7 +148,7 @@ class ProduitsRepository extends ServiceEntityRepository
             default => $qb->orderBy('p.prixUnitaire', 'ASC'),
         };
 
-        return $qb->getQuery()->getResult();
+        return $qb;
     }
 
     /**
