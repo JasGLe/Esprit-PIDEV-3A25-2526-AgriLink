@@ -589,4 +589,330 @@ $box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0
       transform: translateY(0);
     }
   }
+  
+}
+// ============================================================================
+// Modal « Demande de location équipement »
+// ============================================================================
+
+.modal-rental {
+  .modal-content {
+    border-radius: $border-radius-lg;
+    border: 1px solid rgba($green-200, 0.4);
+    overflow: hidden;
+  }
+
+  // ── Header ──────────────────────────────────────────────────────────────
+  .modal-rental__head {
+    background: linear-gradient(135deg, $green-900 0%, $green-800 60%, $green-700 100%);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-rental__head-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .modal-rental__icon {
+    width: 42px;
+    height: 42px;
+    border-radius: $border-radius;
+    background: rgba($white, 0.12);
+    border: 1px solid rgba($white, 0.22);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: $white;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+
+  .modal-rental__title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: $white;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .modal-rental__subtitle {
+    font-size: 0.75rem;
+    color: rgba($white, 0.6);
+    margin-top: 2px;
+  }
+
+  .modal-rental__close {
+    width: 30px;
+    height: 30px;
+    border-radius: $border-radius;
+    background: rgba($white, 0.12);
+    border: none;
+    color: $white;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: rgba($white, 0.22);
+    }
+  }
+
+  // ── Product alert bar ────────────────────────────────────────────────────
+  .modal-rental__product-alert {
+    margin: 1.25rem 1.5rem 0;
+    padding: 0.75rem 1rem;
+    background: $green-50;
+    border: 0.5px solid $green-200;
+    border-radius: $border-radius;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .modal-rental__product-name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: $green-900;
+  }
+
+  .modal-rental__product-price {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: $green-700;
+    background: $green-100;
+    padding: 3px 10px;
+    border-radius: $border-radius-pill;
+  }
+
+  // ── Stepper ──────────────────────────────────────────────────────────────
+  .modal-rental__stepper {
+    display: flex;
+    align-items: center;
+    padding: 1rem 1.5rem 0.5rem;
+    gap: 0;
+  }
+
+  .modal-rental__step-item {
+    display: flex;
+    align-items: center;
+    flex: 1;
+
+    &:last-child {
+      flex: 0 0 auto;
+    }
+  }
+
+  .modal-rental__step-dot {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+
+    &.is-active {
+      background: $green-600;
+      color: $white;
+    }
+
+    &.is-done {
+      background: $green-100;
+      color: $green-700;
+      border: 1px solid $green-300;
+    }
+
+    &.is-idle {
+      background: $gray-100;
+      color: $gray-400;
+      border: 0.5px solid $gray-200;
+    }
+  }
+
+  .modal-rental__step-line {
+    flex: 1;
+    height: 2px;
+    background: $gray-200;
+    margin: 0 4px;
+    transition: background 0.2s ease;
+
+    &.is-done {
+      background: $green-300;
+    }
+  }
+
+  // ── Body / Steps ─────────────────────────────────────────────────────────
+  .modal-rental__body {
+    padding: 1.25rem 1.5rem;
+  }
+
+  .modal-rental__section {
+    background: $gray-50;
+    border: 0.5px solid $gray-200;
+    border-radius: $border-radius;
+    padding: 1rem;
+    margin-bottom: 1rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .modal-rental__section-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: $green-700;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .modal-rental__section-bar {
+    width: 3px;
+    height: 14px;
+    background: $green-500;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .form-label {
+    font-size: 0.8rem;
+    color: $gray-600;
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+
+  .form-control,
+  .form-select {
+    font-size: 0.875rem;
+    border-color: $gray-300;
+    border-radius: $border-radius;
+
+    &:focus {
+      border-color: $green-400;
+      box-shadow: 0 0 0 3px rgba($green-500, 0.15);
+    }
+  }
+
+  // Engagement checkboxes
+  .modal-rental__check-group {
+    border: 0.5px solid $gray-200;
+    border-radius: $border-radius;
+    padding: 0.75rem 1rem;
+    background: $white;
+  }
+
+  .modal-rental__check-group .form-check {
+    padding: 0.35rem 0 0.35rem 1.75rem;
+    border-bottom: 0.5px solid $gray-100;
+
+    &:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+  }
+
+  // Confirmation step alert
+  .modal-rental__confirm-alert {
+    background: $green-50;
+    border: 0.5px solid $green-200;
+    border-radius: $border-radius;
+    padding: 1rem;
+    font-size: 0.875rem;
+    color: $green-800;
+  }
+
+  // ── Footer ───────────────────────────────────────────────────────────────
+  .modal-rental__footer {
+    padding: 1rem 1.5rem;
+    border-top: 0.5px solid $gray-200;
+    background: $gray-50;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  .btn-rental-cancel {
+    height: 36px;
+    padding: 0 1rem;
+    border-radius: $border-radius;
+    border: 0.5px solid $gray-300;
+    background: transparent;
+    font-size: 0.8125rem;
+    color: $gray-600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: $gray-100;
+    }
+  }
+
+  .btn-rental-prev {
+    height: 36px;
+    padding: 0 1rem;
+    border-radius: $border-radius;
+    border: 0.5px solid $gray-300;
+    background: transparent;
+    font-size: 0.8125rem;
+    color: $gray-600;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: $gray-100;
+    }
+  }
+
+  .btn-rental-next {
+    height: 36px;
+    padding: 0 1.25rem;
+    border-radius: $border-radius;
+    border: none;
+    background: $green-600;
+    color: $white;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease;
+
+    &:hover {
+      background: $green-700;
+    }
+  }
+
+  .btn-rental-submit {
+    height: 36px;
+    padding: 0 1.25rem;
+    border-radius: $border-radius;
+    border: none;
+    background: $green-600;
+    color: $white;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      background: $green-700;
+      box-shadow: 0 4px 14px rgba($green-600, 0.35);
+    }
+  }
 }
