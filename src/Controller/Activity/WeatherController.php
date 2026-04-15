@@ -60,21 +60,10 @@ class WeatherController extends AbstractController
         }
 
         $city = $this->resolveAllowedCity($searchQuery !== '' ? $searchQuery : $selectedCity);
-        $weather = null;
-        $forecast = [];
-        $error = null;
 
-        try {
-            $weather = $this->openWeatherMapService->getDetailedWeatherForCity($city);
-            $forecast = $this->openWeatherMapService->getForecastForCity($city);
-
-            if ($weather === null) {
-                throw new \RuntimeException('Impossible de récupérer les données météo.');
-            }
-        } catch (\Throwable $exception) {
-            $error = 'Impossible de récupérer les données météo pour le moment.';
-            $this->addFlash('error', $error);
-        }
+        // Service returns null gracefully when offline or error occurs (no exception thrown)
+        $weather = $this->openWeatherMapService->getDetailedWeatherForCity($city);
+        $forecast = $this->openWeatherMapService->getForecastForCity($city);
 
         $agriInsights = is_array($weather) ? $this->buildAgricultureInsights($weather) : null;
         $forecastWithAdvice = array_map(
@@ -89,7 +78,7 @@ class WeatherController extends AbstractController
             'weather' => $weather,
             'forecast' => $forecastWithAdvice,
             'agriInsights' => $agriInsights,
-            'weatherError' => $error,
+            'isOffline' => $weather === null,
         ]);
     }
 
