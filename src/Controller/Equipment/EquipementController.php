@@ -4,6 +4,7 @@ namespace App\Controller\Equipment;
 
 use App\Entity\Equipement;
 use App\Form\Equipment\EquipementType;
+use App\Notification\EquipementStatutNotification;
 use App\Repository\EquipementRepository;
 use App\Repository\Marketplace\ProduitsRepository;
 use App\Service\FileUploader;
@@ -14,6 +15,8 @@ use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Notifier\NotifierInterface;
+use Symfony\Component\Notifier\Recipient\Recipient;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
@@ -161,9 +164,13 @@ public function index(
         Request $request,
         Equipement $equipement,
         EntityManagerInterface $em,
-        FileUploader $fileUploader
+        FileUploader $fileUploader,
+        NotifierInterface $notifier
     ): Response {
         $this->denyAccessUnlessOwner($equipement);
+
+        // Sauvegarder le statut AVANT handleRequest (modification par l'utilisateur)
+        $ancienStatut = $equipement->getStatut();
 
         $form = $this->createForm(EquipementType::class, $equipement);
         $form->handleRequest($request);
@@ -190,6 +197,37 @@ public function index(
             }
 
             $em->flush();
+
+            // ── Notification SMS si statut changé ──────────────────────────
+            $nouveauStatut = $equipement->getStatut();
+            if ($ancienStatut !== $nouveauStatut) {
+                $user      = $this->getUser();
+                $telephone = method_exists($user, 'getTelephone') ? $user->getTelephone() : null;
+
+                if ($telephone !== null && $telephone !== '') {
+                    // Normaliser en E.164 : si commence par 0, remplacer par +216
+                    if (str_starts_with($telephone, '0')) {
+                        $telephone = '+216' . substr($telephone, 1);
+                    } elseif (!str_starts_with($telephone, '+')) {
+                        $telephone = '+216' . $telephone;
+                    }
+
+                    try {
+                        $notification = new EquipementStatutNotification(
+                            $equipement->getNom() ?? 'Équipement',
+                            $ancienStatut ?? '—',
+                            $nouveauStatut ?? '—'
+                        );
+                        $recipient = new Recipient('', $telephone);
+                        $notifier->send($notification, $recipient);
+                        $this->addFlash('info', 'SMS de notification envoyé.');
+                    } catch (\Throwable $e) {
+                        // Ne pas bloquer la modification si le SMS échoue
+                    }
+                }
+            }
+            // ───────────────────────────────────────────────────────────────
+
             $this->addFlash('success', 'Équipement modifié avec succès !');
             return $this->redirectToRoute('equipement_index');
         }
