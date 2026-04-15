@@ -6,7 +6,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
 
-#[ORM\Entity]
+#[ORM\Entity(repositoryClass: \App\Repository\Marketplace\RentalRequestRepository::class)]
 #[ORM\Table(name: 'rental_requests')]
 class RentalRequest
 {
@@ -134,6 +134,9 @@ class RentalRequest
     )]
     private string $transportResponsibility;
 
+    #[ORM\Column(type: Types::FLOAT, options: ['default' => 0])]
+    private float $totalPrice = 0.0;
+
     // ── Getters / Setters ────────────────────────────────────────────────────
 
     public function getId(): ?int { return $this->id; }
@@ -167,4 +170,6 @@ class RentalRequest
     public function setUsageLocation(string $usageLocation): static { $this->usageLocation = $usageLocation; return $this; }
     public function getTransportResponsibility(): string { return $this->transportResponsibility; }
     public function setTransportResponsibility(string $transportResponsibility): static { $this->transportResponsibility = $transportResponsibility; return $this; }
+    public function getTotalPrice(): float { return $this->totalPrice; }
+    public function setTotalPrice(float $totalPrice): static { $this->totalPrice = $totalPrice; return $this; }
 }

@@ -22,6 +22,9 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/marketplace')]
 class MarketplacePublicController extends AbstractController
 {
+    private const SELLER_TRANSPORT_FEE_DT = 10.0;
+    private const EXTRA_HOUR_FEE_DT = 10.0;
+
     public function __construct(
         private readonly ProduitsRepository $produitsRepository,
         private readonly UserRepository $userRepository,
@@ -144,6 +147,7 @@ class MarketplacePublicController extends AbstractController
                 $rentalRequest->setProduitId($produit->getId());
                 $rentalRequest->setVendeurId((int) $produit->getIdFournisseur());
                 $rentalRequest->setLocataireId((int) $user->getId());
+                $rentalRequest->setTotalPrice($this->calculateRentalTotalPrice($rentalRequest, $produit, $durationHours));
 
                 $this->entityManager->persist($rentalRequest);
                 $this->entityManager->flush();
@@ -269,7 +273,7 @@ class MarketplacePublicController extends AbstractController
         if (!\in_array($sort, ['price_asc', 'price_desc'], true)) {
             $sort = 'price_asc';
         }
-        $allowedCat = ['all', 'legume', 'fruit', 'graines', 'equipement'];
+        $allowedCat = ['all', 'legume', 'fruit', 'graines', 'equipement', 'location'];
         if (!\in_array($cat, $allowedCat, true)) {
             $cat = 'all';
         }
@@ -298,5 +302,27 @@ class MarketplacePublicController extends AbstractController
             ->setPhone((string) ($user->getTelephone() ?? ''))
             ->setDateNaissance($user->getDateNaissance())
             ->setAddress($addressParts !== [] ? implode(', ', $addressParts) : '');
+    }
+
+    private function calculateRentalTotalPrice(RentalRequest $request, Produits $produit, float $durationHours): float
+    {
+        $dailyPrice = max(0.0, (float) ($produit->getRentalPricePerDay() ?? 0.0));
+        if ($dailyPrice <= 0.0) {
+            return 0.0;
+        }
+
+        $hours = max(0.0, $durationHours);
+        $fullDays = (int) floor($hours / 24);
+        $billableDays = max(1, $fullDays);
+        $extraHours = max(0.0, $hours - ($billableDays * 24));
+        $extraHourFee = $extraHours * self::EXTRA_HOUR_FEE_DT;
+
+        $transportFee = 0.0;
+        $transport = strtolower(trim((string) $request->getTransportResponsibility()));
+        if (\in_array($transport, ['seller', 'vendeur'], true)) {
+            $transportFee = self::SELLER_TRANSPORT_FEE_DT;
+        }
+
+        return round(($billableDays * $dailyPrice) + $extraHourFee + $transportFee, 3);
     }
 }
