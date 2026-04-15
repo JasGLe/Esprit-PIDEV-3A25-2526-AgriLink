@@ -12,6 +12,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -224,6 +225,40 @@ class UserController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}/upload-photo', name: 'upload_photo', methods: ['POST'])]
+    public function uploadPhoto(User $user, Request $request, FileUploader $fileUploader): JsonResponse
+    {
+        $adminUserData = $request->request->all()['admin_user'] ?? [];
+        $csrfToken = $adminUserData['_token'] ?? null;
+
+        if (!$this->isCsrfTokenValid('admin_user', $csrfToken)) {
+            return $this->json(['success' => false, 'message' => 'Token de sécurité invalide.'], 403);
+        }
+
+        $filesData = $request->files->all()['admin_user'] ?? [];
+        $photoFile = $filesData['profilePhoto'] ?? null;
+
+        if (!$photoFile) {
+            return $this->json(['success' => false, 'message' => 'Aucun fichier sélectionné.'], 400);
+        }
+
+        try {
+            $oldPhoto = $user->getPhotoProfil();
+            $photoFilename = $fileUploader->upload($photoFile, 'profiles', $oldPhoto);
+        } catch (FileException $exception) {
+            return $this->json(['success' => false, 'message' => $exception->getMessage()], 400);
+        }
+
+        $user->setPhotoProfil($photoFilename);
+        $this->entityManager->flush();
+
+        return $this->json([
+            'success' => true,
+            'photoUrl' => '/agrilink/uploads/' . ltrim($photoFilename, '/'),
+            'photoFilename' => $photoFilename,
+        ]);
+    }
+
     #[Route('/{id}/toggle-status', name: 'toggle_status', methods: ['POST'])]
     public function toggleStatus(User $user, Request $request): Response
     {
@@ -282,9 +317,15 @@ class UserController extends AbstractController
     #[Route('/{id}/delete-photo', name: 'delete_photo', methods: ['POST'])]
     public function deletePhoto(User $user, Request $request, FileUploader $fileUploader): Response
     {
+        $expectsJson = $request->isXmlHttpRequest() || str_contains((string) $request->headers->get('Accept'), 'application/json');
+
         // CSRF protection
         $submittedToken = $request->request->get('_token');
         if (!$this->isCsrfTokenValid('delete-photo-' . $user->getId(), $submittedToken)) {
+            if ($expectsJson) {
+                return $this->json(['success' => false, 'message' => 'Token CSRF invalide.'], 403);
+            }
+
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('admin_users_edit', ['id' => $user->getId()]);
         }
@@ -297,8 +338,16 @@ class UserController extends AbstractController
             $user->setPhotoProfil(null);
             $this->entityManager->flush();
 
+            if ($expectsJson) {
+                return $this->json(['success' => true]);
+            }
+
             $this->addFlash('success', 'Photo de profil supprimée avec succès.');
         } else {
+            if ($expectsJson) {
+                return $this->json(['success' => false, 'message' => 'Aucune photo de profil à supprimer.'], 400);
+            }
+
             $this->addFlash('info', 'Aucune photo de profil à supprimer.');
         }
 
@@ -376,4 +425,3 @@ class UserController extends AbstractController
         return $this->redirectToRoute('admin_users_list');
     }
 }
-
