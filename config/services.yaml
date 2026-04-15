@@ -24,11 +24,9 @@ services:
             string $openWeatherBaseUrl: '%env(OPENWEATHER_BASE_URL)%'
             string $recaptchaSiteKey: '%env(RECAPTCHA_SITE_KEY)%'
             string $recaptchaSecretKey: '%env(RECAPTCHA_SECRET_KEY)%'
+            string $geminiApiKey:         '%env(GEMINI_API_KEY)%'  
             string $mapboxToken: '%env(MAPBOX_TOKEN)%'
-            string $apiKey: '%env(PERENUAL_API_KEY)%'
-    App\Service\PerenualApiService:
-        arguments:
-            $apiKey: '%env(PERENUAL_API_KEY)%'        
+            string $apiKey:               '%env(PERENUAL_API_KEY)%'
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     App\:
