@@ -13,6 +13,7 @@ use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\File;
 
@@ -183,6 +184,16 @@ class EquipementType extends AbstractType
                 'widget'   => 'single_text',
                 'required' => false,
                 'attr'     => ['class' => 'form-control'],
+            ])
+
+            // ── Localisation (remplis par JS / Leaflet) ──────────────────────
+            ->add('latitude', HiddenType::class, [
+                'required' => false,
+                'attr'     => ['id' => 'equipement_latitude'],
+            ])
+            ->add('longitude', HiddenType::class, [
+                'required' => false,
+                'attr'     => ['id' => 'equipement_longitude'],
             ]);
 
         // ── PRE_SET_DATA : peuple 'type' selon la catégorie de l'objet en édition ──

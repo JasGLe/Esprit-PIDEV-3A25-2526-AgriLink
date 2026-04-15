@@ -198,6 +198,21 @@ class Equipement
 // AJOUT : variable pour qr code 
     #[ORM\Column(type: Types::STRING, length: 20, nullable: true, unique: true)]
     private ?string $codePasseport = null;
+// AJOUT : variable  latitude et longitude 
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+#[Assert\Range(
+    min: -90, max: 90,
+    notInRangeMessage: 'Latitude invalide (entre -90 et 90).'
+)]
+private ?float $latitude = null;
+
+#[ORM\Column(type: Types::FLOAT, nullable: true)]
+#[Assert\Range(
+    min: -180, max: 180,
+    notInRangeMessage: 'Longitude invalide (entre -180 et 180).'
+)]
+private ?float $longitude = null;
 
     // ════════════════════════════════════════════════════════
     // AJOUT : Lifecycle callbacks (dates automatiques)
@@ -477,4 +492,11 @@ public function genererCodePasseport(): string
 {
     return 'EQ-' . date('Y') . '-' . str_pad($this->id, 4, '0', STR_PAD_LEFT);
 }
+
+// pour maps 
+public function getLatitude(): ?float { return $this->latitude; }
+public function setLatitude(?float $latitude): static { $this->latitude = $latitude; return $this; }
+
+public function getLongitude(): ?float { return $this->longitude; }
+public function setLongitude(?float $longitude): static { $this->longitude = $longitude; return $this; }
 }

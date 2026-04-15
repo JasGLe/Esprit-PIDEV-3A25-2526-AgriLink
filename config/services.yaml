@@ -10,6 +10,7 @@ parameters:
     uploads_base_dir: '%kernel.project_dir%/public/uploads'
     uploads_base_url: '/uploads'
     equipements_directory: '%env(UPLOADS_BASE_DIR)%/equipements'
+    opencage_api_key: '%env(OPENCAGE_API_KEY)%'
 
 services:
     # default configuration for services in *this* file

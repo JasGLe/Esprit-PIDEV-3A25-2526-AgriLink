@@ -3,10 +3,14 @@
 {% block page_title %}{{ equipement.nom }}{% endblock %}
 
 {% block stylesheets %}
+{% if equipement.latitude is not null and equipement.longitude is not null %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+{% endif %}
 <style>
     .info-label { font-size: .8rem; color: #6c757d; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
     .info-value { font-size: 1rem; font-weight: 500; }
     .badge-vehicule { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+    #map-show { height: 380px; border-radius: 8px; }
 </style>
 {% endblock %}
 
@@ -26,8 +30,13 @@
             <span class="badge bg-secondary me-1">{{ equipement.type }}</span>
             <span class="badge bg-light text-dark border">{{ equipement.categorie }}</span>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
             <a href="{{ path('equipement_edit', {id: equipement.id}) }}" class="btn btn-outline-primary">✏️ Modifier</a>
+            {% if equipement.latitude is not null and equipement.longitude is not null %}
+            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalCarteEquipement">
+                📍 Voir sur la carte
+            </button>
+            {% endif %}
             <form method="post" action="{{ path('equipement_delete', {id: equipement.id}) }}"
                   onsubmit="return confirm('Supprimer définitivement cet équipement ?')">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ equipement.id) }}">
@@ -221,6 +230,61 @@
     </div>
 </div>
     
+    {# ── Modal carte équipement ── #}
+    {% if equipement.latitude is not null and equipement.longitude is not null %}
+    {% set couleurStatutMap = {
+        'Actif':          '#198754',
+        'En maintenance': '#ffc107',
+        'En panne':       '#dc3545',
+        'Hors service':   '#6f42c1'
+    } %}
+    {% set markerColor = couleurStatutMap[equipement.statut] ?? '#6c757d' %}
+    <div class="modal fade" id="modalCarteEquipement" tabindex="-1" aria-labelledby="modalCarteEquipementLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCarteEquipementLabel">📍 {{ equipement.nom }} — Position</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body p-2">
+                    <div id="map-show"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+    (function () {
+        var lat    = {{ equipement.latitude }};
+        var lng    = {{ equipement.longitude }};
+        var color  = {{ markerColor|json_encode|raw }};
+        var nom    = {{ equipement.nom|json_encode|raw }};
+        var statut = {{ (equipement.statut ?? '')|json_encode|raw }};
+        var mapInit = false;
+
+        var modalEl = document.getElementById('modalCarteEquipement');
+        modalEl.addEventListener('shown.bs.modal', function () {
+            if (mapInit) return;
+            mapInit = true;
+
+            var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38"><path d="M14 0C6.27 0 0 6.27 0 14c0 9.6 14 24 14 24s14-14.4 14-24C28 6.27 21.73 0 14 0z" fill="' + color + '"/><circle cx="14" cy="14" r="6" fill="#fff" opacity=".9"/></svg>';
+            var icon = L.divIcon({ html: svg, className: '', iconSize: [28, 38], iconAnchor: [14, 38], popupAnchor: [0, -38] });
+
+            var map = L.map('map-show').setView([lat, lng], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom: 19
+            }).addTo(map);
+
+            L.marker([lat, lng], { icon: icon })
+                .addTo(map)
+                .bindPopup('<strong>' + nom + '</strong><br><span class="badge" style="background:' + color + ';color:#fff">' + statut + '</span>')
+                .openPopup();
+        });
+    })();
+    </script>
+    {% endif %}
+
     <a href="{{ path('equipement_index') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
     <a href="{{ path('passeport_show_by_id', {id: equipement.id}) }}"
    class="btn btn-outline-success"

@@ -67,12 +67,35 @@ public function index(
             ->getValue();
     }
 
+    // ── Équipements géolocalisés (tous, pour la carte) ──
+    $equipementsGeo = [];
+    $allGeo = $repo->createQueryBuilder('g')
+        ->where('g.userlog = :userId')
+        ->andWhere('g.latitude IS NOT NULL')
+        ->andWhere('g.longitude IS NOT NULL')
+        ->setParameter('userId', $user->getId())
+        ->getQuery()
+        ->getResult();
+    foreach ($allGeo as $geo) {
+        $equipementsGeo[] = [
+            'id'     => $geo->getId(),
+            'nom'    => $geo->getNom(),
+            'type'   => $geo->getType(),
+            'marque' => $geo->getMarque(),
+            'statut' => $geo->getStatut(),
+            'lat'    => $geo->getLatitude(),
+            'lng'    => $geo->getLongitude(),
+            'url'    => $this->generateUrl('equipement_show', ['id' => $geo->getId()]),
+        ];
+    }
+
     return $this->render('equipment/index.html.twig', [
         'equipements'                => $equipements,
         'equipement_ids_en_boutique' => $equipementIdsEnBoutique,
         'equipement_boutique_tokens' => $boutiqueTokens,
         'search'                     => $search,
         'statut'                     => $statut,
+        'equipementsGeo'             => $equipementsGeo,
     ]);
 }
 
@@ -118,8 +141,9 @@ public function index(
         }
 
         return $this->render('equipment/new.html.twig', [
-            'form'       => $form,
-            'equipement' => $equipement,
+            'form'           => $form,
+            'equipement'     => $equipement,
+            'opencageApiKey' => $this->getParameter('opencage_api_key'),
         ]);
     }
 
@@ -171,8 +195,9 @@ public function index(
         }
 
         return $this->render('equipment/edit.html.twig', [
-            'form'       => $form,
-            'equipement' => $equipement,
+            'form'           => $form,
+            'equipement'     => $equipement,
+            'opencageApiKey' => $this->getParameter('opencage_api_key'),
         ]);
     }
 
