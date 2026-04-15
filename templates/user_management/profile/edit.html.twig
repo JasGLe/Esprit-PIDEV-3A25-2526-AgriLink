@@ -189,6 +189,13 @@
                     </div>
                     <input type="file" name="profile_edit_form[profilePhoto]" id="profilePhotoInput" class="d-none" accept="image/jpeg,image/png,image/webp">
 
+                    {# Preview section (hidden until file chosen) #}
+                    <div id="previewSection" class="d-none mt-3 p-3 bg-light rounded-2" style="text-align:center;">
+                        <p class="text-muted small mb-2">Aperçu de votre nouvelle photo</p>
+                        <img id="imagePreview" src="" alt="Aperçu" class="avatar-large mb-2" style="border:3px solid #198754; max-width:100%;">
+                        <p id="previewFileName" class="text-muted small mb-0"></p>
+                    </div>
+
                     {# Cancel selection (hidden until file chosen) #}
                     <div id="cancelSelectionWrap" class="d-none mb-2 text-center">
                         <button type="button" id="cancelSelectionBtn" class="btn btn-link btn-sm text-secondary p-0" style="font-size:.75rem;">
@@ -199,8 +206,8 @@
                         </button>
                     </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" id="savePhotoBtn" class="btn btn-success btn-sm" disabled>
+                    <div id="saveButtonWrap" class="d-none d-grid gap-2">
+                        <button type="submit" id="savePhotoBtn" class="btn btn-success btn-sm">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" class="me-1">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                             </svg>
@@ -599,18 +606,16 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const photoInput        = document.getElementById('profilePhotoInput');
-    const uploadZone        = document.getElementById('uploadZone');
-    const savePhotoBtn      = document.getElementById('savePhotoBtn');
+    const photoInput         = document.getElementById('profilePhotoInput');
+    const uploadZone         = document.getElementById('uploadZone');
+    const savePhotoBtn       = document.getElementById('savePhotoBtn');
+    const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
+    const previewSection     = document.getElementById('previewSection');
     const cancelSelectionWrap = document.getElementById('cancelSelectionWrap');
-    const cancelSelectionBtn  = document.getElementById('cancelSelectionBtn');
-    const avatarPreviewWrap = document.getElementById('avatarPreviewWrap');
-    const uploadZoneText    = document.getElementById('uploadZoneText');
-    const photoStatusBadge  = document.getElementById('photoStatusBadge');
-
-    // Remember the original avatar HTML so we can restore it on cancel
-    const originalAvatarHtml = avatarPreviewWrap ? avatarPreviewWrap.innerHTML : '';
-    const originalBadgeHtml  = photoStatusBadge  ? photoStatusBadge.innerHTML  : '';
+    const saveButtonWrap     = document.getElementById('saveButtonWrap');
+    const uploadZoneText     = document.getElementById('uploadZoneText');
+    const imagePreview       = document.getElementById('imagePreview');
+    const previewFileName    = document.getElementById('previewFileName');
 
     if (!photoInput || !uploadZone) return;
 
@@ -619,19 +624,20 @@ document.addEventListener('DOMContentLoaded', function () {
         photoInput.click();
     });
     uploadZone.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); photoInput.click(); }
+        if (e.key === 'Enter' || e.key === ' ') { 
+            e.preventDefault(); 
+            photoInput.click(); 
+        }
     });
 
     function applyFileSelection(file) {
         const reader = new FileReader();
         reader.onload = function (e) {
-            if (avatarPreviewWrap) {
-                avatarPreviewWrap.innerHTML =
-                    '<img src="' + e.target.result + '" class="avatar-large" alt="Aperçu" style="border:3px solid #198754;">';
+            if (imagePreview) {
+                imagePreview.src = e.target.result;
             }
-            if (photoStatusBadge) {
-                photoStatusBadge.innerHTML =
-                    '<span class="badge bg-warning-subtle text-warning mt-1" style="font-size:.7rem;">Aperçu — non enregistré</span>';
+            if (previewFileName) {
+                previewFileName.textContent = file.name.replace(/</g, '&lt;');
             }
         };
         reader.readAsDataURL(file);
@@ -644,22 +650,26 @@ document.addEventListener('DOMContentLoaded', function () {
         uploadZone.style.borderColor = '#198754';
         uploadZone.style.background  = '#f0fff4';
 
-        // Enable save button and show cancel
-        if (savePhotoBtn)       savePhotoBtn.disabled = false;
+        // Show preview and buttons
+        if (previewSection) previewSection.classList.remove('d-none');
         if (cancelSelectionWrap) cancelSelectionWrap.classList.remove('d-none');
+        if (saveButtonWrap) saveButtonWrap.classList.remove('d-none');
     }
 
     function resetSelection() {
         photoInput.value = '';
-        if (avatarPreviewWrap) avatarPreviewWrap.innerHTML = originalAvatarHtml;
-        if (photoStatusBadge)  photoStatusBadge.innerHTML  = originalBadgeHtml;
+        if (imagePreview) imagePreview.src = '';
+        if (previewFileName) previewFileName.textContent = '';
         if (uploadZoneText) {
             uploadZoneText.innerHTML = '<span style="text-decoration:underline;">Cliquez ici</span> pour choisir une photo';
         }
         uploadZone.style.borderColor = '';
         uploadZone.style.background  = '';
-        if (savePhotoBtn)        savePhotoBtn.disabled = true;
+        
+        // Hide preview and buttons
+        if (previewSection) previewSection.classList.add('d-none');
         if (cancelSelectionWrap) cancelSelectionWrap.classList.add('d-none');
+        if (saveButtonWrap) saveButtonWrap.classList.add('d-none');
     }
 
     photoInput.addEventListener('change', function () {
@@ -671,7 +681,10 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     if (cancelSelectionBtn) {
-        cancelSelectionBtn.addEventListener('click', resetSelection);
+        cancelSelectionBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            resetSelection();
+        });
     }
 
     // Drag-and-drop
@@ -690,12 +703,10 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault();
         const dt = e.dataTransfer;
         if (dt.files && dt.files[0]) {
-            // Transfer files to the input via DataTransfer
             try {
                 photoInput.files = dt.files;
                 photoInput.dispatchEvent(new Event('change'));
             } catch (_) {
-                // Fallback for browsers that don't support setting .files
                 applyFileSelection(dt.files[0]);
             }
         }

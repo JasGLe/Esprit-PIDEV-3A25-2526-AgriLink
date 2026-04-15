@@ -312,25 +312,57 @@
                 <div class="card-body p-4 text-center">
                     {% if user.photoProfil %}
                         <img src="{{ asset('agrilink/uploads/' ~ user.photoProfil) }}" alt="{{ user.displayName }}"
-                             class="rounded-circle mb-3" width="80" height="80" style="object-fit:cover;" id="avatar-preview">
+                             class="rounded-circle mb-3" width="100" height="100" style="object-fit:cover;" id="avatar-preview">
                         <div id="avatar-placeholder" class="d-none"></div>
                     {% else %}
                         <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 fw-bold text-white"
-                             style="width:80px;height:80px;background:linear-gradient(135deg,#667eea,#764ba2);font-size:1.5rem;" id="avatar-placeholder">
+                             style="width:100px;height:100px;background:linear-gradient(135deg,#667eea,#764ba2);font-size:1.8rem;" id="avatar-placeholder">
                             {{ user.initials }}
                         </div>
-                        <img id="avatar-preview" src="" alt="" class="rounded-circle mb-3 d-none" width="80" height="80" style="object-fit:cover;">
+                        <img id="avatar-preview" src="" alt="" class="rounded-circle mb-3 d-none" width="100" height="100" style="object-fit:cover;">
                     {% endif %}
-                    {{ form_label(form.profilePhoto, null, {label_attr: {class: 'form-label fw-semibold d-block mt-3'}}) }}
-                    {{ form_widget(form.profilePhoto, {attr: {class: 'form-control form-control-sm', accept: 'image/jpeg,image/png,image/webp', id: 'profile-photo-input'}}) }}
-                    {{ form_errors(form.profilePhoto) }}
-                    <div class="mt-2 d-flex gap-2 justify-content-center">
+                    <div class="mt-2 mb-3">
                         {% if user.photoProfil %}
                             <small class="text-muted d-block">Photo actuelle : <strong>{{ user.photoProfil|split('/')|last }}</strong></small>
+                        {% else %}
+                            <small class="text-muted d-block">Aucune photo</small>
                         {% endif %}
                     </div>
+                    
+                    {{ form_label(form.profilePhoto, null, {label_attr: {class: 'form-label fw-semibold d-block'}}) }}
+                    {{ form_widget(form.profilePhoto, {attr: {class: 'form-control form-control-sm', accept: 'image/jpeg,image/png,image/webp', id: 'profile-photo-input'}}) }}
+                    {{ form_errors(form.profilePhoto) }}
+                    
+                    {# Preview section (hidden until file chosen) #}
+                    <div id="photo-preview-section" class="d-none mt-4 p-3 bg-success bg-opacity-10 border border-success border-opacity-25 rounded-2">
+                        <p class="text-success small mb-2 fw-semibold">
+                            <svg fill="currentColor" viewBox="0 0 20 20" width="14" height="14" style="display:inline; margin-right:4px; vertical-align:middle;">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                            Aperçu de la nouvelle photo
+                        </p>
+                        <img id="photo-preview-img" src="" alt="Aperçu" class="rounded-circle mb-2" width="100" height="100" style="object-fit:cover; border:4px solid #198754;">
+                        <p id="photo-preview-filename" class="text-muted small mb-0"></p>
+                    </div>
+                    
+                    {# Submit photo button (hidden until file chosen) #}
+                    <div id="photo-submit-wrap" class="d-none mt-3 pt-3 border-top">
+                        <button type="button" id="submit-photo-btn" class="btn btn-sm btn-success w-100">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" class="me-1" style="display:inline; vertical-align:middle;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                            Enregistrer la photo seulement
+                        </button>
+                        <button type="button" id="cancel-photo-btn" class="btn btn-sm btn-outline-secondary w-100 mt-2">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" class="me-1" style="display:inline; vertical-align:middle;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                            Annuler
+                        </button>
+                    </div>
+                    
                     {% if user.photoProfil %}
-                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="delete-avatar-btn">
+                        <button type="button" class="btn btn-sm btn-outline-danger mt-2 w-100" id="delete-avatar-btn">
                             <svg class="me-1" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                             </svg>
@@ -486,12 +518,28 @@ document.addEventListener('DOMContentLoaded', function () {
     toggleRoleFields();
     toggleFournisseurTypeFields();
     
-    // Live photo preview
-    // Photo upload preview
+    // Live photo preview and submit button
     const input = document.getElementById('profile-photo-input');
+    const photoPreviewSection = document.getElementById('photo-preview-section');
+    const photoPreviewImg = document.getElementById('photo-preview-img');
+    const photoPreviewFilename = document.getElementById('photo-preview-filename');
+    const photoSubmitWrap = document.getElementById('photo-submit-wrap');
+    const submitPhotoBtn = document.getElementById('submit-photo-btn');
+    const cancelPhotoBtn = document.getElementById('cancel-photo-btn');
+    const form = document.querySelector('form[enctype="multipart/form-data"]');
+    
+    console.log('Photo upload elements found:', {
+        input: !!input,
+        photoPreviewSection: !!photoPreviewSection,
+        photoPreviewImg: !!photoPreviewImg,
+        submitPhotoBtn: !!submitPhotoBtn,
+        form: !!form
+    });
+    
     if (input) {
         input.addEventListener('change', function () {
             const file = this.files[0];
+            console.log('File selected:', file?.name);
             if (file) {
                 const reader = new FileReader();
                 reader.onload = e => {
@@ -500,9 +548,98 @@ document.addEventListener('DOMContentLoaded', function () {
                     const img = document.getElementById('avatar-preview');
                     img.src = e.target.result;
                     img.classList.remove('d-none');
+                    
+                    // Show preview section
+                    if (photoPreviewImg) {
+                        photoPreviewImg.src = e.target.result;
+                        console.log('Preview image src set');
+                    }
+                    if (photoPreviewFilename) {
+                        photoPreviewFilename.textContent = file.name;
+                        console.log('Preview filename set:', file.name);
+                    }
+                    if (photoPreviewSection) {
+                        photoPreviewSection.classList.remove('d-none');
+                        console.log('Preview section shown');
+                    }
+                    if (photoSubmitWrap) {
+                        photoSubmitWrap.classList.remove('d-none');
+                        console.log('Submit button shown');
+                    }
                 };
                 reader.readAsDataURL(file);
+            } else {
+                // No file selected
+                if (photoPreviewSection) photoPreviewSection.classList.add('d-none');
+                if (photoSubmitWrap) photoSubmitWrap.classList.add('d-none');
             }
+        });
+    }
+    
+    // Submit photo only
+    if (submitPhotoBtn && form) {
+        submitPhotoBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (input && input.files[0] && form) {
+                console.log('Submitting photo only...');
+                // Show loading state
+                submitPhotoBtn.disabled = true;
+                const originalHTML = submitPhotoBtn.innerHTML;
+                submitPhotoBtn.innerHTML = '<svg class="me-1" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Enregistrement...';
+                
+                // Create FormData from form with only photo field and CSRF
+                const formData = new FormData();
+                
+                // Get CSRF token from hidden input in form
+                const csrfToken = form.querySelector('input[name="_token"]');
+                if (csrfToken) {
+                    formData.append('_token', csrfToken.value);
+                    console.log('CSRF token found');
+                }
+                
+                // Add photo file with correct field name
+                formData.append('admin_user[profilePhoto]', input.files[0]);
+                
+                // Post to current URL
+                fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData
+                }).then(response => {
+                    console.log('Response status:', response.status);
+                    if (response.ok) {
+                        window.location.reload();
+                    } else {
+                        submitPhotoBtn.disabled = false;
+                        submitPhotoBtn.innerHTML = originalHTML;
+                        alert('Erreur lors de l\'enregistrement de la photo');
+                    }
+                }).catch(error => {
+                    console.error('Erreur:', error);
+                    submitPhotoBtn.disabled = false;
+                    submitPhotoBtn.innerHTML = originalHTML;
+                    alert('Erreur lors de l\'enregistrement de la photo');
+                });
+            }
+        });
+    }
+    
+    // Cancel photo selection
+    if (cancelPhotoBtn) {
+        cancelPhotoBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            input.value = '';
+            const placeholder = document.getElementById('avatar-placeholder');
+            const img = document.getElementById('avatar-preview');
+            
+            if (placeholder && !img.src) {
+                placeholder.classList.remove('d-none');
+            } else if (img.src && img.src !== '') {
+                // Reset to original image
+                img.classList.remove('d-none');
+            }
+            
+            if (photoPreviewSection) photoPreviewSection.classList.add('d-none');
+            if (photoSubmitWrap) photoSubmitWrap.classList.add('d-none');
         });
     }
 
@@ -517,6 +654,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (deleteForm) {
                     // Disable button and show loading state
                     deleteAvatarBtn.disabled = true;
+                    const originalHTML = deleteAvatarBtn.innerHTML;
                     deleteAvatarBtn.innerHTML = '<svg class="me-1" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Suppression...';
                     deleteForm.submit();
                 } else {
