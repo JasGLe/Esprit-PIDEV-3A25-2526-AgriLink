@@ -56,5 +56,11 @@ services:
         tags:
             - { name: kernel.event_listener, event: Symfony\Component\Security\Http\Event\LoginFailureEvent }
 
+    # GroqDiagnosticService — diagnostic IA équipements
+    App\Service\Equipment\GroqDiagnosticService:
+        arguments:
+            $groqApiKey: '%env(GROQ_API_KEY)%'
+            $groqModel:  '%env(GROQ_MODEL)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

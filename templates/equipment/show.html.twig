@@ -11,6 +11,20 @@
     .info-value { font-size: 1rem; font-weight: 500; }
     .badge-vehicule { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
     #map-show { height: 380px; border-radius: 8px; }
+
+    /* ── Diagnostic IA ── */
+    #diag-panel { display: none; }
+    #diag-panel .diag-score-ring {
+        width: 72px; height: 72px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.35rem; font-weight: 900; color: #fff;
+        flex-shrink: 0;
+    }
+    #diag-panel .diag-critere-item { border-left: 3px solid #dee2e6; padding-left: .75rem; margin-bottom: .6rem; }
+    #diag-panel .diag-alerte { background: #fff5f5; border: 1px solid #f5c6cb; border-radius: .5rem; padding: .5rem .75rem; margin-bottom: .4rem; color: #842029; font-size: .88rem; }
+    #diag-panel .diag-reco { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: .5rem; padding: .5rem .75rem; margin-bottom: .4rem; color: #14532d; font-size: .88rem; }
+    #diag-panel .diag-disclaimer { background: #fff8e1; border: 1px solid #ffe082; border-radius: .5rem; padding: .6rem .9rem; font-size: .82rem; color: #6d4c00; margin-top: 1rem; }
+    #diag-spinner { display: none; }
 </style>
 {% endblock %}
 
@@ -37,6 +51,10 @@
                 📍 Voir sur la carte
             </button>
             {% endif %}
+            {# ── Bouton Diagnostic IA — déclenche l'appel AJAX vers Groq ── #}
+            <button type="button" id="btn-diagnostic-ia" class="btn btn-outline-dark">
+                🧠 Diagnostic IA
+            </button>
             <form method="post" action="{{ path('equipement_delete', {id: equipement.id}) }}"
                   onsubmit="return confirm('Supprimer définitivement cet équipement ?')">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ equipement.id) }}">
@@ -285,11 +303,229 @@
     </script>
     {% endif %}
 
+    {# ── Spinner visible pendant l'appel IA ── #}
+    <div id="diag-spinner" class="card shadow-sm mb-4">
+        <div class="card-body text-center py-4">
+            <div class="spinner-border text-dark mb-2" role="status"></div>
+            <div class="text-muted">Analyse IA en cours, veuillez patienter…</div>
+        </div>
+    </div>
+
+    {# ── Panel résultat diagnostic IA — rempli dynamiquement par JS ── #}
+    <div id="diag-panel" class="card shadow-sm mb-4 border-0" style="border-top: 4px solid #6c757d !important;">
+        <div class="card-header bg-white d-flex align-items-center gap-3 py-3">
+            {# Cercle coloré avec le score — couleur injectée par JS #}
+            <div id="diag-score-ring" class="diag-score-ring">—</div>
+            <div>
+                <div class="fw-bold fs-5">Diagnostic IA
+                    <span id="diag-indice-badge" class="badge ms-2" style="font-size:.8rem">—</span>
+                </div>
+                <div id="diag-resume" class="text-muted small mt-1"></div>
+            </div>
+        </div>
+        <div class="card-body">
+
+            {# ── Analyse par critère ── #}
+            <div class="mb-3">
+                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.75rem;letter-spacing:.07em;color:#6c757d">Analyse par critère</div>
+                <div id="diag-criteres"></div>
+            </div>
+
+            {# ── Alertes (rouge) — affichées seulement si présentes ── #}
+            <div id="diag-alertes-section" style="display:none" class="mb-3">
+                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.75rem;letter-spacing:.07em;color:#dc3545">⚠️ Alertes</div>
+                <div id="diag-alertes"></div>
+            </div>
+
+            {# ── Recommandations ── #}
+            <div class="mb-3">
+                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.75rem;letter-spacing:.07em;color:#198754">✅ Recommandations</div>
+                <div id="diag-recommandations"></div>
+            </div>
+
+            {# ── Prochaine maintenance estimée ── #}
+            <div class="mb-2">
+                <div class="fw-semibold mb-1 text-uppercase" style="font-size:.75rem;letter-spacing:.07em;color:#6c757d">🔧 Prochaine maintenance estimée</div>
+                <div id="diag-prochaine" class="fw-medium"></div>
+            </div>
+
+            {# ── Disclaimer IA ── #}
+            <div class="diag-disclaimer">
+                ⚠️ Rapport généré par IA à titre indicatif. Consultez un technicien agréé pour confirmation.
+            </div>
+        </div>
+    </div>
+
+    {# ── Zone d'erreur si l'appel IA échoue ── #}
+    <div id="diag-error" class="alert alert-danger mb-4" style="display:none"></div>
+
     <a href="{{ path('equipement_index') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
     <a href="{{ path('passeport_show_by_id', {id: equipement.id}) }}"
    class="btn btn-outline-success"
    target="_blank">
     📱 Voir le passeport
 </a>
+
+{# ── JS Diagnostic IA ─────────────────────────────────────────────────────
+   Fonctionnement :
+   1. Clic sur #btn-diagnostic-ia
+   2. fetch POST vers /equipement/{id}/diagnostic-ia avec token CSRF
+   3. Réponse JSON → remplissage dynamique du #diag-panel
+   ──────────────────────────────────────────────────────────────────────── #}
+<script>
+(function () {
+    // Couleurs associées à chaque indice de santé
+    var SANTE_COLORS = {
+        'Excellent': '#198754',
+        'Bon':       '#0d6efd',
+        'Attention': '#fd7e14',
+        'Critique':  '#dc3545'
+    };
+
+    // Libellés lisibles pour les critères
+    var CRITERE_LABELS = {
+        'statut':      'Statut actuel',
+        'description': 'Description',
+        'kilometrage': 'Kilométrage',
+        'heures':      'Heures d\'utilisation',
+        'maintenance': 'Historique maintenance'
+    };
+
+    var btn       = document.getElementById('btn-diagnostic-ia');
+    var spinner   = document.getElementById('diag-spinner');
+    var panel     = document.getElementById('diag-panel');
+    var errorDiv  = document.getElementById('diag-error');
+
+    // Token CSRF lu depuis Twig (injecté ci-dessous)
+    var csrfToken = {{ csrf_token('diagnostic_ia_' ~ equipement.id)|json_encode|raw }};
+    var diagUrl   = {{ path('equipement_diagnostic_ia', {id: equipement.id})|json_encode|raw }};
+
+    btn.addEventListener('click', function () {
+        // Masquer les résultats précédents, afficher le spinner
+        panel.style.display    = 'none';
+        errorDiv.style.display = 'none';
+        spinner.style.display  = 'block';
+        btn.disabled = true;
+        btn.textContent = '⏳ Analyse…';
+
+        // ── Appel AJAX POST vers DiagnosticController ─────────────────────────
+        fetch(diagUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-Token': csrfToken,
+                'Accept':       'application/json',
+            }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            spinner.style.display = 'none';
+            btn.disabled = false;
+            btn.textContent = '🧠 Diagnostic IA';
+
+            if (!data.success) {
+                // Afficher l'erreur retournée par le serveur
+                errorDiv.textContent = data.error || 'Erreur inconnue.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // ── Remplir le panel avec le diagnostic ───────────────────────────
+            renderDiagnostic(data.diagnostic);
+        })
+        .catch(function (err) {
+            spinner.style.display = 'none';
+            btn.disabled = false;
+            btn.textContent = '🧠 Diagnostic IA';
+            errorDiv.textContent = 'Erreur réseau : impossible de contacter le service IA.';
+            errorDiv.style.display = 'block';
+        });
+    });
+
+    /**
+     * Injecte les données du diagnostic dans le DOM.
+     * Appelé une fois la réponse JSON reçue et validée.
+     */
+    function renderDiagnostic(d) {
+        var indice = d.indice_sante || 'Bon';
+        var score  = d.score || 0;
+        var color  = SANTE_COLORS[indice] || '#6c757d';
+
+        // Badge indice de santé + cercle score
+        var ring = document.getElementById('diag-score-ring');
+        ring.textContent = score;
+        ring.style.background = color;
+        panel.style.borderTopColor = color + ' !important';
+
+        var badge = document.getElementById('diag-indice-badge');
+        badge.textContent = indice;
+        badge.style.background = color;
+        badge.style.color = '#fff';
+
+        // Résumé global
+        document.getElementById('diag-resume').textContent = d.resume || '';
+
+        // ── Analyse par critère (masquer les null) ────────────────────────────
+        var criteresEl = document.getElementById('diag-criteres');
+        criteresEl.innerHTML = '';
+        var criteres = d.analyse_par_critere || {};
+        Object.keys(criteres).forEach(function (key) {
+            var val = criteres[key];
+            if (val === null || val === 'null' || val === '') return; // masquer si null
+            var div = document.createElement('div');
+            div.className = 'diag-critere-item';
+            div.innerHTML = '<span class="fw-semibold small">' + (CRITERE_LABELS[key] || key) + '</span>'
+                          + '<div class="text-muted small">' + escHtml(val) + '</div>';
+            criteresEl.appendChild(div);
+        });
+
+        // ── Alertes (afficher section seulement si liste non vide) ────────────
+        var alertes = d.alertes || [];
+        var alertesSection = document.getElementById('diag-alertes-section');
+        var alertesEl = document.getElementById('diag-alertes');
+        alertesEl.innerHTML = '';
+        if (alertes.length > 0) {
+            alertesSection.style.display = 'block';
+            alertes.forEach(function (a) {
+                var div = document.createElement('div');
+                div.className = 'diag-alerte';
+                div.textContent = '⚠️ ' + a;
+                alertesEl.appendChild(div);
+            });
+        } else {
+            alertesSection.style.display = 'none';
+        }
+
+        // ── Recommandations numérotées ────────────────────────────────────────
+        var recos = d.recommandations || [];
+        var recosEl = document.getElementById('diag-recommandations');
+        recosEl.innerHTML = '';
+        recos.forEach(function (r, i) {
+            var div = document.createElement('div');
+            div.className = 'diag-reco';
+            div.textContent = (i + 1) + '. ' + r;
+            recosEl.appendChild(div);
+        });
+
+        // ── Prochaine maintenance estimée ─────────────────────────────────────
+        document.getElementById('diag-prochaine').textContent =
+            d.prochaine_maintenance_estimee || 'Non estimée';
+
+        // Afficher le panel
+        panel.style.display = 'block';
+
+        // Scroll vers le panel pour que l'utilisateur le voie
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // Utilitaire : échappe le HTML pour éviter les injections XSS
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+})();
+</script>
 
 {% endblock %}
