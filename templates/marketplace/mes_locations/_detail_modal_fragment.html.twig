@@ -1,0 +1,38 @@
+{% set transport_value = request_item.transportResponsibility|default('')|lower %}
+{% set has_seller_transport_fee = transport_value in ['seller', 'vendeur'] %}
+
+<div class="mc-order-modal-root p-3" data-mc-order-modal-root>
+    <div class="mc-detail-card p-3">
+        <div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+            <div>
+                <div class="mc-num">#LOC{{ "%03d"|format(request_item.id) }}</div>
+                <div class="small mc-muted">{{ product ? product.nom : ('Produit #' ~ request_item.produitId) }}</div>
+            </div>
+            <div class="text-end">
+                <div class="mc-amount">{{ estimated_amount|number_format(3, ',', ' ') }} DT</div>
+                <div class="small mc-muted">Montant estimé</div>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <h6 class="mb-2 text-white">Client</h6>
+                <p class="mb-1"><strong>Nom:</strong> {{ request_item.fullName }}</p>
+                <p class="mb-1"><strong>Email:</strong> {{ request_item.email }}</p>
+                <p class="mb-1"><strong>Téléphone:</strong> {{ request_item.phone }}</p>
+                <p class="mb-1"><strong>Naissance:</strong> {{ request_item.dateNaissance ? request_item.dateNaissance|date('Y-m-d') : '—' }}</p>
+                <p class="mb-0"><strong>Adresse:</strong> {{ request_item.address }}</p>
+            </div>
+            <div class="col-md-6">
+                <h6 class="mb-2 text-white">Location</h6>
+                <p class="mb-1"><strong>CIN / Passeport:</strong> {{ request_item.identityNumber }}</p>
+                <p class="mb-1"><strong>Début:</strong> {{ request_item.rentalStartAt|date('Y-m-d H:i') }}</p>
+                <p class="mb-1"><strong>Fin:</strong> {{ request_item.rentalEndAt|date('Y-m-d H:i') }}</p>
+                <p class="mb-1"><strong>Durée:</strong> {{ request_item.rentalDurationHours }} h</p>
+                <p class="mb-1"><strong>Paiement:</strong> {{ request_item.paymentMethod }}</p>
+                <p class="mb-1"><strong>Lieu d'utilisation:</strong> {{ request_item.usageLocation }}</p>
+                <p class="mb-0"><strong>Transport:</strong> {{ request_item.transportResponsibility }}{% if has_seller_transport_fee %} <span class="mc-muted">(+10 DT inclus)</span>{% endif %}</p>
+            </div>
+        </div>
+    </div>
+</div>

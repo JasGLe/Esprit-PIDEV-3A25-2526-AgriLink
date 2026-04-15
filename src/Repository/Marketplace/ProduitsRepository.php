@@ -117,6 +117,7 @@ class ProduitsRepository extends ServiceEntityRepository
             'fruit' => $qb->andWhere('p.category = :catcode')->setParameter('catcode', 'FRUIT'),
             'graines' => $qb->andWhere('p.category = :catcode')->setParameter('catcode', 'GRAINS'),
             'equipement' => $qb->andWhere('p.equipementId IS NOT NULL'),
+            'location' => $qb->andWhere('p.equipementId IS NOT NULL')->andWhere('p.isRental = :isRental')->setParameter('isRental', true),
             default => null,
         };
 

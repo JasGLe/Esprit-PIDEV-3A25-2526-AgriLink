@@ -10,6 +10,7 @@ use App\Repository\CancellationRequestsRepository;
 use App\Repository\Marketplace\CommandesRepository;
 use App\Repository\Marketplace\LigneCommandeRepository;
 use App\Repository\UserManagement\UserRepository;
+use Knp\Snappy\Pdf;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -44,6 +45,7 @@ class MesCommandesController extends AbstractController
         private readonly LigneCommandeRepository $ligneCommandeRepository,
         private readonly UserRepository $userRepository,
         private readonly CancellationRequestsRepository $cancellationRequestsRepository,
+        private readonly Pdf $snappyPdf,
     ) {
     }
 
@@ -438,9 +440,22 @@ class MesCommandesController extends AbstractController
             $this->findOwnedCommandeAcheteur($id, $user);
         }
 
-        $this->addFlash('info', 'Export PDF disponible prochainement.');
+        $pdfVars = $this->buildOrderDetailVars($id, $user);
+        $html = $this->renderView('marketplace/mes_commandes/pdf_invoice.html.twig', $pdfVars);
+        $filename = 'facture_commande_'.$id.'.pdf';
+        $output = $this->snappyPdf->getOutputFromHtml($html, [
+            'encoding' => 'utf-8',
+            'margin-top' => 12,
+            'margin-right' => 10,
+            'margin-bottom' => 12,
+            'margin-left' => 10,
+            'enable-local-file-access' => true,
+        ]);
 
-        return $this->redirectToRoute('mes_commandes_index');
+        return new Response($output, Response::HTTP_OK, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
+        ]);
     }
 
     private function isMarcheAcheteur(): bool

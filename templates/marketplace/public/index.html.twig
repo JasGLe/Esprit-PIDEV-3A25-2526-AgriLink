@@ -438,7 +438,7 @@
                     <li class="nav-item"><a class="nav-link tropical-nav-link" href="#hero">Accueil</a></li>
                     <li class="nav-item"><a class="nav-link tropical-nav-link" href="#about">À propos</a></li>
                     <li class="nav-item"><a class="nav-link tropical-nav-link" href="#produits">Produits</a></li>
-                    <li class="nav-item"><a class="nav-link tropical-nav-link" href="#stats">Chiffres</a></li>
+                    <li class="nav-item"><a class="nav-link tropical-nav-link" href="{{ path('marketplace_index', { cat: 'location' }) }}#produits">Location</a></li>
                 </ul>
                 <div class="d-flex flex-wrap align-items-center gap-2 gap-lg-3 ms-lg-3 tropical-nav-end">
                     {# Ordre : recherche (gauche du groupe) → panier (libellé + badge) → compte → tableau de bord #}
@@ -568,6 +568,7 @@
                 <a href="{{ path('marketplace_index', qp|merge({cat: 'fruit'})) }}" class="tropical-pill {{ filter_cat == 'fruit' ? 'is-active' : '' }}"><i class="bi bi-apple"></i> Fruits</a>
                 <a href="{{ path('marketplace_index', qp|merge({cat: 'graines'})) }}" class="tropical-pill {{ filter_cat == 'graines' ? 'is-active' : '' }}"><i class="bi bi-globe2"></i> Graines</a>
                 <a href="{{ path('marketplace_index', qp|merge({cat: 'equipement'})) }}" class="tropical-pill {{ filter_cat == 'equipement' ? 'is-active' : '' }}"><i class="bi bi-truck-front"></i> Équipements</a>
+                <a href="{{ path('marketplace_index', qp|merge({cat: 'location'})) }}" class="tropical-pill {{ filter_cat == 'location' ? 'is-active' : '' }}"><i class="bi bi-calendar-check"></i> Location</a>
             </div>
             <div class="tropical-toolbar-controls">
                 <form method="get" action="{{ path('marketplace_index') }}" class="tropical-filter-form tropical-filter-form--inline" id="marketplace-filter-form">
@@ -615,8 +616,13 @@
 {# ── Products (horizontal scroll mobile / grid desktop) — data: même requête contrôleur ── #}
 <section id="produits" class="tropical-products-section py-3 py-md-4">
     <div class="container-fluid px-2 px-md-3 tropical-page-gutter">
-        <h2 class="tropical-section-title text-start mb-1">Meilleure sélection</h2>
-        <p class="tropical-muted mb-3 small">Produits actifs issus de <strong class="text-white">Ma boutique</strong> des agriculteurs</p>
+        <h2 class="tropical-section-title text-start mb-1">{{ filter_cat == 'location' ? 'Équipements en location' : 'Meilleure sélection' }}</h2>
+        <p class="tropical-muted mb-3 small">
+            {{ filter_cat == 'location'
+                ? 'Uniquement les équipements marqués en location.'
+                : 'Produits actifs issus de <strong class="text-white">Ma boutique</strong> des agriculteurs'
+            |raw }}
+        </p>
 
         {% if produits is empty %}
             <div class="tropical-empty text-center py-5 rounded-4">

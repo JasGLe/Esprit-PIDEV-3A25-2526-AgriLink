@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Facture location #{{ request_item.id }}</title>
+    <style>
+        body { font-family: DejaVu Sans, Arial, sans-serif; color: #111827; font-size: 12px; }
+        .header { border-bottom: 2px solid #2563eb; padding-bottom: 10px; margin-bottom: 14px; }
+        .title { font-size: 22px; font-weight: 700; color: #1e3a8a; margin: 0; }
+        .muted { color: #6b7280; }
+        .grid { display: table; width: 100%; margin-bottom: 14px; }
+        .col { display: table-cell; width: 50%; vertical-align: top; }
+        .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; margin-right: 8px; }
+        .card h3 { margin: 0 0 8px; font-size: 13px; color: #111827; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #e5e7eb; padding: 7px; text-align: left; }
+        th { background: #f3f4f6; font-size: 11px; text-transform: uppercase; }
+        .text-end { text-align: right; }
+        .total { margin-top: 12px; text-align: right; font-weight: 700; font-size: 14px; color: #1e3a8a; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <p class="title">Facture location</p>
+        <p class="muted">Référence: #LOC{{ "%03d"|format(request_item.id) }}</p>
+    </div>
+
+    <div class="grid">
+        <div class="col">
+            <div class="card">
+                <h3>Locataire</h3>
+                <div>{{ request_item.fullName }}</div>
+                <div class="muted">{{ request_item.email }}</div>
+                <div class="muted">{{ request_item.phone }}</div>
+                <div class="muted">CIN/Passeport: {{ request_item.identityNumber }}</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <h3>Équipement</h3>
+                <div>{{ product ? product.nom : ('Produit #' ~ request_item.produitId) }}</div>
+                <div class="muted">Période: {{ request_item.rentalStartAt|date('Y-m-d H:i') }} → {{ request_item.rentalEndAt|date('Y-m-d H:i') }}</div>
+                <div class="muted">Durée: {{ request_item.rentalDurationHours }} h</div>
+                <div class="muted">Transport: {{ request_item.transportResponsibility }}</div>
+            </div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th class="text-end">Valeur</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Lieu d'utilisation</td>
+                <td class="text-end">{{ request_item.usageLocation }}</td>
+            </tr>
+            <tr>
+                <td>Mode de paiement</td>
+                <td class="text-end">{{ request_item.paymentMethod }}</td>
+            </tr>
+            <tr>
+                <td>Montant estimé total</td>
+                <td class="text-end">{{ estimated_amount|number_format(3, ',', ' ') }} DT</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="total">Total: {{ estimated_amount|number_format(3, ',', ' ') }} DT</div>
+</body>
+</html>
