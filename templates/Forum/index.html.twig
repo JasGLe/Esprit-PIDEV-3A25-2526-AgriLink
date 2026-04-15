@@ -2,13 +2,542 @@
 {% block title %}Forum - AgriLink{% endblock %}
 {% block page_title %}Forum{% endblock %}
 
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .forum-yield-panel {
+            border-radius: 1.25rem;
+            overflow: hidden;
+            border: 1px solid #dbe7d8;
+            background: linear-gradient(135deg, #f7fbf3 0%, #ffffff 100%);
+        }
+
+        .forum-yield-panel__hero {
+            padding: 1.5rem;
+            background:
+                radial-gradient(circle at top right, rgba(34, 197, 94, 0.14), transparent 28%),
+                linear-gradient(135deg, #14532d 0%, #166534 100%);
+            color: #fff;
+        }
+
+        .forum-yield-panel__hero-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.75rem;
+            height: 2.75rem;
+            border-radius: 0.9rem;
+            background: rgba(255, 255, 255, 0.14);
+            font-weight: 700;
+            font-size: 1.15rem;
+        }
+
+        .forum-yield-panel__body {
+            padding: 1.5rem;
+        }
+
+        .forum-yield-panel__result {
+            padding: 1rem 1.1rem;
+            border-radius: 1rem;
+            background: #ecfdf5;
+            border: 1px solid #bbf7d0;
+        }
+
+        .forum-yield-panel__result-value {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #166534;
+            line-height: 1;
+        }
+
+        .forum-yield-panel__hint {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .forum-reco-panel {
+            border-radius: 1.25rem;
+            overflow: hidden;
+            border: 1px solid #d7e3ef;
+            background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
+        }
+
+        .forum-reco-panel__hero {
+            padding: 1.5rem;
+            background:
+                radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 28%),
+                linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
+            color: #fff;
+        }
+
+        .forum-reco-panel__hero-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.75rem;
+            height: 2.75rem;
+            border-radius: 0.9rem;
+            background: rgba(255, 255, 255, 0.16);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .forum-reco-panel__body {
+            padding: 1.5rem;
+        }
+
+        .forum-reco-panel__result {
+            padding: 1rem 1.1rem;
+            border-radius: 1rem;
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+        }
+
+        .forum-reco-panel__result-value {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #1d4ed8;
+            line-height: 1.1;
+        }
+
+        .forum-profit-panel {
+            border-radius: 1.25rem;
+            overflow: hidden;
+            border: 1px solid #f3d7c3;
+            background: linear-gradient(135deg, #fffaf5 0%, #ffffff 100%);
+        }
+
+        .forum-profit-panel__hero {
+            padding: 1.5rem;
+            background:
+                radial-gradient(circle at top right, rgba(249, 115, 22, 0.18), transparent 28%),
+                linear-gradient(135deg, #c2410c 0%, #ea580c 100%);
+            color: #fff;
+        }
+
+        .forum-profit-panel__hero-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.75rem;
+            height: 2.75rem;
+            border-radius: 0.9rem;
+            background: rgba(255, 255, 255, 0.16);
+            font-weight: 700;
+            font-size: 1rem;
+        }
+
+        .forum-profit-panel__body {
+            padding: 1.5rem;
+        }
+
+        .forum-profit-panel__result {
+            padding: 1rem 1.1rem;
+            border-radius: 1rem;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+        }
+
+        .forum-profit-panel__result-value {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #c2410c;
+            line-height: 1.1;
+        }
+
+        .forum-yield-panel .form-control.is-invalid,
+        .forum-yield-panel .form-select.is-invalid,
+        .forum-reco-panel .form-control.is-invalid,
+        .forum-reco-panel .form-select.is-invalid,
+        .forum-profit-panel .form-control.is-invalid,
+        .forum-profit-panel .form-select.is-invalid {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15) !important;
+            background-image: none !important;
+        }
+
+        .forum-yield-panel .invalid-feedback,
+        .forum-reco-panel .invalid-feedback,
+        .forum-profit-panel .invalid-feedback {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #dc3545;
+            margin-top: 0.35rem;
+        }
+    </style>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function setFieldError(field, message) {
+                field.classList.add('is-invalid');
+
+                let feedback = field.parentElement.querySelector('.js-inline-error');
+                if (!feedback) {
+                    feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback d-block js-inline-error';
+                    field.parentElement.appendChild(feedback);
+                }
+
+                feedback.textContent = message;
+            }
+
+            function clearFieldError(field) {
+                field.classList.remove('is-invalid');
+                const feedback = field.parentElement.querySelector('.js-inline-error');
+                if (feedback) {
+                    feedback.remove();
+                }
+            }
+
+            function validateRequiredTextField(field, emptyMessage, numericMessage) {
+                const value = field.value.trim();
+                clearFieldError(field);
+
+                if (value === '') {
+                    setFieldError(field, emptyMessage);
+                    return false;
+                }
+
+                if (numericMessage !== null) {
+                    const parsed = Number(value);
+                    if (!Number.isFinite(parsed)) {
+                        setFieldError(field, numericMessage);
+                        return false;
+                    }
+
+                    if (parsed < 0) {
+                        setFieldError(field, numericMessage);
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            function validateRequiredChoice(field, emptyMessage) {
+                clearFieldError(field);
+
+                if ((field.value || '').trim() === '') {
+                    setFieldError(field, emptyMessage);
+                    return false;
+                }
+
+                return true;
+            }
+
+            const configs = [
+                {
+                    formId: 'forum-yield-form',
+                    fields: [
+                        ['#yield_forecast_surface', 'Surface est obligatoire.', 'Surface doit etre numerique.'],
+                        ['#yield_forecast_cropCoefficient', 'Coefficient culture est obligatoire.', 'Coefficient culture doit etre numerique.'],
+                        ['#yield_forecast_weatherCoefficient', 'Coefficient meteo est obligatoire.', 'Coefficient meteo doit etre numerique.']
+                    ]
+                },
+                {
+                    formId: 'forum-reco-form',
+                    fields: [
+                        ['#crop_recommendation_soil', 'Le type de sol est obligatoire.', null],
+                        ['#crop_recommendation_season', 'La saison est obligatoire.', null]
+                    ]
+                },
+                {
+                    formId: 'forum-profit-form',
+                    fields: [
+                        ['#profitability_revenue', 'Revenu est obligatoire.', 'Revenu doit etre numerique.'],
+                        ['#profitability_fertilizer', 'Engrais est obligatoire.', 'Engrais doit etre numerique.'],
+                        ['#profitability_water', 'Eau est obligatoire.', 'Eau doit etre numerique.'],
+                        ['#profitability_labor', "Main d'oeuvre est obligatoire.", "Main d'oeuvre doit etre numerique."],
+                        ['#profitability_seeds', 'Semences est obligatoire.', 'Semences doit etre numerique.']
+                    ]
+                }
+            ];
+
+            configs.forEach(function (config) {
+                const form = document.getElementById(config.formId);
+                if (!form) {
+                    return;
+                }
+
+                form.addEventListener('submit', function (event) {
+                    let valid = true;
+
+                    config.fields.forEach(function (fieldConfig) {
+                        const field = form.querySelector(fieldConfig[0]);
+                        if (!field) {
+                            return;
+                        }
+
+                        const isChoice = field.tagName === 'SELECT';
+                        const fieldValid = isChoice
+                            ? validateRequiredChoice(field, fieldConfig[1])
+                            : validateRequiredTextField(field, fieldConfig[1], fieldConfig[2]);
+
+                        if (!fieldValid) {
+                            valid = false;
+                        }
+                    });
+
+                    if (!valid) {
+                        event.preventDefault();
+                    }
+                });
+
+                config.fields.forEach(function (fieldConfig) {
+                    const field = form.querySelector(fieldConfig[0]);
+                    if (!field) {
+                        return;
+                    }
+
+                    const eventName = field.tagName === 'SELECT' ? 'change' : 'input';
+                    field.addEventListener(eventName, function () {
+                        if ((field.value || '').trim() !== '') {
+                            clearFieldError(field);
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+{% endblock %}
+
 {% block dashboard_content %}
+    {% set yield_state = tool_state.yield %}
+    {% set reco_state = tool_state.recommendation %}
+    {% set profit_state = tool_state.profitability %}
+
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
         <div>
             <h2 class="fs-4 fw-bold text-dark mb-1">Forum communautaire</h2>
             <p class="text-muted mb-0">Retrouvez les sujets de discussion et poursuivez les echanges.</p>
         </div>
-        <a href="{{ path('forum_new') }}" class="btn btn-success">Nouveau sujet</a>
+        <div class="d-flex flex-wrap gap-2">
+            <button
+                type="button"
+                class="btn btn-outline-success"
+                data-bs-toggle="collapse"
+                data-bs-target="#forumYieldForecastPanel"
+                aria-expanded="false"
+                aria-controls="forumYieldForecastPanel"
+            >
+                Prevision de rendement
+            </button>
+            <button
+                type="button"
+                class="btn btn-outline-primary"
+                data-bs-toggle="collapse"
+                data-bs-target="#forumCropRecommendationPanel"
+                aria-expanded="false"
+                aria-controls="forumCropRecommendationPanel"
+            >
+                Recommandation de culture
+            </button>
+            <button
+                type="button"
+                class="btn btn-outline-warning"
+                data-bs-toggle="collapse"
+                data-bs-target="#forumProfitabilityPanel"
+                aria-expanded="false"
+                aria-controls="forumProfitabilityPanel"
+            >
+                Analyse de rentabilite
+            </button>
+            <a href="{{ path('forum_new') }}" class="btn btn-success">Nouveau sujet</a>
+        </div>
+    </div>
+
+    <div class="collapse mb-4 {{ tool_state.active_panel == 'yield' ? 'show' : '' }}" id="forumYieldForecastPanel">
+        <div class="forum-yield-panel shadow-sm">
+            <div class="forum-yield-panel__hero">
+                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="forum-yield-panel__hero-badge">YR</div>
+                        <div>
+                            <h3 class="fs-5 fw-bold mb-1">Systeme de Prevision de Rendement Agricole</h3>
+                            <p class="mb-0 text-white text-opacity-75">Calculez rapidement une estimation de rendement a partir de la surface et des coefficients terrain/meteo.</p>
+                        </div>
+                    </div>
+                    <span class="badge rounded-pill text-bg-light">Outil rapide</span>
+                </div>
+            </div>
+
+            <div class="forum-yield-panel__body">
+                <div class="row g-4 align-items-start">
+                    <div class="col-12 col-xl-7">
+                        {{ form_start(yield_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-yield-form', 'novalidate': 'novalidate', 'class': 'row g-3'}}) }}
+                            <div class="col-12 col-md-4">
+                                {{ form_label(yield_form.surface, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+                                {{ form_widget(yield_form.surface, {'attr': {'class': 'form-control' ~ (yield_form.surface.vars.errors|length ? ' is-invalid' : '')}}) }}
+                                {% if yield_form.surface.vars.errors|length %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(yield_form.surface) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                {{ form_label(yield_form.cropCoefficient, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+                                {{ form_widget(yield_form.cropCoefficient, {'attr': {'class': 'form-control' ~ (yield_form.cropCoefficient.vars.errors|length ? ' is-invalid' : '')}}) }}
+                                {% if yield_form.cropCoefficient.vars.errors|length %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(yield_form.cropCoefficient) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                {{ form_label(yield_form.weatherCoefficient, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+                                {{ form_widget(yield_form.weatherCoefficient, {'attr': {'class': 'form-control' ~ (yield_form.weatherCoefficient.vars.errors|length ? ' is-invalid' : '')}}) }}
+                                {% if yield_form.weatherCoefficient.vars.errors|length %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(yield_form.weatherCoefficient) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 d-flex flex-wrap gap-2">
+                                <button type="submit" class="btn btn-success">Calculer</button>
+                                <a href="{{ path('forum_index') }}" class="btn btn-outline-secondary">Reinitialiser</a>
+                            </div>
+                        {{ form_end(yield_form) }}
+                    </div>
+
+                    <div class="col-12 col-xl-5">
+                        <div class="forum-yield-panel__result">
+                            <div class="small text-uppercase fw-semibold text-success mb-2">Rendement estime</div>
+                            <div class="forum-yield-panel__result-value">{{ yield_state.result }}</div>
+                            <div class="forum-yield-panel__hint mt-2">
+                                {{ yield_state.message }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="collapse mb-4 {{ tool_state.active_panel == 'recommendation' ? 'show' : '' }}" id="forumCropRecommendationPanel">
+        <div class="forum-reco-panel shadow-sm">
+            <div class="forum-reco-panel__hero">
+                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="forum-reco-panel__hero-badge">RC</div>
+                        <div>
+                            <h3 class="fs-5 fw-bold mb-1">Systeme Intelligent de Recommandation de Culture</h3>
+                            <p class="mb-0 text-white text-opacity-75">Choisissez le type de sol et la saison pour obtenir une suggestion de culture selon les regles definies.</p>
+                        </div>
+                    </div>
+                    <span class="badge rounded-pill text-bg-light">Assistant rapide</span>
+                </div>
+            </div>
+
+            <div class="forum-reco-panel__body">
+                <div class="row g-4 align-items-start">
+                    <div class="col-12 col-xl-7">
+                        {{ form_start(recommendation_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-reco-form', 'novalidate': 'novalidate', 'class': 'row g-3'}}) }}
+                            <div class="col-12 col-md-6">
+                                {{ form_label(recommendation_form.soil, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+                                {{ form_widget(recommendation_form.soil, {'attr': {'class': 'form-select' ~ (recommendation_form.soil.vars.errors|length ? ' is-invalid' : '')}}) }}
+                                {% if recommendation_form.soil.vars.errors|length %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(recommendation_form.soil) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-6">
+                                {{ form_label(recommendation_form.season, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+                                {{ form_widget(recommendation_form.season, {'attr': {'class': 'form-select' ~ (recommendation_form.season.vars.errors|length ? ' is-invalid' : '')}}) }}
+                                {% if recommendation_form.season.vars.errors|length %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(recommendation_form.season) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 d-flex flex-wrap gap-2">
+                                <button type="submit" class="btn btn-primary">Recommander</button>
+                                <a href="{{ path('forum_index') }}" class="btn btn-outline-secondary">Reinitialiser</a>
+                            </div>
+                        {{ form_end(recommendation_form) }}
+                    </div>
+
+                    <div class="col-12 col-xl-5">
+                        <div class="forum-reco-panel__result">
+                            <div class="small text-uppercase fw-semibold text-primary mb-2">Culture recommandee</div>
+                            <div class="forum-reco-panel__result-value">{{ reco_state.result }}</div>
+                            <div class="forum-yield-panel__hint mt-2">
+                                {{ reco_state.message }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="collapse mb-4 {{ tool_state.active_panel == 'profitability' ? 'show' : '' }}" id="forumProfitabilityPanel">
+        <div class="forum-profit-panel shadow-sm">
+            <div class="forum-profit-panel__hero">
+                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="forum-profit-panel__hero-badge">PR</div>
+                        <div>
+                            <h3 class="fs-5 fw-bold mb-1">Systeme d'Analyse de Rentabilite Agricole</h3>
+                            <p class="mb-0 text-white text-opacity-75">Estimez rapidement le profit agricole a partir du revenu et des charges principales.</p>
+                        </div>
+                    </div>
+                    <span class="badge rounded-pill text-bg-light">Assistant financier</span>
+                </div>
+            </div>
+
+            <div class="forum-profit-panel__body">
+                <div class="row g-4 align-items-start">
+                    <div class="col-12 col-xl-7">
+                        {{ form_start(profitability_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-profit-form', 'novalidate': 'novalidate', 'class': 'row g-3'}}) }}
+                            <div class="col-12 col-md-6">
+                                {{ form_label(profitability_form.revenue, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+                                {{ form_widget(profitability_form.revenue, {'attr': {'class': 'form-control' ~ (profitability_form.revenue.vars.errors|length ? ' is-invalid' : '')}}) }}
+                                {% if profitability_form.revenue.vars.errors|length %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(profitability_form.revenue) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-6">
+                                {{ form_label(profitability_form.fertilizer, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+                                {{ form_widget(profitability_form.fertilizer, {'attr': {'class': 'form-control' ~ (profitability_form.fertilizer.vars.errors|length ? ' is-invalid' : '')}}) }}
+                                {% if profitability_form.fertilizer.vars.errors|length %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(profitability_form.fertilizer) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                {{ form_label(profitability_form.water, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+                                {{ form_widget(profitability_form.water, {'attr': {'class': 'form-control' ~ (profitability_form.water.vars.errors|length ? ' is-invalid' : '')}}) }}
+                                {% if profitability_form.water.vars.errors|length %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(profitability_form.water) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                {{ form_label(profitability_form.labor, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+                                {{ form_widget(profitability_form.labor, {'attr': {'class': 'form-control' ~ (profitability_form.labor.vars.errors|length ? ' is-invalid' : '')}}) }}
+                                {% if profitability_form.labor.vars.errors|length %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(profitability_form.labor) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 col-md-4">
+                                {{ form_label(profitability_form.seeds, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
+                                {{ form_widget(profitability_form.seeds, {'attr': {'class': 'form-control' ~ (profitability_form.seeds.vars.errors|length ? ' is-invalid' : '')}}) }}
+                                {% if profitability_form.seeds.vars.errors|length %}
+                                    <div class="invalid-feedback d-block">{{ form_errors(profitability_form.seeds) }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-12 d-flex flex-wrap gap-2">
+                                <button type="submit" class="btn btn-warning text-dark">Calculer</button>
+                                <a href="{{ path('forum_index') }}" class="btn btn-outline-secondary">Reinitialiser</a>
+                            </div>
+                        {{ form_end(profitability_form) }}
+                    </div>
+
+                    <div class="col-12 col-xl-5">
+                        <div class="forum-profit-panel__result">
+                            <div class="small text-uppercase fw-semibold text-warning-emphasis mb-2">Profit estime</div>
+                            <div class="forum-profit-panel__result-value">{{ profit_state.result }}</div>
+                            <div class="forum-yield-panel__hint mt-2">
+                                {{ profit_state.message }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <div class="card border-0 shadow-sm mb-4">

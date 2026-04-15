@@ -1,41 +1,138 @@
-{% extends 'base.html.twig' %}
+{% extends 'layouts/dashboard_layout.html.twig' %}
+{% block title %}Nouveau sujet - AgriLink{% endblock %}
+{% block page_title %}Nouveau sujet{% endblock %}
 
-{% block title %}Nouvelle annonce{% endblock %}
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .forum-topic-form .form-control.is-invalid,
+        .forum-topic-form .form-select.is-invalid {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15) !important;
+            background-image: none !important;
+        }
 
-{% block body %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header bg-success text-white">
-                    <h2 class="h4 mb-0">Publier une nouvelle annonce</h2>
-                </div>
-                <div class="card-body">
-                    {% for message in app.flashes('success') %}
-                        <div class="alert alert-success alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                    
-                    {% for message in app.flashes('danger') %}
-                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                    
-                    {% for message in app.flashes('warning') %}
-                        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
+        .forum-topic-form .invalid-feedback {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+    </style>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="row g-4">
+        <div class="col-12 col-xl-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4 p-lg-5">
+                    <h2 class="fs-4 fw-bold text-dark mb-1">Publier un nouveau sujet</h2>
+                    <p class="text-muted mb-4">Créez une discussion pour la communauté depuis le même espace dashboard que les autres modules.</p>
 
                     {{ include('Forum/_form.html.twig', {'submit_label': 'Créer le sujet'}) }}
                 </div>
             </div>
         </div>
+
+        <div class="col-12 col-xl-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body p-4">
+                    <h3 class="fs-6 fw-bold text-dark mb-3">Conseils</h3>
+                    <p class="text-muted small mb-2">Choisissez un titre clair pour faciliter la recherche des sujets.</p>
+                    <p class="text-muted small mb-0">Sélectionnez la bonne catégorie afin que le sujet apparaisse au bon endroit dans le forum.</p>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <script>
+        (function () {
+            const form = document.querySelector('.forum-topic-form');
+            if (!form) {
+                return;
+            }
+
+            const titleInput = form.querySelector('#forum_titre');
+            const categoryInput = form.querySelector('#forum_categorie');
+
+            function ensureFeedback(input, message) {
+                let feedback = input.parentElement.querySelector('.js-forum-feedback');
+
+                if (!feedback) {
+                    feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback js-forum-feedback';
+                    input.parentElement.appendChild(feedback);
+                }
+
+                feedback.textContent = message;
+            }
+
+            function clearFeedback(input) {
+                input.classList.remove('is-invalid');
+                const feedback = input.parentElement.querySelector('.js-forum-feedback');
+                if (feedback) {
+                    feedback.remove();
+                }
+            }
+
+            function validateTitle() {
+                if (!titleInput) {
+                    return true;
+                }
+
+                const value = titleInput.value.trim();
+                clearFeedback(titleInput);
+
+                if (value === '') {
+                    titleInput.classList.add('is-invalid');
+                    ensureFeedback(titleInput, 'Le titre du sujet est obligatoire.');
+                    return false;
+                }
+
+                if (value.length < 2) {
+                    titleInput.classList.add('is-invalid');
+                    ensureFeedback(titleInput, 'Le titre doit contenir au moins 2 caracteres.');
+                    return false;
+                }
+
+                return true;
+            }
+
+            function validateCategory() {
+                if (!categoryInput) {
+                    return true;
+                }
+
+                const value = (categoryInput.value || '').trim();
+                clearFeedback(categoryInput);
+
+                if (value === '') {
+                    categoryInput.classList.add('is-invalid');
+                    ensureFeedback(categoryInput, 'La categorie est obligatoire.');
+                    return false;
+                }
+
+                return true;
+            }
+
+            form.addEventListener('submit', function (event) {
+                const titleValid = validateTitle();
+                const categoryValid = validateCategory();
+
+                if (!titleValid || !categoryValid) {
+                    event.preventDefault();
+                }
+            });
+
+            if (titleInput) {
+                titleInput.addEventListener('input', validateTitle);
+            }
+
+            if (categoryInput) {
+                categoryInput.addEventListener('change', validateCategory);
+            }
+        })();
+    </script>
 {% endblock %}
