@@ -46,6 +46,51 @@
     color: #ffd199 !important;
 }
 
+.mc-head-actions {
+    min-width: 14rem;
+}
+
+.mc-pagination--top {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.mc-pagination__list {
+    gap: 0.3rem;
+}
+
+.mc-pagination__item .mc-pagination__link {
+    border-radius: 0.55rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    background: rgba(255, 255, 255, 0.04) !important;
+    color: #c8f542 !important;
+    font-weight: 700;
+    min-width: 2.1rem;
+    text-align: center;
+    line-height: 1.1;
+}
+
+.mc-pagination__item .mc-pagination__link:hover {
+    background: rgba(200, 245, 66, 0.16) !important;
+    border-color: rgba(200, 245, 66, 0.45) !important;
+    color: #e8f7a0 !important;
+}
+
+.mc-pagination__item.active .mc-pagination__link,
+.mc-pagination__item .mc-pagination__link--active {
+    background: linear-gradient(180deg, rgba(255, 140, 0, 0.36), rgba(255, 120, 0, 0.24)) !important;
+    border-color: rgba(255, 140, 0, 0.7) !important;
+    color: #ffd9a0 !important;
+    box-shadow: 0 8px 18px rgba(255, 140, 0, 0.22);
+}
+
+.mc-pagination__item.disabled .mc-pagination__link {
+    opacity: 0.35;
+    color: #9aa0a8 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
 .mc-stat-card {
     display: flex;
     align-items: center;

@@ -1,0 +1,44 @@
+{% if pageCount > 1 %}
+    <nav aria-label="Pagination des commandes">
+        <ul class="pagination pagination-sm mb-0 mc-pagination__list">
+            {% if previous is defined %}
+                <li class="page-item mc-pagination__item">
+                    <a class="page-link mc-pagination__link mc-pagination__link--nav"
+                       rel="prev"
+                       aria-label="Page précédente"
+                       href="{{ path(route, query|merge({ (pageParameterName): previous })) }}">&lt;&lt;</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled mc-pagination__item">
+                    <span class="page-link mc-pagination__link mc-pagination__link--nav" aria-hidden="true">&lt;&lt;</span>
+                </li>
+            {% endif %}
+
+            {% for page in pagesInRange %}
+                {% if page != current %}
+                    <li class="page-item mc-pagination__item">
+                        <a class="page-link mc-pagination__link"
+                           href="{{ path(route, query|merge({ (pageParameterName): page })) }}">{{ page }}</a>
+                    </li>
+                {% else %}
+                    <li class="page-item active mc-pagination__item" aria-current="page">
+                        <span class="page-link mc-pagination__link mc-pagination__link--active">{{ page }}</span>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if next is defined %}
+                <li class="page-item mc-pagination__item">
+                    <a class="page-link mc-pagination__link mc-pagination__link--nav"
+                       rel="next"
+                       aria-label="Page suivante"
+                       href="{{ path(route, query|merge({ (pageParameterName): next })) }}">&gt;&gt;</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled mc-pagination__item">
+                    <span class="page-link mc-pagination__link mc-pagination__link--nav" aria-hidden="true">&gt;&gt;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}

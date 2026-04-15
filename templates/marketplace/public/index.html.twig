@@ -559,6 +559,7 @@
 
 {# ── Filters toolbar (server-side query preserved) ── #}
 {% set qp = query_params %}
+{% set total_products = produits.getTotalItemCount %}
 <section class="tropical-toolbar py-1 tropical-toolbar--compact">
     <div class="container-fluid px-2 px-md-3 tropical-page-gutter">
         <div class="d-flex flex-column flex-xl-row align-items-stretch align-items-xl-center justify-content-between gap-1 gap-xl-2 mb-1">
@@ -608,7 +609,7 @@
         </div>
         <p class="small tropical-muted mb-0 tropical-toolbar-meta text-start">
             <i class="bi bi-box-seam me-1 tropical-lime"></i>
-            <strong class="text-white" id="marketplaceLiveCount">{{ produits|length }}</strong> produit{{ produits|length > 1 ? 's' : '' }} disponible{{ produits|length > 1 ? 's' : '' }}
+            <strong class="text-white" id="marketplaceLiveCount">{{ total_products }}</strong> produit{{ total_products > 1 ? 's' : '' }} disponible{{ total_products > 1 ? 's' : '' }}
         </p>
     </div>
 </section>
@@ -624,7 +625,7 @@
             |raw }}
         </p>
 
-        {% if produits is empty %}
+        {% if produits|length == 0 %}
             <div class="tropical-empty text-center py-5 rounded-4">
                 <i class="bi bi-inboxes display-4 tropical-lime mb-3 d-block"></i>
                 <p class="tropical-muted mb-3">Aucun produit ne correspond à vos filtres.</p>
@@ -645,6 +646,9 @@
                 <i class="bi bi-search display-4 tropical-lime mb-3 d-block"></i>
                 <p class="tropical-muted mb-3">Aucun produit ne correspond à votre recherche.</p>
                 <a href="{{ path('marketplace_index') }}" class="btn tropical-btn-register">Réinitialiser</a>
+            </div>
+            <div class="d-flex justify-content-center mt-4">
+                {{ knp_pagination_render(produits) }}
             </div>
         {% endif %}
     </div>
@@ -1674,7 +1678,7 @@
     <div class="container px-2 px-md-3">
         <div class="row g-4 text-center tropical-stats__row">
             <div class="col-6 col-md-3">
-                <div class="tropical-stat__num">{{ produits|length > 0 ? produits|length ~ '+' : '0' }}</div>
+                <div class="tropical-stat__num">{{ total_products > 0 ? total_products ~ '+' : '0' }}</div>
                 <div class="tropical-stat__label">Produits listés</div>
             </div>
             <div class="col-6 col-md-3">
