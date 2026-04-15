@@ -10,7 +10,9 @@ use App\Repository\CancellationRequestsRepository;
 use App\Repository\Marketplace\CommandesRepository;
 use App\Repository\Marketplace\LigneCommandeRepository;
 use App\Repository\UserManagement\UserRepository;
+use Knp\Component\Pager\PaginatorInterface;
 use Knp\Snappy\Pdf;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -45,12 +47,14 @@ class MesCommandesController extends AbstractController
         private readonly LigneCommandeRepository $ligneCommandeRepository,
         private readonly UserRepository $userRepository,
         private readonly CancellationRequestsRepository $cancellationRequestsRepository,
+        private readonly PaginatorInterface $paginator,
         private readonly Pdf $snappyPdf,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
     #[Route('', name: 'index', methods: ['GET'])]
-    public function index(): Response
+    public function index(Request $request): Response
     {
         /** @var User $user */
         $user = $this->getUser();
@@ -60,10 +64,11 @@ class MesCommandesController extends AbstractController
             $counts = $this->countBuckets($commandes);
             $commandeIds = $this->commandeIdsList($commandes);
             $pendingMap = $this->cancellationRequestsRepository->findPendingCommandeIdMap($commandeIds);
+            $paginatedCommandes = $this->paginateCommandes($request, $commandes);
 
             return $this->render('marketplace/mes_commandes/index.html.twig', [
                 'mes_commandes_mode' => 'admin',
-                'commandes' => $commandes,
+                'commandes' => $paginatedCommandes,
                 'montants_vendeur' => [],
                 'vendeurs_par_commande' => $this->buildVendeurLabelsForCommandesAdmin($commandes),
                 'count_total' => $counts['total'],
@@ -83,17 +88,20 @@ class MesCommandesController extends AbstractController
             $counts = $this->countBuckets($commandes);
             $commandeIds = $this->commandeIdsList($commandes);
             $pendingMap = $this->cancellationRequestsRepository->findPendingCommandeIdMap($commandeIds);
+            [$eligibleMap, $reasonMap] = $this->buildBuyerCancelEligibilityAndReasons($commandes, $pendingMap);
+            $paginatedCommandes = $this->paginateCommandes($request, $commandes);
 
             return $this->render('marketplace/mes_commandes/index.html.twig', [
                 'mes_commandes_mode' => 'acheteur',
-                'commandes' => $commandes,
+                'commandes' => $paginatedCommandes,
                 'montants_vendeur' => [],
                 'count_total' => $counts['total'],
                 'count_en_cours' => $counts['en_cours'],
                 'count_livrees' => $counts['livrees'],
                 'count_annulations_attente' => 0,
                 'pending_cancellation_map' => $pendingMap,
-                'buyer_cancel_eligible_map' => $this->buildBuyerCancelEligibleMap($commandes, $pendingMap),
+                'buyer_cancel_eligible_map' => $eligibleMap,
+                'buyer_cancel_reason_map' => $reasonMap,
                 'statut_choices_seller' => null,
                 'statut_choices_by_commande' => $this->acheteurStatutChoicesByCommandes($commandes),
                 'deletable_commande_ids' => $this->buildDeletableCommandeIds($commandes, $user, 'acheteur'),
@@ -114,10 +122,11 @@ class MesCommandesController extends AbstractController
 
             $commandeIds = $this->commandeIdsList($commandes);
             $pendingMap = $this->cancellationRequestsRepository->findPendingCommandeIdMap($commandeIds);
+            $paginatedCommandes = $this->paginateCommandes($request, $commandes);
 
             return $this->render('marketplace/mes_commandes/index.html.twig', [
                 'mes_commandes_mode' => 'vendeur',
-                'commandes' => $commandes,
+                'commandes' => $paginatedCommandes,
                 'montants_vendeur' => $montants,
                 'count_total' => $counts['total'],
                 'count_en_cours' => $counts['en_cours'],
@@ -136,21 +145,35 @@ class MesCommandesController extends AbstractController
 
         $commandeIds = $this->commandeIdsList($commandes);
         $pendingMap = $this->cancellationRequestsRepository->findPendingCommandeIdMap($commandeIds);
+        [$eligibleMap, $reasonMap] = $this->buildBuyerCancelEligibilityAndReasons($commandes, $pendingMap);
+        $paginatedCommandes = $this->paginateCommandes($request, $commandes);
 
         return $this->render('marketplace/mes_commandes/index.html.twig', [
             'mes_commandes_mode' => 'acheteur',
-            'commandes' => $commandes,
+            'commandes' => $paginatedCommandes,
             'montants_vendeur' => [],
             'count_total' => $counts['total'],
             'count_en_cours' => $counts['en_cours'],
             'count_livrees' => $counts['livrees'],
             'count_annulations_attente' => 0,
             'pending_cancellation_map' => $pendingMap,
-            'buyer_cancel_eligible_map' => $this->buildBuyerCancelEligibleMap($commandes, $pendingMap),
+            'buyer_cancel_eligible_map' => $eligibleMap,
+            'buyer_cancel_reason_map' => $reasonMap,
             'statut_choices_seller' => null,
             'statut_choices_by_commande' => $this->acheteurStatutChoicesByCommandes($commandes),
             'deletable_commande_ids' => $this->buildDeletableCommandeIds($commandes, $user, 'acheteur'),
         ]);
+    }
+
+    /**
+     * @param list<Commandes> $commandes
+     */
+    private function paginateCommandes(Request $request, array $commandes): mixed
+    {
+        $page = max(1, (int) $request->query->get('page', 1));
+        $itemsPerPage = 5;
+
+        return $this->paginator->paginate($commandes, $page, $itemsPerPage);
     }
 
     #[Route('/{id}/edit-modal', name: 'edit_modal', requirements: ['id' => '\\d+'], methods: ['GET'])]
@@ -551,10 +574,9 @@ class MesCommandesController extends AbstractController
         $cr->setHandledByUserId((int) $user->getId());
         $cr->setHandledAt(new \DateTimeImmutable());
 
-        $em = $this->commandesRepository->getEntityManager();
-        $em->persist($commande);
-        $em->persist($cr);
-        $em->flush();
+        $this->entityManager->persist($commande);
+        $this->entityManager->persist($cr);
+        $this->entityManager->flush();
     }
 
     /**
@@ -566,7 +588,12 @@ class MesCommandesController extends AbstractController
         if (str_contains($s, 'annul')) {
             return 'annulee';
         }
-        if (str_contains($s, 'livr') || str_contains($s, 'livré') || str_contains($s, 'termine') || str_contains($s, 'reception')) {
+        // Important: "livraison" (delivery method) is NOT "livrée" (delivered status).
+        // Status like "EN_ATTENTE_LIVRAISON_CASH" must remain "encours".
+        if (str_contains($s, 'livraison')) {
+            return 'encours';
+        }
+        if (str_contains($s, 'livree') || str_contains($s, 'livrée') || str_contains($s, 'livré') || str_contains($s, 'termine') || str_contains($s, 'reception') || str_contains($s, 'reçue') || str_contains($s, 'recue')) {
             return 'livree';
         }
 
@@ -600,6 +627,53 @@ class MesCommandesController extends AbstractController
         return $out;
     }
 
+    /**
+     * @param list<Commandes>  $commandes
+     * @param array<int, true> $pendingMap
+     *
+     * @return array{0: array<int, bool>, 1: array<int, string>}
+     */
+    private function buildBuyerCancelEligibilityAndReasons(array $commandes, array $pendingMap): array
+    {
+        $eligible = [];
+        $reasons = [];
+
+        foreach ($commandes as $c) {
+            $id = $c->getId();
+            $hasPending = isset($pendingMap[$id]);
+            $isOk = $this->buyerMayRequestCancellation($c, $hasPending);
+            $eligible[$id] = $isOk;
+
+            if ($isOk) {
+                continue;
+            }
+
+            if ($hasPending) {
+                $reasons[$id] = 'Demande d’annulation déjà en attente.';
+                continue;
+            }
+
+            if (!$this->isWithinBuyerCancellationWindow($c)) {
+                $reasons[$id] = 'Annulation indisponible: délai 48 h dépassé.';
+                continue;
+            }
+
+            if ($this->categorizeStatus($c->getStatus()) !== 'encours') {
+                $reasons[$id] = 'Annulation indisponible: commande déjà terminée (livrée/annulée).';
+                continue;
+            }
+
+            if (str_contains(strtoupper($c->getStatus()), 'EXPEDI')) {
+                $reasons[$id] = 'Annulation indisponible: commande déjà expédiée.';
+                continue;
+            }
+
+            $reasons[$id] = 'Annulation indisponible pour ce statut.';
+        }
+
+        return [$eligible, $reasons];
+    }
+
     private function buyerMayRequestCancellation(Commandes $commande, bool $hasPendingRequest): bool
     {
         if ($hasPendingRequest) {
@@ -621,7 +695,11 @@ class MesCommandesController extends AbstractController
 
     private function isWithinBuyerCancellationWindow(Commandes $commande): bool
     {
-        $start = \DateTimeImmutable::createFromInterface($commande->getDateCommande());
+        // `dateCommande` is stored as DATE (no time). To avoid wrongly expiring
+        // cancellation requests early (e.g. order placed late in the day),
+        // anchor the 48h window at end-of-day.
+        $start = \DateTimeImmutable::createFromInterface($commande->getDateCommande())
+            ->setTime(23, 59, 59);
         $deadline = $start->modify('+48 hours');
 
         return new \DateTimeImmutable() <= $deadline;
