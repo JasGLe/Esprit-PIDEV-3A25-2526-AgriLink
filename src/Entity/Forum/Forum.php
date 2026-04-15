@@ -16,21 +16,25 @@ class Forum
     private int $id;
 
     #[ORM\Column(type: Types::STRING, length: 150)]
-    #[Assert\NotBlank(message: 'Le titre du sujet est obligatoire.')]
-    #[Assert\Length(
-        min: 2,
-        max: 150,
-        minMessage: 'Le titre doit contenir au moins {{ limit }} caracteres.',
-        maxMessage: 'Le titre ne doit pas depasser {{ limit }} caracteres.'
-    )]
+    #[Assert\Sequentially([
+        new Assert\NotBlank(message: 'Le titre du sujet est obligatoire.'),
+        new Assert\Length(
+            min: 2,
+            max: 150,
+            minMessage: 'Le titre doit contenir au moins {{ limit }} caracteres.',
+            maxMessage: 'Le titre ne doit pas depasser {{ limit }} caracteres.'
+        ),
+    ])]
     private string $titre;
 
     #[ORM\Column(type: Types::STRING, length: 100)]
-    #[Assert\NotBlank(message: 'La categorie est obligatoire.')]
-    #[Assert\Choice(
-        choices: ['Agriculture generale', 'Agriculture générale', 'Elevage', 'Élevage', 'Cultures', 'Equipements', 'Équipements', 'Meteo', 'Météo', 'Autre'],
-        message: 'La categorie selectionnee est invalide.'
-    )]
+    #[Assert\Sequentially([
+        new Assert\NotBlank(message: 'La categorie est obligatoire.'),
+        new Assert\Choice(
+            choices: ['Agriculture generale', 'Agriculture generale', 'Elevage', 'Elevage', 'Cultures', 'Equipements', 'Equipements', 'Meteo', 'Meteo', 'Autre'],
+            message: 'La categorie selectionnee est invalide.'
+        ),
+    ])]
     private string $categorie = '';
 
     #[ORM\Column(name: 'date_creation', type: Types::DATETIME_MUTABLE)]
