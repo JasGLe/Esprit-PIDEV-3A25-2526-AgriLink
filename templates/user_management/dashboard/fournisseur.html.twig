@@ -3,294 +3,209 @@
 {% block title %}Tableau de bord Fournisseur - AgriLink{% endblock %}
 {% block page_title %}Espace Fournisseur{% endblock %}
 
-{% block role_badge %}
-    <span class="badge rounded-pill bg-primary-subtle text-primary d-inline-flex align-items-center px-3 py-1">
-        🏢 Fournisseur
-        {% if app.user.fournisseurTypeFournisseur == 'SOCIETE' %}
-            - Société
-        {% else %}
-            - Personne
-        {% endif %}
-    </span>
-{% endblock %}
-
 {% block role_specific_navigation %}
     <hr class="my-3 border-secondary">
-    <div class="px-3 py-2 small fw-semibold text-muted text-uppercase">
+    <div class="px-3 py-2 small fw-semibold text-muted text-uppercase" style="font-size:0.65rem;letter-spacing:0.07em;">
         Mon activité
     </div>
-    
-    <a href="#" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark">
-        <svg class="me-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+    <a href="{{ path('boutique_index') }}" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark text-decoration-none mb-1">
+        <svg class="me-3" style="width:1.15rem;height:1.15rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
         </svg>
         Mes produits
     </a>
-
-    <a href="#" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark">
-        <svg class="me-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+    <a href="{{ path('mes_commandes_index') }}" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark text-decoration-none mb-1">
+        <svg class="me-3" style="width:1.15rem;height:1.15rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
         </svg>
         Commandes reçues
     </a>
-
-    <a href="#" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark">
-        <svg class="me-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        Facturation
-    </a>
-
-    <a href="#" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark">
-        <svg class="me-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    <a href="{{ path('statistiques_index') }}" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark text-decoration-none mb-1">
+        <svg class="me-3" style="width:1.15rem;height:1.15rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
         </svg>
         Statistiques
     </a>
-
-    <hr class="my-3 border-secondary">
-    <div class="px-3 py-2 small fw-semibold text-muted text-uppercase">
-        Communication
-    </div>
-
-    <a href="#" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark">
-        <svg class="me-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-        Messages
-    </a>
-
-    <a href="#" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark">
-        <svg class="me-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-        </svg>
-        Avis clients
-    </a>
-{% endblock %}
-
-{% block mobile_sidebar %}
-    {{ block('sidebar_navigation') }}
 {% endblock %}
 
 {% block dashboard_content %}
-    {# Welcome section #}
-    <div class="mb-4">
-        <h2 class="fs-3 fw-bold text-dark">
-            Bienvenue, {{ app.user.displayName }} ! 
-            {% if app.user.fournisseurTypeFournisseur == 'SOCIETE' %}
-                🏭
-            {% else %}
-                🏪
-            {% endif %}
-        </h2>
-        <p class="mt-1 small text-muted">
-            Gérez vos produits et suivez vos commandes en temps réel.
-            {% if app.user.fournisseurRaisonSocial %}
-                <span class="fw-medium text-primary">{{ app.user.fournisseurRaisonSocial }}</span>
-            {% endif %}
-        </p>
+
+{# ── Welcome Banner ── #}
+<div class="ag-welcome-banner ag-animate-fade-up mb-4" style="background:linear-gradient(135deg,#1e3a5f 0%,#1d4ed8 60%,#0ea5e9 100%);">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <p class="mb-1" style="color:rgba(255,255,255,.6);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Espace fournisseur</p>
+            <h2 class="h4 fw-bold mb-1" style="color:#fff;">
+                {{ app.user.displayName }}
+                {% if app.user.fournisseurTypeFournisseur == 'SOCIETE' %}🏭{% else %}🏪{% endif %}
+            </h2>
+            <p class="mb-0" style="color:rgba(255,255,255,.7);font-size:0.85rem;">
+                Gérez vos produits et suivez vos commandes en temps réel.
+                {% if app.user.fournisseurRaisonSocial %}
+                    &middot; <span style="color:rgba(255,255,255,.9);font-weight:600;">{{ app.user.fournisseurRaisonSocial }}</span>
+                {% endif %}
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ path('boutique_index') }}" class="btn btn-sm fw-semibold" style="background:#fff;color:#1d4ed8;border-radius:8px;">
+                Ma boutique →
+            </a>
+        </div>
     </div>
+</div>
 
-    {# Profile Completion Widget #}
-    <div class="mb-4">
-        {% include 'components/profile_completion_simple.html.twig' %}
-    </div>
+{# ── Profile Completion ── #}
+<div class="mb-4 ag-animate-fade-up ag-delay-1">
+    {% include 'components/profile_completion_simple.html.twig' %}
+</div>
 
-    {# Quick Stats #}
-    <div class="row g-4 mb-4">
-        {# Products #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #dbeafe;">
-                                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Mes produits</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">--</dd>
-                            </dl>
-                        </div>
-                    </div>
+{# ── Stat Cards ── #}
+<div class="row g-3 mb-4">
+
+    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-1">
+        <div class="ag-stat-card">
+            <div class="ag-stat-body d-flex align-items-start gap-3">
+                <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(37,99,235,.14),rgba(96,165,250,.07));">
+                    <svg width="22" height="22" fill="none" stroke="#2563eb" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                 </div>
-                <div class="card-footer bg-light p-3">
-                    <a href="#" class="small fw-medium text-primary text-decoration-none">Gérer →</a>
+                <div>
+                    <p class="text-muted small fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">Mes produits</p>
+                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#111827;">--</p>
                 </div>
             </div>
-        </div>
-
-        {# Orders #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #dcfce7;">
-                                <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Commandes en cours</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">--</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light p-3">
-                    <a href="#" class="small fw-medium text-success text-decoration-none">Voir tout →</a>
-                </div>
-            </div>
-        </div>
-
-        {# Revenue #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #fef08a;">
-                                <svg class="w-6 h-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Chiffre d'affaires</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">-- TND</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light p-3">
-                    <span class="small text-muted">Ce mois</span>
-                </div>
-            </div>
-        </div>
-
-        {# Rating #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #e9d5ff;">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #7c3aed;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Note moyenne</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">-- / 5</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light p-3">
-                    <a href="#" class="small fw-medium" style="color: #7c3aed; text-decoration: none;">Voir les avis →</a>
-                </div>
+            <div class="ag-stat-footer">
+                <a href="{{ path('boutique_index') }}" class="small fw-semibold text-decoration-none" style="color:#2563eb;">Gérer →</a>
             </div>
         </div>
     </div>
 
-    {# Main content grid #}
-    <div class="row g-4">
-        {# Quick Actions #}
-        <div class="col-12 col-lg-6">
-        {% embed 'components/_card.html.twig' %}
-            {% block card_title %}Actions rapides{% endblock %}
-            {% block card_content %}
-                <div class="d-flex flex-column gap-2">
-                    <a href="#" class="d-flex align-items-center p-3 rounded border border-light-subtle text-decoration-none">
-                        <div class="d-flex align-items-center justify-content-center rounded" style="width: 40px; height: 40px; background-color: #dbeafe; margin-right: 1rem;">
-                            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="small fw-medium text-dark mb-0">Ajouter un produit</p>
-                            <p class="small text-muted mb-0">Publier un nouveau produit dans le catalogue</p>
-                        </div>
-                    </a>
-
-                    <a href="#" class="d-flex align-items-center p-3 rounded border border-light-subtle text-decoration-none">
-                        <div class="d-flex align-items-center justify-content-center rounded" style="width: 40px; height: 40px; background-color: #dcfce7; margin-right: 1rem;">
-                            <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="small fw-medium text-dark mb-0">Traiter les commandes</p>
-                            <p class="small text-muted mb-0">Gérer les commandes en attente</p>
-                        </div>
-                    </a>
-
-                    <a href="#" class="d-flex align-items-center p-3 rounded border border-light-subtle text-decoration-none">
-                        <div class="d-flex align-items-center justify-content-center rounded" style="width: 40px; height: 40px; background-color: #e9d5ff; margin-right: 1rem;">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #7c3aed;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="small fw-medium text-dark mb-0">Générer un rapport</p>
-                            <p class="small text-muted mb-0">Exporter les ventes et statistiques</p>
-                        </div>
-                    </a>
+    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-2">
+        <div class="ag-stat-card">
+            <div class="ag-stat-body d-flex align-items-start gap-3">
+                <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(22,163,74,.14),rgba(34,197,94,.07));">
+                    <svg width="22" height="22" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
                 </div>
-            {% endblock %}
-        {% endembed %}
-        </div>
-
-        {# Recent Orders #}
-        <div class="col-12 col-lg-6">
-        {% embed 'components/_card.html.twig' %}
-            {% block card_title %}Dernières commandes{% endblock %}
-            {% block card_content %}
-                <div class="text-center py-5">
-                    <div class="d-flex align-items-center justify-content-center rounded-circle mx-auto mb-3" style="width: 64px; height: 64px; background-color: #f3f4f6;">
-                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #9ca3af;">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                        </svg>
-                    </div>
-                    <p class="text-muted small mb-3">Aucune commande récente</p>
-                    <a href="#" class="btn btn-primary btn-sm">Voir toutes les commandes</a>
+                <div>
+                    <p class="text-muted small fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">Commandes en cours</p>
+                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#111827;">--</p>
                 </div>
-            {% endblock %}
-        {% endembed %}
+            </div>
+            <div class="ag-stat-footer">
+                <a href="{{ path('mes_commandes_index') }}" class="small fw-semibold text-decoration-none" style="color:#16a34a;">Voir tout →</a>
+            </div>
         </div>
     </div>
 
-    {# Certification Info #}
-    {% if app.user.fournisseurCertifications %}
-    <div class="mt-4">
-        {% embed 'components/_card.html.twig' %}
-            {% block card_title %}Mes certifications{% endblock %}
-            {% block card_content %}
-                <div class="d-flex align-items-center gap-3">
-                    <div class="flex-shrink-0">
-                        <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 48px; height: 48px; background-color: #dcfce7;">
-                            <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
-                            </svg>
-                        </div>
+    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-3">
+        <div class="ag-stat-card">
+            <div class="ag-stat-body d-flex align-items-start gap-3">
+                <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(252,211,77,.09));">
+                    <svg width="22" height="22" fill="none" stroke="#d97706" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-muted small fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">Chiffre d'affaires</p>
+                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#111827;">-- TND</p>
+                </div>
+            </div>
+            <div class="ag-stat-footer">
+                <span class="small text-muted">Ce mois</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-4">
+        <div class="ag-stat-card">
+            <div class="ag-stat-body d-flex align-items-start gap-3">
+                <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(139,92,246,.14),rgba(167,139,250,.07));">
+                    <svg width="22" height="22" fill="none" stroke="#8b5cf6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/></svg>
+                </div>
+                <div>
+                    <p class="text-muted small fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">Note moyenne</p>
+                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#111827;">-- / 5</p>
+                </div>
+            </div>
+            <div class="ag-stat-footer">
+                <a href="#" class="small fw-semibold text-decoration-none" style="color:#8b5cf6;">Voir les avis →</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{# ── Main Grid ── #}
+<div class="row g-3 mb-4">
+
+    <div class="col-12 col-lg-6 ag-animate-fade-up ag-delay-2">
+        <div class="ag-card h-100">
+            <div class="ag-card-header">
+                <p class="ag-card-title">⚡ Actions rapides</p>
+            </div>
+            <div class="ag-card-body d-flex flex-column gap-2">
+                <a href="{{ path('boutique_index') }}" class="ag-action-item text-decoration-none">
+                    <div class="ag-action-icon" style="background:rgba(37,99,235,.1);">
+                        <svg width="18" height="18" fill="none" stroke="#2563eb" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                     </div>
                     <div>
-                        <p class="small fw-medium text-dark mb-0">Certifications actives</p>
-                        <p class="small text-muted mb-0">{{ app.user.fournisseurCertifications }}</p>
+                        <p class="small fw-semibold text-dark mb-0">Ajouter un produit</p>
+                        <p class="text-muted mb-0" style="font-size:0.775rem;">Publier un nouveau produit dans le catalogue</p>
                     </div>
-                </div>
-            {% endblock %}
-        {% endembed %}
+                    <svg class="ag-action-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="{{ path('mes_commandes_index') }}" class="ag-action-item text-decoration-none">
+                    <div class="ag-action-icon" style="background:rgba(22,163,74,.1);">
+                        <svg width="18" height="18" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    </div>
+                    <div>
+                        <p class="small fw-semibold text-dark mb-0">Traiter les commandes</p>
+                        <p class="text-muted mb-0" style="font-size:0.775rem;">Gérer les commandes en attente</p>
+                    </div>
+                    <svg class="ag-action-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="{{ path('statistiques_index') }}" class="ag-action-item text-decoration-none">
+                    <div class="ag-action-icon" style="background:rgba(139,92,246,.1);">
+                        <svg width="18" height="18" fill="none" stroke="#8b5cf6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </div>
+                    <div>
+                        <p class="small fw-semibold text-dark mb-0">Générer un rapport</p>
+                        <p class="text-muted mb-0" style="font-size:0.775rem;">Exporter les ventes et statistiques</p>
+                    </div>
+                    <svg class="ag-action-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
     </div>
-    {% endif %}
+
+    <div class="col-12 col-lg-6 ag-animate-fade-up ag-delay-3">
+        <div class="ag-card h-100">
+            <div class="ag-card-header">
+                <p class="ag-card-title">📦 Dernières commandes</p>
+            </div>
+            <div class="ag-card-body">
+                <div class="d-flex flex-column align-items-center justify-content-center py-4 text-muted">
+                    <span style="font-size:2rem;margin-bottom:0.5rem;">📭</span>
+                    <p class="small fw-medium mb-1">Aucune commande récente</p>
+                    <p style="font-size:0.75rem;" class="mb-3">Vos commandes apparaîtront ici</p>
+                    <a href="{{ path('mes_commandes_index') }}" class="btn btn-sm btn-primary">Voir toutes les commandes</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{# Certifications #}
+{% if app.user.fournisseurCertifications %}
+<div class="ag-card ag-animate-fade-up">
+    <div class="ag-card-body d-flex align-items-center gap-3">
+        <div style="width:48px;height:48px;background:rgba(22,163,74,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <svg width="22" height="22" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+        </div>
+        <div>
+            <p class="small fw-semibold text-dark mb-0">Certifications actives</p>
+            <p class="small text-muted mb-0">{{ app.user.fournisseurCertifications }}</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}
