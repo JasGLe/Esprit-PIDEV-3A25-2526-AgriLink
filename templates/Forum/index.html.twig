@@ -172,6 +172,10 @@
     {{ parent() }}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            function getServerFeedback(field) {
+                return field.parentElement.querySelector('.invalid-feedback:not(.js-inline-error)');
+            }
+
             function setFieldError(field, message) {
                 field.classList.add('is-invalid');
 
@@ -193,66 +197,159 @@
                 }
             }
 
-            function validateRequiredTextField(field, emptyMessage, numericMessage) {
+            function validateField(field, rules) {
                 const value = field.value.trim();
+                const serverFeedback = getServerFeedback(field);
+
+                if (serverFeedback) {
+                    serverFeedback.remove();
+                }
+
                 clearFieldError(field);
 
                 if (value === '') {
-                    setFieldError(field, emptyMessage);
+                    setFieldError(field, rules.requiredMessage);
                     return false;
                 }
 
-                if (numericMessage !== null) {
+                if (rules.type === 'number') {
                     const parsed = Number(value);
                     if (!Number.isFinite(parsed)) {
-                        setFieldError(field, numericMessage);
+                        setFieldError(field, rules.numericMessage);
                         return false;
                     }
 
                     if (parsed < 0) {
-                        setFieldError(field, numericMessage);
+                        setFieldError(field, rules.minMessage);
                         return false;
                     }
+                }
+
+                if (rules.type === 'choice' && rules.choices.indexOf(value) === -1) {
+                    setFieldError(field, rules.invalidChoiceMessage);
+                    return false;
                 }
 
                 return true;
             }
 
-            function validateRequiredChoice(field, emptyMessage) {
-                clearFieldError(field);
+            function formatNumber(value) {
+                return Number(value).toFixed(2);
+            }
 
-                if ((field.value || '').trim() === '') {
-                    setFieldError(field, emptyMessage);
-                    return false;
+            function openPanel(panelId) {
+                const panel = document.getElementById(panelId);
+                if (panel) {
+                    panel.classList.add('show');
+                }
+            }
+
+            function setResult(valueSelector, messageSelector, value, message) {
+                const valueElement = document.querySelector(valueSelector);
+                const messageElement = document.querySelector(messageSelector);
+
+                if (valueElement) {
+                    valueElement.textContent = value;
                 }
 
-                return true;
+                if (messageElement) {
+                    messageElement.textContent = message;
+                }
             }
 
             const configs = [
                 {
                     formId: 'forum-yield-form',
+                    panelId: 'forumYieldForecastPanel',
+                    resultValueSelector: '#yield-result-value',
+                    resultMessageSelector: '#yield-result-message',
                     fields: [
-                        ['#yield_forecast_surface', 'Surface est obligatoire.', 'Surface doit etre numerique.'],
-                        ['#yield_forecast_cropCoefficient', 'Coefficient culture est obligatoire.', 'Coefficient culture doit etre numerique.'],
-                        ['#yield_forecast_weatherCoefficient', 'Coefficient meteo est obligatoire.', 'Coefficient meteo doit etre numerique.']
+                        {
+                            selector: '#yield_forecast_surface',
+                            type: 'number',
+                            requiredMessage: 'Surface est obligatoire.',
+                            numericMessage: 'Surface doit etre numerique.',
+                            minMessage: 'Surface doit etre superieur ou egal a zero.'
+                        },
+                        {
+                            selector: '#yield_forecast_cropCoefficient',
+                            type: 'number',
+                            requiredMessage: 'Coefficient culture est obligatoire.',
+                            numericMessage: 'Coefficient culture doit etre numerique.',
+                            minMessage: 'Coefficient culture doit etre superieur ou egal a zero.'
+                        },
+                        {
+                            selector: '#yield_forecast_weatherCoefficient',
+                            type: 'number',
+                            requiredMessage: 'Coefficient meteo est obligatoire.',
+                            numericMessage: 'Coefficient meteo doit etre numerique.',
+                            minMessage: 'Coefficient meteo doit etre superieur ou egal a zero.'
+                        }
                     ]
                 },
                 {
                     formId: 'forum-reco-form',
+                    panelId: 'forumCropRecommendationPanel',
+                    resultValueSelector: '#reco-result-value',
+                    resultMessageSelector: '#reco-result-message',
                     fields: [
-                        ['#crop_recommendation_soil', 'Le type de sol est obligatoire.', null],
-                        ['#crop_recommendation_season', 'La saison est obligatoire.', null]
+                        {
+                            selector: '#crop_recommendation_soil',
+                            type: 'choice',
+                            requiredMessage: 'Le type de sol est obligatoire.',
+                            invalidChoiceMessage: 'Le type de sol selectionne est invalide.',
+                            choices: ['sableux', 'argileux']
+                        },
+                        {
+                            selector: '#crop_recommendation_season',
+                            type: 'choice',
+                            requiredMessage: 'La saison est obligatoire.',
+                            invalidChoiceMessage: 'La saison selectionnee est invalide.',
+                            choices: ['ete', 'hiver']
+                        }
                     ]
                 },
                 {
                     formId: 'forum-profit-form',
+                    panelId: 'forumProfitabilityPanel',
+                    resultValueSelector: '#profit-result-value',
+                    resultMessageSelector: '#profit-result-message',
                     fields: [
-                        ['#profitability_revenue', 'Revenu est obligatoire.', 'Revenu doit etre numerique.'],
-                        ['#profitability_fertilizer', 'Engrais est obligatoire.', 'Engrais doit etre numerique.'],
-                        ['#profitability_water', 'Eau est obligatoire.', 'Eau doit etre numerique.'],
-                        ['#profitability_labor', "Main d'oeuvre est obligatoire.", "Main d'oeuvre doit etre numerique."],
-                        ['#profitability_seeds', 'Semences est obligatoire.', 'Semences doit etre numerique.']
+                        {
+                            selector: '#profitability_revenue',
+                            type: 'number',
+                            requiredMessage: 'Revenu est obligatoire.',
+                            numericMessage: 'Revenu doit etre numerique.',
+                            minMessage: 'Revenu doit etre superieur ou egal a zero.'
+                        },
+                        {
+                            selector: '#profitability_fertilizer',
+                            type: 'number',
+                            requiredMessage: 'Engrais est obligatoire.',
+                            numericMessage: 'Engrais doit etre numerique.',
+                            minMessage: 'Engrais doit etre superieur ou egal a zero.'
+                        },
+                        {
+                            selector: '#profitability_water',
+                            type: 'number',
+                            requiredMessage: 'Eau est obligatoire.',
+                            numericMessage: 'Eau doit etre numerique.',
+                            minMessage: 'Eau doit etre superieur ou egal a zero.'
+                        },
+                        {
+                            selector: '#profitability_labor',
+                            type: 'number',
+                            requiredMessage: "Main d'oeuvre est obligatoire.",
+                            numericMessage: "Main d'oeuvre doit etre numerique.",
+                            minMessage: "Main d'oeuvre doit etre superieur ou egal a zero."
+                        },
+                        {
+                            selector: '#profitability_seeds',
+                            type: 'number',
+                            requiredMessage: 'Semences est obligatoire.',
+                            numericMessage: 'Semences doit etre numerique.',
+                            minMessage: 'Semences doit etre superieur ou egal a zero.'
+                        }
                     ]
                 }
             ];
@@ -267,37 +364,101 @@
                     let valid = true;
 
                     config.fields.forEach(function (fieldConfig) {
-                        const field = form.querySelector(fieldConfig[0]);
+                        const field = form.querySelector(fieldConfig.selector);
                         if (!field) {
                             return;
                         }
 
-                        const isChoice = field.tagName === 'SELECT';
-                        const fieldValid = isChoice
-                            ? validateRequiredChoice(field, fieldConfig[1])
-                            : validateRequiredTextField(field, fieldConfig[1], fieldConfig[2]);
-
-                        if (!fieldValid) {
+                        if (!validateField(field, fieldConfig)) {
                             valid = false;
                         }
                     });
 
                     if (!valid) {
                         event.preventDefault();
+                        openPanel(config.panelId);
+                        return;
                     }
+
+                    event.preventDefault();
+
+                    if (config.formId === 'forum-yield-form') {
+                        const surface = Number(form.querySelector('#yield_forecast_surface').value.trim());
+                        const cropCoefficient = Number(form.querySelector('#yield_forecast_cropCoefficient').value.trim());
+                        const weatherCoefficient = Number(form.querySelector('#yield_forecast_weatherCoefficient').value.trim());
+                        const result = surface * cropCoefficient * weatherCoefficient;
+
+                        setResult(
+                            config.resultValueSelector,
+                            config.resultMessageSelector,
+                            formatNumber(result),
+                            'Calcul effectue avec succes.'
+                        );
+                    }
+
+                    if (config.formId === 'forum-reco-form') {
+                        const soil = form.querySelector('#crop_recommendation_soil').value.trim();
+                        const season = form.querySelector('#crop_recommendation_season').value.trim();
+                        let result = 'Aucune recommandation';
+                        let message = 'Aucune regle ne correspond a cette combinaison pour le moment.';
+
+                        if (soil === 'sableux' && season === 'ete') {
+                            result = 'Pasteque';
+                            message = 'Regle appliquee avec succes.';
+                        } else if (soil === 'argileux' && season === 'hiver') {
+                            result = 'Ble';
+                            message = 'Regle appliquee avec succes.';
+                        }
+
+                        setResult(
+                            config.resultValueSelector,
+                            config.resultMessageSelector,
+                            result,
+                            message
+                        );
+                    }
+
+                    if (config.formId === 'forum-profit-form') {
+                        const revenue = Number(form.querySelector('#profitability_revenue').value.trim());
+                        const fertilizer = Number(form.querySelector('#profitability_fertilizer').value.trim());
+                        const water = Number(form.querySelector('#profitability_water').value.trim());
+                        const labor = Number(form.querySelector('#profitability_labor').value.trim());
+                        const seeds = Number(form.querySelector('#profitability_seeds').value.trim());
+                        const result = revenue - (fertilizer + water + labor + seeds);
+                        let message = "Le resultat est a l'equilibre.";
+
+                        if (result > 0) {
+                            message = 'Exploitation rentable selon les valeurs saisies.';
+                        } else if (result < 0) {
+                            message = 'Le resultat indique une perte selon les valeurs saisies.';
+                        }
+
+                        setResult(
+                            config.resultValueSelector,
+                            config.resultMessageSelector,
+                            formatNumber(result),
+                            message
+                        );
+                    }
+
+                    openPanel(config.panelId);
                 });
 
                 config.fields.forEach(function (fieldConfig) {
-                    const field = form.querySelector(fieldConfig[0]);
+                    const field = form.querySelector(fieldConfig.selector);
                     if (!field) {
                         return;
                     }
 
                     const eventName = field.tagName === 'SELECT' ? 'change' : 'input';
                     field.addEventListener(eventName, function () {
-                        if ((field.value || '').trim() !== '') {
-                            clearFieldError(field);
+                        if (field.classList.contains('is-invalid') || getServerFeedback(field)) {
+                            validateField(field, fieldConfig);
                         }
+                    });
+
+                    field.addEventListener('blur', function () {
+                        validateField(field, fieldConfig);
                     });
                 });
             });
@@ -400,8 +561,8 @@
                     <div class="col-12 col-xl-5">
                         <div class="forum-yield-panel__result">
                             <div class="small text-uppercase fw-semibold text-success mb-2">Rendement estime</div>
-                            <div class="forum-yield-panel__result-value">{{ yield_state.result }}</div>
-                            <div class="forum-yield-panel__hint mt-2">
+                            <div id="yield-result-value" class="forum-yield-panel__result-value">{{ yield_state.result }}</div>
+                            <div id="yield-result-message" class="forum-yield-panel__hint mt-2">
                                 {{ yield_state.message }}
                             </div>
                         </div>
@@ -454,8 +615,8 @@
                     <div class="col-12 col-xl-5">
                         <div class="forum-reco-panel__result">
                             <div class="small text-uppercase fw-semibold text-primary mb-2">Culture recommandee</div>
-                            <div class="forum-reco-panel__result-value">{{ reco_state.result }}</div>
-                            <div class="forum-yield-panel__hint mt-2">
+                            <div id="reco-result-value" class="forum-reco-panel__result-value">{{ reco_state.result }}</div>
+                            <div id="reco-result-message" class="forum-yield-panel__hint mt-2">
                                 {{ reco_state.message }}
                             </div>
                         </div>
@@ -529,8 +690,8 @@
                     <div class="col-12 col-xl-5">
                         <div class="forum-profit-panel__result">
                             <div class="small text-uppercase fw-semibold text-warning-emphasis mb-2">Profit estime</div>
-                            <div class="forum-profit-panel__result-value">{{ profit_state.result }}</div>
-                            <div class="forum-yield-panel__hint mt-2">
+                            <div id="profit-result-value" class="forum-profit-panel__result-value">{{ profit_state.result }}</div>
+                            <div id="profit-result-message" class="forum-yield-panel__hint mt-2">
                                 {{ profit_state.message }}
                             </div>
                         </div>
