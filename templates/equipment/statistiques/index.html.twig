@@ -176,9 +176,13 @@ function _initCharts() {
         r: '#dc3545', gr: '#6c757d', t: '#20c997', o: '#fd7e14'
     };
 
+    // Couleurs par label de statut — indépendant de l'ordre retourné par le repo
+    var statutColorMap = { 'Actif': C.g, 'En panne': C.r, 'En maintenance': C.y, 'Hors service': C.gr };
+    var equipStatutColors = _chartData.equipStatutLabels.map(function(l) { return statutColorMap[l] || C.gr; });
+
     new Chart(document.getElementById('chartEquipStatut'), {
         type: 'pie',
-        data: { labels: _chartData.equipStatutLabels, datasets: [{ data: _chartData.equipStatutValeurs, backgroundColor: [C.g, C.r, C.y, C.gr] }] },
+        data: { labels: _chartData.equipStatutLabels, datasets: [{ data: _chartData.equipStatutValeurs, backgroundColor: equipStatutColors }] },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
     });
 
@@ -213,8 +217,11 @@ function _initCharts() {
     });
 }
 
+// DOMContentLoaded — navigation directe / F5
 document.addEventListener('DOMContentLoaded', _initCharts);
-window.addEventListener('pageshow', function(e) { _initCharts(); });
-window.addEventListener('focus', function() { _initCharts(); });
+// turbo:load — navigation Turbo (Symfony UX Turbo / Hotwire)
+document.addEventListener('turbo:load', _initCharts);
+// pageshow — retour via bouton Précédent du navigateur (bfcache)
+window.addEventListener('pageshow', function(e) { if (e.persisted) { _initCharts(); } });
 </script>
 {% endblock %}

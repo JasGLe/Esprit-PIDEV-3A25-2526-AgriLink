@@ -34,6 +34,12 @@ class EquipementRepository extends ServiceEntityRepository
 
     public function countByStatut(int $userId): array
     {
+        // Valeurs canoniques — tout ce qui n'est pas dans cette liste est regroupé sous "Hors service"
+        $statutsConnus = ['Actif', 'En panne', 'En maintenance', 'Hors service'];
+
+        // Initialiser à 0 pour garantir que tous les statuts apparaissent toujours dans le graphique
+        $data = array_fill_keys($statutsConnus, 0);
+
         $results = $this->createQueryBuilder('e')
             ->select('e.statut, COUNT(e.id) as total')
             ->where('e.userlog = :userId')
@@ -42,10 +48,15 @@ class EquipementRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
 
-        $data = [];
         foreach ($results as $r) {
-            $data[$r['statut'] ?? 'Inconnu'] = (int) $r['total'];
+            $statut = $r['statut'];
+            // Normaliser : null / vide / valeur inconnue → "Hors service"
+            if ($statut === null || $statut === '' || !in_array($statut, $statutsConnus, true)) {
+                $statut = 'Hors service';
+            }
+            $data[$statut] = ($data[$statut] ?? 0) + (int) $r['total'];
         }
+
         return $data;
     }
 
