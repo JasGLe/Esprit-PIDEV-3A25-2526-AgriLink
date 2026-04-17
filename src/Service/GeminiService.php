@@ -21,7 +21,7 @@ class GeminiService
 
     $response = $this->client->request(
         'POST',
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=".$this->apiKey,
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=".$this->apiKey,
         [
             'headers' => [
                 'Content-Type' => 'application/json'
@@ -115,7 +115,7 @@ public function analyserImage($file, string $nomCulture = ''): array
 
         $response = $this->client->request(
             'POST',
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=".$this->apiKey,
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=".$this->apiKey,
             [
                 'headers' => [
                     'Content-Type' => 'application/json'
