@@ -21,6 +21,11 @@ class EventPosterGeneratorService
      */
     public function generatePoster(Evenement $evenement): array
     {
+        // Mode test/mock - retourner une réponse simulée
+        if (($_ENV['APP_ENV'] ?? '') === 'test' || ($_ENV['MOCK_REPLICATE'] ?? '') === 'true') {
+            return $this->getMockPredictionResponse();
+        }
+
         if (!$this->replicateApiKey) {
             throw new \Exception("REPLICATE_API_KEY not configured");
         }
@@ -67,10 +72,15 @@ class EventPosterGeneratorService
     }
 
     /**
-     * Vérifier l'état de la génération
+     * Vérifier l'état de la génération (mock ou réelle)
      */
     public function checkPredictionStatus(string $predictionId): array
     {
+        // Mode test/mock - retourner une réponse simulée après 3-5 secondes
+        if (str_starts_with($predictionId, 'mock-')) {
+            return $this->getMockPredictionStatus($predictionId);
+        }
+
         if (!$this->replicateApiKey) {
             throw new \Exception("REPLICATE_API_KEY not configured");
         }
@@ -128,5 +138,34 @@ Design requis:
 Langue: Français
 Ambiance: Professionnelle, moderne, inspirante
 PROMPT;
+    }
+
+    /**
+     * Génère une réponse mock simulant Replicate pour les tests
+     */
+    private function getMockPredictionResponse(): array
+    {
+        $predictionId = 'mock-' . uniqid() . '-' . bin2hex(random_bytes(4));
+        
+        return [
+            'status' => 'processing',
+            'prediction_id' => $predictionId,
+            'created_at' => date('Y-m-d H:i:s'),
+            'mock' => true,
+        ];
+    }
+
+    /**
+     * Génère un statut mock avec une fausse image générée
+     */
+    private function getMockPredictionStatus(string $predictionId): array
+    {
+        return [
+            'status' => 'succeeded',
+            'output' => [
+                'https://via.placeholder.com/1024x768?text=Event+Poster+Generated'
+            ],
+            'error' => null,
+        ];
     }
 }
