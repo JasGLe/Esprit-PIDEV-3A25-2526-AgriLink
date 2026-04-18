@@ -1,0 +1,754 @@
+{# Face Recognition Component - With Toggle & Password Validation #}
+<div class="face-recognition-widget" id="{{ widget_id ?? 'face-widget' }}">
+    <style>
+        .face-recognition-widget {
+            border: 1px solid #e9ecef;
+            border-radius: 12px;
+            padding: 1.5rem;
+            background: #fff;
+        }
+        .face-widget-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+        .face-widget-header .icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0fff4;
+            color: #198754;
+            flex-shrink: 0;
+        }
+        .face-widget-header h4 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #212529;
+            flex: 1;
+        }
+        .face-toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .toggle-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 44px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.3s;
+        }
+        .toggle-checkbox::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-checkbox:checked {
+            background-color: #198754;
+        }
+        .toggle-checkbox:checked::before {
+            left: 22px;
+        }
+        .toggle-checkbox:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .face-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.8rem;
+            padding: 0.35rem 0.625rem;
+            border-radius: 6px;
+            margin-left: auto;
+        }
+        .face-status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+        .face-status-badge.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .face-password-validation {
+            display: none;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #f9fafb;
+        }
+        .face-password-validation.active {
+            display: block;
+        }
+        .face-password-validation h5 {
+            margin: 0 0 1rem 0;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #212529;
+        }
+        .face-password-field {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .face-password-field input {
+            flex: 1;
+            padding: 0.5rem 0.875rem;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+        .face-password-field button {
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, #198754, #20c997);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.15s;
+        }
+        .face-password-field button:hover {
+            opacity: 0.9;
+        }
+        .face-password-field button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .face-password-message {
+            padding: 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+        .face-password-message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .face-password-message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .face-camera-container {
+            display: none;
+            border: 2px dashed #dee2e6;
+            border-radius: 12px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: #f9fafb;
+        }
+        .face-camera-container.active {
+            display: block;
+        }
+        .face-video-wrapper {
+            position: relative;
+            background: #000;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        .face-video {
+            width: 100%;
+            height: 300px;
+            display: block;
+            transform: scaleX(-1);
+        }
+        .face-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+        .face-canvas.active {
+            display: block;
+        }
+        .face-status-text {
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        .face-status-text.detecting {
+            background: #e7f3ff;
+            color: #004085;
+        }
+        .face-status-text.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .face-status-text.capturing {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .face-status-text.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .face-countdown {
+            font-size: 2rem;
+            font-weight: bold;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .face-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .face-actions button {
+            flex: 1;
+            padding: 0.625rem 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .btn-face-cancel {
+            background: #e9ecef;
+            color: #495057;
+        }
+        .btn-face-cancel:hover {
+            background: #dee2e6;
+        }
+        .btn-face-remove {
+            background: #dc3545;
+            color: #fff;
+        }
+        .btn-face-remove:hover {
+            opacity: 0.9;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(25, 135, 84, 0.3);
+            border-top: 2px solid #198754;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+
+    <div class="face-widget-header">
+        <div class="icon">
+            <svg fill="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+            </svg>
+        </div>
+        <h4>Reconnaissance Faciale</h4>
+        <div class="face-toggle-switch">
+            <input type="checkbox" class="toggle-checkbox" id="face-toggle-{{ widget_id ?? 'default' }}" {% if mode_status == 'active' %}checked{% endif %} />
+            <span class="face-status-badge {{ mode_status ?? 'inactive' }}">
+                <svg fill="currentColor" viewBox="0 0 20 20" width="12" height="12">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <span class="badge-text">{{ mode_status_text ?? 'Non activée' }}</span>
+            </span>
+        </div>
+    </div>
+
+    {# Password Validation Section #}
+    <div class="face-password-validation" id="face-password-validation-{{ widget_id ?? 'default' }}">
+        <h5>🔒 Veuillez confirmer votre identité</h5>
+        <p style="margin: 0 0 0.75rem 0; color: #666; font-size: 0.85rem;">
+            Entrez votre mot de passe pour activer la reconnaissance faciale
+        </p>
+        <div class="face-password-field">
+            <input type="password" placeholder="Entrez votre mot de passe" id="face-password-input-{{ widget_id ?? 'default' }}" />
+            <button type="button" id="face-password-submit-{{ widget_id ?? 'default' }}">Valider</button>
+        </div>
+        <div class="face-password-message" id="face-password-message-{{ widget_id ?? 'default' }}" style="display: none;"></div>
+    </div>
+
+    {# Face Camera Section #}
+    <div class="face-camera-container" id="face-camera-{{ widget_id ?? 'default' }}">
+        <div class="face-video-wrapper">
+            <video class="face-video" id="face-video-{{ widget_id ?? 'default' }}" playsinline></video>
+            <canvas class="face-canvas" id="face-canvas-{{ widget_id ?? 'default' }}"></canvas>
+        </div>
+
+        <div class="face-status-text detecting" id="face-status-{{ widget_id ?? 'default' }}">
+            <span class="loading-spinner"></span> Détection du visage en cours...
+        </div>
+
+        <div class="face-countdown" id="face-countdown-{{ widget_id ?? 'default' }}" style="display: none;"></div>
+
+        <div class="face-actions" id="face-actions-{{ widget_id ?? 'default' }}">
+            <button type="button" class="btn-face-cancel" data-action="cancel">
+                Annuler
+            </button>
+        </div>
+
+        <input type="hidden" id="face-descriptor-{{ widget_id ?? 'default' }}" />
+        <input type="hidden" id="face-token-enroll-{{ widget_id ?? 'default' }}" value="{{ csrf_token('face_enroll') }}" />
+        <input type="hidden" id="face-token-remove-{{ widget_id ?? 'default' }}" value="{{ csrf_token('face_remove') }}" />
+    </div>
+
+    {# Remove Button #}
+    <div style="margin-top: 1rem; display: none;" id="face-remove-section-{{ widget_id ?? 'default' }}">
+        <button type="button" class="btn-face-remove" data-action="remove" style="width: 100%; padding: 0.75rem;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="display:inline; margin-right: 0.35rem;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            Supprimer le Visage
+        </button>
+    </div>
+
+    {# ── Delete-face confirmation modal ── #}
+    <div class="modal fade" id="face-delete-modal-{{ widget_id ?? 'default' }}" tabindex="-1" aria-labelledby="faceDeleteLabel-{{ widget_id ?? 'default' }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:14px; border:none; box-shadow:0 8px 32px rgba(0,0,0,.12);">
+                <div class="modal-header" style="border-bottom:1px solid #f0f0f0; padding:1.25rem 1.5rem;">
+                    <div style="display:flex; align-items:center; gap:.75rem;">
+                        <div style="width:2.25rem;height:2.25rem;border-radius:8px;background:#fef2f2;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                            <svg fill="none" stroke="#dc3545" viewBox="0 0 24 24" width="18" height="18">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                            </svg>
+                        </div>
+                        <h5 class="modal-title mb-0 fw-semibold" id="faceDeleteLabel-{{ widget_id ?? 'default' }}" style="font-size:.975rem;">Supprimer la reconnaissance faciale</h5>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body" style="padding:1.5rem;">
+                    <p style="color:#495057; font-size:.9rem; margin-bottom:1.25rem;">
+                        Cette action supprimera définitivement votre Face ID. Vous ne pourrez plus vous connecter par reconnaissance faciale.
+                    </p>
+                    {# Password field – hidden for OAuth users #}
+                    <div id="face-delete-pw-wrap-{{ widget_id ?? 'default' }}">
+                        <label style="font-size:.82rem; font-weight:600; color:#374151; margin-bottom:.4rem; display:block;">
+                            Confirmez votre mot de passe
+                        </label>
+                        <div style="position:relative;">
+                            <input type="password"
+                                   id="face-delete-password-{{ widget_id ?? 'default' }}"
+                                   class="form-control"
+                                   placeholder="Votre mot de passe actuel"
+                                   style="border-radius:8px; font-size:.875rem; padding:.6rem .9rem; border:1.5px solid #dee2e6;"
+                                   autocomplete="current-password" />
+                        </div>
+                        <div id="face-delete-error-{{ widget_id ?? 'default' }}"
+                             style="display:none; margin-top:.5rem; padding:.5rem .75rem; background:#fef2f2; color:#dc3545; border-radius:6px; font-size:.825rem;"></div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid #f0f0f0; padding:1rem 1.5rem; gap:.5rem;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                            style="border-radius:8px; font-size:.875rem; font-weight:500;">
+                        Annuler
+                    </button>
+                    <button type="button" id="face-delete-confirm-{{ widget_id ?? 'default' }}"
+                            class="btn btn-danger"
+                            style="border-radius:8px; font-size:.875rem; font-weight:500; min-width:7rem;">
+                        Supprimer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function waitForFaceRecognition(timeout = 5000) {
+            const startTime = Date.now();
+            while (typeof FaceRecognition === 'undefined') {
+                if (Date.now() - startTime > timeout) {
+                    throw new Error('FaceRecognition library failed to load after ' + timeout + 'ms');
+                }
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            const widgetId       = '{{ widget_id ?? 'default' }}';
+            const enrollEndpoint = '{{ enroll_endpoint ?? '/profile/face/enroll' }}';
+            const removeEndpoint = '{{ remove_endpoint ?? '/profile/face/remove' }}';
+            const statusEndpoint = '{{ status_endpoint ?? '/profile/face/status' }}';
+            const isOAuthUser    = {{ app.user and app.user.oauthProvider ? 'true' : 'false' }};
+
+            const widgetContainer  = document.getElementById('{{ widget_id ?? 'face-widget' }}');
+            const toggleSwitch     = widgetContainer.querySelector(`#face-toggle-${widgetId}`);
+            const passwordValidation = widgetContainer.querySelector(`#face-password-validation-${widgetId}`);
+            const passwordInput    = widgetContainer.querySelector(`#face-password-input-${widgetId}`);
+            const passwordSubmit   = widgetContainer.querySelector(`#face-password-submit-${widgetId}`);
+            const passwordMessage  = widgetContainer.querySelector(`#face-password-message-${widgetId}`);
+            const cameraContainer  = widgetContainer.querySelector(`#face-camera-${widgetId}`);
+            const removeSection    = widgetContainer.querySelector(`#face-remove-section-${widgetId}`);
+            const removeBtn        = widgetContainer.querySelector('[data-action="remove"]');
+            const cancelBtn        = widgetContainer.querySelector('[data-action="cancel"]');
+            const statusBadge      = widgetContainer.querySelector('.face-status-badge');
+            const badgeText        = statusBadge.querySelector('.badge-text');
+
+            // Delete-modal elements
+            const deleteModal      = new bootstrap.Modal(document.getElementById(`face-delete-modal-${widgetId}`));
+            const deletePwWrap     = document.getElementById(`face-delete-pw-wrap-${widgetId}`);
+            const deletePasswordEl = document.getElementById(`face-delete-password-${widgetId}`);
+            const deleteErrorEl    = document.getElementById(`face-delete-error-${widgetId}`);
+            const deleteConfirmBtn = document.getElementById(`face-delete-confirm-${widgetId}`);
+
+            // Hide password field for OAuth users (they have no password)
+            if (isOAuthUser) deletePwWrap.style.display = 'none';
+
+            let detectionStableCount = 0;
+            const detectionStableThreshold = 5;
+            let autoCapturingInProgress = false;
+
+            // ── Status check runs immediately — does NOT need the FaceRecognition library ──
+            updateFaceStatus();
+
+            // ── Load FaceRecognition library in the background; alert only if camera is needed ──
+            let faceLibReady = false;
+            waitForFaceRecognition().then(() => { faceLibReady = true; }).catch(() => {});
+
+            // Toggle switch listener
+            toggleSwitch.addEventListener('change', async function() {
+                if (this.checked) {
+                    // Activate: Show password validation
+                    passwordValidation.classList.add('active');
+                    passwordInput.focus();
+                } else {
+                    // Deactivate: Hide everything
+                    passwordValidation.classList.remove('active');
+                    cameraContainer.classList.remove('active');
+                    stopCamera();
+                    resetUI();
+                }
+            });
+
+            // Password validation
+            passwordSubmit.addEventListener('click', validatePassword);
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') validatePassword();
+            });
+
+            if (cancelBtn) cancelBtn.addEventListener('click', cancelEnrollment);
+            if (removeBtn) removeBtn.addEventListener('click', openDeleteModal);
+
+            // ── Delete modal: open ──
+            function openDeleteModal() {
+                deletePasswordEl.value = '';
+                deleteErrorEl.style.display = 'none';
+                deleteConfirmBtn.disabled = false;
+                deleteConfirmBtn.innerHTML = 'Supprimer';
+                deleteModal.show();
+                if (!isOAuthUser) setTimeout(() => deletePasswordEl.focus(), 300);
+            }
+
+            // ── Delete modal: confirm button ──
+            deleteConfirmBtn.addEventListener('click', async function() {
+                deleteErrorEl.style.display = 'none';
+
+                if (!isOAuthUser) {
+                    const pw = deletePasswordEl.value.trim();
+                    if (!pw) {
+                        deleteErrorEl.textContent = 'Veuillez saisir votre mot de passe.';
+                        deleteErrorEl.style.display = 'block';
+                        deletePasswordEl.focus();
+                        return;
+                    }
+                }
+
+                deleteConfirmBtn.disabled = true;
+                deleteConfirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Suppression…';
+
+                try {
+                    const formData = new FormData();
+                    if (!isOAuthUser) formData.append('password', deletePasswordEl.value.trim());
+                    formData.append('_token', widgetContainer.querySelector(`#face-token-remove-${widgetId}`).value);
+
+                    const response = await fetch(removeEndpoint, { method: 'POST', body: formData });
+                    const result   = await response.json();
+
+                    if (result.success) {
+                        deleteModal.hide();
+                        updateFaceStatus();
+                        toggleSwitch.checked = false;
+                        resetUI();
+                    } else {
+                        deleteErrorEl.textContent = result.error || 'Une erreur est survenue.';
+                        deleteErrorEl.style.display = 'block';
+                        deleteConfirmBtn.disabled = false;
+                        deleteConfirmBtn.innerHTML = 'Supprimer';
+                    }
+                } catch (err) {
+                    deleteErrorEl.textContent = 'Erreur réseau : ' + err.message;
+                    deleteErrorEl.style.display = 'block';
+                    deleteConfirmBtn.disabled = false;
+                    deleteConfirmBtn.innerHTML = 'Supprimer';
+                }
+            });
+
+            // Allow Enter key to confirm deletion
+            deletePasswordEl.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') deleteConfirmBtn.click();
+            });
+
+            async function validatePassword() {
+                const password = passwordInput.value.trim();
+                if (!password) {
+                    showPasswordMessage('Veuillez entrer votre mot de passe', 'error');
+                    return;
+                }
+
+                passwordSubmit.disabled = true;
+                passwordMessage.innerHTML = '<span class="loading-spinner"></span> Vérification...';
+                passwordMessage.className = 'face-password-message';
+                passwordMessage.style.display = 'block';
+
+                try {
+                    // Simple password validation: try to enroll with empty descriptor
+                    // Server will validate password and return error if wrong
+                    const formData = new FormData();
+                    formData.append('descriptor', JSON.stringify([]));
+                    formData.append('password', password);
+                    formData.append('_token', widgetContainer.querySelector(`#face-token-enroll-${widgetId}`).value);
+
+                    const response = await fetch(enrollEndpoint, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    const result = await response.json();
+
+                    if (result.error && result.error.includes('Mot de passe')) {
+                        showPasswordMessage('Mot de passe incorrect', 'error');
+                        passwordSubmit.disabled = false;
+                        return;
+                    }
+
+                    // Password is valid - proceed to face capture
+                    showPasswordMessage('✓ Identité confirmée. Veuillez positionner votre visage.', 'success');
+                    passwordValidation.classList.remove('active');
+                    
+                    setTimeout(() => {
+                        cameraContainer.classList.add('active');
+                        startFaceDetection();
+                    }, 500);
+
+                } catch (error) {
+                    showPasswordMessage('Erreur lors de la vérification: ' + error.message, 'error');
+                    passwordSubmit.disabled = false;
+                }
+            }
+
+            function showPasswordMessage(message, type) {
+                passwordMessage.textContent = message;
+                passwordMessage.className = 'face-password-message ' + type;
+                passwordMessage.style.display = 'block';
+            }
+
+            async function startFaceDetection() {
+                const videoElement = widgetContainer.querySelector(`#face-video-${widgetId}`);
+                const canvasElement = widgetContainer.querySelector(`#face-canvas-${widgetId}`);
+                const statusText = widgetContainer.querySelector(`#face-status-${widgetId}`);
+
+                detectionStableCount = 0;
+                autoCapturingInProgress = false;
+
+                try {
+                    // Initialize face recognition models if not already initialized
+                    statusText.className = 'face-status-text detecting';
+                    statusText.innerHTML = '<span class="loading-spinner"></span> Initialisation de la reconnaissance faciale...';
+                    
+                    const initialized = await FaceRecognition.init();
+                    if (!initialized) {
+                        throw new Error('Impossible d\'initialiser la reconnaissance faciale. Vérifiez votre connexion.');
+                    }
+
+                    statusText.innerHTML = '<span class="loading-spinner"></span> Démarrage de la caméra...';
+                    await FaceRecognition.startWebcam(videoElement);
+                    canvasElement.classList.add('active');
+
+                    statusText.className = 'face-status-text detecting';
+                    statusText.innerHTML = '<span class="loading-spinner"></span> Détection du visage en cours...';
+
+                    const detectionLoop = setInterval(async () => {
+                        if (autoCapturingInProgress) return;
+
+                        try {
+                            const hasFace = await FaceRecognition.drawDetection(videoElement, canvasElement);
+                            
+                            if (hasFace) {
+                                detectionStableCount++;
+                                statusText.className = 'face-status-text success';
+                                statusText.innerHTML = `✓ Visage détecté (${detectionStableCount}/${detectionStableThreshold})`;
+                                
+                                if (detectionStableCount >= detectionStableThreshold) {
+                                    autoCapturingInProgress = true;
+                                    clearInterval(detectionLoop);
+                                    await autoCaptureFace(videoElement);
+                                }
+                            } else {
+                                detectionStableCount = 0;
+                                statusText.className = 'face-status-text detecting';
+                                statusText.innerHTML = '<span class="loading-spinner"></span> Détection du visage en cours...';
+                            }
+                        } catch (error) {
+                            console.error('Detection error:', error);
+                        }
+                    }, 100);
+
+                    videoElement.detectionLoop = detectionLoop;
+                } catch (error) {
+                    alert(error.message);
+                    cameraContainer.classList.remove('active');
+                    toggleSwitch.checked = false;
+                    resetUI();
+                }
+            }
+
+            async function autoCaptureFace(videoElement) {
+                const statusText = widgetContainer.querySelector(`#face-status-${widgetId}`);
+                const countdownDiv = widgetContainer.querySelector(`#face-countdown-${widgetId}`);
+                const password = passwordInput.value;
+
+                try {
+                    countdownDiv.style.display = 'block';
+                    for (let i = 3; i > 0; i--) {
+                        countdownDiv.textContent = i;
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
+                    countdownDiv.textContent = '✓';
+                    
+                    const descriptor = await FaceRecognition.extractDescriptor(videoElement);
+                    
+                    statusText.className = 'face-status-text capturing';
+                    statusText.innerHTML = '<span class="loading-spinner"></span> Enregistrement du visage...';
+
+                    await submitFaceDescriptor(descriptor, password);
+                } catch (error) {
+                    statusText.className = 'face-status-text error';
+                    statusText.innerHTML = '✗ Erreur lors de la capture: ' + error.message;
+                    countdownDiv.style.display = 'none';
+                    autoCapturingInProgress = false;
+                }
+            }
+
+            async function submitFaceDescriptor(descriptor, password) {
+                const statusText = widgetContainer.querySelector(`#face-status-${widgetId}`);
+                const countdownDiv = widgetContainer.querySelector(`#face-countdown-${widgetId}`);
+
+                try {
+                    const formData = new FormData();
+                    formData.append('descriptor', JSON.stringify(descriptor));
+                    if (password) {
+                        formData.append('password', password);
+                    }
+                    formData.append('_token', widgetContainer.querySelector(`#face-token-enroll-${widgetId}`).value);
+
+                    const response = await fetch(enrollEndpoint, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        statusText.className = 'face-status-text success';
+                        statusText.innerHTML = '✓ ' + result.message;
+                        countdownDiv.style.display = 'none';
+                        
+                        setTimeout(() => {
+                            cancelEnrollment();
+                            updateFaceStatus();
+                        }, 2000);
+                    } else {
+                        statusText.className = 'face-status-text error';
+                        statusText.innerHTML = '✗ Erreur: ' + result.error;
+                        countdownDiv.style.display = 'none';
+                        autoCapturingInProgress = false;
+                    }
+                } catch (error) {
+                    statusText.className = 'face-status-text error';
+                    statusText.innerHTML = '✗ Erreur lors de l\'enregistrement: ' + error.message;
+                    countdownDiv.style.display = 'none';
+                    autoCapturingInProgress = false;
+                }
+            }
+
+            async function updateFaceStatus() {
+                try {
+                    const response = await fetch(statusEndpoint);
+                    const data = await response.json();
+                    
+                    if (data.enrolled) {
+                        toggleSwitch.checked = true;
+                        statusBadge.classList.add('active');
+                        statusBadge.classList.remove('inactive');
+                        badgeText.textContent = 'Activée';
+                        removeSection.style.display = 'block';
+                    } else {
+                        toggleSwitch.checked = false;
+                        statusBadge.classList.remove('active');
+                        statusBadge.classList.add('inactive');
+                        badgeText.textContent = 'Non activée';
+                        removeSection.style.display = 'none';
+                    }
+                } catch (error) {
+                    console.error('Failed to check face status:', error);
+                }
+            }
+
+            function stopCamera() {
+                const videoElement = widgetContainer.querySelector(`#face-video-${widgetId}`);
+                if (videoElement && videoElement.detectionLoop) {
+                    clearInterval(videoElement.detectionLoop);
+                }
+                if (faceLibReady) FaceRecognition.stopWebcam(videoElement);
+            }
+
+            function cancelEnrollment() {
+                const videoElement = widgetContainer.querySelector(`#face-video-${widgetId}`);
+                const canvasElement = widgetContainer.querySelector(`#face-canvas-${widgetId}`);
+                const countdownDiv = widgetContainer.querySelector(`#face-countdown-${widgetId}`);
+                const statusText = widgetContainer.querySelector(`#face-status-${widgetId}`);
+
+                stopCamera();
+                canvasElement.classList.remove('active');
+                cameraContainer.classList.remove('active');
+                countdownDiv.style.display = 'none';
+                statusText.className = 'face-status-text detecting';
+                statusText.innerHTML = '<span class="loading-spinner"></span> Détection du visage en cours...';
+                
+                detectionStableCount = 0;
+                autoCapturingInProgress = false;
+                
+                toggleSwitch.checked = false;
+                passwordValidation.classList.remove('active');
+                passwordInput.value = '';
+                passwordMessage.style.display = 'none';
+            }
+
+            function resetUI() {
+                passwordValidation.classList.remove('active');
+                cameraContainer.classList.remove('active');
+                passwordInput.value = '';
+                passwordMessage.style.display = 'none';
+                detectionStableCount = 0;
+                autoCapturingInProgress = false;
+            }
+        });
+    </script>
+</div>

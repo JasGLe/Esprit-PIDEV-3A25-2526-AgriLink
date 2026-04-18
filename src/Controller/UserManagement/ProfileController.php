@@ -9,6 +9,7 @@ use App\Repository\UserManagement\SecurityEventRepository;
 use App\Repository\UserManagement\UserSessionRepository;
 use App\Service\BackupCodeService;
 use App\Service\EmailVerificationService;
+use App\Service\FaceRecognitionService;
 use App\Service\FileUploader;
 use App\Service\SecurityEventService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,6 +17,7 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
@@ -210,11 +212,17 @@ class ProfileController extends AbstractController
 
         $recentEvents = $securityEventRepository->findByUser($user->getId(), 8);
         $backupCodesRemaining = $backupCodeService->getRemainingCount($user);
+        
+        // Get face recognition status
+        $faceStatus = [
+            'enrolled' => !empty($user->getFaceDescriptor()),
+        ];
 
         return $this->render('user_management/profile/security.html.twig', [
             'user'                 => $user,
             'recentEvents'         => $recentEvents,
             'backupCodesRemaining' => $backupCodesRemaining,
+            'faceStatus'           => $faceStatus,
         ]);
     }
 
@@ -366,5 +374,110 @@ class ProfileController extends AbstractController
         }
 
         return $this->redirectToRoute('app_profile_edit');
+    }
+
+    #[Route('/face/status', name: 'app_profile_face_status', methods: ['GET'])]
+    public function getFaceStatus(): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        return new JsonResponse([
+            'enrolled' => !empty($user->getFaceDescriptor()),
+            'enrolled_at' => $user->getFaceEnrolledAt()?->format('Y-m-d H:i:s'),
+        ]);
+    }
+
+    #[Route('/face/enroll', name: 'app_profile_face_enroll', methods: ['POST'])]
+    public function enrollFace(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        FaceRecognitionService $faceRecognitionService,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('face_enroll', $request->request->get('_token'))) {
+            return new JsonResponse(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
+        }
+
+        // Skip password validation for OAuth users (they don't have passwords)
+        if (!$user->getOauthProvider()) {
+            $password = $request->request->get('password');
+            if (!$password || !$passwordHasher->isPasswordValid($user, $password)) {
+                return new JsonResponse(['error' => 'Mot de passe incorrect.'], Response::HTTP_UNAUTHORIZED);
+            }
+        }
+
+        $descriptor = $request->request->get('descriptor');
+        if (!$descriptor) {
+            return new JsonResponse(['error' => 'Face descriptor manquant.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $descriptorArray = json_decode($descriptor, true);
+            if (!is_array($descriptorArray)) {
+                return new JsonResponse(['error' => 'Format de descriptor invalide.'], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Empty array = password-validation probe from the widget; do not store anything.
+            if (empty($descriptorArray)) {
+                return new JsonResponse(['success' => true, 'password_only' => true]);
+            }
+
+            if (\count($descriptorArray) !== 128) {
+                return new JsonResponse(['error' => 'Descriptor invalide (128 valeurs attendues).'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $storedDescriptor = $faceRecognitionService->storeFaceDescriptor($descriptorArray);
+            $user->setFaceDescriptor($storedDescriptor);
+            $user->setFaceEnrolledAt(new \DateTime());
+
+            $entityManager->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Votre visage a été enregistré avec succès.',
+                'enrolled_at' => $user->getFaceEnrolledAt()->format('Y-m-d H:i:s'),
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Erreur lors de l\'enregistrement du visage: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/face/remove', name: 'app_profile_face_remove', methods: ['POST'])]
+    public function removeFace(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('face_remove', $request->request->get('_token'))) {
+            return new JsonResponse(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
+        }
+
+        // Skip password validation for OAuth users (they don't have passwords)
+        if (!$user->getOauthProvider()) {
+            $password = $request->request->get('password');
+            if (!$password || !$passwordHasher->isPasswordValid($user, $password)) {
+                return new JsonResponse(['error' => 'Mot de passe incorrect.'], Response::HTTP_UNAUTHORIZED);
+            }
+        }
+
+        try {
+            $user->setFaceDescriptor(null);
+            $user->setFaceEnrolledAt(null);
+            $entityManager->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Votre face ID a été supprimé avec succès.',
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Erreur lors de la suppression: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }

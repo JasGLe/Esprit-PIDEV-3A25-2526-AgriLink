@@ -79,6 +79,7 @@
         border-radius: 6px; padding: .25rem .625rem;
         font-size: .8rem; margin-top: .5rem;
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 
 <div class="min-vh-100 d-flex align-items-center justify-content-center py-5 px-3">
@@ -237,6 +238,42 @@
                     </svg>
                 </button>
 
+                {# Face Login Section #}
+                <div class="divider-text my-3">
+                    <span>ou utilisez la reconnaissance faciale</span>
+                </div>
+
+                <button type="button" class="btn w-100 text-white" id="faceLoginBtn" style="background: linear-gradient(135deg, #198754, #20c997); border: none; border-radius: 10px; padding: .7rem; font-weight: 600; letter-spacing: .01em; transition: opacity .15s, transform .1s; margin-bottom: 1.5rem;">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16" style="display:inline; margin-right: 0.5rem;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                    </svg>
+                    Connexion par Visage
+                </button>
+
+                {# Face Login Camera Container #}
+                <div id="faceLoginContainer" style="display: none; border: 2px dashed #dee2e6; border-radius: 12px; padding: 1rem; margin-bottom: 1.5rem; background: #f9fafb;">
+                    <div class="position-relative" style="background: #000; border-radius: 8px; overflow: hidden; margin-bottom: 1rem;">
+                        <video id="faceLoginVideo" style="width: 100%; height: 300px; display: block; transform: scaleX(-1);" playsinline></video>
+                        <canvas id="faceLoginCanvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;"></canvas>
+                    </div>
+
+                    <div id="faceLoginStatus" style="text-align: center; padding: 1rem; border-radius: 8px; font-size: 0.875rem; margin-bottom: 1rem; background: #e7f3ff; color: #004085;">
+                        Initialisation…
+                    </div>
+
+                    <div style="display: flex; gap: 0.75rem; margin-top: 1rem;">
+                        <button type="button" id="faceLoginCapture" class="btn" style="flex: 1; background: #e9ecef; color: #495057; border: none; border-radius: 8px; padding: 0.625rem 1rem; font-size: 0.875rem; font-weight: 500; cursor: pointer;">
+                            Capturer manuellement
+                        </button>
+                        <button type="button" id="faceLoginCancel" class="btn" style="flex: 1; background: #e9ecef; color: #495057; border: none; border-radius: 8px; padding: 0.625rem 1rem; font-size: 0.875rem; font-weight: 500; cursor: pointer;">
+                            Annuler
+                        </button>
+                    </div>
+
+                    <input type="hidden" id="faceLoginEmail" />
+                    <input type="hidden" id="faceLoginDescriptor" />
+                </div>
+
                 {# Social Login Divider #}
                 <div class="divider-text my-4">
                     <span>ou continuez avec</span>
@@ -273,6 +310,10 @@
         </p>
     </div>
 </div>
+
+{# Load face scripts first so FaceRecognition is defined before any listener fires #}
+<script src="{{ asset('js/face-api.min.js') }}"></script>
+<script src="{{ asset('js/face-recognition.js') }}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
@@ -344,5 +385,164 @@ function togglePassword(btn) {
         ? `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/>`
         : `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>`;
 }
+
+// Face Login Logic — scripts above ensure FaceRecognition is ready; no DOMContentLoaded needed.
+(function() {
+    const faceLoginBtn       = document.getElementById('faceLoginBtn');
+    const faceLoginContainer = document.getElementById('faceLoginContainer');
+    const faceLoginCancel    = document.getElementById('faceLoginCancel');
+    const faceLoginCapture   = document.getElementById('faceLoginCapture');
+    const emailInput         = document.getElementById('email');
+    const videoElement       = document.getElementById('faceLoginVideo');
+    const canvasElement      = document.getElementById('faceLoginCanvas');
+    const statusDiv          = document.getElementById('faceLoginStatus');
+
+    // Auto-capture: number of consecutive frames with a face required before triggering
+    const AUTO_CAPTURE_FRAMES = 12; // ~1.2 s at 100 ms/frame
+    let detectionLoop    = null;
+    let consecutiveFaces = 0;
+    let isCapturing      = false;
+
+    faceLoginBtn.addEventListener('click', async function () {
+        faceLoginContainer.style.display = 'block';
+        faceLoginBtn.disabled = true;
+        statusDiv.style.background = '#e7f3ff';
+        statusDiv.style.color = '#004085';
+        statusDiv.innerHTML = '<span class="loading-spinner" style="display:inline-block;width:1rem;height:1rem;border:2px solid rgba(25,135,84,.3);border-top:2px solid #198754;border-radius:50%;animation:spin 1s linear infinite;"></span> Chargement des modèles…';
+
+        try {
+            const ok = await FaceRecognition.init();
+            if (!ok) throw new Error('Impossible de charger les modèles de reconnaissance. Vérifiez votre connexion.');
+            await startFaceCamera();
+            startDetection();
+        } catch (error) {
+            statusDiv.style.background = '#fdecea';
+            statusDiv.style.color = '#721c24';
+            statusDiv.innerHTML = '✗ ' + error.message;
+            faceLoginBtn.disabled = false;
+        }
+    });
+
+    faceLoginCancel.addEventListener('click', cancelFaceLogin);
+
+    // Keep the manual capture button as fallback
+    faceLoginCapture.addEventListener('click', function () {
+        if (!isCapturing) doCapture();
+    });
+
+    async function doCapture() {
+        if (isCapturing) return;
+        isCapturing = true;
+        consecutiveFaces = 0;
+
+        if (detectionLoop) { clearInterval(detectionLoop); detectionLoop = null; }
+
+        statusDiv.style.background = '#e7f3ff';
+        statusDiv.style.color = '#004085';
+        statusDiv.innerHTML = '<span class="loading-spinner" style="display:inline-block;width:1rem;height:1rem;border:2px solid rgba(25,135,84,.3);border-top:2px solid #198754;border-radius:50%;animation:spin 1s linear infinite;"></span> Analyse en cours…';
+
+        try {
+            const descriptor = await FaceRecognition.extractDescriptor(videoElement);
+
+            statusDiv.innerHTML = '<span class="loading-spinner" style="display:inline-block;width:1rem;height:1rem;border:2px solid rgba(25,135,84,.3);border-top:2px solid #198754;border-radius:50%;animation:spin 1s linear infinite;"></span> Vérification…';
+
+            const response = await fetch('{{ path('app_face_verify') }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    descriptor: JSON.stringify(descriptor),
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                statusDiv.style.background = '#d4edda';
+                statusDiv.style.color = '#155724';
+                statusDiv.innerHTML = '✓ Visage reconnu ! Redirection...';
+                // Redirect to dashboard since token is already set on server
+                setTimeout(() => {
+                    window.location.href = result.redirect_url || '{{ path('app_dashboard') }}';
+                }, 1000);
+            } else {
+                statusDiv.style.background = '#fdecea';
+                statusDiv.style.color = '#721c24';
+                statusDiv.innerHTML = '✗ ' + (result.message || 'Visage non reconnu. Repositionnez-vous et réessayez.');
+                isCapturing = false;
+                // Restart detection loop so user can try again
+                setTimeout(startDetection, 1500);
+            }
+        } catch (error) {
+            statusDiv.style.background = '#fdecea';
+            statusDiv.style.color = '#721c24';
+            statusDiv.innerHTML = '✗ ' + error.message;
+            isCapturing = false;
+            setTimeout(startDetection, 1500);
+        }
+    }
+
+    async function startFaceCamera() {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+            audio: false,
+        });
+        videoElement.srcObject = stream;
+        return new Promise((resolve) => {
+            videoElement.onloadedmetadata = () => { videoElement.play(); resolve(); };
+        });
+    }
+
+    function startDetection() {
+        if (detectionLoop) return;
+        consecutiveFaces = 0;
+        canvasElement.style.display = 'block';
+
+        detectionLoop = setInterval(async () => {
+            if (isCapturing) return;
+            try {
+                const hasFace = await FaceRecognition.drawDetection(videoElement, canvasElement);
+
+                if (hasFace) {
+                    consecutiveFaces++;
+                    const progress = Math.min(consecutiveFaces, AUTO_CAPTURE_FRAMES);
+                    const pct = Math.round((progress / AUTO_CAPTURE_FRAMES) * 100);
+
+                    if (consecutiveFaces >= AUTO_CAPTURE_FRAMES) {
+                        // Enough stable frames — capture automatically
+                        clearInterval(detectionLoop);
+                        detectionLoop = null;
+                        doCapture();
+                    } else {
+                        statusDiv.style.background = '#d4edda';
+                        statusDiv.style.color = '#155724';
+                        statusDiv.innerHTML =
+                            '✓ Visage détecté — maintien…' +
+                            '<div style="margin-top:.5rem;height:6px;border-radius:3px;background:#c3e6cb;overflow:hidden;">' +
+                            '<div style="height:100%;width:' + pct + '%;background:#198754;transition:width .1s;border-radius:3px;"></div></div>';
+                    }
+                } else {
+                    consecutiveFaces = 0;
+                    statusDiv.style.background = '#e7f3ff';
+                    statusDiv.style.color = '#004085';
+                    statusDiv.innerHTML =
+                        '<span class="loading-spinner" style="display:inline-block;width:1rem;height:1rem;border:2px solid rgba(25,135,84,.3);border-top:2px solid #198754;border-radius:50%;animation:spin 1s linear infinite;"></span> Positionnez votre visage face à la caméra…';
+                }
+            } catch (error) {
+                console.error('Detection error:', error);
+            }
+        }, 100);
+    }
+
+    function cancelFaceLogin() {
+        isCapturing = false;
+        consecutiveFaces = 0;
+        if (detectionLoop) { clearInterval(detectionLoop); detectionLoop = null; }
+        FaceRecognition.stopWebcam(videoElement);
+        canvasElement.style.display = 'none';
+        faceLoginContainer.style.display = 'none';
+        faceLoginBtn.disabled = false;
+    }
+}());
 </script>
+
 {% endblock %}

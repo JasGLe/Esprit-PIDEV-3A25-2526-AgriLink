@@ -606,6 +606,17 @@
         </div>
         {% endif %}
 
+        {# ── Face Recognition ── #}
+        {{ include('components/face_recognition_widget.html.twig', {
+            widget_id: 'security-face-widget',
+            csrf_key: 'face_enroll',
+            enroll_endpoint: path('app_profile_face_enroll'),
+            remove_endpoint: path('app_profile_face_remove'),
+            status_endpoint: path('app_profile_face_status'),
+            mode_status: faceStatus.enrolled ? 'active' : 'inactive',
+            mode_status_text: faceStatus.enrolled ? 'Activée' : 'Non activée'
+        }) }}
+
         {# ── Quick actions ── #}
         <div class="sec-card">
             <div class="sec-card-header">
@@ -662,6 +673,8 @@
     </div>
 </div>
 
+<script src="{{ asset('js/face-api.min.js') }}"></script>
+<script src="{{ asset('js/face-recognition.js') }}"></script>
 <script>
 function confirmToggle2fa(checkbox) {
     const enabling = checkbox.checked;
