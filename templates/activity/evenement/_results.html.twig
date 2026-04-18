@@ -37,6 +37,7 @@
                                     data-qr-item="{{ evenement.titre }}">
                                     📱 QR
                                 </button>
+                                {% include 'components/poster_generator_modal.html.twig' with {'eventId': evenement.id} only %}
                                 <a href="{{ path('evenement_show', {'id': evenement.id}) }}" class="btn btn-outline-success btn-sm">Voir</a>
                                 {% if canManage %}
                                     <a href="{{ path('evenement_edit', {'id': evenement.id}) }}" class="btn btn-success btn-sm">Modifier</a>

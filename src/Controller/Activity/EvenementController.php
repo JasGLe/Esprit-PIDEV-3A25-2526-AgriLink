@@ -9,6 +9,7 @@ use App\Form\Activity\EvenementInvitationMailType;
 use App\Form\Activity\EvenementType;
 use App\Repository\Activity\EvenementRepository;
 use App\Repository\UserManagement\UserRepository;
+use App\Service\EventPosterGeneratorService;
 use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
@@ -32,6 +33,7 @@ class EvenementController extends AbstractController
         private readonly EvenementRepository $evenementRepository,
         private readonly UserRepository $userRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly EventPosterGeneratorService $posterGeneratorService,
         #[Autowire('%env(MAILER_FROM_EMAIL)%')]
         private readonly string $mailerFromEmail,
         #[Autowire('%env(MAILER_FROM_NAME)%')]
@@ -607,5 +609,49 @@ class EvenementController extends AbstractController
         }
 
         return array_values(array_unique($errors));
+    }
+
+    #[Route('/{id}/generate-poster', name: 'evenement_generate_poster', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function generatePoster(Evenement $evenement): Response
+    {
+        $this->assertModuleAccess();
+
+        try {
+            // Generate poster using Replicate API
+            $predictionId = $this->posterGeneratorService->generatePoster($evenement);
+
+            return $this->json([
+                'success' => true,
+                'prediction_id' => $predictionId,
+                'message' => 'Génération de l\'affiche en cours...',
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération: ' . $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/api/poster-status/{predictionId}', name: 'evenement_poster_status', methods: ['GET'])]
+    public function posterStatus(string $predictionId): Response
+    {
+        $this->assertModuleAccess();
+
+        try {
+            $status = $this->posterGeneratorService->checkPredictionStatus($predictionId);
+
+            return $this->json([
+                'success' => true,
+                'status' => $status['status'],
+                'output' => $status['output'] ?? null,
+                'error' => $status['error'] ?? null,
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la vérification du statut: ' . $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 }
