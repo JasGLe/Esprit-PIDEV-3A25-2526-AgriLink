@@ -618,11 +618,11 @@ class EvenementController extends AbstractController
 
         try {
             // Generate poster using Replicate API
-            $predictionId = $this->posterGeneratorService->generatePoster($evenement);
+            $result = $this->posterGeneratorService->generatePoster($evenement);
 
             return $this->json([
                 'success' => true,
-                'prediction_id' => $predictionId,
+                'prediction_id' => $result['prediction_id'] ?? null,
                 'message' => 'Génération de l\'affiche en cours...',
             ]);
         } catch (\Exception $e) {

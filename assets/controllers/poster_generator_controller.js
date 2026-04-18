@@ -44,6 +44,7 @@ export default class extends Controller {
             // Trigger generation endpoint
             const response = await fetch(`/evenement/${eventId}/generate-poster`, {
                 method: 'POST',
+                credentials: 'include',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Requested-With': 'XMLHttpRequest',
@@ -87,6 +88,7 @@ export default class extends Controller {
                 // Check status
                 const response = await fetch(`/evenement/api/poster-status/${predictionId}`, {
                     method: 'GET',
+                    credentials: 'include',
                     headers: {
                         'Content-Type': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',

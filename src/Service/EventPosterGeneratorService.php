@@ -39,14 +39,14 @@ class EventPosterGeneratorService
                         'Content-Type' => 'application/json'
                     ],
                     'json' => [
-                        'version' => 'db21e45d3f7023abc9e0ff587989658c92d6d40a90b63b4485399db8b34704c1',
+                        'version' => '3feb88c4e011fa324e2a0b7ad898605d4e5b4062404de0bfa5dd1cb5d6661a75',
                         'input' => [
                             'prompt' => $prompt,
                             'num_outputs' => 1,
-                            'height' => 768,
-                            'width' => 1024,
+                            'height' => 576,
+                            'width' => 768,
                             'scheduler' => 'K_EULER',
-                            'num_inference_steps' => 25,
+                            'num_inference_steps' => 20,
                             'guidance_scale' => 7.5
                         ]
                     ]
@@ -105,7 +105,7 @@ class EventPosterGeneratorService
     private function buildPromptFromEvent(Evenement $evenement): string
     {
         $titre = $evenement->getTitre() ?? 'Événement Agricole';
-        $date = $evenement->getDateDebut()?->format('d/m/Y') ?? 'Date TBD';
+        $date = $evenement->getDateEvenement()?->format('d/m/Y') ?? 'Date TBD';
         $lieu = $evenement->getLieu() ?? 'Lieu à définir';
         $description = $evenement->getDescription() ?? 'Événement agricole professionnel';
 
