@@ -916,3 +916,90 @@ $box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0
     }
   }
 }
+// ============================================================================
+// Poster Generator Modal - Fix for Dark Appearance
+// ============================================================================
+.modal.fade[id^="posterModal"] {
+  .modal-content {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+    border: none !important;
+  }
+
+  .modal-header {
+    background-color: #ffffff !important;
+    border-bottom: 1px solid #dee2e6 !important;
+    color: #212529 !important;
+  }
+
+  .modal-body {
+    background-color: #ffffff !important;
+    color: #212529 !important;
+  }
+
+  .modal-footer {
+    background-color: #ffffff !important;
+    border-top: 1px solid #dee2e6 !important;
+  }
+
+  .btn-close {
+    filter: none !important;
+  }
+
+  .alert {
+    color: #212529 !important;
+  }
+}
+
+// Ensure modal backdrop is visible but not blocking
+.modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  z-index: 1040 !important;
+}
+
+// Additional z-index and visibility fixes
+.modal.show {
+  z-index: 1050 !important;
+  
+  .modal-dialog {
+    z-index: 1050 !important;
+  }
+  
+  .modal-content {
+    z-index: 1051 !important;
+    display: block !important;
+    visibility: visible !important;
+  }
+}
+
+// Make sure poster modal is fully visible
+.modal.fade[id^=\"posterModal\"].show {
+  display: block !important;
+  
+  .modal-dialog {
+    display: block !important;
+  }
+}
+
+// Force poster modal to display properly
+#posterModal58, #posterModal57, #posterModal56, #posterModal55, #posterModal54,
+#posterModal62, #posterModal65, #posterModal19, #posterModal7, #posterModal53 {
+  &.show {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    
+    .modal-dialog {
+      display: block !important;
+      height: auto !important;
+      max-height: 90vh !important;
+    }
+    
+    .modal-content {
+      display: block !important;
+      background-color: #ffffff !important;
+      border: 1px solid #dee2e6 !important;
+      box-shadow: 0 3px 7px 0 rgba(0, 0, 0, 0.3) !important;
+    }
+  }
+}
