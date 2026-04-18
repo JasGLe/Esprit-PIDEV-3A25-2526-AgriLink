@@ -326,6 +326,33 @@ class ActiviteController extends AbstractController
         return $this->redirectBackOrFallback($request, 'activite_list');
     }
 
+    #[Route('/recommendations/ia', name: 'activite_recommendations_ia', methods: ['GET'])]
+    public function recommendationsIa(
+        \App\Service\Ai\AnomalyDetectorService $anomalyDetectorService
+    ): Response
+    {
+        $this->assertModuleAccess();
+        
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException('User not found');
+        }
+
+        $userId = $user->getId();
+        
+        // Détecte les anomalies dans les 10 prochains jours
+        $anomalies = $anomalyDetectorService->detectAnomalies($userId);
+        
+        // Génère les recommandations IA
+        $recommendations = $anomalyDetectorService->generateRecommendations($anomalies, $userId);
+
+        return $this->render('activity/ia_recommendations/index.html.twig', [
+            'recommendations' => $recommendations,
+            'anomalies' => $anomalies,
+            'nextDays' => 10,
+        ]);
+    }
+
     private function assertModuleAccess(): void
     {
         if (!$this->isGranted('ROLE_ADMIN') && !$this->isGranted('ROLE_AGRICULTEUR')) {

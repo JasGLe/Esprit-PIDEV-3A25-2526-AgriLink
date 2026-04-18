@@ -238,4 +238,62 @@ IMPORTANT:
 - Aucun texte hors JSON
 ";
 }
+
+    /**
+     * Appel générique à Gemini avec extraction JSON
+     */
+    public function callGemini(string $prompt): array
+    {
+        $response = $this->client->request(
+            'POST',
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=".$this->apiKey,
+            [
+                'headers' => [
+                    'Content-Type' => 'application/json'
+                ],
+                'json' => [
+                    'contents' => [
+                        [
+                            'role' => 'user',
+                            'parts' => [
+                                ['text' => $prompt]
+                            ]
+                        ]
+                    ]
+                ]
+            ]
+        );
+
+        $data = $response->toArray(false);
+
+        if (isset($data['promptFeedback'])) {
+            throw new \Exception("Gemini blocked: " . json_encode($data['promptFeedback']));
+        }
+
+        if (!isset($data['candidates'][0])) {
+            throw new \Exception("Aucune candidate Gemini: " . json_encode($data));
+        }
+
+        $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+
+        if (!$text) {
+            throw new \Exception("Réponse Gemini vide (parts missing): " . json_encode($data));
+        }
+
+        $text = trim($text);
+
+        preg_match('/\{.*\}/s', $text, $matches);
+
+        if (!isset($matches[0])) {
+            throw new \Exception("JSON introuvable: " . $text);
+        }
+
+        $json = json_decode($matches[0], true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \Exception("JSON invalide: " . json_last_error_msg());
+        }
+
+        return $json;
+    }
 }

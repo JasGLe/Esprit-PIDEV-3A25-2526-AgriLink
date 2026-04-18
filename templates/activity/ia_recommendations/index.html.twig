@@ -1,0 +1,220 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Recommandations IA{% endblock %}
+{% block page_title %}Analyse Intelligente 🤖{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .ia-page {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+            border-radius: 12px;
+            padding: 32px 24px;
+        }
+
+        .insight-card {
+            background: white;
+            border: none;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border-left: 4px solid #667eea;
+        }
+
+        .insight-card:hover {
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .insight-card.critical {
+            border-left-color: #dc3545;
+        }
+
+        .insight-card.warning {
+            border-left-color: #ffc107;
+        }
+
+        .insight-card.success {
+            border-left-color: #28a745;
+        }
+
+        .insight-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .insight-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #212529;
+        }
+
+        .insight-text {
+            font-size: 0.95rem;
+            color: #6c757d;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .status-badge.ok {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            color: #28a745;
+            margin-bottom: 16px;
+        }
+
+        .empty-state-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-text {
+            color: #6c757d;
+            font-size: 1rem;
+        }
+
+        .action-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 0;
+        }
+
+        .action-item:not(:last-child) {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .action-number {
+            background: #667eea;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .action-text {
+            font-size: 0.95rem;
+            color: #212529;
+            line-height: 1.5;
+        }
+    </style>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="ia-page">
+        
+        {% if recommendations.status == 'ok' %}
+            <!-- Empty State - All Good -->
+            <div class="empty-state">
+                <div class="empty-state-icon">✅</div>
+                <h2 class="empty-state-title">Tout va bien!</h2>
+                <p class="empty-state-text">Vos activités des 10 prochains jours sont parfaitement planifiées.</p>
+                <p class="text-muted small" style="margin-top: 16px;">Continuez comme ça! 🌾</p>
+            </div>
+
+        {% elseif recommendations.status == 'anomalies_found' and recommendations.recommendations %}
+            <!-- Anomalies Found -->
+            <span class="status-badge warning">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ recommendations.anomalies_count }} anomalie{{ recommendations.anomalies_count > 1 ? 's' : '' }} détectée{{ recommendations.anomalies_count > 1 ? 's' : '' }}
+            </span>
+
+            <!-- Insights -->
+            <div>
+                {% if recommendations.recommendations.anomalies_critique %}
+                    <div class="insight-card critical">
+                        <div class="insight-icon">🔴</div>
+                        <h3 class="insight-title">Problèmes Critiques</h3>
+                        {% for anomaly in recommendations.recommendations.anomalies_critique %}
+                            <p class="insight-text">{{ anomaly }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% if recommendations.recommendations.anomalies_mineures %}
+                    <div class="insight-card warning">
+                        <div class="insight-icon">🟡</div>
+                        <h3 class="insight-title">Points d'Attention</h3>
+                        {% for anomaly in recommendations.recommendations.anomalies_mineures %}
+                            <p class="insight-text">{{ anomaly }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {% if recommendations.recommendations.recommandations %}
+                    <div class="insight-card success">
+                        <div class="insight-icon">💡</div>
+                        <h3 class="insight-title">Actions Recommandées</h3>
+                        <div>
+                            {% for action in recommendations.recommendations.recommandations %}
+                                <div class="action-item">
+                                    <div class="action-number">{{ loop.index }}</div>
+                                    <div class="action-text">{{ action }}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                {% if recommendations.recommendations.resume %}
+                    <div class="insight-card" style="border-left-color: #667eea; background: #f8f9fc;">
+                        <h3 class="insight-title">Résumé</h3>
+                        <p class="insight-text">{{ recommendations.recommendations.resume }}</p>
+                    </div>
+                {% endif %}
+            </div>
+
+        {% else %}
+            <!-- Error State -->
+            <div class="insight-card critical">
+                <div class="insight-icon">⚠️</div>
+                <h3 class="insight-title">{{ recommendations.message }}</h3>
+                {% if recommendations.error %}
+                    <p class="insight-text">{{ recommendations.error }}</p>
+                {% endif %}
+            </div>
+        {% endif %}
+
+        <!-- Back Button -->
+        <div style="margin-top: 40px; text-align: center;">
+            <a href="{{ path('activite_list') }}" class="btn btn-outline-secondary btn-sm">
+                ← Retour aux activités
+            </a>
+        </div>
+    </div>
+{% endblock %}
+
