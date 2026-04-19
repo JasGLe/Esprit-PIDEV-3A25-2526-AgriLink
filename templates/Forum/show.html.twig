@@ -838,188 +838,243 @@
     </div>
 
     <script>
-        const forumThread = document.getElementById('forum-chat-thread');
-        if (forumThread) {
-            forumThread.scrollTop = forumThread.scrollHeight;
-        }
-
-        const form = document.getElementById('forum-chat-form');
-        const audioInput = document.getElementById('forum-audio-file');
-        const recordButton = document.getElementById('forum-voice-record');
-        const stopButton = document.getElementById('forum-voice-stop');
-        const pickButton = document.getElementById('forum-voice-pick');
-        const clearButton = document.getElementById('forum-voice-clear');
-        const emojiToggle = document.getElementById('forum-emoji-toggle');
-        const emojiClose = document.getElementById('forum-emoji-close');
-        const emojiPicker = document.getElementById('forum-emoji-picker');
-        const status = document.getElementById('forum-voice-status');
-        const statusText = document.getElementById('forum-voice-status-text');
-        const preview = document.getElementById('forum-voice-preview');
-        const player = document.getElementById('forum-voice-player');
-        const textarea = document.getElementById('forum-message-content');
-
-        let mediaRecorder = null;
-        let recordedChunks = [];
-        let previewUrl = null;
-
-        function toggleEmojiPicker(forceState) {
-            if (!emojiPicker) {
+        function initForumChatPage() {
+            const page = document.getElementById('forum-chat-form');
+            if (!page || page.dataset.forumChatReady === '1') {
                 return;
             }
 
-            const shouldShow = typeof forceState === 'boolean'
-                ? forceState
-                : !emojiPicker.classList.contains('is-visible');
+            page.dataset.forumChatReady = '1';
 
-            emojiPicker.classList.toggle('is-visible', shouldShow);
-            emojiToggle?.classList.toggle('is-recording', shouldShow);
-        }
-
-        function insertEmoji(emoji) {
-            if (!textarea) {
-                return;
+            const forumThread = document.getElementById('forum-chat-thread');
+            if (forumThread) {
+                forumThread.scrollTop = forumThread.scrollHeight;
             }
 
-            const start = textarea.selectionStart ?? textarea.value.length;
-            const end = textarea.selectionEnd ?? textarea.value.length;
-            const value = textarea.value;
-            textarea.value = value.slice(0, start) + emoji + value.slice(end);
-            textarea.focus();
-            const nextPosition = start + emoji.length;
-            textarea.setSelectionRange(nextPosition, nextPosition);
-        }
+            const form = document.getElementById('forum-chat-form');
+            const audioInput = document.getElementById('forum-audio-file');
+            const recordButton = document.getElementById('forum-voice-record');
+            const stopButton = document.getElementById('forum-voice-stop');
+            const pickButton = document.getElementById('forum-voice-pick');
+            const clearButton = document.getElementById('forum-voice-clear');
+            const emojiToggle = document.getElementById('forum-emoji-toggle');
+            const emojiClose = document.getElementById('forum-emoji-close');
+            const emojiPicker = document.getElementById('forum-emoji-picker');
+            const status = document.getElementById('forum-voice-status');
+            const statusText = document.getElementById('forum-voice-status-text');
+            const preview = document.getElementById('forum-voice-preview');
+            const player = document.getElementById('forum-voice-player');
+            const textarea = document.getElementById('forum-message-content');
 
-        function setVoiceState(message, isRecording) {
-            if (statusText) {
-                statusText.textContent = message;
-            }
-            status.classList.toggle('is-recording', Boolean(isRecording));
-            recordButton.classList.toggle('d-none', Boolean(isRecording));
-            stopButton.classList.toggle('d-none', !isRecording);
-            recordButton.classList.toggle('is-recording', Boolean(isRecording));
-            stopButton.classList.toggle('is-recording', Boolean(isRecording));
-        }
+            let mediaRecorder = null;
+            let recordedChunks = [];
+            let previewUrl = null;
 
-        function clearVoiceSelection() {
-            audioInput.value = '';
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-                previewUrl = null;
-            }
-            player.removeAttribute('src');
-            player.load();
-            preview.classList.remove('is-visible');
-            clearButton.classList.add('d-none');
-            setVoiceState('Aucun vocal joint.', false);
-        }
-
-        function setAudioFile(file) {
-            const transfer = new DataTransfer();
-            transfer.items.add(file);
-            audioInput.files = transfer.files;
-
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-            }
-            previewUrl = URL.createObjectURL(file);
-            player.src = previewUrl;
-            preview.classList.add('is-visible');
-            clearButton.classList.remove('d-none');
-            setVoiceState('Vocal pret a etre envoye.', false);
-        }
-
-        if (pickButton && audioInput) {
-            pickButton.addEventListener('click', function () {
-                audioInput.click();
-            });
-
-            audioInput.addEventListener('change', function () {
-                const file = audioInput.files && audioInput.files[0];
-                if (!file) {
-                    clearVoiceSelection();
+            function toggleEmojiPicker(forceState) {
+                if (!emojiPicker) {
                     return;
                 }
 
-                setAudioFile(file);
-            });
-        }
+                const shouldShow = typeof forceState === 'boolean'
+                    ? forceState
+                    : !emojiPicker.classList.contains('is-visible');
 
-        if (clearButton) {
-            clearButton.addEventListener('click', function () {
-                clearVoiceSelection();
-            });
-        }
+                emojiPicker.classList.toggle('is-visible', shouldShow);
+                emojiToggle?.classList.toggle('is-recording', shouldShow);
+            }
 
-        if (emojiToggle && emojiPicker) {
-            emojiToggle.addEventListener('click', function () {
-                toggleEmojiPicker();
-            });
-
-            emojiClose?.addEventListener('click', function () {
-                toggleEmojiPicker(false);
-            });
-
-            emojiPicker.querySelectorAll('[data-forum-emoji]').forEach(function (button) {
-                button.addEventListener('click', function () {
-                    insertEmoji(button.getAttribute('data-forum-emoji') || '');
-                });
-            });
-
-            document.addEventListener('click', function (event) {
-                if (!emojiPicker.classList.contains('is-visible')) {
+            function insertEmoji(emoji) {
+                if (!textarea) {
                     return;
                 }
 
-                const target = event.target;
-                if (target instanceof Node && !emojiPicker.contains(target) && !emojiToggle.contains(target)) {
-                    toggleEmojiPicker(false);
-                }
-            });
-        }
+                const start = textarea.selectionStart ?? textarea.value.length;
+                const end = textarea.selectionEnd ?? textarea.value.length;
+                const value = textarea.value;
+                textarea.value = value.slice(0, start) + emoji + value.slice(end);
+                textarea.focus();
+                const nextPosition = start + emoji.length;
+                textarea.setSelectionRange(nextPosition, nextPosition);
+            }
 
-        if (recordButton && stopButton && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            recordButton.addEventListener('click', async function () {
+            function setVoiceState(message, isRecording) {
+                if (statusText) {
+                    statusText.textContent = message;
+                }
+
+                status?.classList.toggle('is-recording', Boolean(isRecording));
+                recordButton?.classList.toggle('d-none', Boolean(isRecording));
+                stopButton?.classList.toggle('d-none', !isRecording);
+                recordButton?.classList.toggle('is-recording', Boolean(isRecording));
+                stopButton?.classList.toggle('is-recording', Boolean(isRecording));
+            }
+
+            function clearVoiceSelection() {
+                if (audioInput) {
+                    audioInput.value = '';
+                }
+
+                if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                    previewUrl = null;
+                }
+
+                player?.removeAttribute('src');
+                player?.load();
+                preview?.classList.remove('is-visible');
+                clearButton?.classList.add('d-none');
+                setVoiceState('Aucun vocal joint.', false);
+            }
+
+            function setAudioFile(file) {
+                if (!audioInput) {
+                    return;
+                }
+
+                const transfer = new DataTransfer();
+                transfer.items.add(file);
+                audioInput.files = transfer.files;
+
+                if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                }
+
+                previewUrl = URL.createObjectURL(file);
+                if (player) {
+                    player.src = previewUrl;
+                }
+                preview?.classList.add('is-visible');
+                clearButton?.classList.remove('d-none');
+                setVoiceState('Vocal pret a etre envoye.', false);
+            }
+
+            async function parseJsonResponse(response) {
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    const text = await response.text();
+                    throw new Error(text && text.trim() !== '' ? text.trim() : 'Reponse serveur invalide.');
+                }
+
+                return response.json();
+            }
+
+            async function requestJson(url) {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    recordedChunks = [];
-                    mediaRecorder = new MediaRecorder(stream);
-
-                    mediaRecorder.addEventListener('dataavailable', function (event) {
-                        if (event.data && event.data.size > 0) {
-                            recordedChunks.push(event.data);
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        credentials: 'same-origin',
+                        cache: 'no-store',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
                         }
                     });
 
-                    mediaRecorder.addEventListener('stop', function () {
-                        const mimeType = mediaRecorder.mimeType || 'audio/webm';
-                        const extension = mimeType.indexOf('ogg') !== -1 ? 'ogg' : 'webm';
-                        const blob = new Blob(recordedChunks, { type: mimeType });
-                        const file = new File([blob], 'message-vocal.' + extension, { type: mimeType });
-                        setAudioFile(file);
-                        stream.getTracks().forEach(function (track) {
-                            track.stop();
-                        });
-                    });
+                    const payload = await parseJsonResponse(response);
 
-                    mediaRecorder.start();
-                    setVoiceState('Enregistrement en cours...', true);
+                    if (!response.ok || !payload.success) {
+                        throw new Error(payload.error || 'Requete impossible.');
+                    }
+
+                    return payload;
                 } catch (error) {
-                    setVoiceState('Impossible d acceder au microphone.', false);
+                    if (error instanceof TypeError) {
+                        throw new Error('Connexion au serveur impossible. Rechargez la page puis reessayez.');
+                    }
+
+                    throw error;
                 }
+            }
+
+            if (pickButton && audioInput) {
+                pickButton.addEventListener('click', function () {
+                    audioInput.click();
+                });
+
+                audioInput.addEventListener('change', function () {
+                    const file = audioInput.files && audioInput.files[0];
+                    if (!file) {
+                        clearVoiceSelection();
+                        return;
+                    }
+
+                    setAudioFile(file);
+                });
+            }
+
+            clearButton?.addEventListener('click', function () {
+                clearVoiceSelection();
             });
 
-            stopButton.addEventListener('click', function () {
-                if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-                    mediaRecorder.stop();
-                }
-            });
-        } else if (recordButton) {
-            recordButton.classList.add('d-none');
-            stopButton.classList.add('d-none');
-        }
+            if (emojiToggle && emojiPicker) {
+                emojiToggle.addEventListener('click', function () {
+                    toggleEmojiPicker();
+                });
 
-        if (form) {
-            form.addEventListener('submit', function (event) {
+                emojiClose?.addEventListener('click', function () {
+                    toggleEmojiPicker(false);
+                });
+
+                emojiPicker.querySelectorAll('[data-forum-emoji]').forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        insertEmoji(button.getAttribute('data-forum-emoji') || '');
+                    });
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!emojiPicker.classList.contains('is-visible')) {
+                        return;
+                    }
+
+                    const target = event.target;
+                    if (target instanceof Node && !emojiPicker.contains(target) && !emojiToggle.contains(target)) {
+                        toggleEmojiPicker(false);
+                    }
+                });
+            }
+
+            if (recordButton && stopButton && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                recordButton.addEventListener('click', async function () {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        recordedChunks = [];
+                        mediaRecorder = new MediaRecorder(stream);
+
+                        mediaRecorder.addEventListener('dataavailable', function (event) {
+                            if (event.data && event.data.size > 0) {
+                                recordedChunks.push(event.data);
+                            }
+                        });
+
+                        mediaRecorder.addEventListener('stop', function () {
+                            const mimeType = mediaRecorder.mimeType || 'audio/webm';
+                            const extension = mimeType.indexOf('ogg') !== -1 ? 'ogg' : 'webm';
+                            const blob = new Blob(recordedChunks, { type: mimeType });
+                            const file = new File([blob], 'message-vocal.' + extension, { type: mimeType });
+                            setAudioFile(file);
+                            stream.getTracks().forEach(function (track) {
+                                track.stop();
+                            });
+                        });
+
+                        mediaRecorder.start();
+                        setVoiceState('Enregistrement en cours...', true);
+                    } catch (error) {
+                        setVoiceState('Impossible d acceder au microphone.', false);
+                    }
+                });
+
+                stopButton.addEventListener('click', function () {
+                    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                        mediaRecorder.stop();
+                    }
+                });
+            } else if (recordButton && stopButton) {
+                recordButton.classList.add('d-none');
+                stopButton.classList.add('d-none');
+            }
+
+            form?.addEventListener('submit', function (event) {
                 const hasText = textarea && textarea.value.trim() !== '';
                 const hasAudio = audioInput && audioInput.files && audioInput.files.length > 0;
 
@@ -1028,92 +1083,89 @@
                     setVoiceState('Ajoutez un texte ou un message vocal.', false);
                 }
             });
+
+            document.addEventListener('click', async function (event) {
+                const target = event.target;
+                if (!(target instanceof Element)) {
+                    return;
+                }
+
+                const translateToggle = target.closest('[data-translate-toggle]');
+                if (translateToggle) {
+                    const tools = translateToggle.closest('.forum-message-tools');
+                    const menu = tools ? tools.querySelector('[data-translate-menu]') : null;
+
+                    if (menu) {
+                        menu.classList.toggle('is-visible');
+                    }
+
+                    return;
+                }
+
+                const translateButton = target.closest('[data-translate-request]');
+                if (translateButton instanceof HTMLButtonElement) {
+                    const translateUrl = translateButton.getAttribute('data-translate-url');
+                    const targetLanguage = translateButton.getAttribute('data-target-language');
+                    const tools = translateButton.closest('.forum-message-tools');
+                    const box = tools ? tools.querySelector('[data-translation-box]') : null;
+                    const label = tools ? tools.querySelector('[data-translation-label]') : null;
+                    const text = tools ? tools.querySelector('[data-translation-text]') : null;
+
+                    if (!translateUrl || !targetLanguage || !box || !label || !text) {
+                        return;
+                    }
+
+                    translateButton.disabled = true;
+                    box.classList.add('is-visible');
+                    label.textContent = 'Traduction en cours';
+                    text.textContent = 'Chargement...';
+
+                    try {
+                        const url = new URL(translateUrl, window.location.origin);
+                        url.searchParams.set('target', targetLanguage);
+                        const payload = await requestJson(url.toString());
+
+                        label.textContent = 'Traduction ' + payload.targetLabel;
+                        text.textContent = payload.translation;
+                    } catch (error) {
+                        label.textContent = 'Traduction indisponible';
+                        text.textContent = error instanceof Error ? error.message : 'Une erreur est survenue.';
+                    } finally {
+                        translateButton.disabled = false;
+                    }
+
+                    return;
+                }
+
+                const transcribeButton = target.closest('[data-transcribe-request]');
+                if (transcribeButton instanceof HTMLButtonElement) {
+                    const transcribeUrl = transcribeButton.getAttribute('data-transcribe-url');
+                    const tools = transcribeButton.closest('.forum-message-tools');
+                    const box = tools ? tools.querySelector('[data-transcript-box]') : null;
+                    const text = tools ? tools.querySelector('[data-transcript-text]') : null;
+
+                    if (!transcribeUrl || !box || !text) {
+                        return;
+                    }
+
+                    transcribeButton.disabled = true;
+                    box.classList.add('is-visible');
+                    text.textContent = 'Transcription en cours...';
+
+                    try {
+                        const url = new URL(transcribeUrl, window.location.origin);
+                        const payload = await requestJson(url.toString());
+                        text.textContent = payload.transcript;
+                    } catch (error) {
+                        text.textContent = error instanceof Error ? error.message : 'Une erreur est survenue.';
+                    } finally {
+                        transcribeButton.disabled = false;
+                    }
+                }
+            });
         }
 
-        document.querySelectorAll('[data-translate-toggle]').forEach(function (toggleButton) {
-            toggleButton.addEventListener('click', function () {
-                const tools = toggleButton.closest('.forum-message-tools');
-                const menu = tools ? tools.querySelector('[data-translate-menu]') : null;
-
-                if (!menu) {
-                    return;
-                }
-
-                menu.classList.toggle('is-visible');
-            });
-        });
-
-        document.querySelectorAll('[data-translate-request]').forEach(function (button) {
-            button.addEventListener('click', async function () {
-                const translateUrl = button.getAttribute('data-translate-url');
-                const targetLanguage = button.getAttribute('data-target-language');
-                const tools = button.closest('.forum-message-tools');
-                const box = tools ? tools.querySelector('[data-translation-box]') : null;
-                const label = tools ? tools.querySelector('[data-translation-label]') : null;
-                const text = tools ? tools.querySelector('[data-translation-text]') : null;
-
-                if (!translateUrl || !targetLanguage || !box || !label || !text) {
-                    return;
-                }
-
-                box.classList.add('is-visible');
-                label.textContent = 'Traduction en cours';
-                text.textContent = 'Chargement...';
-
-                try {
-                    const response = await fetch(translateUrl + '?target=' + encodeURIComponent(targetLanguage), {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-
-                    const payload = await response.json();
-
-                    if (!response.ok || !payload.success) {
-                        throw new Error(payload.error || 'Traduction indisponible');
-                    }
-
-                    label.textContent = 'Traduction ' + payload.targetLabel;
-                    text.textContent = payload.translation;
-                } catch (error) {
-                    label.textContent = 'Traduction indisponible';
-                    text.textContent = error instanceof Error ? error.message : 'Une erreur est survenue.';
-                }
-            });
-        });
-
-        document.querySelectorAll('[data-transcribe-request]').forEach(function (button) {
-            button.addEventListener('click', async function () {
-                const transcribeUrl = button.getAttribute('data-transcribe-url');
-                const tools = button.closest('.forum-message-tools');
-                const box = tools ? tools.querySelector('[data-transcript-box]') : null;
-                const text = tools ? tools.querySelector('[data-transcript-text]') : null;
-
-                if (!transcribeUrl || !box || !text) {
-                    return;
-                }
-
-                box.classList.add('is-visible');
-                text.textContent = 'Transcription en cours...';
-
-                try {
-                    const response = await fetch(transcribeUrl, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    });
-
-                    const payload = await response.json();
-
-                    if (!response.ok || !payload.success) {
-                        throw new Error(payload.error || 'Transcription indisponible');
-                    }
-
-                    text.textContent = payload.transcript;
-                } catch (error) {
-                    text.textContent = error instanceof Error ? error.message : 'Une erreur est survenue.';
-                }
-            });
-        });
+        document.addEventListener('DOMContentLoaded', initForumChatPage);
+        document.addEventListener('turbo:load', initForumChatPage);
     </script>
 {% endblock %}
