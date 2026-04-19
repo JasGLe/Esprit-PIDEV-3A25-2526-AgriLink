@@ -50,56 +50,6 @@
             line-height: 1;
         }
 
-        .forum-yield-panel__hint {
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-
-        .forum-reco-panel {
-            border-radius: 1.25rem;
-            overflow: hidden;
-            border: 1px solid #d7e3ef;
-            background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
-        }
-
-        .forum-reco-panel__hero {
-            padding: 1.5rem;
-            background:
-                radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 28%),
-                linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-            color: #fff;
-        }
-
-        .forum-reco-panel__hero-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 2.75rem;
-            height: 2.75rem;
-            border-radius: 0.9rem;
-            background: rgba(255, 255, 255, 0.16);
-            font-weight: 700;
-            font-size: 1rem;
-        }
-
-        .forum-reco-panel__body {
-            padding: 1.5rem;
-        }
-
-        .forum-reco-panel__result {
-            padding: 1rem 1.1rem;
-            border-radius: 1rem;
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-        }
-
-        .forum-reco-panel__result-value {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #1d4ed8;
-            line-height: 1.1;
-        }
-
         .forum-profit-panel {
             border-radius: 1.25rem;
             overflow: hidden;
@@ -147,8 +97,6 @@
 
         .forum-yield-panel .form-control.is-invalid,
         .forum-yield-panel .form-select.is-invalid,
-        .forum-reco-panel .form-control.is-invalid,
-        .forum-reco-panel .form-select.is-invalid,
         .forum-profit-panel .form-control.is-invalid,
         .forum-profit-panel .form-select.is-invalid {
             border-color: #dc3545 !important;
@@ -157,7 +105,6 @@
         }
 
         .forum-yield-panel .invalid-feedback,
-        .forum-reco-panel .invalid-feedback,
         .forum-profit-panel .invalid-feedback {
             display: block;
             font-size: 0.875rem;
@@ -165,15 +112,20 @@
             color: #dc3545;
             margin-top: 0.35rem;
         }
+
+        .forum-tool-hint {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
     </style>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            function getServerFeedback(field) {
-                return field.parentElement.querySelector('.invalid-feedback:not(.js-inline-error)');
+        function initForumCalculators() {
+            function normalizeNumericValue(value) {
+                return (value || '').trim().replace(/\s+/g, '').replace(',', '.');
             }
 
             function setFieldError(field, message) {
@@ -197,278 +149,253 @@
                 }
             }
 
-            function validateField(field, rules) {
-                const value = field.value.trim();
-                const serverFeedback = getServerFeedback(field);
+            function clearFormErrors(form) {
+                form.querySelectorAll('.is-invalid').forEach(function (field) {
+                    field.classList.remove('is-invalid');
+                });
 
-                if (serverFeedback) {
-                    serverFeedback.remove();
-                }
+                form.querySelectorAll('.invalid-feedback').forEach(function (feedback) {
+                    feedback.remove();
+                });
+            }
 
+            function validateRequiredTextField(field, emptyMessage, numericMessage) {
+                const value = normalizeNumericValue(field.value);
                 clearFieldError(field);
 
                 if (value === '') {
-                    setFieldError(field, rules.requiredMessage);
+                    setFieldError(field, emptyMessage);
                     return false;
                 }
 
-                if (rules.type === 'number') {
+                if (numericMessage !== null) {
                     const parsed = Number(value);
-                    if (!Number.isFinite(parsed)) {
-                        setFieldError(field, rules.numericMessage);
+                    if (!Number.isFinite(parsed) || parsed < 0) {
+                        setFieldError(field, numericMessage);
                         return false;
                     }
 
-                    if (parsed < 0) {
-                        setFieldError(field, rules.minMessage);
-                        return false;
-                    }
+                    field.value = value;
                 }
 
-                if (rules.type === 'choice' && rules.choices.indexOf(value) === -1) {
-                    setFieldError(field, rules.invalidChoiceMessage);
+                return true;
+            }
+
+            function validateRequiredChoice(field, emptyMessage) {
+                clearFieldError(field);
+
+                if ((field.value || '').trim() === '') {
+                    setFieldError(field, emptyMessage);
                     return false;
                 }
 
                 return true;
             }
 
-            function formatNumber(value) {
-                return Number(value).toFixed(2);
+            function parseNumericField(form, selector) {
+                const field = form.querySelector(selector);
+                return field ? Number(normalizeNumericValue(field.value)) : 0;
             }
 
-            function openPanel(panelId) {
-                const panel = document.getElementById(panelId);
-                if (panel) {
-                    panel.classList.add('show');
+            function renderYieldResult(form) {
+                const surface = parseNumericField(form, '#yield_forecast_surface');
+                const cropCoefficient = parseNumericField(form, '#yield_forecast_cropCoefficient');
+                const weatherCoefficient = parseNumericField(form, '#yield_forecast_weatherCoefficient');
+                const result = (surface * cropCoefficient * weatherCoefficient).toFixed(2);
+
+                const resultValue = document.getElementById('yield-result-value');
+                const resultMessage = document.getElementById('yield-result-message');
+
+                if (resultValue) {
+                    resultValue.textContent = result;
+                }
+
+                if (resultMessage) {
+                    resultMessage.textContent = 'Calcul effectue avec succes.';
                 }
             }
 
-            function setResult(valueSelector, messageSelector, value, message) {
-                const valueElement = document.querySelector(valueSelector);
-                const messageElement = document.querySelector(messageSelector);
+            function renderProfitResult(form) {
+                const revenue = parseNumericField(form, '#profitability_revenue');
+                const fertilizer = parseNumericField(form, '#profitability_fertilizer');
+                const water = parseNumericField(form, '#profitability_water');
+                const labor = parseNumericField(form, '#profitability_labor');
+                const seeds = parseNumericField(form, '#profitability_seeds');
+                const result = (revenue - (fertilizer + water + labor + seeds)).toFixed(2);
 
-                if (valueElement) {
-                    valueElement.textContent = value;
+                const resultValue = document.getElementById('profit-result-value');
+                const resultMessage = document.getElementById('profit-result-message');
+
+                if (resultValue) {
+                    resultValue.textContent = result;
                 }
 
-                if (messageElement) {
-                    messageElement.textContent = message;
+                if (resultMessage) {
+                    if (Number(result) > 0) {
+                        resultMessage.textContent = 'Exploitation rentable selon les valeurs saisies.';
+                    } else if (Number(result) < 0) {
+                        resultMessage.textContent = 'Le resultat indique une perte selon les valeurs saisies.';
+                    } else {
+                        resultMessage.textContent = 'Le resultat est a l\'equilibre.';
+                    }
                 }
+            }
+
+            function validateConfiguredForm(form, config) {
+                let valid = true;
+
+                config.fields.forEach(function (fieldConfig) {
+                    const field = form.querySelector(fieldConfig[0]);
+                    if (!field) {
+                        return;
+                    }
+
+                    const isChoice = field.tagName === 'SELECT';
+                    const fieldValid = isChoice
+                        ? validateRequiredChoice(field, fieldConfig[1])
+                        : validateRequiredTextField(field, fieldConfig[1], fieldConfig[2]);
+
+                    if (!fieldValid) {
+                        valid = false;
+                    }
+                });
+
+                return valid;
             }
 
             const configs = [
                 {
                     formId: 'forum-yield-form',
-                    panelId: 'forumYieldForecastPanel',
-                    resultValueSelector: '#yield-result-value',
-                    resultMessageSelector: '#yield-result-message',
                     fields: [
-                        {
-                            selector: '#yield_forecast_surface',
-                            type: 'number',
-                            requiredMessage: 'Surface est obligatoire.',
-                            numericMessage: 'Surface doit etre numerique.',
-                            minMessage: 'Surface doit etre superieur ou egal a zero.'
-                        },
-                        {
-                            selector: '#yield_forecast_cropCoefficient',
-                            type: 'number',
-                            requiredMessage: 'Coefficient culture est obligatoire.',
-                            numericMessage: 'Coefficient culture doit etre numerique.',
-                            minMessage: 'Coefficient culture doit etre superieur ou egal a zero.'
-                        },
-                        {
-                            selector: '#yield_forecast_weatherCoefficient',
-                            type: 'number',
-                            requiredMessage: 'Coefficient meteo est obligatoire.',
-                            numericMessage: 'Coefficient meteo doit etre numerique.',
-                            minMessage: 'Coefficient meteo doit etre superieur ou egal a zero.'
-                        }
-                    ]
-                },
-                {
-                    formId: 'forum-reco-form',
-                    panelId: 'forumCropRecommendationPanel',
-                    resultValueSelector: '#reco-result-value',
-                    resultMessageSelector: '#reco-result-message',
-                    fields: [
-                        {
-                            selector: '#crop_recommendation_soil',
-                            type: 'choice',
-                            requiredMessage: 'Le type de sol est obligatoire.',
-                            invalidChoiceMessage: 'Le type de sol selectionne est invalide.',
-                            choices: ['sableux', 'argileux']
-                        },
-                        {
-                            selector: '#crop_recommendation_season',
-                            type: 'choice',
-                            requiredMessage: 'La saison est obligatoire.',
-                            invalidChoiceMessage: 'La saison selectionnee est invalide.',
-                            choices: ['ete', 'hiver']
-                        }
+                        ['#yield_forecast_surface', 'Surface est obligatoire.', 'Surface doit etre numerique.'],
+                        ['#yield_forecast_cropCoefficient', 'Coefficient culture est obligatoire.', 'Coefficient culture doit etre numerique.'],
+                        ['#yield_forecast_weatherCoefficient', 'Coefficient meteo est obligatoire.', 'Coefficient meteo doit etre numerique.']
                     ]
                 },
                 {
                     formId: 'forum-profit-form',
-                    panelId: 'forumProfitabilityPanel',
-                    resultValueSelector: '#profit-result-value',
-                    resultMessageSelector: '#profit-result-message',
                     fields: [
-                        {
-                            selector: '#profitability_revenue',
-                            type: 'number',
-                            requiredMessage: 'Revenu est obligatoire.',
-                            numericMessage: 'Revenu doit etre numerique.',
-                            minMessage: 'Revenu doit etre superieur ou egal a zero.'
-                        },
-                        {
-                            selector: '#profitability_fertilizer',
-                            type: 'number',
-                            requiredMessage: 'Engrais est obligatoire.',
-                            numericMessage: 'Engrais doit etre numerique.',
-                            minMessage: 'Engrais doit etre superieur ou egal a zero.'
-                        },
-                        {
-                            selector: '#profitability_water',
-                            type: 'number',
-                            requiredMessage: 'Eau est obligatoire.',
-                            numericMessage: 'Eau doit etre numerique.',
-                            minMessage: 'Eau doit etre superieur ou egal a zero.'
-                        },
-                        {
-                            selector: '#profitability_labor',
-                            type: 'number',
-                            requiredMessage: "Main d'oeuvre est obligatoire.",
-                            numericMessage: "Main d'oeuvre doit etre numerique.",
-                            minMessage: "Main d'oeuvre doit etre superieur ou egal a zero."
-                        },
-                        {
-                            selector: '#profitability_seeds',
-                            type: 'number',
-                            requiredMessage: 'Semences est obligatoire.',
-                            numericMessage: 'Semences doit etre numerique.',
-                            minMessage: 'Semences doit etre superieur ou egal a zero.'
-                        }
+                        ['#profitability_revenue', 'Revenu est obligatoire.', 'Revenu doit etre numerique.'],
+                        ['#profitability_fertilizer', 'Engrais est obligatoire.', 'Engrais doit etre numerique.'],
+                        ['#profitability_water', 'Eau est obligatoire.', 'Eau doit etre numerique.'],
+                        ['#profitability_labor', "Main d'oeuvre est obligatoire.", "Main d'oeuvre doit etre numerique."],
+                        ['#profitability_seeds', 'Semences est obligatoire.', 'Semences doit etre numerique.']
                     ]
                 }
             ];
 
             configs.forEach(function (config) {
                 const form = document.getElementById(config.formId);
-                if (!form) {
+                if (!form || form.dataset.forumCalculatorBound === '1') {
                     return;
                 }
 
+                form.dataset.forumCalculatorBound = '1';
+
                 form.addEventListener('submit', function (event) {
-                    let valid = true;
-
-                    config.fields.forEach(function (fieldConfig) {
-                        const field = form.querySelector(fieldConfig.selector);
-                        if (!field) {
-                            return;
-                        }
-
-                        if (!validateField(field, fieldConfig)) {
-                            valid = false;
-                        }
-                    });
-
+                    const valid = validateConfiguredForm(form, config);
                     if (!valid) {
                         event.preventDefault();
-                        openPanel(config.panelId);
                         return;
                     }
 
-                    event.preventDefault();
-
                     if (config.formId === 'forum-yield-form') {
-                        const surface = Number(form.querySelector('#yield_forecast_surface').value.trim());
-                        const cropCoefficient = Number(form.querySelector('#yield_forecast_cropCoefficient').value.trim());
-                        const weatherCoefficient = Number(form.querySelector('#yield_forecast_weatherCoefficient').value.trim());
-                        const result = surface * cropCoefficient * weatherCoefficient;
-
-                        setResult(
-                            config.resultValueSelector,
-                            config.resultMessageSelector,
-                            formatNumber(result),
-                            'Calcul effectue avec succes.'
-                        );
-                    }
-
-                    if (config.formId === 'forum-reco-form') {
-                        const soil = form.querySelector('#crop_recommendation_soil').value.trim();
-                        const season = form.querySelector('#crop_recommendation_season').value.trim();
-                        let result = 'Aucune recommandation';
-                        let message = 'Aucune regle ne correspond a cette combinaison pour le moment.';
-
-                        if (soil === 'sableux' && season === 'ete') {
-                            result = 'Pasteque';
-                            message = 'Regle appliquee avec succes.';
-                        } else if (soil === 'argileux' && season === 'hiver') {
-                            result = 'Ble';
-                            message = 'Regle appliquee avec succes.';
-                        }
-
-                        setResult(
-                            config.resultValueSelector,
-                            config.resultMessageSelector,
-                            result,
-                            message
-                        );
+                        event.preventDefault();
+                        renderYieldResult(form);
                     }
 
                     if (config.formId === 'forum-profit-form') {
-                        const revenue = Number(form.querySelector('#profitability_revenue').value.trim());
-                        const fertilizer = Number(form.querySelector('#profitability_fertilizer').value.trim());
-                        const water = Number(form.querySelector('#profitability_water').value.trim());
-                        const labor = Number(form.querySelector('#profitability_labor').value.trim());
-                        const seeds = Number(form.querySelector('#profitability_seeds').value.trim());
-                        const result = revenue - (fertilizer + water + labor + seeds);
-                        let message = "Le resultat est a l'equilibre.";
-
-                        if (result > 0) {
-                            message = 'Exploitation rentable selon les valeurs saisies.';
-                        } else if (result < 0) {
-                            message = 'Le resultat indique une perte selon les valeurs saisies.';
-                        }
-
-                        setResult(
-                            config.resultValueSelector,
-                            config.resultMessageSelector,
-                            formatNumber(result),
-                            message
-                        );
+                        event.preventDefault();
+                        renderProfitResult(form);
                     }
-
-                    openPanel(config.panelId);
                 });
 
                 config.fields.forEach(function (fieldConfig) {
-                    const field = form.querySelector(fieldConfig.selector);
+                    const field = form.querySelector(fieldConfig[0]);
                     if (!field) {
                         return;
                     }
 
                     const eventName = field.tagName === 'SELECT' ? 'change' : 'input';
                     field.addEventListener(eventName, function () {
-                        if (field.classList.contains('is-invalid') || getServerFeedback(field)) {
-                            validateField(field, fieldConfig);
+                        if ((field.value || '').trim() !== '') {
+                            clearFieldError(field);
                         }
-                    });
-
-                    field.addEventListener('blur', function () {
-                        validateField(field, fieldConfig);
                     });
                 });
             });
-        });
+
+            const yieldCalculateButton = document.getElementById('forum-yield-calculate');
+            const yieldForm = document.getElementById('forum-yield-form');
+            const yieldConfig = configs.find(function (config) {
+                return config.formId === 'forum-yield-form';
+            });
+
+            if (yieldCalculateButton && yieldForm && yieldCalculateButton.dataset.forumCalcBound !== '1') {
+                yieldCalculateButton.dataset.forumCalcBound = '1';
+                yieldCalculateButton.addEventListener('click', function () {
+                    if (!yieldConfig || !validateConfiguredForm(yieldForm, yieldConfig)) {
+                        return;
+                    }
+
+                    renderYieldResult(yieldForm);
+                });
+            }
+
+            const profitCalculateButton = document.getElementById('forum-profit-calculate');
+            const profitForm = document.getElementById('forum-profit-form');
+            const profitConfig = configs.find(function (config) {
+                return config.formId === 'forum-profit-form';
+            });
+
+            if (profitCalculateButton && profitForm && profitCalculateButton.dataset.forumCalcBound !== '1') {
+                profitCalculateButton.dataset.forumCalcBound = '1';
+                profitCalculateButton.addEventListener('click', function () {
+                    if (!profitConfig || !validateConfiguredForm(profitForm, profitConfig)) {
+                        return;
+                    }
+
+                    renderProfitResult(profitForm);
+                });
+            }
+
+            document.querySelectorAll('[data-forum-reset-form]').forEach(function (button) {
+                if (button.dataset.forumResetBound === '1') {
+                    return;
+                }
+
+                button.dataset.forumResetBound = '1';
+
+                button.addEventListener('click', function () {
+                    const form = document.getElementById(button.getAttribute('data-forum-reset-form'));
+                    if (!form) {
+                        return;
+                    }
+
+                    form.reset();
+                    clearFormErrors(form);
+
+                    const resultValue = document.getElementById(button.getAttribute('data-forum-reset-value'));
+                    const resultMessage = document.getElementById(button.getAttribute('data-forum-reset-message'));
+
+                    if (resultValue) {
+                        resultValue.textContent = button.getAttribute('data-forum-default-value') || '';
+                    }
+
+                    if (resultMessage) {
+                        resultMessage.textContent = button.getAttribute('data-forum-default-message') || '';
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initForumCalculators);
+        document.addEventListener('turbo:load', initForumCalculators);
     </script>
 {% endblock %}
 
 {% block dashboard_content %}
     {% set yield_state = tool_state.yield %}
-    {% set reco_state = tool_state.recommendation %}
     {% set profit_state = tool_state.profitability %}
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
@@ -486,16 +413,6 @@
                 aria-controls="forumYieldForecastPanel"
             >
                 Prevision de rendement
-            </button>
-            <button
-                type="button"
-                class="btn btn-outline-primary"
-                data-bs-toggle="collapse"
-                data-bs-target="#forumCropRecommendationPanel"
-                aria-expanded="false"
-                aria-controls="forumCropRecommendationPanel"
-            >
-                Recommandation de culture
             </button>
             <button
                 type="button"
@@ -529,7 +446,7 @@
             <div class="forum-yield-panel__body">
                 <div class="row g-4 align-items-start">
                     <div class="col-12 col-xl-7">
-                        {{ form_start(yield_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-yield-form', 'novalidate': 'novalidate', 'class': 'row g-3'}}) }}
+                        {{ form_start(yield_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-yield-form', 'novalidate': 'novalidate', 'data-turbo': 'false', 'class': 'row g-3'}}) }}
                             <div class="col-12 col-md-4">
                                 {{ form_label(yield_form.surface, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
                                 {{ form_widget(yield_form.surface, {'attr': {'class': 'form-control' ~ (yield_form.surface.vars.errors|length ? ' is-invalid' : '')}}) }}
@@ -552,8 +469,18 @@
                                 {% endif %}
                             </div>
                             <div class="col-12 d-flex flex-wrap gap-2">
-                                <button type="submit" class="btn btn-success">Calculer</button>
-                                <a href="{{ path('forum_index') }}" class="btn btn-outline-secondary">Reinitialiser</a>
+                                <button type="button" class="btn btn-success" id="forum-yield-calculate">Calculer</button>
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-secondary"
+                                    data-forum-reset-form="forum-yield-form"
+                                    data-forum-reset-value="yield-result-value"
+                                    data-forum-reset-message="yield-result-message"
+                                    data-forum-default-value="0.00"
+                                    data-forum-default-message="Renseignez les trois champs puis cliquez sur Calculer."
+                                >
+                                    Reinitialiser
+                                </button>
                             </div>
                         {{ form_end(yield_form) }}
                     </div>
@@ -562,63 +489,7 @@
                         <div class="forum-yield-panel__result">
                             <div class="small text-uppercase fw-semibold text-success mb-2">Rendement estime</div>
                             <div id="yield-result-value" class="forum-yield-panel__result-value">{{ yield_state.result }}</div>
-                            <div id="yield-result-message" class="forum-yield-panel__hint mt-2">
-                                {{ yield_state.message }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="collapse mb-4 {{ tool_state.active_panel == 'recommendation' ? 'show' : '' }}" id="forumCropRecommendationPanel">
-        <div class="forum-reco-panel shadow-sm">
-            <div class="forum-reco-panel__hero">
-                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
-                    <div class="d-flex align-items-start gap-3">
-                        <div class="forum-reco-panel__hero-badge">RC</div>
-                        <div>
-                            <h3 class="fs-5 fw-bold mb-1">Systeme Intelligent de Recommandation de Culture</h3>
-                            <p class="mb-0 text-white text-opacity-75">Choisissez le type de sol et la saison pour obtenir une suggestion de culture selon les regles definies.</p>
-                        </div>
-                    </div>
-                    <span class="badge rounded-pill text-bg-light">Assistant rapide</span>
-                </div>
-            </div>
-
-            <div class="forum-reco-panel__body">
-                <div class="row g-4 align-items-start">
-                    <div class="col-12 col-xl-7">
-                        {{ form_start(recommendation_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-reco-form', 'novalidate': 'novalidate', 'class': 'row g-3'}}) }}
-                            <div class="col-12 col-md-6">
-                                {{ form_label(recommendation_form.soil, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
-                                {{ form_widget(recommendation_form.soil, {'attr': {'class': 'form-select' ~ (recommendation_form.soil.vars.errors|length ? ' is-invalid' : '')}}) }}
-                                {% if recommendation_form.soil.vars.errors|length %}
-                                    <div class="invalid-feedback d-block">{{ form_errors(recommendation_form.soil) }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-12 col-md-6">
-                                {{ form_label(recommendation_form.season, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
-                                {{ form_widget(recommendation_form.season, {'attr': {'class': 'form-select' ~ (recommendation_form.season.vars.errors|length ? ' is-invalid' : '')}}) }}
-                                {% if recommendation_form.season.vars.errors|length %}
-                                    <div class="invalid-feedback d-block">{{ form_errors(recommendation_form.season) }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-12 d-flex flex-wrap gap-2">
-                                <button type="submit" class="btn btn-primary">Recommander</button>
-                                <a href="{{ path('forum_index') }}" class="btn btn-outline-secondary">Reinitialiser</a>
-                            </div>
-                        {{ form_end(recommendation_form) }}
-                    </div>
-
-                    <div class="col-12 col-xl-5">
-                        <div class="forum-reco-panel__result">
-                            <div class="small text-uppercase fw-semibold text-primary mb-2">Culture recommandee</div>
-                            <div id="reco-result-value" class="forum-reco-panel__result-value">{{ reco_state.result }}</div>
-                            <div id="reco-result-message" class="forum-yield-panel__hint mt-2">
-                                {{ reco_state.message }}
-                            </div>
+                            <div id="yield-result-message" class="forum-tool-hint mt-2">{{ yield_state.message }}</div>
                         </div>
                     </div>
                 </div>
@@ -644,7 +515,7 @@
             <div class="forum-profit-panel__body">
                 <div class="row g-4 align-items-start">
                     <div class="col-12 col-xl-7">
-                        {{ form_start(profitability_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-profit-form', 'novalidate': 'novalidate', 'class': 'row g-3'}}) }}
+                        {{ form_start(profitability_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-profit-form', 'novalidate': 'novalidate', 'data-turbo': 'false', 'class': 'row g-3'}}) }}
                             <div class="col-12 col-md-6">
                                 {{ form_label(profitability_form.revenue, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
                                 {{ form_widget(profitability_form.revenue, {'attr': {'class': 'form-control' ~ (profitability_form.revenue.vars.errors|length ? ' is-invalid' : '')}}) }}
@@ -681,8 +552,18 @@
                                 {% endif %}
                             </div>
                             <div class="col-12 d-flex flex-wrap gap-2">
-                                <button type="submit" class="btn btn-warning text-dark">Calculer</button>
-                                <a href="{{ path('forum_index') }}" class="btn btn-outline-secondary">Reinitialiser</a>
+                                <button type="button" class="btn btn-warning text-dark" id="forum-profit-calculate">Calculer</button>
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-secondary"
+                                    data-forum-reset-form="forum-profit-form"
+                                    data-forum-reset-value="profit-result-value"
+                                    data-forum-reset-message="profit-result-message"
+                                    data-forum-default-value="0.00"
+                                    data-forum-default-message="Saisissez le revenu et les charges puis cliquez sur Calculer."
+                                >
+                                    Reinitialiser
+                                </button>
                             </div>
                         {{ form_end(profitability_form) }}
                     </div>
@@ -691,9 +572,7 @@
                         <div class="forum-profit-panel__result">
                             <div class="small text-uppercase fw-semibold text-warning-emphasis mb-2">Profit estime</div>
                             <div id="profit-result-value" class="forum-profit-panel__result-value">{{ profit_state.result }}</div>
-                            <div id="profit-result-message" class="forum-yield-panel__hint mt-2">
-                                {{ profit_state.message }}
-                            </div>
+                            <div id="profit-result-message" class="forum-tool-hint mt-2">{{ profit_state.message }}</div>
                         </div>
                     </div>
                 </div>

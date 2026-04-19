@@ -2,13 +2,11 @@
 
 namespace App\Controller\Forum;
 
-use App\Dto\Forum\CropRecommendationData;
 use App\Dto\Forum\ProfitabilityAnalysisData;
 use App\Dto\Forum\YieldForecastData;
 use App\Entity\Forum\Forum;
 use App\Entity\Forum\Message;
 use App\Entity\UserManagement\User;
-use App\Form\Forum\CropRecommendationType;
 use App\Form\Forum\ForumType;
 use App\Form\Forum\ProfitabilityAnalysisType;
 use App\Form\Forum\YieldForecastType;
@@ -18,37 +16,63 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormError;
-use Symfony\Component\Form\FormInterface;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\String\Slugger\SluggerInterface;
 use Symfony\Component\Validator\Constraints\Length;
-use Symfony\Component\Validator\Constraints\NotBlank;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
 #[Route('/forum')]
 class ForumController extends AbstractController
 {
+    private const MAX_AUDIO_SIZE = 10 * 1024 * 1024;
+
+    private const ALLOWED_AUDIO_MIME_TYPES = [
+        'audio/webm',
+        'audio/ogg',
+        'audio/mpeg',
+        'audio/mp3',
+        'audio/wav',
+        'audio/x-wav',
+        'audio/mp4',
+        'audio/x-m4a',
+        'audio/aac',
+        'application/octet-stream',
+        'video/webm',
+        'video/mp4',
+    ];
+
+    private const ALLOWED_AUDIO_EXTENSIONS = [
+        'webm',
+        'ogg',
+        'mp3',
+        'wav',
+        'm4a',
+        'mp4',
+        'aac',
+    ];
+
+    public function __construct(private readonly string $uploadsBaseDir)
+    {
+    }
+
     #[Route('/', name: 'forum_index', methods: ['GET', 'POST'])]
     public function index(Request $request, ForumRepository $repo, FormFactoryInterface $formFactory): Response
     {
         $search = trim((string) $request->query->get('q', ''));
         $sort = (string) $request->query->get('sort', 'recent');
         $yieldData = new YieldForecastData();
-        $recommendationData = new CropRecommendationData();
         $profitabilityData = new ProfitabilityAnalysisData();
 
         $yieldForm = $formFactory->createNamed('yield_forecast', YieldForecastType::class, $yieldData);
-        $recommendationForm = $formFactory->createNamed('crop_recommendation', CropRecommendationType::class, $recommendationData);
         $profitabilityForm = $formFactory->createNamed('profitability', ProfitabilityAnalysisType::class, $profitabilityData);
 
-        if ($request->isMethod('POST') && $request->request->has($yieldForm->getName())) {
+        if ($request->isMethod('POST')) {
             $yieldForm->handleRequest($request);
-        }
-        if ($request->isMethod('POST') && $request->request->has($recommendationForm->getName())) {
-            $recommendationForm->handleRequest($request);
-        }
-        if ($request->isMethod('POST') && $request->request->has($profitabilityForm->getName())) {
             $profitabilityForm->handleRequest($request);
         }
 
@@ -57,10 +81,6 @@ class ForumController extends AbstractController
             'yield' => [
                 'result' => '0.00',
                 'message' => 'Renseignez les trois champs puis cliquez sur Calculer.',
-            ],
-            'recommendation' => [
-                'result' => 'Aucune',
-                'message' => 'Selectionnez un sol et une saison puis cliquez sur Recommander.',
             ],
             'profitability' => [
                 'result' => '0.00',
@@ -80,22 +100,6 @@ class ForumController extends AbstractController
                 $toolState['yield']['message'] = 'Calcul effectue avec succes.';
             } else {
                 $toolState['yield']['message'] = 'Veuillez corriger les erreurs du formulaire.';
-            }
-        } elseif ($recommendationForm->isSubmitted()) {
-            $toolState['active_panel'] = 'recommendation';
-            if ($recommendationForm->isValid()) {
-                if ($recommendationData->soil === 'sableux' && $recommendationData->season === 'ete') {
-                    $toolState['recommendation']['result'] = 'Pasteque';
-                    $toolState['recommendation']['message'] = 'Regle appliquee avec succes.';
-                } elseif ($recommendationData->soil === 'argileux' && $recommendationData->season === 'hiver') {
-                    $toolState['recommendation']['result'] = 'Ble';
-                    $toolState['recommendation']['message'] = 'Regle appliquee avec succes.';
-                } else {
-                    $toolState['recommendation']['result'] = 'Aucune recommandation';
-                    $toolState['recommendation']['message'] = 'Aucune regle ne correspond a cette combinaison pour le moment.';
-                }
-            } else {
-                $toolState['recommendation']['message'] = 'Veuillez corriger les erreurs du formulaire.';
             }
         } elseif ($profitabilityForm->isSubmitted()) {
             $toolState['active_panel'] = 'profitability';
@@ -124,7 +128,6 @@ class ForumController extends AbstractController
             ],
             'tool_state' => $toolState,
             'yield_form' => $yieldForm->createView(),
-            'recommendation_form' => $recommendationForm->createView(),
             'profitability_form' => $profitabilityForm->createView(),
         ]);
     }
@@ -175,12 +178,16 @@ class ForumController extends AbstractController
             'forum' => $forum,
             'messageCount' => count($messages),
             'messages' => array_map(
-                static function (Message $message) use ($currentUserId): array {
+                function (Message $message) use ($currentUserId): array {
                     $author = $message->getUser();
 
                     return [
                         'id' => $message->getId(),
                         'content' => $message->getContenu(),
+                        'audioPath' => $message->getAudioPath(),
+                        'audioUrl' => $message->getAudioPath() !== null
+                            ? $this->generateUrl('forum_message_audio', ['filename' => basename($message->getAudioPath())])
+                            : null,
                         'sentAt' => $message->getDateEnvoi(),
                         'isOwn' => $currentUserId !== null && $author->getId() === $currentUserId,
                         'authorName' => $author->getDisplayName(),
@@ -193,8 +200,13 @@ class ForumController extends AbstractController
     }
 
     #[Route('/{id}/messages', name: 'forum_message_create', methods: ['POST'])]
-    public function createMessage(Request $request, Forum $forum, EntityManagerInterface $em, ValidatorInterface $validator): Response
-    {
+    public function createMessage(
+        Request $request,
+        Forum $forum,
+        EntityManagerInterface $em,
+        ValidatorInterface $validator,
+        SluggerInterface $slugger
+    ): Response {
         if (!$this->isCsrfTokenValid('forum_message_' . $forum->getId(), $request->request->get('_token'))) {
             $this->addFlash('danger', 'Action invalide.');
 
@@ -202,15 +214,27 @@ class ForumController extends AbstractController
         }
 
         $content = trim((string) $request->request->get('contenu', ''));
+        /** @var UploadedFile|null $audioFile */
+        $audioFile = $request->files->get('audio_message');
+
+        if ($content === '' && !$audioFile instanceof UploadedFile) {
+            $this->addFlash('warning', 'Ajoutez un texte ou un message vocal.');
+
+            return $this->redirectToRoute('forum_show', ['id' => $forum->getId()]);
+        }
+
         $violations = $validator->validate($content, [
-            new NotBlank(['message' => 'Le message ne peut pas etre vide.']),
             new Length([
-                'min' => 2,
                 'max' => 500,
-                'minMessage' => 'Le message doit contenir au moins {{ limit }} caracteres.',
                 'maxMessage' => 'Le message ne doit pas depasser {{ limit }} caracteres.',
             ]),
         ]);
+
+        if ($content !== '' && mb_strlen($content) < 2) {
+            $this->addFlash('warning', 'Le message doit contenir au moins 2 caracteres.');
+
+            return $this->redirectToRoute('forum_show', ['id' => $forum->getId()]);
+        }
 
         if (count($violations) > 0) {
             foreach ($violations as $violation) {
@@ -220,9 +244,21 @@ class ForumController extends AbstractController
             return $this->redirectToRoute('forum_show', ['id' => $forum->getId()]);
         }
 
+        $audioPath = null;
+        if ($audioFile instanceof UploadedFile) {
+            try {
+                $audioPath = $this->uploadVoiceMessage($audioFile, $slugger);
+            } catch (FileException $exception) {
+                $this->addFlash('warning', $exception->getMessage());
+
+                return $this->redirectToRoute('forum_show', ['id' => $forum->getId()]);
+            }
+        }
+
         $message = new Message();
         $message->setForum($forum);
         $message->setContenu($content);
+        $message->setAudioPath($audioPath);
         $message->setDateEnvoi(new \DateTimeImmutable());
 
         $user = $this->getUser();
@@ -275,22 +311,54 @@ class ForumController extends AbstractController
         return $this->redirectToRoute('forum_index');
     }
 
-    /**
-     * @return string[]
-     */
-    private function collectFormErrors(FormInterface $form): array
+    #[Route('/messages/audio/{filename}', name: 'forum_message_audio', methods: ['GET'])]
+    public function audio(string $filename): Response
     {
-        $messages = [];
+        $safeFilename = basename($filename);
+        $path = $this->uploadsBaseDir . '/forum-voices/' . $safeFilename;
 
-        foreach ($form->getErrors(true) as $error) {
-            $origin = $error->getOrigin();
-            $name = $origin instanceof FormInterface ? $origin->getName() : null;
-            $messages[] = $name && $name !== $form->getName()
-                ? sprintf('%s: %s', ucfirst($name), $error->getMessage())
-                : $error->getMessage();
+        if (!is_file($path)) {
+            throw $this->createNotFoundException('Fichier audio introuvable.');
         }
 
-        return array_values(array_unique($messages));
+        return new BinaryFileResponse($path);
     }
 
+    private function uploadVoiceMessage(UploadedFile $audioFile, SluggerInterface $slugger): string
+    {
+        if (($audioFile->getSize() ?? 0) > self::MAX_AUDIO_SIZE) {
+            throw new FileException('Le message vocal est trop volumineux (max 10 Mo).');
+        }
+
+        $mimeType = $audioFile->getMimeType() ?? '';
+        $guessedExtension = strtolower((string) ($audioFile->guessExtension() ?: ''));
+        $clientExtension = strtolower((string) $audioFile->getClientOriginalExtension());
+        $hasAllowedMimeType = in_array($mimeType, self::ALLOWED_AUDIO_MIME_TYPES, true);
+        $hasAllowedExtension = in_array($guessedExtension, self::ALLOWED_AUDIO_EXTENSIONS, true)
+            || in_array($clientExtension, self::ALLOWED_AUDIO_EXTENSIONS, true);
+
+        if (!$hasAllowedMimeType && !$hasAllowedExtension) {
+            throw new FileException('Format audio non autorise.');
+        }
+
+        $targetDirectory = $this->uploadsBaseDir . '/forum-voices';
+        if (!is_dir($targetDirectory) && !mkdir($targetDirectory, 0755, true) && !is_dir($targetDirectory)) {
+            throw new FileException('Impossible de preparer le dossier des messages vocaux.');
+        }
+
+        $originalFilename = pathinfo($audioFile->getClientOriginalName(), PATHINFO_FILENAME);
+        $safeFilename = (string) $slugger->slug($originalFilename !== '' ? $originalFilename : 'voice-message');
+        $extension = $guessedExtension !== ''
+            ? $guessedExtension
+            : ($clientExtension !== '' ? $clientExtension : 'webm');
+        $newFilename = $safeFilename . '-' . uniqid('', true) . '.' . $extension;
+
+        try {
+            $audioFile->move($targetDirectory, $newFilename);
+        } catch (FileException $exception) {
+            throw new FileException('Erreur lors de l\'upload du message vocal.');
+        }
+
+        return 'forum-voices/' . $newFilename;
+    }
 }
