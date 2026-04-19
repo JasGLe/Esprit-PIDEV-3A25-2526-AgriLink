@@ -437,17 +437,30 @@ class ForumController extends AbstractController
 
     private function guessAudioMimeType(string $path): string
     {
+        $extension = strtolower((string) pathinfo($path, PATHINFO_EXTENSION));
         $detectedMimeType = @mime_content_type($path);
+
         if (is_string($detectedMimeType) && $detectedMimeType !== '') {
-            return $detectedMimeType;
+            if ($detectedMimeType === 'video/webm' && $extension === 'webm') {
+                return 'audio/webm';
+            }
+
+            if ($detectedMimeType === 'video/mp4' && in_array($extension, ['m4a', 'mp4'], true)) {
+                return 'audio/mp4';
+            }
+
+            if (str_starts_with($detectedMimeType, 'audio/')) {
+                return $detectedMimeType;
+            }
         }
 
-        return match (strtolower((string) pathinfo($path, PATHINFO_EXTENSION))) {
+        return match ($extension) {
             'mp3' => 'audio/mpeg',
             'wav' => 'audio/wav',
             'ogg' => 'audio/ogg',
-            'm4a' => 'audio/mp4',
+            'm4a', 'mp4' => 'audio/mp4',
             'aac' => 'audio/aac',
+            'webm' => 'audio/webm',
             default => 'audio/webm',
         };
     }
