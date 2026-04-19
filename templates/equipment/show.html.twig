@@ -25,6 +25,28 @@
     #diag-panel .diag-reco { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: .5rem; padding: .5rem .75rem; margin-bottom: .4rem; color: #14532d; font-size: .88rem; }
     #diag-panel .diag-disclaimer { background: #fff8e1; border: 1px solid #ffe082; border-radius: .5rem; padding: .6rem .9rem; font-size: .82rem; color: #6d4c00; margin-top: 1rem; }
     #diag-spinner { display: none; }
+
+    /* ── Analyse Photo IA ── */
+    #photo-drop-zone {
+        border: 2px dashed #adb5bd; border-radius: .75rem;
+        padding: 2rem 1rem; text-align: center; cursor: pointer;
+        transition: border-color .2s, background .2s; background: #f8f9fa;
+    }
+    #photo-drop-zone.drag-over { border-color: #0d6efd; background: #e7f0ff; }
+    #photo-drop-zone.has-file  { border-color: #198754; background: #f0fdf4; }
+    #photo-preview-wrap { display: none; margin-top: 1rem; text-align: center; }
+    #photo-preview-wrap img { max-height: 200px; max-width: 100%; border-radius: .5rem; border: 1px solid #dee2e6; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    #photo-spinner { display: none; }
+    #vision-panel { display: none; }
+    #vision-panel .vision-score-ring {
+        width: 64px; height: 64px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.2rem; font-weight: 900; color: #fff; flex-shrink: 0;
+    }
+    #vision-panel .vision-anomalie { background: #fff5f5; border: 1px solid #f5c6cb; border-radius: .5rem; padding: .45rem .7rem; margin-bottom: .35rem; color: #842029; font-size: .875rem; }
+    #vision-panel .vision-zone     { background: #fff8e1; border: 1px solid #ffe082; border-radius: .5rem; padding: .45rem .7rem; margin-bottom: .35rem; color: #6d4c00; font-size: .875rem; }
+    #vision-panel .vision-reco     { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: .5rem; padding: .45rem .7rem; margin-bottom: .35rem; color: #14532d; font-size: .875rem; }
+    #vision-panel .vision-disclaimer { background: #fff3cd; border: 1px solid #ffc107; border-radius: .5rem; padding: .6rem .9rem; font-size: .82rem; color: #664d03; margin-top: 1rem; }
 </style>
 {% endblock %}
 
@@ -303,6 +325,99 @@
     </script>
     {% endif %}
 
+    {# ══════════════════════════════════════════════════════════════════════
+       ── Analyse Photo IA (Gemini Vision)                              ──
+       ══════════════════════════════════════════════════════════════════════ #}
+    <div class="card shadow-sm mb-4" id="photo-ia-card">
+        <div class="card-header fw-semibold bg-white d-flex align-items-center gap-2">
+            📸 Analyse Photo IA
+            <span class="badge bg-secondary ms-auto" style="font-size:.72rem;font-weight:500">Gemini Vision</span>
+        </div>
+        <div class="card-body">
+
+            {# ── Zone d'upload (drag & drop + bouton) ── #}
+            <div id="photo-drop-zone" role="button" tabindex="0"
+                 aria-label="Zone de dépôt de photo. Cliquez ou glissez une image.">
+                <div id="photo-drop-label">
+                    <div style="font-size:2rem">📷</div>
+                    <div class="fw-semibold mt-1">Glissez une photo ici</div>
+                    <div class="text-muted small mt-1">ou</div>
+                    <label class="btn btn-sm btn-outline-secondary mt-2" style="cursor:pointer">
+                        Choisir une photo
+                        <input type="file" id="photo-file-input" accept="image/jpeg,image/png,image/webp"
+                               style="display:none" aria-label="Sélectionner une photo">
+                    </label>
+                    <div class="text-muted small mt-2">JPG, PNG, WEBP — max 5 MB</div>
+                </div>
+            </div>
+
+            {# ── Aperçu de l'image sélectionnée ── #}
+            <div id="photo-preview-wrap">
+                <img id="photo-preview-img" src="" alt="Aperçu de la photo sélectionnée">
+                <div class="mt-2">
+                    <span id="photo-file-name" class="text-muted small"></span>
+                    <button type="button" id="btn-clear-photo" class="btn btn-sm btn-link text-danger ms-2 p-0"
+                            style="font-size:.82rem">✕ Supprimer</button>
+                </div>
+            </div>
+
+            {# ── Bouton d'analyse ── #}
+            <div class="mt-3">
+                <button type="button" id="btn-analyser-photo" class="btn btn-dark" disabled>
+                    🔍 Analyser la photo
+                </button>
+            </div>
+
+            {# ── Spinner pendant l'analyse Gemini ── #}
+            <div id="photo-spinner" class="text-center py-3">
+                <div class="spinner-border text-dark mb-2" role="status" aria-label="Analyse en cours"></div>
+                <div class="text-muted small">Analyse visuelle en cours…</div>
+            </div>
+
+            {# ── Erreur analyse photo ── #}
+            <div id="photo-error" class="alert alert-danger mt-3" style="display:none" role="alert"></div>
+
+            {# ── Panel résultat vision ── #}
+            <div id="vision-panel" class="mt-4 border-top pt-3">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div id="vision-score-ring" class="vision-score-ring">—</div>
+                    <div>
+                        <div class="fw-bold fs-6">État visuel détecté :
+                            <span id="vision-etat-badge" class="badge ms-1" style="font-size:.8rem">—</span>
+                        </div>
+                        <div class="text-muted small mt-1">Score : <span id="vision-score-text">—</span>/100</div>
+                    </div>
+                </div>
+
+                <div id="vision-anomalies-section" style="display:none" class="mb-3">
+                    <div class="fw-semibold mb-2 text-uppercase" style="font-size:.73rem;letter-spacing:.07em;color:#dc3545">🔴 Anomalies détectées</div>
+                    <div id="vision-anomalies"></div>
+                </div>
+
+                <div id="vision-zones-section" style="display:none" class="mb-3">
+                    <div class="fw-semibold mb-2 text-uppercase" style="font-size:.73rem;letter-spacing:.07em;color:#856404">📍 Zones problématiques</div>
+                    <div id="vision-zones"></div>
+                </div>
+
+                <div id="vision-recos-section" style="display:none" class="mb-3">
+                    <div class="fw-semibold mb-2 text-uppercase" style="font-size:.73rem;letter-spacing:.07em;color:#198754">✅ Recommandations visuelles</div>
+                    <div id="vision-recos"></div>
+                </div>
+
+                <div id="vision-conclusion-section" style="display:none" class="mb-2">
+                    <div class="fw-semibold mb-1 text-uppercase" style="font-size:.73rem;letter-spacing:.07em;color:#6c757d">📝 Conclusion</div>
+                    <div id="vision-conclusion" class="text-muted small fst-italic"></div>
+                </div>
+
+                <div class="vision-disclaimer">
+                    ⚠️ Analyse visuelle IA — confirmer avec un technicien agréé avant toute intervention.
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {# ── Fin Analyse Photo IA ── #}
+
     {# ── Spinner visible pendant l'appel IA ── #}
     <div id="diag-spinner" class="card shadow-sm mb-4">
         <div class="card-body text-center py-4">
@@ -366,15 +481,16 @@
     📱 Voir le passeport
 </a>
 
-{# ── JS Diagnostic IA ─────────────────────────────────────────────────────
-   Fonctionnement :
-   1. Clic sur #btn-diagnostic-ia
-   2. fetch POST vers /equipement/{id}/diagnostic-ia avec token CSRF
-   3. Réponse JSON → remplissage dynamique du #diag-panel
-   ──────────────────────────────────────────────────────────────────────── #}
+{# ══════════════════════════════════════════════════════════════════════════
+   ── JS : Diagnostic IA (Groq) + Analyse Photo IA (Gemini Vision)      ──
+   ══════════════════════════════════════════════════════════════════════════ #}
 <script>
 (function () {
-    // Couleurs associées à chaque indice de santé
+
+    /* ───────────────────────────────────────────────────────────────────────
+       SECTION 1 — Diagnostic IA Groq
+       ─────────────────────────────────────────────────────────────────────── */
+
     var SANTE_COLORS = {
         'Excellent': '#198754',
         'Bon':       '#0d6efd',
@@ -382,7 +498,6 @@
         'Critique':  '#dc3545'
     };
 
-    // Libellés lisibles pour les critères
     var CRITERE_LABELS = {
         'statut':      'Statut actuel',
         'description': 'Description',
@@ -396,19 +511,16 @@
     var panel     = document.getElementById('diag-panel');
     var errorDiv  = document.getElementById('diag-error');
 
-    // Token CSRF lu depuis Twig (injecté ci-dessous)
     var csrfToken = {{ csrf_token('diagnostic_ia_' ~ equipement.id)|json_encode|raw }};
     var diagUrl   = {{ path('equipement_diagnostic_ia', {id: equipement.id})|json_encode|raw }};
 
     btn.addEventListener('click', function () {
-        // Masquer les résultats précédents, afficher le spinner
         panel.style.display    = 'none';
         errorDiv.style.display = 'none';
         spinner.style.display  = 'block';
         btn.disabled = true;
         btn.textContent = '⏳ Analyse…';
 
-        // ── Appel AJAX POST vers DiagnosticController ─────────────────────────
         fetch(diagUrl, {
             method: 'POST',
             headers: {
@@ -423,63 +535,53 @@
             btn.textContent = '🧠 Diagnostic IA';
 
             if (!data.success) {
-                // Afficher l'erreur retournée par le serveur
-                errorDiv.textContent = data.error || 'Erreur inconnue.';
+                errorDiv.textContent   = data.error || 'Erreur inconnue.';
                 errorDiv.style.display = 'block';
                 return;
             }
-
-            // ── Remplir le panel avec le diagnostic ───────────────────────────
             renderDiagnostic(data.diagnostic);
         })
-        .catch(function (err) {
+        .catch(function () {
             spinner.style.display = 'none';
             btn.disabled = false;
             btn.textContent = '🧠 Diagnostic IA';
-            errorDiv.textContent = 'Erreur réseau : impossible de contacter le service IA.';
+            errorDiv.textContent   = 'Erreur réseau : impossible de contacter le service IA.';
             errorDiv.style.display = 'block';
         });
     });
 
-    /**
-     * Injecte les données du diagnostic dans le DOM.
-     * Appelé une fois la réponse JSON reçue et validée.
-     */
     function renderDiagnostic(d) {
         var indice = d.indice_sante || 'Bon';
         var score  = d.score || 0;
         var color  = SANTE_COLORS[indice] || '#6c757d';
 
-        // Badge indice de santé + cercle score
         var ring = document.getElementById('diag-score-ring');
-        ring.textContent = score;
+        ring.textContent    = score;
         ring.style.background = color;
-        panel.style.borderTopColor = color + ' !important';
 
         var badge = document.getElementById('diag-indice-badge');
-        badge.textContent = indice;
+        badge.textContent      = indice;
         badge.style.background = color;
-        badge.style.color = '#fff';
+        badge.style.color      = '#fff';
 
-        // Résumé global
         document.getElementById('diag-resume').textContent = d.resume || '';
 
-        // ── Analyse par critère (masquer les null) ────────────────────────────
+        // ── Analyse par critère ────────────────────────────────────────────────
         var criteresEl = document.getElementById('diag-criteres');
         criteresEl.innerHTML = '';
         var criteres = d.analyse_par_critere || {};
         Object.keys(criteres).forEach(function (key) {
             var val = criteres[key];
-            if (val === null || val === 'null' || val === '') return; // masquer si null
+            if (val === null || val === 'null' || val === '') return;
             var div = document.createElement('div');
             div.className = 'diag-critere-item';
             div.innerHTML = '<span class="fw-semibold small">' + (CRITERE_LABELS[key] || key) + '</span>'
-                          + '<div class="text-muted small">' + escHtml(val) + '</div>';
+                          + '<div class="text-muted small">' + escHtml(String(val)) + '</div>';
             criteresEl.appendChild(div);
         });
 
-        // ── Alertes (afficher section seulement si liste non vide) ────────────
-        var alertes = d.alertes || [];
+        // ── Alertes ───────────────────────────────────────────────────────────
+        var alertes = Array.isArray(d.alertes) ? d.alertes : [];
         var alertesSection = document.getElementById('diag-alertes-section');
         var alertesEl = document.getElementById('diag-alertes');
         alertesEl.innerHTML = '';
@@ -487,37 +589,248 @@
             alertesSection.style.display = 'block';
             alertes.forEach(function (a) {
                 var div = document.createElement('div');
-                div.className = 'diag-alerte';
-                div.textContent = '⚠️ ' + a;
+                div.className   = 'diag-alerte';
+                div.textContent = '⚠️ ' + itemToString(a);
                 alertesEl.appendChild(div);
             });
         } else {
             alertesSection.style.display = 'none';
         }
 
-        // ── Recommandations numérotées ────────────────────────────────────────
-        var recos = d.recommandations || [];
+        // ── Recommandations (BUG FIX : gère les objets retournés par Groq) ────
+        var recos = Array.isArray(d.recommandations) ? d.recommandations : [];
         var recosEl = document.getElementById('diag-recommandations');
         recosEl.innerHTML = '';
         recos.forEach(function (r, i) {
             var div = document.createElement('div');
-            div.className = 'diag-reco';
-            div.textContent = (i + 1) + '. ' + r;
+            div.className   = 'diag-reco';
+            div.textContent = (i + 1) + '. ' + itemToString(r);
             recosEl.appendChild(div);
         });
 
-        // ── Prochaine maintenance estimée ─────────────────────────────────────
         document.getElementById('diag-prochaine').textContent =
             d.prochaine_maintenance_estimee || 'Non estimée';
 
-        // Afficher le panel
         panel.style.display = 'block';
-
-        // Scroll vers le panel pour que l'utilisateur le voie
         panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    // Utilitaire : échappe le HTML pour éviter les injections XSS
+    /* ───────────────────────────────────────────────────────────────────────
+       SECTION 2 — Analyse Photo IA (Gemini Vision)
+       ─────────────────────────────────────────────────────────────────────── */
+
+    var VISION_COLORS = {
+        'Bon':           '#198754',
+        'Usure normale': '#0d6efd',
+        'Dégradation':   '#fd7e14',
+        'Critique':      '#dc3545'
+    };
+
+    var photoUrl = {{ path('equipement_analyse_photo', {id: equipement.id})|json_encode|raw }};
+
+    var dropZone       = document.getElementById('photo-drop-zone');
+    var fileInput      = document.getElementById('photo-file-input');
+    var previewWrap    = document.getElementById('photo-preview-wrap');
+    var previewImg     = document.getElementById('photo-preview-img');
+    var fileNameEl     = document.getElementById('photo-file-name');
+    var btnClearPhoto  = document.getElementById('btn-clear-photo');
+    var btnAnalyser    = document.getElementById('btn-analyser-photo');
+    var photoSpinner   = document.getElementById('photo-spinner');
+    var photoError     = document.getElementById('photo-error');
+    var visionPanel    = document.getElementById('vision-panel');
+
+    var selectedFile = null;
+
+    // ── Drag & drop ──────────────────────────────────────────────────────────
+    dropZone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', function () {
+        dropZone.classList.remove('drag-over');
+    });
+    dropZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        var files = e.dataTransfer.files;
+        if (files.length > 0) { setFile(files[0]); }
+    });
+
+    // ── Click sur la zone (délégué au label+input intérieur) ─────────────────
+    dropZone.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { fileInput.click(); }
+    });
+
+    fileInput.addEventListener('change', function () {
+        if (fileInput.files.length > 0) { setFile(fileInput.files[0]); }
+    });
+
+    btnClearPhoto.addEventListener('click', clearFile);
+
+    btnAnalyser.addEventListener('click', lancerAnalysePhoto);
+
+    function setFile(file) {
+        var allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            showPhotoError('Format non supporté. Utilisez JPG, PNG ou WEBP.');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showPhotoError('La photo dépasse 5 MB. Veuillez choisir une image plus petite.');
+            return;
+        }
+        photoError.style.display = 'none';
+        selectedFile = file;
+
+        // Aperçu
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            previewImg.src  = e.target.result;
+            previewWrap.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+
+        fileNameEl.textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+        dropZone.classList.add('has-file');
+
+        btnAnalyser.disabled = false;
+
+        // Masquer résultat précédent
+        visionPanel.style.display = 'none';
+    }
+
+    function clearFile() {
+        selectedFile = null;
+        fileInput.value = '';
+        previewImg.src  = '';
+        previewWrap.style.display  = 'none';
+        visionPanel.style.display  = 'none';
+        photoError.style.display   = 'none';
+        dropZone.classList.remove('has-file');
+        btnAnalyser.disabled = true;
+    }
+
+    function lancerAnalysePhoto() {
+        if (!selectedFile) return;
+
+        photoError.style.display  = 'none';
+        visionPanel.style.display = 'none';
+        photoSpinner.style.display = 'block';
+        btnAnalyser.disabled = true;
+        btnAnalyser.textContent = '⏳ Analyse…';
+
+        var formData = new FormData();
+        formData.append('photo', selectedFile);
+
+        fetch(photoUrl, {
+            method: 'POST',
+            body:   formData,
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            photoSpinner.style.display = 'none';
+            btnAnalyser.disabled    = false;
+            btnAnalyser.textContent = '🔍 Analyser la photo';
+
+            if (!data.success) {
+                showPhotoError(data.error || 'Erreur inconnue.');
+                return;
+            }
+            renderVisionResult(data.analyse);
+        })
+        .catch(function () {
+            photoSpinner.style.display = 'none';
+            btnAnalyser.disabled    = false;
+            btnAnalyser.textContent = '🔍 Analyser la photo';
+            showPhotoError('Erreur réseau : impossible de contacter le service IA.');
+        });
+    }
+
+    function renderVisionResult(a) {
+        var etat  = a.etat_visuel  || 'Inconnu';
+        var score = a.score_visuel || 0;
+        var color = VISION_COLORS[etat] || '#6c757d';
+
+        // Cercle score
+        var ring = document.getElementById('vision-score-ring');
+        ring.textContent      = score;
+        ring.style.background = color;
+
+        // Badge état
+        var badge = document.getElementById('vision-etat-badge');
+        badge.textContent      = etat;
+        badge.style.background = color;
+        badge.style.color      = '#fff';
+
+        document.getElementById('vision-score-text').textContent = score;
+
+        // Anomalies
+        renderVisionList('vision-anomalies-section', 'vision-anomalies', a.anomalies_detectees, 'vision-anomalie', '🔴 ');
+
+        // Zones problématiques
+        renderVisionList('vision-zones-section', 'vision-zones', a.zones_problematiques, 'vision-zone', '📍 ');
+
+        // Recommandations visuelles
+        renderVisionList('vision-recos-section', 'vision-recos', a.recommandations_visuelles, 'vision-reco', '', true);
+
+        // Conclusion
+        var conclusionSection = document.getElementById('vision-conclusion-section');
+        var conclusionEl      = document.getElementById('vision-conclusion');
+        if (a.conclusion) {
+            conclusionEl.textContent          = a.conclusion;
+            conclusionSection.style.display   = 'block';
+        } else {
+            conclusionSection.style.display   = 'none';
+        }
+
+        visionPanel.style.display = 'block';
+        visionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderVisionList(sectionId, listId, items, itemClass, prefix, numbered) {
+        var section = document.getElementById(sectionId);
+        var listEl  = document.getElementById(listId);
+        listEl.innerHTML = '';
+        var arr = Array.isArray(items) ? items : [];
+        if (arr.length === 0) {
+            section.style.display = 'none';
+            return;
+        }
+        section.style.display = 'block';
+        arr.forEach(function (item, i) {
+            var div = document.createElement('div');
+            div.className   = itemClass;
+            div.textContent = (numbered ? (i + 1) + '. ' : prefix) + itemToString(item);
+            listEl.appendChild(div);
+        });
+    }
+
+    function showPhotoError(msg) {
+        photoError.textContent   = msg;
+        photoError.style.display = 'block';
+    }
+
+    /* ───────────────────────────────────────────────────────────────────────
+       UTILITAIRES COMMUNS
+       ─────────────────────────────────────────────────────────────────────── */
+
+    /**
+     * Convertit un élément de tableau (string ou objet) en texte lisible.
+     * Corrige le bug "[object Object]" quand le LLM retourne des objets
+     * à la place de strings dans les tableaux recommandations/alertes.
+     */
+    function itemToString(item) {
+        if (item === null || item === undefined) return '';
+        if (typeof item === 'string') return item;
+        if (typeof item === 'object') {
+            // Essayer les propriétés textuelles courantes retournées par les LLMs
+            return item.texte || item.action || item.description || item.recommandation
+                || item.text  || item.message || item.content   || item.titre
+                || JSON.stringify(item);
+        }
+        return String(item);
+    }
+
     function escHtml(str) {
         return String(str)
             .replace(/&/g, '&amp;')
@@ -525,6 +838,7 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;');
     }
+
 })();
 </script>
 

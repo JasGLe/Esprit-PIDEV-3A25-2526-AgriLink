@@ -62,5 +62,16 @@ services:
             $groqApiKey: '%env(GROQ_API_KEY)%'
             $groqModel:  '%env(GROQ_MODEL)%'
 
+    # GeminiVisionService — analyse visuelle photo équipements (via Groq LLaMA 4 Scout)
+    App\Service\Equipment\GeminiVisionService:
+        arguments:
+            $groqApiKey: '%env(GROQ_API_KEY)%'
+
+    # AssistantIAController — chatbot AgriBot équipements & maintenances
+    App\Controller\Equipment\AssistantIAController:
+        arguments:
+            $groqApiKey: '%env(GROQ_API_KEY)%'
+        tags: ['controller.service_arguments']
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

@@ -5,6 +5,7 @@ namespace App\Controller\Equipment;
 use App\Entity\Equipement;
 use App\Repository\MaintenanceRepository;
 use App\Service\Equipment\GroqDiagnosticService;
+use App\Service\Equipment\GeminiVisionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -25,6 +26,7 @@ class DiagnosticController extends AbstractController
 {
     public function __construct(
         private readonly GroqDiagnosticService $groqService,
+        private readonly GeminiVisionService   $geminiVisionService,
         private readonly MaintenanceRepository $maintenanceRepo
     ) {}
 
@@ -106,6 +108,66 @@ class DiagnosticController extends AbstractController
             return $this->json([
                 'success' => false,
                 'error'   => 'Erreur lors du diagnostic IA : ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Analyse visuelle d'un équipement via Gemini Vision (Gemini 1.5 Flash).
+     * ─────────────────────────────────────────────────────────────────────────
+     * Route : POST /equipement/{id}/analyse-photo
+     * Name  : equipement_analyse_photo
+     *
+     * Reçoit une image via multipart/form-data (champ "photo"),
+     * la valide (présence, taille ≤ 5 MB, type image/*),
+     * la convertit en base64, appelle GeminiVisionService,
+     * et retourne le résultat JSON de l'analyse visuelle.
+     */
+    #[Route('/equipement/{id}/analyse-photo', name: 'equipement_analyse_photo', methods: ['POST'], requirements: ['id' => '\d+'])]
+    public function analyserPhoto(Equipement $equipement, Request $request): JsonResponse
+    {
+        // ── 1. Vérification ownership ──────────────────────────────────────────
+        if ($equipement->getUserlog() !== $this->getUser()?->getId()) {
+            return $this->json(['error' => 'Accès refusé.'], 403);
+        }
+
+        // ── 2. Récupérer le fichier uploadé ────────────────────────────────────
+        $file = $request->files->get('photo');
+
+        if (!$file) {
+            return $this->json(['success' => false, 'error' => 'Aucune photo reçue.'], 400);
+        }
+
+        // ── 3. Valider la taille (max 5 MB) ───────────────────────────────────
+        if ($file->getSize() > 5 * 1024 * 1024) {
+            return $this->json(['success' => false, 'error' => 'La photo dépasse la taille maximale autorisée (5 MB).'], 400);
+        }
+
+        // ── 4. Valider le type MIME (image uniquement) ─────────────────────────
+        $mimeType = $file->getMimeType();
+        $allowedMimes = ['image/jpeg', 'image/png', 'image/webp'];
+
+        if (!in_array($mimeType, $allowedMimes, true)) {
+            return $this->json(['success' => false, 'error' => 'Format non supporté. Utilisez JPG, PNG ou WEBP.'], 400);
+        }
+
+        // ── 5. Convertir l'image en base64 côté serveur ────────────────────────
+        $imageContent = file_get_contents($file->getPathname());
+
+        if ($imageContent === false) {
+            return $this->json(['success' => false, 'error' => 'Impossible de lire le fichier uploadé.'], 500);
+        }
+
+        $base64Image = base64_encode($imageContent);
+
+        // ── 6. Appel au service Gemini Vision ──────────────────────────────────
+        try {
+            $analyse = $this->geminiVisionService->analyserPhoto($base64Image, $mimeType, $equipement);
+            return $this->json(['success' => true, 'analyse' => $analyse]);
+        } catch (\Throwable $e) {
+            return $this->json([
+                'success' => false,
+                'error'   => 'Erreur lors de l\'analyse visuelle : ' . $e->getMessage(),
             ], 500);
         }
     }
