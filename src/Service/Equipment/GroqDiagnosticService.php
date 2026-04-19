@@ -259,7 +259,8 @@ PROMPT;
         // ── Instruction finale — format de réponse attendu ────────────────────
         $lines[] = "";
         $lines[] = "Réponds UNIQUEMENT avec le JSON suivant, sans texte autour :";
-        $lines[] = '{"indice_sante":"Excellent|Bon|Attention|Critique","score":0-100,"resume":"...","analyse_par_critere":{"statut":"...","description":"...","kilometrage":null,"heures":null,"maintenance":"..."},"alertes":[],"recommandations":[],"prochaine_maintenance_estimee":"..."}';
+        $lines[] = '{"indice_sante":"Excellent|Bon|Attention|Critique","score":0-100,"resume":"...","analyse_par_critere":{"statut":"phrase courte","description":"phrase courte","kilometrage":"phrase courte ou null","heures":"phrase courte ou null","maintenance":"phrase courte"},"alertes":[],"recommandations":[],"prochaine_maintenance_estimee":"durée relative ex: Dans 30 jours | Dans 3 mois | Immédiatement — JAMAIS une date absolue passée"}';
+        $lines[] = "IMPORTANT : prochaine_maintenance_estimee doit être une durée RELATIVE (ex: 'Dans 30 jours', 'Dans 3 mois', 'Immédiatement') et NON une date absolue. Tous les champs de analyse_par_critere doivent être des strings courts, jamais des objets JSON.";
 
         return implode("\n", $lines);
     }

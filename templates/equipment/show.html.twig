@@ -12,41 +12,187 @@
     .badge-vehicule { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
     #map-show { height: 380px; border-radius: 8px; }
 
-    /* ── Diagnostic IA ── */
-    #diag-panel { display: none; }
-    #diag-panel .diag-score-ring {
-        width: 72px; height: 72px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.35rem; font-weight: 900; color: #fff;
+    /* ═══════════════════════════════════════════════════
+       CARDS IA — style commun
+    ═══════════════════════════════════════════════════ */
+    .ia-card {
+        border-radius: 16px !important;
+        border: none !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,.08) !important;
+        overflow: hidden;
+        transition: box-shadow .3s;
+    }
+    .ia-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.12) !important; }
+
+    .ia-card-header-diag {
+        background: linear-gradient(135deg, #1a5c2e 0%, #198754 100%);
+        padding: 1.1rem 1.4rem;
+    }
+    .ia-card-header-photo {
+        background: linear-gradient(135deg, #0f4c75 0%, #1a7fc1 100%);
+        padding: 1.1rem 1.4rem;
+    }
+    .ia-header-badge {
+        font-size: .7rem; font-weight: 600; letter-spacing: .04em;
+        background: rgba(255,255,255,.18); color: #fff;
+        padding: .25rem .65rem; border-radius: 20px;
+        border: 1px solid rgba(255,255,255,.3);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       JAUGE CIRCULAIRE SVG
+    ═══════════════════════════════════════════════════ */
+    .score-gauge-wrap {
+        position: relative; display: inline-flex;
+        align-items: center; justify-content: center;
         flex-shrink: 0;
     }
-    #diag-panel .diag-critere-item { border-left: 3px solid #dee2e6; padding-left: .75rem; margin-bottom: .6rem; }
-    #diag-panel .diag-alerte { background: #fff5f5; border: 1px solid #f5c6cb; border-radius: .5rem; padding: .5rem .75rem; margin-bottom: .4rem; color: #842029; font-size: .88rem; }
-    #diag-panel .diag-reco { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: .5rem; padding: .5rem .75rem; margin-bottom: .4rem; color: #14532d; font-size: .88rem; }
-    #diag-panel .diag-disclaimer { background: #fff8e1; border: 1px solid #ffe082; border-radius: .5rem; padding: .6rem .9rem; font-size: .82rem; color: #6d4c00; margin-top: 1rem; }
-    #diag-spinner { display: none; }
+    .score-gauge-wrap svg { display: block; }
+    .score-gauge-text {
+        position: absolute; font-size: 1.3rem; font-weight: 900;
+        color: #1a2a1a; line-height: 1;
+    }
 
-    /* ── Analyse Photo IA ── */
+    /* ═══════════════════════════════════════════════════
+       SECTION 1 — Diagnostic IA
+    ═══════════════════════════════════════════════════ */
+    #btn-diagnostic-ia {
+        background: #198754; color: #fff; border: none;
+        border-radius: 10px; padding: .5rem 1.1rem;
+        font-weight: 600; transition: background .25s, transform .15s;
+    }
+    #btn-diagnostic-ia:hover:not(:disabled) { background: #146c43; transform: translateY(-1px); }
+    #btn-diagnostic-ia:disabled { background: #adb5bd; cursor: not-allowed; }
+
+    #diag-spinner { display: none; }
+    #diag-panel   { display: none; }
+
+    .diag-resume-block {
+        background: #f0fdf4; border-left: 4px solid #198754;
+        border-radius: 0 .6rem .6rem 0;
+        padding: .7rem 1rem; font-size: .9rem; color: #14532d; margin-bottom: 1rem;
+    }
+    .diag-critere-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+    @media (max-width: 576px) { .diag-critere-grid { grid-template-columns: 1fr; } }
+    .diag-critere-card {
+        background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px;
+        padding: .65rem .85rem; transition: box-shadow .2s;
+    }
+    .diag-critere-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .diag-critere-icon { font-size: 1.1rem; margin-right: .4rem; }
+    .diag-critere-label { font-size: .72rem; color: #6c757d; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+    .diag-critere-val   { font-size: .88rem; color: #1a2a1a; margin-top: .15rem; }
+
+    .diag-alerte {
+        background: #fff8e1; border: 1px solid #ffe082;
+        border-radius: .6rem; padding: .5rem .85rem;
+        margin-bottom: .4rem; color: #6d4c00; font-size: .875rem;
+    }
+    .diag-reco {
+        display: flex; align-items: flex-start; gap: .5rem;
+        padding: .45rem 0; border-bottom: 1px solid #e9ecef; font-size: .88rem;
+    }
+    .diag-reco:last-child { border-bottom: none; }
+    .diag-reco-num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 22px; height: 22px; border-radius: 50%;
+        background: #198754; color: #fff; font-size: .72rem; font-weight: 700;
+        flex-shrink: 0; margin-top: .05rem;
+    }
+    .diag-prochaine-badge {
+        display: inline-flex; align-items: center; gap: .4rem;
+        background: #e8f5e9; border: 1px solid #a5d6a7;
+        border-radius: 20px; padding: .4rem .9rem;
+        color: #2e7d32; font-weight: 600; font-size: .9rem;
+    }
+    .diag-disclaimer {
+        background: #f8f9fa; border-radius: .6rem;
+        padding: .65rem 1rem; font-size: .8rem; color: #6c757d;
+        font-style: italic; margin-top: 1rem;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SECTION 2 — Analyse Photo IA
+    ═══════════════════════════════════════════════════ */
     #photo-drop-zone {
-        border: 2px dashed #adb5bd; border-radius: .75rem;
-        padding: 2rem 1rem; text-align: center; cursor: pointer;
-        transition: border-color .2s, background .2s; background: #f8f9fa;
+        border: 2.5px dashed #198754; border-radius: 12px;
+        padding: 2.2rem 1.5rem; text-align: center; cursor: pointer;
+        transition: border-color .25s, background .25s, transform .15s;
+        background: #f0fdf4;
     }
-    #photo-drop-zone.drag-over { border-color: #0d6efd; background: #e7f0ff; }
-    #photo-drop-zone.has-file  { border-color: #198754; background: #f0fdf4; }
+    #photo-drop-zone:hover, #photo-drop-zone.drag-over {
+        border-color: #146c43; background: #dcfce7; transform: scale(1.01);
+    }
+    #photo-drop-zone.has-file { border-color: #0f4c75; background: #e8f4fd; }
+
+    .photo-drop-icon {
+        font-size: 2.5rem; display: block;
+        animation: iconPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes iconPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50%       { transform: scale(1.12); opacity: .8; }
+    }
+
     #photo-preview-wrap { display: none; margin-top: 1rem; text-align: center; }
-    #photo-preview-wrap img { max-height: 200px; max-width: 100%; border-radius: .5rem; border: 1px solid #dee2e6; box-shadow: 0 2px 8px rgba(0,0,0,.08); }
-    #photo-spinner { display: none; }
-    #vision-panel { display: none; }
-    #vision-panel .vision-score-ring {
-        width: 64px; height: 64px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.2rem; font-weight: 900; color: #fff; flex-shrink: 0;
+    #photo-preview-wrap img {
+        max-height: 220px; max-width: 100%; border-radius: 10px;
+        border: 2px solid #1a7fc1; box-shadow: 0 4px 16px rgba(15,76,117,.15);
     }
-    #vision-panel .vision-anomalie { background: #fff5f5; border: 1px solid #f5c6cb; border-radius: .5rem; padding: .45rem .7rem; margin-bottom: .35rem; color: #842029; font-size: .875rem; }
-    #vision-panel .vision-zone     { background: #fff8e1; border: 1px solid #ffe082; border-radius: .5rem; padding: .45rem .7rem; margin-bottom: .35rem; color: #6d4c00; font-size: .875rem; }
-    #vision-panel .vision-reco     { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: .5rem; padding: .45rem .7rem; margin-bottom: .35rem; color: #14532d; font-size: .875rem; }
-    #vision-panel .vision-disclaimer { background: #fff3cd; border: 1px solid #ffc107; border-radius: .5rem; padding: .6rem .9rem; font-size: .82rem; color: #664d03; margin-top: 1rem; }
+    #photo-spinner { display: none; }
+    #vision-panel  { display: none; }
+
+    #btn-analyser-photo {
+        background: linear-gradient(135deg, #0f4c75, #1a7fc1);
+        color: #fff; border: none; border-radius: 10px;
+        padding: .55rem 1.3rem; font-weight: 600;
+        transition: opacity .25s, transform .15s;
+    }
+    #btn-analyser-photo:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+    #btn-analyser-photo:disabled { background: #adb5bd; cursor: not-allowed; }
+
+    .vision-anomalie {
+        background: #fff5f5; border: 1px solid #f5c6cb; border-radius: .6rem;
+        padding: .5rem .85rem; margin-bottom: .4rem; color: #842029; font-size: .875rem;
+    }
+    .vision-zone {
+        background: #fff8e1; border: 1px solid #ffe082; border-radius: .6rem;
+        padding: .5rem .85rem; margin-bottom: .4rem; color: #6d4c00; font-size: .875rem;
+    }
+    .vision-reco {
+        display: flex; align-items: flex-start; gap: .5rem;
+        padding: .45rem 0; border-bottom: 1px solid #e9ecef; font-size: .88rem;
+    }
+    .vision-reco:last-child { border-bottom: none; }
+    .vision-reco-num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 22px; height: 22px; border-radius: 50%;
+        background: #1a7fc1; color: #fff; font-size: .72rem; font-weight: 700;
+        flex-shrink: 0; margin-top: .05rem;
+    }
+    .vision-conclusion-block {
+        background: #f8f9fa; border-left: 4px solid #1a7fc1;
+        border-radius: 0 .6rem .6rem 0;
+        padding: .7rem 1rem; font-size: .88rem; color: #1a2a1a;
+        font-style: italic; margin-bottom: .75rem;
+    }
+    .vision-disclaimer {
+        background: #e8f4fd; border: 1px solid #90caf9; border-radius: .6rem;
+        padding: .65rem 1rem; font-size: .8rem; color: #0d47a1;
+        margin-top: 1rem;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SÉPARATEUR IA
+    ═══════════════════════════════════════════════════ */
+    .ia-divider {
+        display: flex; align-items: center; gap: 1rem;
+        margin: 2rem 0; color: #adb5bd; font-size: .8rem;
+        font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+    }
+    .ia-divider::before, .ia-divider::after {
+        content: ''; flex: 1; height: 1px; background: #dee2e6;
+    }
 </style>
 {% endblock %}
 
@@ -74,8 +220,8 @@
             </button>
             {% endif %}
             {# ── Bouton Diagnostic IA — déclenche l'appel AJAX vers Groq ── #}
-            <button type="button" id="btn-diagnostic-ia" class="btn btn-outline-dark">
-                🧠 Diagnostic IA
+            <button type="button" id="btn-diagnostic-ia">
+                🧠 Lancer le diagnostic IA
             </button>
             <form method="post" action="{{ path('equipement_delete', {id: equipement.id}) }}"
                   onsubmit="return confirm('Supprimer définitivement cet équipement ?')">
@@ -326,29 +472,34 @@
     {% endif %}
 
     {# ══════════════════════════════════════════════════════════════════════
-       ── Analyse Photo IA (Gemini Vision)                              ──
+       ── Analyse Photo IA (Groq Vision)                               ──
        ══════════════════════════════════════════════════════════════════════ #}
-    <div class="card shadow-sm mb-4" id="photo-ia-card">
-        <div class="card-header fw-semibold bg-white d-flex align-items-center gap-2">
-            📸 Analyse Photo IA
-            <span class="badge bg-secondary ms-auto" style="font-size:.72rem;font-weight:500">Gemini Vision</span>
+    <div class="ia-card mb-4" id="photo-ia-card">
+
+        {# Header dégradé bleu-vert #}
+        <div class="ia-card-header-photo d-flex align-items-center gap-3">
+            <span style="font-size:1.6rem; filter:drop-shadow(0 1px 3px rgba(0,0,0,.3))">📸</span>
+            <div class="flex-fill">
+                <div class="fw-bold text-white" style="font-size:1.05rem;">Analyse Photo IA</div>
+                <div style="font-size:.75rem; color:rgba(255,255,255,.75);">Détection visuelle d'anomalies</div>
+            </div>
+            <span class="ia-header-badge">Groq Vision • Llama 4 Scout</span>
         </div>
-        <div class="card-body">
+
+        <div class="card-body p-4">
 
             {# ── Zone d'upload (drag & drop + bouton) ── #}
             <div id="photo-drop-zone" role="button" tabindex="0"
                  aria-label="Zone de dépôt de photo. Cliquez ou glissez une image.">
-                <div id="photo-drop-label">
-                    <div style="font-size:2rem">📷</div>
-                    <div class="fw-semibold mt-1">Glissez une photo ici</div>
-                    <div class="text-muted small mt-1">ou</div>
-                    <label class="btn btn-sm btn-outline-secondary mt-2" style="cursor:pointer">
-                        Choisir une photo
-                        <input type="file" id="photo-file-input" accept="image/jpeg,image/png,image/webp"
-                               style="display:none" aria-label="Sélectionner une photo">
-                    </label>
-                    <div class="text-muted small mt-2">JPG, PNG, WEBP — max 5 MB</div>
-                </div>
+                <span class="photo-drop-icon">📷</span>
+                <div class="fw-semibold mt-2" style="color:#146c43; font-size:.95rem;">Glissez une photo de votre équipement ici</div>
+                <div class="text-muted small mt-1">ou</div>
+                <label class="btn btn-sm mt-2" style="cursor:pointer; background:#198754; color:#fff; border-radius:8px; padding:.4rem .9rem; font-weight:600;">
+                    Choisir une photo
+                    <input type="file" id="photo-file-input" accept="image/jpeg,image/png,image/webp"
+                           style="display:none" aria-label="Sélectionner une photo">
+                </label>
+                <div class="text-muted small mt-2">JPG, PNG, WEBP — max 5 MB</div>
             </div>
 
             {# ── Aperçu de l'image sélectionnée ── #}
@@ -363,29 +514,43 @@
 
             {# ── Bouton d'analyse ── #}
             <div class="mt-3">
-                <button type="button" id="btn-analyser-photo" class="btn btn-dark" disabled>
+                <button type="button" id="btn-analyser-photo" disabled>
                     🔍 Analyser la photo
                 </button>
             </div>
 
-            {# ── Spinner pendant l'analyse Gemini ── #}
-            <div id="photo-spinner" class="text-center py-3">
-                <div class="spinner-border text-dark mb-2" role="status" aria-label="Analyse en cours"></div>
-                <div class="text-muted small">Analyse visuelle en cours…</div>
+            {# ── Spinner pendant l'analyse ── #}
+            <div id="photo-spinner" class="text-center py-4">
+                <div class="spinner-border mb-2" role="status" aria-label="Analyse en cours"
+                     style="color:#1a7fc1; width:2rem; height:2rem;"></div>
+                <div class="small fw-semibold" style="color:#1a7fc1;">Analyse visuelle en cours…</div>
             </div>
 
             {# ── Erreur analyse photo ── #}
             <div id="photo-error" class="alert alert-danger mt-3" style="display:none" role="alert"></div>
 
             {# ── Panel résultat vision ── #}
-            <div id="vision-panel" class="mt-4 border-top pt-3">
-                <div class="d-flex align-items-center gap-3 mb-3">
-                    <div id="vision-score-ring" class="vision-score-ring">—</div>
+            <div id="vision-panel" class="mt-4">
+                <hr style="border-color:#e3f2fd; border-width:2px; margin-bottom:1.25rem;">
+
+                {# Score + état #}
+                <div class="d-flex align-items-center gap-4 mb-3 flex-wrap">
+                    <div class="score-gauge-wrap" id="vision-gauge-wrap">
+                        <svg viewBox="0 0 80 80" width="90" height="90">
+                            <circle cx="40" cy="40" r="32" fill="none" stroke="#e9ecef" stroke-width="7"/>
+                            <circle id="vision-gauge-arc" cx="40" cy="40" r="32" fill="none"
+                                    stroke="#6c757d" stroke-width="7"
+                                    stroke-dasharray="201.1" stroke-dashoffset="201.1"
+                                    stroke-linecap="round"
+                                    transform="rotate(-90 40 40)"
+                                    style="transition: stroke-dashoffset .8s ease, stroke .4s;"/>
+                        </svg>
+                        <div class="score-gauge-text" id="vision-gauge-num">—</div>
+                    </div>
                     <div>
-                        <div class="fw-bold fs-6">État visuel détecté :
-                            <span id="vision-etat-badge" class="badge ms-1" style="font-size:.8rem">—</span>
-                        </div>
-                        <div class="text-muted small mt-1">Score : <span id="vision-score-text">—</span>/100</div>
+                        <div class="text-muted small mb-1" style="font-size:.72rem; text-transform:uppercase; letter-spacing:.05em;">État visuel détecté</div>
+                        <span id="vision-etat-badge" class="badge py-2 px-3" style="font-size:.92rem; border-radius:20px; background:#6c757d; color:#fff;">—</span>
+                        <div class="text-muted small mt-2">Score visuel : <strong id="vision-score-text">—</strong> / 100</div>
                     </div>
                 </div>
 
@@ -405,12 +570,12 @@
                 </div>
 
                 <div id="vision-conclusion-section" style="display:none" class="mb-2">
-                    <div class="fw-semibold mb-1 text-uppercase" style="font-size:.73rem;letter-spacing:.07em;color:#6c757d">📝 Conclusion</div>
-                    <div id="vision-conclusion" class="text-muted small fst-italic"></div>
+                    <div class="fw-semibold mb-1 text-uppercase" style="font-size:.73rem;letter-spacing:.07em;color:#1a7fc1">📝 Conclusion</div>
+                    <div id="vision-conclusion" class="vision-conclusion-block"></div>
                 </div>
 
                 <div class="vision-disclaimer">
-                    ⚠️ Analyse visuelle IA — confirmer avec un technicien agréé avant toute intervention.
+                    🔬 Analyse visuelle IA (Groq Vision) — confirmer avec un technicien agréé avant toute intervention.
                 </div>
             </div>
 
@@ -418,55 +583,85 @@
     </div>
     {# ── Fin Analyse Photo IA ── #}
 
+    {# ── Séparateur visuel entre les deux sections IA ── #}
+    <div class="ia-divider">Intelligence Artificielle</div>
+
     {# ── Spinner visible pendant l'appel IA ── #}
-    <div id="diag-spinner" class="card shadow-sm mb-4">
-        <div class="card-body text-center py-4">
-            <div class="spinner-border text-dark mb-2" role="status"></div>
-            <div class="text-muted">Analyse IA en cours, veuillez patienter…</div>
+    <div id="diag-spinner" class="ia-card mb-4">
+        <div class="card-body text-center py-5">
+            <div class="spinner-border mb-3" role="status"
+                 style="color:#198754; width:2.5rem; height:2.5rem;"></div>
+            <div class="fw-semibold" style="color:#1a5c2e;">Analyse IA en cours…</div>
+            <div class="text-muted small mt-1">Groq • Llama 4 Scout analyse votre équipement</div>
         </div>
     </div>
 
-    {# ── Panel résultat diagnostic IA — rempli dynamiquement par JS ── #}
-    <div id="diag-panel" class="card shadow-sm mb-4 border-0" style="border-top: 4px solid #6c757d !important;">
-        <div class="card-header bg-white d-flex align-items-center gap-3 py-3">
-            {# Cercle coloré avec le score — couleur injectée par JS #}
-            <div id="diag-score-ring" class="diag-score-ring">—</div>
-            <div>
-                <div class="fw-bold fs-5">Diagnostic IA
-                    <span id="diag-indice-badge" class="badge ms-2" style="font-size:.8rem">—</span>
-                </div>
-                <div id="diag-resume" class="text-muted small mt-1"></div>
+    {# ── Panel résultat diagnostic IA ── #}
+    <div id="diag-panel" class="ia-card mb-4">
+
+        {# Header dégradé vert AgriLink — rempli par JS #}
+        <div class="ia-card-header-diag d-flex align-items-center gap-3">
+            <span style="font-size:1.6rem; filter:drop-shadow(0 1px 3px rgba(0,0,0,.3))">🧠</span>
+            <div class="flex-fill">
+                <div class="fw-bold text-white" style="font-size:1.05rem;">Diagnostic IA</div>
+                <div id="diag-resume" style="font-size:.8rem; color:rgba(255,255,255,.8); margin-top:.1rem;"></div>
             </div>
+            <span id="diag-indice-badge" class="ia-header-badge" style="font-size:.78rem;">—</span>
         </div>
-        <div class="card-body">
 
-            {# ── Analyse par critère ── #}
-            <div class="mb-3">
-                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.75rem;letter-spacing:.07em;color:#6c757d">Analyse par critère</div>
-                <div id="diag-criteres"></div>
+        <div class="card-body p-4">
+
+            {# ── Score + indice ── #}
+            <div class="d-flex align-items-center gap-4 mb-4 flex-wrap">
+                <div class="score-gauge-wrap">
+                    <svg viewBox="0 0 80 80" width="96" height="96">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#e9ecef" stroke-width="7"/>
+                        <circle id="diag-gauge-arc" cx="40" cy="40" r="32" fill="none"
+                                stroke="#198754" stroke-width="7"
+                                stroke-dasharray="201.1" stroke-dashoffset="201.1"
+                                stroke-linecap="round"
+                                transform="rotate(-90 40 40)"
+                                style="transition: stroke-dashoffset .9s ease, stroke .4s;"/>
+                    </svg>
+                    <div class="score-gauge-text" id="diag-gauge-num" style="font-size:1.4rem;">—</div>
+                </div>
+                <div>
+                    <div class="text-muted small mb-1" style="font-size:.72rem; text-transform:uppercase; letter-spacing:.05em;">Indice de santé</div>
+                    <span id="diag-indice-pill" class="badge py-2 px-3"
+                          style="font-size:.95rem; border-radius:20px; background:#198754; color:#fff;">—</span>
+                    <div class="text-muted small mt-2">Score global : <strong id="diag-score-num">—</strong> / 100</div>
+                </div>
             </div>
 
-            {# ── Alertes (rouge) — affichées seulement si présentes ── #}
-            <div id="diag-alertes-section" style="display:none" class="mb-3">
-                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.75rem;letter-spacing:.07em;color:#dc3545">⚠️ Alertes</div>
+            {# ── Analyse par critère — grille 2 colonnes ── #}
+            <div class="mb-4">
+                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.72rem;letter-spacing:.07em;color:#6c757d">📊 Analyse par critère</div>
+                <div id="diag-criteres" class="diag-critere-grid"></div>
+            </div>
+
+            {# ── Alertes ── #}
+            <div id="diag-alertes-section" style="display:none" class="mb-4">
+                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.72rem;letter-spacing:.07em;color:#856404">⚠️ Alertes</div>
                 <div id="diag-alertes"></div>
             </div>
 
             {# ── Recommandations ── #}
-            <div class="mb-3">
-                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.75rem;letter-spacing:.07em;color:#198754">✅ Recommandations</div>
+            <div class="mb-4">
+                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.72rem;letter-spacing:.07em;color:#198754">✅ Recommandations</div>
                 <div id="diag-recommandations"></div>
             </div>
 
-            {# ── Prochaine maintenance estimée ── #}
-            <div class="mb-2">
-                <div class="fw-semibold mb-1 text-uppercase" style="font-size:.75rem;letter-spacing:.07em;color:#6c757d">🔧 Prochaine maintenance estimée</div>
-                <div id="diag-prochaine" class="fw-medium"></div>
+            {# ── Prochaine maintenance ── #}
+            <div class="mb-3">
+                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.72rem;letter-spacing:.07em;color:#6c757d">🔧 Prochaine maintenance estimée</div>
+                <div id="diag-prochaine">
+                    <span class="diag-prochaine-badge">🔧 <span id="diag-prochaine-val">—</span></span>
+                </div>
             </div>
 
-            {# ── Disclaimer IA ── #}
+            {# ── Disclaimer ── #}
             <div class="diag-disclaimer">
-                ⚠️ Rapport généré par IA à titre indicatif. Consultez un technicien agréé pour confirmation.
+                ℹ️ Rapport généré par IA à titre indicatif. Consultez un technicien agréé pour toute décision d'intervention.
             </div>
         </div>
     </div>
@@ -482,14 +677,17 @@
 </a>
 
 {# ══════════════════════════════════════════════════════════════════════════
-   ── JS : Diagnostic IA (Groq) + Analyse Photo IA (Gemini Vision)      ──
+   ── JS : Diagnostic IA (Groq) + Analyse Photo IA (Groq Vision)        ──
    ══════════════════════════════════════════════════════════════════════════ #}
 <script>
 (function () {
 
     /* ───────────────────────────────────────────────────────────────────────
-       SECTION 1 — Diagnostic IA Groq
+       CONSTANTES & CONFIG
        ─────────────────────────────────────────────────────────────────────── */
+
+    // Rayon = 32, circonférence = 2 * π * 32 ≈ 201.06
+    var GAUGE_CIRCUMFERENCE = 201.1;
 
     var SANTE_COLORS = {
         'Excellent': '#198754',
@@ -497,7 +695,24 @@
         'Attention': '#fd7e14',
         'Critique':  '#dc3545'
     };
+    var SANTE_ICONS = {
+        'Excellent': '🟢', 'Bon': '🔵', 'Attention': '🟠', 'Critique': '🔴'
+    };
 
+    var VISION_COLORS = {
+        'Bon':           '#198754',
+        'Usure normale': '#0d6efd',
+        'Dégradation':   '#fd7e14',
+        'Critique':      '#dc3545'
+    };
+
+    var CRITERE_ICONS = {
+        'statut':      '📋',
+        'description': '📝',
+        'kilometrage': '🛣️',
+        'heures':      '⏱️',
+        'maintenance': '🔧'
+    };
     var CRITERE_LABELS = {
         'statut':      'Statut actuel',
         'description': 'Description',
@@ -506,10 +721,61 @@
         'maintenance': 'Historique maintenance'
     };
 
-    var btn       = document.getElementById('btn-diagnostic-ia');
-    var spinner   = document.getElementById('diag-spinner');
-    var panel     = document.getElementById('diag-panel');
-    var errorDiv  = document.getElementById('diag-error');
+    /* ───────────────────────────────────────────────────────────────────────
+       UTILITAIRES COMMUNS
+       ─────────────────────────────────────────────────────────────────────── */
+
+    /**
+     * BUG FIX [object Object] :
+     * Convertit n'importe quelle valeur (string, objet, number) en texte lisible.
+     * Gère les objets retournés par le LLM à la place de strings simples.
+     */
+    function itemToString(item) {
+        if (item === null || item === undefined) return '';
+        if (typeof item === 'string') return item;
+        if (typeof item === 'number' || typeof item === 'boolean') return String(item);
+        if (typeof item === 'object') {
+            // Essayer les propriétés textuelles courantes des LLMs
+            return item.texte        || item.action       || item.description
+                || item.recommandation || item.text        || item.message
+                || item.content      || item.titre        || item.valeur
+                || item.analyse      || item.commentaire  || item.details
+                || JSON.stringify(item);
+        }
+        return String(item);
+    }
+
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    /** Anime la jauge circulaire SVG vers le score donné (0–100). */
+    function animateGauge(arcId, score, color) {
+        var arc = document.getElementById(arcId);
+        if (!arc) return;
+        var offset = GAUGE_CIRCUMFERENCE * (1 - Math.min(Math.max(score, 0), 100) / 100);
+        arc.style.stroke = color;
+        // Forcer le reflow pour que la transition CSS s'anime depuis 0
+        arc.style.strokeDashoffset = GAUGE_CIRCUMFERENCE;
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                arc.style.strokeDashoffset = offset;
+            });
+        });
+    }
+
+    /* ───────────────────────────────────────────────────────────────────────
+       SECTION 1 — Diagnostic IA Groq
+       ─────────────────────────────────────────────────────────────────────── */
+
+    var btn      = document.getElementById('btn-diagnostic-ia');
+    var spinner  = document.getElementById('diag-spinner');
+    var panel    = document.getElementById('diag-panel');
+    var errorDiv = document.getElementById('diag-error');
 
     var csrfToken = {{ csrf_token('diagnostic_ia_' ~ equipement.id)|json_encode|raw }};
     var diagUrl   = {{ path('equipement_diagnostic_ia', {id: equipement.id})|json_encode|raw }};
@@ -519,20 +785,17 @@
         errorDiv.style.display = 'none';
         spinner.style.display  = 'block';
         btn.disabled = true;
-        btn.textContent = '⏳ Analyse…';
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Analyse…';
 
         fetch(diagUrl, {
             method: 'POST',
-            headers: {
-                'X-CSRF-Token': csrfToken,
-                'Accept':       'application/json',
-            }
+            headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json' }
         })
         .then(function (r) { return r.json(); })
         .then(function (data) {
             spinner.style.display = 'none';
-            btn.disabled = false;
-            btn.textContent = '🧠 Diagnostic IA';
+            btn.disabled  = false;
+            btn.innerHTML = '🧠 Lancer le diagnostic IA';
 
             if (!data.success) {
                 errorDiv.textContent   = data.error || 'Erreur inconnue.';
@@ -543,8 +806,8 @@
         })
         .catch(function () {
             spinner.style.display = 'none';
-            btn.disabled = false;
-            btn.textContent = '🧠 Diagnostic IA';
+            btn.disabled  = false;
+            btn.innerHTML = '🧠 Lancer le diagnostic IA';
             errorDiv.textContent   = 'Erreur réseau : impossible de contacter le service IA.';
             errorDiv.style.display = 'block';
         });
@@ -552,38 +815,52 @@
 
     function renderDiagnostic(d) {
         var indice = d.indice_sante || 'Bon';
-        var score  = d.score || 0;
+        var score  = typeof d.score === 'number' ? d.score : parseInt(d.score) || 0;
         var color  = SANTE_COLORS[indice] || '#6c757d';
+        var icon   = SANTE_ICONS[indice]  || '';
 
-        var ring = document.getElementById('diag-score-ring');
-        ring.textContent    = score;
-        ring.style.background = color;
+        // ── Jauge SVG animée ────────────────────────────────────────────────
+        animateGauge('diag-gauge-arc', score, color);
+        document.getElementById('diag-gauge-num').textContent  = score;
+        document.getElementById('diag-score-num').textContent  = score;
 
-        var badge = document.getElementById('diag-indice-badge');
-        badge.textContent      = indice;
-        badge.style.background = color;
-        badge.style.color      = '#fff';
+        // ── Badge indice en header ──────────────────────────────────────────
+        var headerBadge = document.getElementById('diag-indice-badge');
+        headerBadge.textContent = icon + ' ' + indice;
 
+        // ── Badge pill indice de santé ──────────────────────────────────────
+        var pill = document.getElementById('diag-indice-pill');
+        pill.textContent      = icon + ' ' + indice;
+        pill.style.background = color;
+
+        // ── Résumé dans le header ───────────────────────────────────────────
         document.getElementById('diag-resume').textContent = d.resume || '';
 
-        // ── Analyse par critère ────────────────────────────────────────────────
+        // ── Analyse par critère — grille cards (BUG FIX: itemToString) ─────
         var criteresEl = document.getElementById('diag-criteres');
         criteresEl.innerHTML = '';
         var criteres = d.analyse_par_critere || {};
         Object.keys(criteres).forEach(function (key) {
             var val = criteres[key];
-            if (val === null || val === 'null' || val === '') return;
-            var div = document.createElement('div');
-            div.className = 'diag-critere-item';
-            div.innerHTML = '<span class="fw-semibold small">' + (CRITERE_LABELS[key] || key) + '</span>'
-                          + '<div class="text-muted small">' + escHtml(String(val)) + '</div>';
-            criteresEl.appendChild(div);
+            if (val === null || val === undefined || val === 'null' || val === '') return;
+            // BUG FIX : itemToString gère les objets ET les strings
+            var valStr = itemToString(val);
+            if (!valStr || valStr === 'null') return;
+            var card = document.createElement('div');
+            card.className = 'diag-critere-card';
+            card.innerHTML =
+                '<div class="diag-critere-label">'
+                + '<span class="diag-critere-icon">' + (CRITERE_ICONS[key] || '•') + '</span>'
+                + escHtml(CRITERE_LABELS[key] || key)
+                + '</div>'
+                + '<div class="diag-critere-val">' + escHtml(valStr) + '</div>';
+            criteresEl.appendChild(card);
         });
 
-        // ── Alertes ───────────────────────────────────────────────────────────
+        // ── Alertes ─────────────────────────────────────────────────────────
         var alertes = Array.isArray(d.alertes) ? d.alertes : [];
         var alertesSection = document.getElementById('diag-alertes-section');
-        var alertesEl = document.getElementById('diag-alertes');
+        var alertesEl      = document.getElementById('diag-alertes');
         alertesEl.innerHTML = '';
         if (alertes.length > 0) {
             alertesSection.style.display = 'block';
@@ -597,81 +874,71 @@
             alertesSection.style.display = 'none';
         }
 
-        // ── Recommandations (BUG FIX : gère les objets retournés par Groq) ────
+        // ── Recommandations numérotées ───────────────────────────────────────
         var recos = Array.isArray(d.recommandations) ? d.recommandations : [];
         var recosEl = document.getElementById('diag-recommandations');
         recosEl.innerHTML = '';
         recos.forEach(function (r, i) {
-            var div = document.createElement('div');
-            div.className   = 'diag-reco';
-            div.textContent = (i + 1) + '. ' + itemToString(r);
-            recosEl.appendChild(div);
+            var row = document.createElement('div');
+            row.className = 'diag-reco';
+            var num = document.createElement('span');
+            num.className   = 'diag-reco-num';
+            num.textContent = i + 1;
+            var txt = document.createElement('span');
+            txt.textContent = itemToString(r);
+            row.appendChild(num);
+            row.appendChild(txt);
+            recosEl.appendChild(row);
         });
 
-        document.getElementById('diag-prochaine').textContent =
-            d.prochaine_maintenance_estimee || 'Non estimée';
+        // ── Prochaine maintenance ────────────────────────────────────────────
+        document.getElementById('diag-prochaine-val').textContent =
+            itemToString(d.prochaine_maintenance_estimee) || 'Non estimée';
 
         panel.style.display = 'block';
         panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     /* ───────────────────────────────────────────────────────────────────────
-       SECTION 2 — Analyse Photo IA (Gemini Vision)
+       SECTION 2 — Analyse Photo IA (Groq Vision)
        ─────────────────────────────────────────────────────────────────────── */
-
-    var VISION_COLORS = {
-        'Bon':           '#198754',
-        'Usure normale': '#0d6efd',
-        'Dégradation':   '#fd7e14',
-        'Critique':      '#dc3545'
-    };
 
     var photoUrl = {{ path('equipement_analyse_photo', {id: equipement.id})|json_encode|raw }};
 
-    var dropZone       = document.getElementById('photo-drop-zone');
-    var fileInput      = document.getElementById('photo-file-input');
-    var previewWrap    = document.getElementById('photo-preview-wrap');
-    var previewImg     = document.getElementById('photo-preview-img');
-    var fileNameEl     = document.getElementById('photo-file-name');
-    var btnClearPhoto  = document.getElementById('btn-clear-photo');
-    var btnAnalyser    = document.getElementById('btn-analyser-photo');
-    var photoSpinner   = document.getElementById('photo-spinner');
-    var photoError     = document.getElementById('photo-error');
-    var visionPanel    = document.getElementById('vision-panel');
+    var dropZone      = document.getElementById('photo-drop-zone');
+    var fileInput     = document.getElementById('photo-file-input');
+    var previewWrap   = document.getElementById('photo-preview-wrap');
+    var previewImg    = document.getElementById('photo-preview-img');
+    var fileNameEl    = document.getElementById('photo-file-name');
+    var btnClearPhoto = document.getElementById('btn-clear-photo');
+    var btnAnalyser   = document.getElementById('btn-analyser-photo');
+    var photoSpinner  = document.getElementById('photo-spinner');
+    var photoError    = document.getElementById('photo-error');
+    var visionPanel   = document.getElementById('vision-panel');
 
     var selectedFile = null;
 
-    // ── Drag & drop ──────────────────────────────────────────────────────────
     dropZone.addEventListener('dragover', function (e) {
-        e.preventDefault();
-        dropZone.classList.add('drag-over');
+        e.preventDefault(); dropZone.classList.add('drag-over');
     });
     dropZone.addEventListener('dragleave', function () {
         dropZone.classList.remove('drag-over');
     });
     dropZone.addEventListener('drop', function (e) {
-        e.preventDefault();
-        dropZone.classList.remove('drag-over');
-        var files = e.dataTransfer.files;
-        if (files.length > 0) { setFile(files[0]); }
+        e.preventDefault(); dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length > 0) setFile(e.dataTransfer.files[0]);
     });
-
-    // ── Click sur la zone (délégué au label+input intérieur) ─────────────────
     dropZone.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { fileInput.click(); }
+        if (e.key === 'Enter' || e.key === ' ') fileInput.click();
     });
-
     fileInput.addEventListener('change', function () {
-        if (fileInput.files.length > 0) { setFile(fileInput.files[0]); }
+        if (fileInput.files.length > 0) setFile(fileInput.files[0]);
     });
-
     btnClearPhoto.addEventListener('click', clearFile);
-
     btnAnalyser.addEventListener('click', lancerAnalysePhoto);
 
     function setFile(file) {
-        var allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
+        if (!['image/jpeg','image/png','image/webp'].includes(file.type)) {
             showPhotoError('Format non supporté. Utilisez JPG, PNG ou WEBP.');
             return;
         }
@@ -682,20 +949,16 @@
         photoError.style.display = 'none';
         selectedFile = file;
 
-        // Aperçu
         var reader = new FileReader();
         reader.onload = function (e) {
-            previewImg.src  = e.target.result;
+            previewImg.src = e.target.result;
             previewWrap.style.display = 'block';
         };
         reader.readAsDataURL(file);
 
         fileNameEl.textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
         dropZone.classList.add('has-file');
-
-        btnAnalyser.disabled = false;
-
-        // Masquer résultat précédent
+        btnAnalyser.disabled     = false;
         visionPanel.style.display = 'none';
     }
 
@@ -713,74 +976,64 @@
     function lancerAnalysePhoto() {
         if (!selectedFile) return;
 
-        photoError.style.display  = 'none';
-        visionPanel.style.display = 'none';
+        photoError.style.display   = 'none';
+        visionPanel.style.display  = 'none';
         photoSpinner.style.display = 'block';
-        btnAnalyser.disabled = true;
-        btnAnalyser.textContent = '⏳ Analyse…';
+        btnAnalyser.disabled  = true;
+        btnAnalyser.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Analyse…';
 
         var formData = new FormData();
         formData.append('photo', selectedFile);
 
-        fetch(photoUrl, {
-            method: 'POST',
-            body:   formData,
-        })
+        fetch(photoUrl, { method: 'POST', body: formData })
         .then(function (r) { return r.json(); })
         .then(function (data) {
             photoSpinner.style.display = 'none';
-            btnAnalyser.disabled    = false;
-            btnAnalyser.textContent = '🔍 Analyser la photo';
+            btnAnalyser.disabled  = false;
+            btnAnalyser.innerHTML = '🔍 Analyser la photo';
 
-            if (!data.success) {
-                showPhotoError(data.error || 'Erreur inconnue.');
-                return;
-            }
+            if (!data.success) { showPhotoError(data.error || 'Erreur inconnue.'); return; }
             renderVisionResult(data.analyse);
         })
         .catch(function () {
             photoSpinner.style.display = 'none';
-            btnAnalyser.disabled    = false;
-            btnAnalyser.textContent = '🔍 Analyser la photo';
+            btnAnalyser.disabled  = false;
+            btnAnalyser.innerHTML = '🔍 Analyser la photo';
             showPhotoError('Erreur réseau : impossible de contacter le service IA.');
         });
     }
 
     function renderVisionResult(a) {
         var etat  = a.etat_visuel  || 'Inconnu';
-        var score = a.score_visuel || 0;
+        var score = typeof a.score_visuel === 'number' ? a.score_visuel : parseInt(a.score_visuel) || 0;
         var color = VISION_COLORS[etat] || '#6c757d';
 
-        // Cercle score
-        var ring = document.getElementById('vision-score-ring');
-        ring.textContent      = score;
-        ring.style.background = color;
+        // ── Jauge SVG animée ────────────────────────────────────────────────
+        animateGauge('vision-gauge-arc', score, color);
+        document.getElementById('vision-gauge-num').textContent  = score;
+        document.getElementById('vision-score-text').textContent = score;
 
-        // Badge état
+        // ── Badge état visuel ───────────────────────────────────────────────
         var badge = document.getElementById('vision-etat-badge');
         badge.textContent      = etat;
         badge.style.background = color;
-        badge.style.color      = '#fff';
 
-        document.getElementById('vision-score-text').textContent = score;
+        // ── Listes résultats ────────────────────────────────────────────────
+        renderVisionList('vision-anomalies-section', 'vision-anomalies',
+            a.anomalies_detectees, 'vision-anomalie', '🔴 ', false);
+        renderVisionList('vision-zones-section', 'vision-zones',
+            a.zones_problematiques, 'vision-zone', '📍 ', false);
+        renderVisionList('vision-recos-section', 'vision-recos',
+            a.recommandations_visuelles, 'vision-reco', '', true);
 
-        // Anomalies
-        renderVisionList('vision-anomalies-section', 'vision-anomalies', a.anomalies_detectees, 'vision-anomalie', '🔴 ');
-
-        // Zones problématiques
-        renderVisionList('vision-zones-section', 'vision-zones', a.zones_problematiques, 'vision-zone', '📍 ');
-
-        // Recommandations visuelles
-        renderVisionList('vision-recos-section', 'vision-recos', a.recommandations_visuelles, 'vision-reco', '', true);
-
-        // Conclusion
+        // ── Conclusion ──────────────────────────────────────────────────────
         var conclusionSection = document.getElementById('vision-conclusion-section');
         var conclusionEl      = document.getElementById('vision-conclusion');
         if (a.conclusion) {
-            conclusionEl.textContent          = a.conclusion;
-            conclusionSection.style.display   = 'block';
+            conclusionEl.textContent        = a.conclusion;
+            conclusionSection.style.display = 'block';
         } else {
-            conclusionSection.style.display   = 'none';
+            conclusionSection.style.display = 'none';
         }
 
         visionPanel.style.display = 'block';
@@ -792,51 +1045,30 @@
         var listEl  = document.getElementById(listId);
         listEl.innerHTML = '';
         var arr = Array.isArray(items) ? items : [];
-        if (arr.length === 0) {
-            section.style.display = 'none';
-            return;
-        }
+        if (arr.length === 0) { section.style.display = 'none'; return; }
         section.style.display = 'block';
         arr.forEach(function (item, i) {
-            var div = document.createElement('div');
-            div.className   = itemClass;
-            div.textContent = (numbered ? (i + 1) + '. ' : prefix) + itemToString(item);
-            listEl.appendChild(div);
+            var row = document.createElement('div');
+            if (numbered) {
+                row.className = itemClass;
+                var num = document.createElement('span');
+                num.className   = 'vision-reco-num';
+                num.textContent = i + 1;
+                var txt = document.createElement('span');
+                txt.textContent = itemToString(item);
+                row.appendChild(num);
+                row.appendChild(txt);
+            } else {
+                row.className   = itemClass;
+                row.textContent = prefix + itemToString(item);
+            }
+            listEl.appendChild(row);
         });
     }
 
     function showPhotoError(msg) {
         photoError.textContent   = msg;
         photoError.style.display = 'block';
-    }
-
-    /* ───────────────────────────────────────────────────────────────────────
-       UTILITAIRES COMMUNS
-       ─────────────────────────────────────────────────────────────────────── */
-
-    /**
-     * Convertit un élément de tableau (string ou objet) en texte lisible.
-     * Corrige le bug "[object Object]" quand le LLM retourne des objets
-     * à la place de strings dans les tableaux recommandations/alertes.
-     */
-    function itemToString(item) {
-        if (item === null || item === undefined) return '';
-        if (typeof item === 'string') return item;
-        if (typeof item === 'object') {
-            // Essayer les propriétés textuelles courantes retournées par les LLMs
-            return item.texte || item.action || item.description || item.recommandation
-                || item.text  || item.message || item.content   || item.titre
-                || JSON.stringify(item);
-        }
-        return String(item);
-    }
-
-    function escHtml(str) {
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;');
     }
 
 })();
