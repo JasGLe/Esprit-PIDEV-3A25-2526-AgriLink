@@ -24,6 +24,7 @@ use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[Route('/evenement')]
 #[IsGranted('ROLE_USER')]
@@ -40,6 +41,7 @@ class EvenementController extends AbstractController
         private readonly string $mailerFromName,
         #[Autowire('%env(APP_URL)%')]
         private readonly string $appUrl,
+        private readonly HttpClientInterface $httpClient,
     ) {
     }
 
@@ -611,19 +613,38 @@ class EvenementController extends AbstractController
         return array_values(array_unique($errors));
     }
 
+    #[Route('/{id}/poster', name: 'evenement_poster_page', requirements: ['id' => '\\d+'], methods: ['GET'])]
+    public function posterPage(Evenement $evenement): Response
+    {
+        $this->assertModuleAccess();
+
+        if (!$this->canManageEvenement($evenement)) {
+            throw $this->createAccessDeniedException('Accès refusé.');
+        }
+
+        return $this->render('activity/evenement/generate_poster.html.twig', [
+            'evenement' => $evenement,
+        ]);
+    }
+
     #[Route('/{id}/generate-poster', name: 'evenement_generate_poster', requirements: ['id' => '\\d+'], methods: ['POST'])]
     public function generatePoster(Evenement $evenement): Response
     {
         $this->assertModuleAccess();
 
+        if (!$this->canManageEvenement($evenement)) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Accès refusé.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
         try {
-            // Generate poster using Replicate API
-            $result = $this->posterGeneratorService->generatePoster($evenement);
+            $result = $this->posterGeneratorService->buildPosterUrl($evenement);
 
             return $this->json([
                 'success' => true,
-                'prediction_id' => $result['prediction_id'] ?? null,
-                'message' => 'Génération de l\'affiche en cours...',
+                'image_url' => $result['url'],
             ]);
         } catch (\Exception $e) {
             return $this->json([
@@ -633,25 +654,83 @@ class EvenementController extends AbstractController
         }
     }
 
-    #[Route('/api/poster-status/{predictionId}', name: 'evenement_poster_status', methods: ['GET'])]
-    public function posterStatus(string $predictionId): Response
+    /**
+     * Fetches the Pollinations image server-side and returns bytes with a safe image/* type,
+     * so the browser never loads the cross-origin URL in <img> (avoids CORB).
+     */
+    #[Route('/{id}/poster-image', name: 'evenement_poster_image', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function proxyPosterImage(Request $request, Evenement $evenement): Response
     {
         $this->assertModuleAccess();
 
-        try {
-            $status = $this->posterGeneratorService->checkPredictionStatus($predictionId);
-
-            return $this->json([
-                'success' => true,
-                'status' => $status['status'],
-                'output' => $status['output'] ?? null,
-                'error' => $status['error'] ?? null,
-            ]);
-        } catch (\Exception $e) {
+        if (!$this->canManageEvenement($evenement)) {
             return $this->json([
                 'success' => false,
-                'message' => 'Erreur lors de la vérification du statut: ' . $e->getMessage(),
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+                'message' => 'Accès refusé.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            $payload = $request->toArray();
+        } catch (\Throwable) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Corps JSON invalide.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $imageUrl = trim((string) ($payload['image_url'] ?? ''));
+        if ($imageUrl === '' || !$this->posterGeneratorService->isAllowedRemotePosterUrl($imageUrl)) {
+            return $this->json([
+                'success' => false,
+                'message' => 'URL d\'image non autorisée.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $remote = $this->httpClient->request('GET', $imageUrl, [
+                'timeout' => 180,
+                'max_duration' => 180,
+                'headers' => [
+                    'Accept' => 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+                    'User-Agent' => 'Symfony EventPoster/1.0',
+                ],
+            ]);
+
+            $status = $remote->getStatusCode();
+            if ($status < 200 || $status >= 300) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Le service d\'images a répondu avec une erreur (' . $status . ').',
+                ], Response::HTTP_BAD_GATEWAY);
+            }
+
+            $body = $remote->getContent(false);
+            if ($body === '') {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Image vide.',
+                ], Response::HTTP_BAD_GATEWAY);
+            }
+
+            $headerCt = $remote->getHeaders()['content-type'][0] ?? null;
+            $contentType = $this->posterGeneratorService->guessImageContentType($body, $headerCt);
+            if ($contentType === '') {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Réponse inattendue du service d\'images (pas une image).',
+                ], Response::HTTP_BAD_GATEWAY);
+            }
+
+            return new Response($body, Response::HTTP_OK, [
+                'Content-Type' => $contentType,
+                'Cache-Control' => 'private, max-age=300',
+            ]);
+        } catch (\Throwable $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Échec du téléchargement de l\'image: ' . $e->getMessage(),
+            ], Response::HTTP_BAD_GATEWAY);
         }
     }
 }

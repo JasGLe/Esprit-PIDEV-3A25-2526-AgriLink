@@ -342,14 +342,31 @@ class ActiviteController extends AbstractController
         
         // Détecte les anomalies dans les 10 prochains jours
         $anomalies = $anomalyDetectorService->detectAnomalies($userId);
-        
+
         // Génère les recommandations IA
         $recommendations = $anomalyDetectorService->generateRecommendations($anomalies, $userId);
+
+        $nextDays = 10;
+        $today = new \DateTime();
+        $horizon = (clone $today)->modify(sprintf('+%d days', $nextDays));
+        $plannedWindow = $this->activiteRepository->findBetweenDates($today, $horizon);
+        $plannedActivitiesCount = \count(array_filter(
+            $plannedWindow,
+            static fn (Activite $a) => $a->getIdAgriculteur() === $userId
+        ));
+
+        $displayName = trim((string) $user->getNom());
+        if ($displayName === '') {
+            $displayName = (string) (explode('@', (string) $user->getEmail())[0] ?? 'Agriculteur');
+        }
 
         return $this->render('activity/ia_recommendations/index.html.twig', [
             'recommendations' => $recommendations,
             'anomalies' => $anomalies,
-            'nextDays' => 10,
+            'nextDays' => $nextDays,
+            'plannedActivitiesCount' => $plannedActivitiesCount,
+            'anomalyGroupsCount' => \count($anomalies),
+            'recoUserDisplayName' => $displayName,
         ]);
     }
 

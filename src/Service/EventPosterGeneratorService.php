@@ -3,169 +3,123 @@
 namespace App\Service;
 
 use App\Entity\Activity\Evenement;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 
+/**
+ * Generates event poster images using Pollinations.ai.
+ *
+ * Pollinations.ai is completely free with no API key required.
+ * It returns an image URL that can be embedded directly in the browser.
+ * Generation time varies (often tens of seconds; Pollinations may cache similar requests).
+ */
 class EventPosterGeneratorService
 {
-    private HttpClientInterface $client;
-    private string $replicateApiKey;
-
-    public function __construct(HttpClientInterface $client)
-    {
-        $this->client = $client;
-        $this->replicateApiKey = $_ENV['REPLICATE_API_KEY'] ?? '';
-    }
+    private const POLLINATIONS_BASE = 'https://image.pollinations.ai/prompt/';
+    private const IMAGE_WIDTH = 768;
+    private const IMAGE_HEIGHT = 512;
 
     /**
-     * Génère une affiche pour un événement avec Stable Diffusion
+     * Builds a direct image URL from Pollinations.ai based on event data.
+     * No HTTP call needed from the backend – the browser loads the image directly.
+     *
+     * @return array{url: string, prompt: string}
      */
-    public function generatePoster(Evenement $evenement): array
+    public function buildPosterUrl(Evenement $evenement): array
     {
-        // Mode test/mock - retourner une réponse simulée
-        if (($_ENV['APP_ENV'] ?? '') === 'test' || ($_ENV['MOCK_REPLICATE'] ?? '') === 'true') {
-            return $this->getMockPredictionResponse();
-        }
+        $prompt = $this->buildPrompt($evenement);
+        $encodedPrompt = rawurlencode($prompt);
 
-        if (!$this->replicateApiKey) {
-            throw new \Exception("REPLICATE_API_KEY not configured");
-        }
+        $url = sprintf(
+            '%s%s?width=%d&height=%d&seed=%d&nologo=true&enhance=true',
+            self::POLLINATIONS_BASE,
+            $encodedPrompt,
+            self::IMAGE_WIDTH,
+            self::IMAGE_HEIGHT,
+            abs(crc32((string) $evenement->getId()) + time()) % 99999
+        );
 
-        // Construire le prompt basé sur les données de l'événement
-        $prompt = $this->buildPromptFromEvent($evenement);
-
-        try {
-            // Lancer la génération (asynchrone)
-            $response = $this->client->request(
-                'POST',
-                'https://api.replicate.com/v1/predictions',
-                [
-                    'headers' => [
-                        'Authorization' => 'Token ' . $this->replicateApiKey,
-                        'Content-Type' => 'application/json'
-                    ],
-                    'json' => [
-                        'version' => '3feb88c4e011fa324e2a0b7ad898605d4e5b4062404de0bfa5dd1cb5d6661a75',
-                        'input' => [
-                            'prompt' => $prompt,
-                            'num_outputs' => 1,
-                            'height' => 576,
-                            'width' => 768,
-                            'scheduler' => 'K_EULER',
-                            'num_inference_steps' => 20,
-                            'guidance_scale' => 7.5
-                        ]
-                    ]
-                ]
-            );
-
-            $data = $response->toArray();
-            
-            return [
-                'status' => 'processing',
-                'prediction_id' => $data['id'] ?? null,
-                'created_at' => $data['created_at'] ?? null
-            ];
-
-        } catch (\Exception $e) {
-            throw new \Exception("Erreur lors de la génération: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Vérifier l'état de la génération (mock ou réelle)
-     */
-    public function checkPredictionStatus(string $predictionId): array
-    {
-        // Mode test/mock - retourner une réponse simulée après 3-5 secondes
-        if (str_starts_with($predictionId, 'mock-')) {
-            return $this->getMockPredictionStatus($predictionId);
-        }
-
-        if (!$this->replicateApiKey) {
-            throw new \Exception("REPLICATE_API_KEY not configured");
-        }
-
-        try {
-            $response = $this->client->request(
-                'GET',
-                'https://api.replicate.com/v1/predictions/' . $predictionId,
-                [
-                    'headers' => [
-                        'Authorization' => 'Token ' . $this->replicateApiKey
-                    ]
-                ]
-            );
-
-            $data = $response->toArray();
-
-            return [
-                'status' => $data['status'] ?? 'unknown',
-                'output' => $data['output'] ?? null,
-                'error' => $data['error'] ?? null
-            ];
-
-        } catch (\Exception $e) {
-            throw new \Exception("Erreur lors de la vérification: " . $e->getMessage());
-        }
-    }
-
-    /**
-     * Construire le prompt basé sur les données de l'événement
-     */
-    private function buildPromptFromEvent(Evenement $evenement): string
-    {
-        $titre = $evenement->getTitre() ?? 'Événement Agricole';
-        $date = $evenement->getDateEvenement()?->format('d/m/Y') ?? 'Date TBD';
-        $lieu = $evenement->getLieu() ?? 'Lieu à définir';
-        $description = $evenement->getDescription() ?? 'Événement agricole professionnel';
-
-        return <<<PROMPT
-Créer une affiche professionnelle et attrayante pour un événement agricole avec:
-- Titre: "$titre"
-- Date: $date
-- Lieu: $lieu
-- Description: $description
-
-Design requis:
-- Couleurs vives et professionnelles (bleu, vert, or)
-- Style moderne et épuré
-- Icônes agricoles (tracteur, récolte, grains)
-- Texte lisible et bien hiérarchisé
-- Format paysage (1024x768)
-- Arrière-plan avec motifs agricoles
-- Style: affiche événementielle - haute qualité
-
-Langue: Français
-Ambiance: Professionnelle, moderne, inspirante
-PROMPT;
-    }
-
-    /**
-     * Génère une réponse mock simulant Replicate pour les tests
-     */
-    private function getMockPredictionResponse(): array
-    {
-        $predictionId = 'mock-' . uniqid() . '-' . bin2hex(random_bytes(4));
-        
         return [
-            'status' => 'processing',
-            'prediction_id' => $predictionId,
-            'created_at' => date('Y-m-d H:i:s'),
-            'mock' => true,
+            'url' => $url,
+            'prompt' => $prompt,
         ];
     }
 
     /**
-     * Génère un statut mock avec une fausse image générée
+     * Limits server-side fetch to Pollinations poster URLs (SSRF guard).
      */
-    private function getMockPredictionStatus(string $predictionId): array
+    public function isAllowedRemotePosterUrl(string $url): bool
     {
-        return [
-            'status' => 'succeeded',
-            'output' => [
-                'https://via.placeholder.com/1024x768?text=Event+Poster+Generated'
-            ],
-            'error' => null,
-        ];
+        if (!filter_var($url, \FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        $parts = parse_url($url);
+        if (($parts['scheme'] ?? '') !== 'https') {
+            return false;
+        }
+
+        if (strtolower((string) ($parts['host'] ?? '')) !== 'image.pollinations.ai') {
+            return false;
+        }
+
+        $path = (string) ($parts['path'] ?? '');
+
+        return str_starts_with($path, '/prompt/');
+    }
+
+    /**
+     * Prefer magic-byte sniffing so we send a correct image/* type even if the upstream
+     * server mislabels the body (avoids browser CORB issues on <img> / blob usage).
+     */
+    public function guessImageContentType(string $binary, ?string $headerContentType): string
+    {
+        if (str_starts_with($binary, "\xFF\xD8\xFF")) {
+            return 'image/jpeg';
+        }
+
+        if (str_starts_with($binary, "\x89PNG\r\n\x1a\n")) {
+            return 'image/png';
+        }
+
+        if (str_starts_with($binary, 'GIF87a') || str_starts_with($binary, 'GIF89a')) {
+            return 'image/gif';
+        }
+
+        if (\strlen($binary) >= 12 && str_starts_with($binary, 'RIFF') && substr($binary, 8, 4) === 'WEBP') {
+            return 'image/webp';
+        }
+
+        if ($headerContentType !== null) {
+            $main = strtolower(trim(explode(';', $headerContentType, 2)[0]));
+            if (preg_match('#^image/[\w.+-]+$#', $main) === 1) {
+                return $main;
+            }
+        }
+
+        return '';
+    }
+
+    private function buildPrompt(Evenement $evenement): string
+    {
+        $titre = $evenement->getTitre();
+        $date = $evenement->getDateEvenement()?->format('d/m/Y') ?? '';
+        $lieu = $evenement->getLieu();
+        $type = strtoupper((string) $evenement->getTypeEvenement());
+
+        $typeFr = match ($type) {
+            'OFFICIEL' => 'Événement officiel',
+            'PERSONNEL' => 'Événement personnel',
+            default => 'Événement agricole',
+        };
+
+        return sprintf(
+            'Affiche événement agricole professionnelle, palette vert et bleu, fond clair, hiérarchie visuelle claire, '
+            . 'qualité print. Le visuel DOIT inclure du texte en français, très lisible, gros caractères sans serif, fort contraste : '
+            . 'titre principal exactement « %s » ; ligne « Date : %s » ; ligne « Lieu : %s » ; ligne « Type : %s ». '
+            . 'Disposition type affiche A4 horizontale, texte net, pas de texte illisible ni bruité.',
+            $titre,
+            $date,
+            $lieu,
+            $typeFr
+        );
     }
 }
