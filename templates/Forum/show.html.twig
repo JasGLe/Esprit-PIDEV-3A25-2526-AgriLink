@@ -182,6 +182,122 @@
             display: block;
         }
 
+        .forum-message-tools {
+            margin-top: 0.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+            align-items: flex-start;
+        }
+
+        .forum-message-row.is-own .forum-message-tools {
+            align-items: flex-end;
+        }
+
+        .forum-translate-trigger {
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            color: #111827;
+            border-radius: 999px;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .forum-translate-menu {
+            display: none;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+        }
+
+        .forum-translate-menu.is-visible {
+            display: flex;
+        }
+
+        .forum-translate-option {
+            border: 1px solid #d1d5db;
+            background: #f8fafc;
+            color: #0f172a;
+            border-radius: 999px;
+            padding: 0.4rem 0.7rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .forum-translation-box {
+            display: none;
+            width: 100%;
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            color: #1e3a8a;
+            border-radius: 1rem;
+            padding: 0.75rem 0.9rem;
+        }
+
+        .forum-translation-box.is-visible {
+            display: block;
+        }
+
+        .forum-translation-label {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.35rem;
+        }
+
+        .forum-translation-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .forum-transcribe-trigger {
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            color: #111827;
+            border-radius: 999px;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .forum-transcript-box {
+            display: none;
+            width: 100%;
+            border: 1px solid #e5e7eb;
+            background: #f8fafc;
+            color: #0f172a;
+            border-radius: 1rem;
+            padding: 0.75rem 0.9rem;
+        }
+
+        .forum-transcript-box.is-visible {
+            display: block;
+        }
+
+        .forum-transcript-label {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.35rem;
+        }
+
+        .forum-transcript-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
         .forum-message-row.is-other .forum-message-bubble {
             background: #ffffff;
             color: #111827;
@@ -588,6 +704,44 @@
                                         </div>
                                     {% endif %}
                                 </div>
+                                {% if message.content is not empty %}
+                                    <div class="forum-message-tools">
+                                        <button
+                                            type="button"
+                                            class="forum-translate-trigger"
+                                            data-translate-toggle
+                                        >
+                                            <i class="bi bi-translate"></i>
+                                            Traduire
+                                        </button>
+                                        <div class="forum-translate-menu" data-translate-menu>
+                                            <button type="button" class="forum-translate-option" data-translate-request data-target-language="fr" data-translate-url="{{ message.translateUrl }}">Francais</button>
+                                            <button type="button" class="forum-translate-option" data-translate-request data-target-language="en" data-translate-url="{{ message.translateUrl }}">Anglais</button>
+                                            <button type="button" class="forum-translate-option" data-translate-request data-target-language="ar" data-translate-url="{{ message.translateUrl }}">Arabe</button>
+                                        </div>
+                                        <div class="forum-translation-box" data-translation-box>
+                                            <div class="forum-translation-label" data-translation-label></div>
+                                            <div class="forum-translation-text" data-translation-text></div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                {% if message.audioPath %}
+                                    <div class="forum-message-tools">
+                                        <button
+                                            type="button"
+                                            class="forum-transcribe-trigger"
+                                            data-transcribe-request
+                                            data-transcribe-url="{{ message.transcribeUrl }}"
+                                        >
+                                            <i class="bi bi-card-text"></i>
+                                            Ecriture du vocal
+                                        </button>
+                                        <div class="forum-transcript-box" data-transcript-box>
+                                            <div class="forum-transcript-label">Transcription</div>
+                                            <div class="forum-transcript-text" data-transcript-text></div>
+                                        </div>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     {% else %}
@@ -875,5 +1029,91 @@
                 }
             });
         }
+
+        document.querySelectorAll('[data-translate-toggle]').forEach(function (toggleButton) {
+            toggleButton.addEventListener('click', function () {
+                const tools = toggleButton.closest('.forum-message-tools');
+                const menu = tools ? tools.querySelector('[data-translate-menu]') : null;
+
+                if (!menu) {
+                    return;
+                }
+
+                menu.classList.toggle('is-visible');
+            });
+        });
+
+        document.querySelectorAll('[data-translate-request]').forEach(function (button) {
+            button.addEventListener('click', async function () {
+                const translateUrl = button.getAttribute('data-translate-url');
+                const targetLanguage = button.getAttribute('data-target-language');
+                const tools = button.closest('.forum-message-tools');
+                const box = tools ? tools.querySelector('[data-translation-box]') : null;
+                const label = tools ? tools.querySelector('[data-translation-label]') : null;
+                const text = tools ? tools.querySelector('[data-translation-text]') : null;
+
+                if (!translateUrl || !targetLanguage || !box || !label || !text) {
+                    return;
+                }
+
+                box.classList.add('is-visible');
+                label.textContent = 'Traduction en cours';
+                text.textContent = 'Chargement...';
+
+                try {
+                    const response = await fetch(translateUrl + '?target=' + encodeURIComponent(targetLanguage), {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    const payload = await response.json();
+
+                    if (!response.ok || !payload.success) {
+                        throw new Error(payload.error || 'Traduction indisponible');
+                    }
+
+                    label.textContent = 'Traduction ' + payload.targetLabel;
+                    text.textContent = payload.translation;
+                } catch (error) {
+                    label.textContent = 'Traduction indisponible';
+                    text.textContent = error instanceof Error ? error.message : 'Une erreur est survenue.';
+                }
+            });
+        });
+
+        document.querySelectorAll('[data-transcribe-request]').forEach(function (button) {
+            button.addEventListener('click', async function () {
+                const transcribeUrl = button.getAttribute('data-transcribe-url');
+                const tools = button.closest('.forum-message-tools');
+                const box = tools ? tools.querySelector('[data-transcript-box]') : null;
+                const text = tools ? tools.querySelector('[data-transcript-text]') : null;
+
+                if (!transcribeUrl || !box || !text) {
+                    return;
+                }
+
+                box.classList.add('is-visible');
+                text.textContent = 'Transcription en cours...';
+
+                try {
+                    const response = await fetch(transcribeUrl, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    const payload = await response.json();
+
+                    if (!response.ok || !payload.success) {
+                        throw new Error(payload.error || 'Transcription indisponible');
+                    }
+
+                    text.textContent = payload.transcript;
+                } catch (error) {
+                    text.textContent = error instanceof Error ? error.message : 'Une erreur est survenue.';
+                }
+            });
+        });
     </script>
 {% endblock %}

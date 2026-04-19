@@ -12,6 +12,9 @@ use App\Form\Forum\ProfitabilityAnalysisType;
 use App\Form\Forum\YieldForecastType;
 use App\Repository\Forum\ForumRepository;
 use App\Repository\Forum\MessageRepository;
+use App\Service\ForumMessageTranslationException;
+use App\Service\ForumMessageTranslationService;
+use App\Service\ForumVoiceTranscriptionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -19,6 +22,7 @@ use Symfony\Component\Form\FormError;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -56,7 +60,9 @@ class ForumController extends AbstractController
         'aac',
     ];
 
-    public function __construct(private readonly string $uploadsBaseDir)
+    public function __construct(
+        private readonly string $uploadsBaseDir
+    )
     {
     }
 
@@ -188,6 +194,12 @@ class ForumController extends AbstractController
                         'audioUrl' => $message->getAudioPath() !== null
                             ? $this->generateUrl('forum_message_audio', ['filename' => basename($message->getAudioPath())])
                             : null,
+                        'translateUrl' => $message->getContenu() !== ''
+                            ? $this->generateUrl('forum_message_translate', ['id' => $message->getId()])
+                            : null,
+                        'transcribeUrl' => $message->getAudioPath() !== null
+                            ? $this->generateUrl('forum_message_transcribe', ['id' => $message->getId()])
+                            : null,
                         'sentAt' => $message->getDateEnvoi(),
                         'isOwn' => $currentUserId !== null && $author->getId() === $currentUserId,
                         'authorName' => $author->getDisplayName(),
@@ -272,6 +284,67 @@ class ForumController extends AbstractController
         $this->addFlash('success', 'Message envoye.');
 
         return $this->redirectToRoute('forum_show', ['id' => $forum->getId()]);
+    }
+
+    #[Route('/messages/{id}/translate', name: 'forum_message_translate', methods: ['GET'])]
+    public function translateMessage(
+        Message $message,
+        Request $request,
+        ForumMessageTranslationService $translationService
+    ): JsonResponse {
+        if ($message->getContenu() === '') {
+            return $this->json([
+                'success' => false,
+                'error' => 'Seuls les messages texte peuvent etre traduits.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $targetLanguage = (string) $request->query->get('target', '');
+        try {
+            $translation = $translationService->translate($message->getContenu(), $targetLanguage);
+        } catch (ForumMessageTranslationException $exception) {
+            return $this->json([
+                'success' => false,
+                'error' => $exception->getMessage(),
+            ], $exception->getStatusCode());
+        }
+
+        return $this->json([
+            'success' => true,
+            'translation' => $translation['translation'],
+            'target' => $translation['target'],
+            'targetLabel' => $translation['targetLabel'],
+            'source' => $translation['source'],
+        ]);
+    }
+
+    #[Route('/messages/{id}/transcribe', name: 'forum_message_transcribe', methods: ['GET'])]
+    public function transcribeMessage(Message $message, ForumVoiceTranscriptionService $transcriptionService): JsonResponse
+    {
+        $audioPath = $message->getAudioPath();
+        if ($audioPath === null) {
+            return $this->json([
+                'success' => false,
+                'error' => 'Ce message ne contient pas de vocal.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $absolutePath = $this->uploadsBaseDir . '/' . ltrim($audioPath, '/');
+        $mimeType = $this->guessAudioMimeType($absolutePath);
+
+        try {
+            $transcript = $transcriptionService->transcribe($absolutePath, $mimeType);
+        } catch (ForumMessageTranslationException $exception) {
+            return $this->json([
+                'success' => false,
+                'error' => $exception->getMessage(),
+            ], $exception->getStatusCode());
+        }
+
+        return $this->json([
+            'success' => true,
+            'transcript' => $transcript,
+        ]);
     }
 
     #[Route('/{id}/edit', name: 'forum_edit', methods: ['GET', 'POST'])]
@@ -360,5 +433,22 @@ class ForumController extends AbstractController
         }
 
         return 'forum-voices/' . $newFilename;
+    }
+
+    private function guessAudioMimeType(string $path): string
+    {
+        $detectedMimeType = @mime_content_type($path);
+        if (is_string($detectedMimeType) && $detectedMimeType !== '') {
+            return $detectedMimeType;
+        }
+
+        return match (strtolower((string) pathinfo($path, PATHINFO_EXTENSION))) {
+            'mp3' => 'audio/mpeg',
+            'wav' => 'audio/wav',
+            'ogg' => 'audio/ogg',
+            'm4a' => 'audio/mp4',
+            'aac' => 'audio/aac',
+            default => 'audio/webm',
+        };
     }
 }
