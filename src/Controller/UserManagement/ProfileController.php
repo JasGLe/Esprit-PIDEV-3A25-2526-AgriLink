@@ -480,4 +480,36 @@ class ProfileController extends AbstractController
             return new JsonResponse(['error' => 'Erreur lors de la suppression: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
     }
+
+    #[Route('/security/toggle-intrusion-capture', name: 'app_profile_toggle_intrusion_capture', methods: ['POST'])]
+    public function toggleIntrusionCapture(
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('toggle_intrusion_capture', $request->request->get('_token'))) {
+            return new JsonResponse(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            $enabled = $request->request->getBoolean('enabled');
+            $user->setIntrusionCaptureEnabled($enabled);
+            $entityManager->flush($user);
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => $enabled 
+                    ? 'Alertes de sécurité activées.' 
+                    : 'Alertes de sécurité désactivées.',
+                'enabled' => $user->isIntrusionCaptureEnabled(),
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                ['error' => 'Erreur lors de la mise à jour: ' . $e->getMessage()],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
 }

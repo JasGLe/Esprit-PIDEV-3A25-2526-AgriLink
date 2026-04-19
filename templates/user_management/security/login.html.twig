@@ -101,6 +101,7 @@
 
         <div class="auth-card">
 
+
             {# Error alert #}
             {% if error %}
                 {% set msg = error.messageKey %}
@@ -320,8 +321,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const emailInput  = document.getElementById('email');
     const rememberChk = document.getElementById('remember_me');
     const form        = document.getElementById('loginForm');
-
-    // Restore remembered email from cookie
     const saved = getCookie('remembered_email');
     if (saved && !emailInput.value) {
         emailInput.value = saved;
@@ -376,6 +375,7 @@ if (RECAPTCHA_SITE_KEY && RECAPTCHA_SITE_KEY !== 'YOUR_RECAPTCHA_V3_SITE_KEY') {
         });
     };
 }
+
 
 function togglePassword(btn) {
     const input = document.getElementById('password');

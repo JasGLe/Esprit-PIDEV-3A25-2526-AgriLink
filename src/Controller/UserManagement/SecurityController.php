@@ -32,12 +32,15 @@ class SecurityController extends AbstractController
         // Get remembered email from cookie
         $rememberedEmail = $request->cookies->get('remembered_email', '');
 
-        return $this->render('user_management/security/login.html.twig', [
+        // Prepare response data
+        $responseData = [
             'last_username' => $lastUsername ?: $rememberedEmail,
             'remembered_email' => $rememberedEmail,
             'error' => $error,
             'recaptcha_site_key' => $this->recaptchaSiteKey,
-        ]);
+        ];
+
+        return $this->render('user_management/security/login.html.twig', $responseData);
     }
 
     #[Route('/api/face/verify', name: 'app_face_verify', methods: ['POST'])]
