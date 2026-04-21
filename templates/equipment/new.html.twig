@@ -317,45 +317,59 @@
 })();
 </script>
 <script>
-const categorieSelect = document.getElementById('equipement_categorie');
-const typeSelect      = document.getElementById('equipement_type');
-const sectionVehicule = document.getElementById('section-vehicule');
+(function () {
+    var categorieSelect = document.getElementById('equipement_categorie');
+    var typeSelect      = document.getElementById('equipement_type');
+    var sectionVehicule = document.getElementById('section-vehicule');
 
-// Valeur du type soumis (pour restaurer après erreur de validation)
-const submittedType = {{ form.type.vars.value is not empty ? ('"' ~ form.type.vars.value|e('js') ~ '"') : 'null' }};
+    // Type soumis par le formulaire — restauré après retour d'erreur de validation
+    var submittedType = {{ form.type.vars.value is not empty ? ('"' ~ form.type.vars.value|e('js') ~ '"') : 'null' }};
 
-function updateTypeChoices(resetType) {
-    const cat = categorieSelect.value;
-    if (!cat) {
-        typeSelect.innerHTML = '<option value="">-- Choisir un type --</option>';
-        return;
+    /**
+     * Affiche ou masque le bloc champs véhicule selon la catégorie.
+     * Appelée au chargement ET à chaque changement de catégorie.
+     */
+    function updateChampsVehicule(categorie) {
+        sectionVehicule.style.display = (categorie === 'Véhicule Motorisé') ? 'block' : 'none';
     }
-    const isVehicule = cat === 'Véhicule Motorisé';
-    sectionVehicule.style.display = isVehicule ? 'block' : 'none';
 
-    fetch(`/equipement/api/types?categorie=${encodeURIComponent(cat)}`)
-        .then(r => r.json())
-        .then(types => {
+    /**
+     * Recharge les options du select "type" via l'API selon la catégorie.
+     * @param {string}      categorie      Valeur du select catégorie
+     * @param {string|null} typeASelectionner  Type à pré-sélectionner (null = reset)
+     */
+    function updateType(categorie, typeASelectionner) {
+        if (!categorie) {
             typeSelect.innerHTML = '<option value="">-- Choisir un type --</option>';
-            types.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t;
-                opt.textContent = t;
-                if (!resetType && submittedType === t) opt.selected = true;
-                typeSelect.appendChild(opt);
-            });
-        });
-}
+            return;
+        }
+        fetch('/equipement/api/types?categorie=' + encodeURIComponent(categorie))
+            .then(function (r) { return r.json(); })
+            .then(function (types) {
+                typeSelect.innerHTML = '<option value="">-- Choisir un type --</option>';
+                types.forEach(function (t) {
+                    var opt = document.createElement('option');
+                    opt.value       = t;
+                    opt.textContent = t;
+                    if (typeASelectionner && typeASelectionner === t) {
+                        opt.selected = true;
+                    }
+                    typeSelect.appendChild(opt);
+                });
+            })
+            .catch(function () {});
+    }
 
-categorieSelect.addEventListener('change', () => {
-    sectionVehicule.style.display = categorieSelect.value === 'Véhicule Motorisé' ? 'block' : 'none';
-    updateTypeChoices(true);
-});
+    // ── Au chargement : initialiser sans condition (couvre le retour après erreur)
+    var categorieActuelle = categorieSelect.value;
+    updateChampsVehicule(categorieActuelle);
+    updateType(categorieActuelle, submittedType);
 
-// Init : si catégorie déjà sélectionnée (retour après erreur), repeupler le type
-if (categorieSelect.value) {
-    sectionVehicule.style.display = categorieSelect.value === 'Véhicule Motorisé' ? 'block' : 'none';
-    updateTypeChoices(false);
-}
+    // ── À chaque changement de catégorie : mettre à jour type ET section véhicule
+    categorieSelect.addEventListener('change', function () {
+        updateChampsVehicule(this.value);
+        updateType(this.value, null); // reset type : l'agriculteur doit rechoisir
+    });
+})();
 </script>
 {% endblock %}

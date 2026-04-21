@@ -235,35 +235,58 @@
 })();
 </script>
 <script>
-const categorieSelect = document.getElementById('equipement_categorie');
-const typeSelect      = document.getElementById('equipement_type');
-const sectionVehicule = document.getElementById('section-vehicule');
+(function () {
+    var categorieSelect = document.getElementById('equipement_categorie');
+    var typeSelect      = document.getElementById('equipement_type');
+    var sectionVehicule = document.getElementById('section-vehicule');
 
-// On garde la valeur actuelle du type pour la resélectionner après rechargement
-const currentType = "{{ equipement.type|e('js') }}";
+    // Type de l'entité — restauré après chargement ou retour d'erreur de validation
+    var currentType = {{ equipement.type is not empty ? ('"' ~ equipement.type|e('js') ~ '"') : 'null' }};
 
-function updateForm(resetType = true) {
-    const isVehicule = categorieSelect.value === 'Véhicule Motorisé';
-    sectionVehicule.style.display = isVehicule ? 'block' : 'none';
+    /**
+     * Affiche ou masque le bloc champs véhicule selon la catégorie.
+     */
+    function updateChampsVehicule(categorie) {
+        sectionVehicule.style.display = (categorie === 'Véhicule Motorisé') ? 'block' : 'none';
+    }
 
-    fetch(`/equipement/api/types?categorie=${encodeURIComponent(categorieSelect.value)}`)
-        .then(r => r.json())
-        .then(types => {
+    /**
+     * Recharge les options du select "type" via l'API selon la catégorie.
+     * @param {string}      categorie          Valeur du select catégorie
+     * @param {string|null} typeASelectionner  Type à pré-sélectionner (null = reset)
+     */
+    function updateType(categorie, typeASelectionner) {
+        if (!categorie) {
             typeSelect.innerHTML = '<option value="">-- Choisir un type --</option>';
-            types.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t;
-                opt.textContent = t;
-                // En mode édition, on resélectionne le type existant
-                if (!resetType && t === currentType) opt.selected = true;
-                typeSelect.appendChild(opt);
-            });
-        });
-}
+            return;
+        }
+        fetch('/equipement/api/types?categorie=' + encodeURIComponent(categorie))
+            .then(function (r) { return r.json(); })
+            .then(function (types) {
+                typeSelect.innerHTML = '<option value="">-- Choisir un type --</option>';
+                types.forEach(function (t) {
+                    var opt = document.createElement('option');
+                    opt.value       = t;
+                    opt.textContent = t;
+                    if (typeASelectionner && typeASelectionner === t) {
+                        opt.selected = true;
+                    }
+                    typeSelect.appendChild(opt);
+                });
+            })
+            .catch(function () {});
+    }
 
-categorieSelect.addEventListener('change', () => updateForm(true));
+    // ── Au chargement : initialiser sans condition (couvre le retour après erreur)
+    var categorieActuelle = categorieSelect.value;
+    updateChampsVehicule(categorieActuelle);
+    updateType(categorieActuelle, currentType);
 
-// Au chargement : on remet le bon type sans le réinitialiser
-updateForm(false);
+    // ── À chaque changement de catégorie : mettre à jour type ET section véhicule
+    categorieSelect.addEventListener('change', function () {
+        updateChampsVehicule(this.value);
+        updateType(this.value, null); // reset type : l'agriculteur doit rechoisir
+    });
+})();
 </script>
 {% endblock %}
