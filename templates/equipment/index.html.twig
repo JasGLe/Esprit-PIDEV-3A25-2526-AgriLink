@@ -168,7 +168,7 @@
 
                         {# Image #}
                         {% if eq.imageUrl %}
-                            <img src="{{ uploads_base_url }}/{{ eq.imageUrl }}" alt="{{ eq.nom }}" class="img-equipement">
+                            <img src="{{ uploads_base_url }}/equipements/{{ eq.imageUrl|split('/')|last }}" alt="{{ eq.nom }}" class="img-equipement">
                         {% else %}
                             <div class="img-placeholder">🚜</div>
                         {% endif %}
@@ -407,6 +407,8 @@
     var modalEl = document.getElementById('modalEqPutForSale');
     if (!modalEl) return;
 
+    var UPLOADS_BASE_URL = {{ uploads_base_url|json_encode|raw }};
+
     var titleName = document.getElementById('eqSaleTitleName');
     var fieldNom = document.getElementById('eqSaleFieldNom');
     var fieldType = document.getElementById('eqSaleFieldType');
@@ -484,7 +486,9 @@
 
         if (img && imgPh) {
             if (image) {
-                img.src = image.startsWith('http') ? image : ({{ asset('')|json_encode|raw }} + image);
+                // Extraire uniquement le nom de fichier pour construire une URL propre
+                var filename = image.split('/').pop();
+                img.src = UPLOADS_BASE_URL + '/equipements/' + filename;
                 img.style.display = 'block';
                 imgPh.style.display = 'none';
                 img.onerror = function () {

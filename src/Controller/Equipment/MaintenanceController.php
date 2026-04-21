@@ -7,6 +7,7 @@ use App\Form\Equipment\MaintenanceType;
 use App\Repository\EquipementRepository;
 use App\Repository\MaintenanceRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,18 +23,32 @@ class MaintenanceController extends AbstractController
     public function index(
         MaintenanceRepository $repo,
         EquipementRepository  $equipRepo,
-        Request $request
+        PaginatorInterface    $paginator,
+        Request               $request
     ): Response {
         $userId = $this->getUser()->getId();
 
-        // Récupérer les IDs des équipements de l'agriculteur
         $equipements   = $equipRepo->findBy(['userlog' => $userId]);
         $equipementIds = array_map(fn($e) => $e->getId(), $equipements);
 
-        // Toutes les maintenances de ces équipements
-        $maintenances = $repo->findByEquipementIds($equipementIds);
+        // ── Filtres URL ────────────────────────────────────────────────────────
+        $search = trim($request->query->get('search', ''));
+        $statut = $request->query->get('statut', '');
+        $type   = $request->query->get('type', '');
 
-        // Map id => équipement pour affichage dans la liste
+        // ── KPIs globaux (toutes maintenances, sans filtre) ────────────────────
+        $kpiTotal  = $repo->countTotalForUser($equipementIds);
+        $kpiRetard = $repo->countEnRetardForUser($equipementIds);
+        $kpiCout   = $repo->sumCoutForUser($equipementIds);
+
+        // ── Pagination (8 par page, avec filtres) ─────────────────────────────
+        $maintenances = $paginator->paginate(
+            $repo->findFilteredQuery($equipementIds, $search, $statut, $type),
+            $request->query->getInt('page', 1),
+            8
+        );
+
+        // ── Map id => équipement pour affichage dans les cards ─────────────────
         $equipMap = [];
         foreach ($equipements as $eq) {
             $equipMap[$eq->getId()] = $eq;
@@ -42,6 +57,12 @@ class MaintenanceController extends AbstractController
         return $this->render('equipment/maintenance/index.html.twig', [
             'maintenances' => $maintenances,
             'equipMap'     => $equipMap,
+            'search'       => $search,
+            'statut'       => $statut,
+            'type'         => $type,
+            'kpiTotal'     => $kpiTotal,
+            'kpiRetard'    => $kpiRetard,
+            'kpiCout'      => $kpiCout,
         ]);
     }
 

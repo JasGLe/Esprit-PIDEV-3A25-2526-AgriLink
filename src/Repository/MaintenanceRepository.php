@@ -55,6 +55,82 @@ class MaintenanceRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Retourne une Query paginable avec filtres optionnels.
+     * Utilisée par KnpPaginator dans MaintenanceController::index().
+     */
+    public function findFilteredQuery(
+        array  $ids,
+        string $search = '',
+        string $statut = '',
+        string $type   = ''
+    ): \Doctrine\ORM\Query {
+        if (empty($ids)) {
+            // Retourner une query qui ne ramène rien
+            return $this->createQueryBuilder('m')
+                ->where('1 = 0')
+                ->getQuery();
+        }
+
+        $qb = $this->createQueryBuilder('m')
+            ->where('m.equipementId IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->orderBy('m.datePlanifiee', 'DESC');
+
+        if ($search !== '') {
+            $qb->andWhere(
+                $qb->expr()->orX(
+                    $qb->expr()->like('m.description', ':search'),
+                    $qb->expr()->like('m.technicien', ':search'),
+                    $qb->expr()->like('m.categorie', ':search'),
+                    $qb->expr()->like('m.type', ':search')
+                )
+            )->setParameter('search', '%' . $search . '%');
+        }
+
+        if ($statut !== '') {
+            $qb->andWhere('m.statut = :statut')->setParameter('statut', $statut);
+        }
+
+        if ($type !== '') {
+            $qb->andWhere('m.type = :type')->setParameter('type', $type);
+        }
+
+        return $qb->getQuery();
+    }
+
+    /**
+     * Nombre total de maintenances pour les équipements de l'utilisateur.
+     */
+    public function countTotalForUser(array $ids): int
+    {
+        if (empty($ids)) return 0;
+
+        return (int) $this->createQueryBuilder('m')
+            ->select('COUNT(m.id)')
+            ->where('m.equipementId IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /**
+     * Somme des coûts de toutes les maintenances de l'utilisateur.
+     */
+    public function sumCoutForUser(array $ids): float
+    {
+        if (empty($ids)) return 0.0;
+
+        $result = $this->createQueryBuilder('m')
+            ->select('SUM(m.cout)')
+            ->where('m.equipementId IN (:ids)')
+            ->setParameter('ids', $ids)
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return (float) ($result ?? 0.0);
+    }
+
     // ════════════════════════════════════════════════════════
     // Méthodes statistiques
     // ════════════════════════════════════════════════════════

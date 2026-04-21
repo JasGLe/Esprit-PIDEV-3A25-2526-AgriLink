@@ -111,9 +111,13 @@ class Maintenance
     private ?int $heuresPrevues = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    #[Assert\PositiveOrZero(message: 'Le coût doit être positif ou nul.')]
+    #[Assert\LessThan(value: 9999999, message: 'Montant trop élevé.')]
     private ?string $cout = null;
 
     #[ORM\Column(type: Types::STRING, length: 100, nullable: true)]
+    #[Assert\Length(max: 100, maxMessage: 'Le nom ne peut dépasser 100 caractères.')]
+    #[Assert\Regex(pattern: '/^[\p{L} \-]+$/u', message: 'Nom invalide (lettres, espaces et tirets uniquement).')]
     private ?string $technicien = null;
 
     // ════════════════════════════════════════════════════════

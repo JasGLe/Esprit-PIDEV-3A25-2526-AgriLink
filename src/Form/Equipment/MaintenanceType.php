@@ -7,7 +7,9 @@ use App\Repository\EquipementRepository;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\NumberType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -88,6 +90,26 @@ class MaintenanceType extends AbstractType
                 'widget'   => 'single_text',
                 'required' => false,
                 'attr'     => ['class' => 'form-control'],
+            ])
+
+            ->add('technicien', TextType::class, [
+                'label'    => 'Technicien',
+                'required' => false,
+                'attr'     => [
+                    'class'       => 'form-control',
+                    'placeholder' => 'Nom du technicien',
+                ],
+            ])
+
+            ->add('cout', NumberType::class, [
+                'label'    => 'Coût (DT)',
+                'required' => false,
+                'scale'    => 2,
+                'html5'    => false,
+                'attr'     => [
+                    'class'       => 'form-control',
+                    'placeholder' => '0.00',
+                ],
             ]);
     }
 

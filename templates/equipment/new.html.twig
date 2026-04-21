@@ -108,6 +108,13 @@
                     {{ form_widget(form.imageFile) }}
                     {{ form_errors(form.imageFile) }}
                     <small class="text-muted">JPG, PNG, WEBP — max 2 Mo</small>
+                    <div id="new-img-preview" class="mt-2 d-none">
+                        <img id="new-img-preview-img"
+                             src=""
+                             alt="Aperçu"
+                             style="height:80px; border-radius:6px; object-fit:cover; border:1px solid #dee2e6">
+                        <div id="new-img-preview-name" class="text-muted small mt-1"></div>
+                    </div>
                 </div>
 
             </div>
@@ -369,6 +376,32 @@
     categorieSelect.addEventListener('change', function () {
         updateChampsVehicule(this.value);
         updateType(this.value, null); // reset type : l'agriculteur doit rechoisir
+    });
+})();
+</script>
+<script>
+// ── Aperçu image avant upload ─────────────────────────────────────────────
+(function () {
+    var input   = document.getElementById('equipement_imageFile');
+    var wrap    = document.getElementById('new-img-preview');
+    var preview = document.getElementById('new-img-preview-img');
+    var nameEl  = document.getElementById('new-img-preview-name');
+    if (!input || !wrap || !preview) return;
+
+    input.addEventListener('change', function () {
+        var file = input.files && input.files[0];
+        if (!file) {
+            wrap.classList.add('d-none');
+            preview.src = '';
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            if (nameEl) nameEl.textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' Ko)';
+            wrap.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
     });
 })();
 </script>
