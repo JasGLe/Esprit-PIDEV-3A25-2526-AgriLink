@@ -6,9 +6,11 @@ use App\Entity\Activity\Activite;
 use App\Entity\UserManagement\User;
 use App\Form\Activity\ActiviteType;
 use App\Repository\Activity\ActiviteRepository;
+use App\Service\Activity\WeatherAwareRecommendationService;
 use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -327,29 +329,20 @@ class ActiviteController extends AbstractController
     }
 
     #[Route('/recommendations/ia', name: 'activite_recommendations_ia', methods: ['GET'])]
-    public function recommendationsIa(
-        \App\Service\Ai\AnomalyDetectorService $anomalyDetectorService
-    ): Response
+    public function recommendationsIa(): Response
     {
         $this->assertModuleAccess();
-        
+
         $user = $this->getUser();
         if (!$user instanceof User) {
             throw $this->createAccessDeniedException('User not found');
         }
 
-        $userId = $user->getId();
-        
-        // Détecte les anomalies dans les 10 prochains jours
-        $anomalies = $anomalyDetectorService->detectAnomalies($userId);
-
-        // Génère les recommandations IA
-        $recommendations = $anomalyDetectorService->generateRecommendations($anomalies, $userId);
-
         $nextDays = 10;
         $today = new \DateTime();
         $horizon = (clone $today)->modify(sprintf('+%d days', $nextDays));
         $plannedWindow = $this->activiteRepository->findBetweenDates($today, $horizon);
+        $userId = $user->getId();
         $plannedActivitiesCount = \count(array_filter(
             $plannedWindow,
             static fn (Activite $a) => $a->getIdAgriculteur() === $userId
@@ -361,13 +354,29 @@ class ActiviteController extends AbstractController
         }
 
         return $this->render('activity/ia_recommendations/index.html.twig', [
-            'recommendations' => $recommendations,
-            'anomalies' => $anomalies,
+            'payloadUrl' => $this->generateUrl('activite_recommendations_ia_payload'),
             'nextDays' => $nextDays,
             'plannedActivitiesCount' => $plannedActivitiesCount,
-            'anomalyGroupsCount' => \count($anomalies),
             'recoUserDisplayName' => $displayName,
         ]);
+    }
+
+    #[Route('/recommendations/ia/payload', name: 'activite_recommendations_ia_payload', methods: ['GET'])]
+    public function recommendationsIaPayload(WeatherAwareRecommendationService $weatherAwareRecommendationService): JsonResponse
+    {
+        $this->assertModuleAccess();
+
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'User not found'], 403);
+        }
+
+        try {
+            $data = $weatherAwareRecommendationService->generateConciseWeatherAwareRecommendations($user, 10);
+            return $this->json($data);
+        } catch (\Throwable $e) {
+            return $this->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     private function assertModuleAccess(): void

@@ -125,7 +125,8 @@ class AnomalyDetectorService
             return $issues;
         }
 
-        $duration = $activity->getDateFin()->diff($activity->getDateDebut())->h;
+        $diff     = $activity->getDateFin()->diff($activity->getDateDebut());
+        $duration = (int) ($diff->days * 24 + $diff->h);
         $normal = $this->normalDurations[$type] ?? null;
 
         if ($normal === null) {
@@ -238,7 +239,9 @@ class AnomalyDetectorService
             $anomalyText .= "\n📌 Activité: {$activity->getTitre()}\n";
             $anomalyText .= "   Type: {$activity->getTypeActivite()}\n";
             $anomalyText .= "   Date: " . $activity->getDateDebut()?->format('d/m/Y H:i') . "\n";
-            $anomalyText .= "   Durée estimée: " . ($activity->getDateFin()?->diff($activity->getDateDebut())?->h ?? 'N/A') . "h\n";
+            $diffInterval = $activity->getDateFin()?->diff($activity->getDateDebut());
+            $totalHours   = $diffInterval ? (int) ($diffInterval->days * 24 + $diffInterval->h) : null;
+            $anomalyText .= "   Durée estimée: " . ($totalHours ?? 'N/A') . "h\n";
             $anomalyText .= "   Coût: {$activity->getCoutEstime()} DT\n";
             $anomalyText .= "   Problèmes:\n";
             
