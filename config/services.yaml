@@ -52,6 +52,12 @@ services:
             $facebookAppSecret: '%env(FACEBOOK_APP_SECRET)%'
             $facebookRedirectUri: '%env(FACEBOOK_REDIRECT_URI)%'
 
+
+    App\Service\RecapitulatifMailService:
+        arguments:
+            $mailerFrom: '%env(MAILER_FROM_EMAIL)%'
+            $appName:    'AgriLink'
+
     App\Service\LibreTranslateService:
         arguments:
             $libreTranslateBaseUrl: '%env(LIBRETRANSLATE_BASE_URL)%'

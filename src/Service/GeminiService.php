@@ -238,4 +238,110 @@ IMPORTANT:
 - Aucun texte hors JSON
 ";
 }
+
+
+
+/**
+ * Valide qu'une image correspond bien à la culture indiquée
+ */
+public function validerImageCulture(
+    string $imageBase64,
+    string $mimeType,
+    string $nomCulture
+): array {
+    $prompt = "Tu es un expert en agriculture.
+L'utilisateur dit que cette image représente : \"{$nomCulture}\".
+
+Réponds UNIQUEMENT en JSON valide, sans texte autour :
+
+{
+  \"valide\": true,
+  \"confiance\": 85,
+  \"culture_detectee\": \"tomate\",
+  \"message\": \"Image conforme à la culture demandée\"
+}
+
+Règles:
+- valide = true si c'est une plante/culture agricole cohérente avec {$nomCulture}
+- valide = false si c'est un animal, objet, paysage sans culture, ou culture totalement différente
+- culture_detectee = ce que tu vois réellement
+- message = explication courte (max 15 mots)
+";
+
+    try {
+        $response = $this->client->request(
+            'POST',
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=".$this->apiKey,
+            [
+                'headers' => [
+                    'Content-Type' => 'application/json'
+                ],
+                'json' => [
+                    'contents' => [[
+                        'parts' => [
+                            ['text' => $prompt],
+                            [
+                                'inline_data' => [
+                                    'mime_type' => $mimeType,
+                                    'data'      => $imageBase64,
+                                ]
+                            ]
+                        ]
+                    ]],
+                    'generationConfig' => [
+                        'temperature' => 0.1,
+                        'maxOutputTokens' => 300,
+                    ]
+                ]
+            ]
+        );
+
+        $data = $response->toArray(false);
+
+        $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+
+        if (!$text) {
+            return [
+                'valide' => false,
+                'message' => 'Réponse IA vide',
+                'confiance' => 0
+            ];
+        }
+
+        // extraction JSON robuste
+        preg_match('/\{.*\}/s', $text, $matches);
+
+        if (!isset($matches[0])) {
+            return [
+                'valide' => false,
+                'message' => 'JSON introuvable',
+                'confiance' => 0
+            ];
+        }
+
+        $json = json_decode($matches[0], true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            return [
+                'valide' => false,
+                'message' => 'JSON invalide',
+                'confiance' => 0
+            ];
+        }
+
+        return [
+            'valide'           => $json['valide'] ?? false,
+            'confiance'        => $json['confiance'] ?? 50,
+            'culture_detectee' => $json['culture_detectee'] ?? '',
+            'message'          => $json['message'] ?? ''
+        ];
+
+    } catch (\Throwable $e) {
+        return [
+            'valide' => false,
+            'message' => 'Erreur API: '.$e->getMessage(),
+            'confiance' => 0
+        ];
+    }
+}
 }
