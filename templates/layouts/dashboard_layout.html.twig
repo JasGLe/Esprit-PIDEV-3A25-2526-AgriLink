@@ -504,7 +504,9 @@
                                         d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                                 </svg>
                                 {# Badge rouge avec compteur #}
-                                {% set nbNotifs = notif_count|default(0) %}
+                                {% set notifCountValue = notif_count|default(0) %}
+                                {% set recentNotifsCount = notifs_recentes|default([])|length %}
+                                {% set nbNotifs = notifCountValue > recentNotifsCount ? notifCountValue : recentNotifsCount %}
                                 {% if nbNotifs > 0 %}
                                     <span class="position-absolute top-0 start-100
                                                 translate-middle badge rounded-pill bg-danger"
@@ -560,13 +562,22 @@
 
                                                     <div class="text-muted"
                                                         style="font-size:0.72rem;line-height:1.4;">
-                                                        {{ notif.body|slice(0, 80) }}
-                                                        {{ notif.body|length > 80 ? '…' : '' }}
+                                                        {% if notif.type in ['order_created_admin', 'order_received'] and notif.commandeId %}
+                                                            Commande <span class="fw-semibold text-dark">#CMD{{ '%03d'|format(notif.commandeId) }}</span>
+                                                            {% if notif.type == 'order_created_admin' %}
+                                                                (marketplace, côté admin)
+                                                            {% else %}
+                                                                reçue pour votre boutique
+                                                            {% endif %}
+                                                        {% else %}
+                                                            {{ notif.body|slice(0, 80) }}
+                                                            {{ notif.body|length > 80 ? '…' : '' }}
+                                                        {% endif %}
                                                     </div>
 
                                                     <div class="text-muted mt-1"
                                                         style="font-size:0.65rem;">
-                                                        {{ notif.createdAt|date('d/m/Y à H:i') }}
+                                                        {{ notif.createdAt|date('d/m/Y à H:i', 'Africa/Tunis') }}
                                                     </div>
 
                                                 </div>

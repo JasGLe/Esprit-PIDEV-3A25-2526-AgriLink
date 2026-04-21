@@ -1,0 +1,116 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}{% if signature_flow_pdf|default(false) %}Signature — facture PDF{% else %}Signer la facture{% endif %} — AgriLink{% endblock %}
+{% block page_title %}{% if signature_flow_pdf|default(false) %}Signature pour la facture PDF{% else %}Signer la facture{% endif %}{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid py-3">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <h2 class="h5 mb-2">Commande #CMD{{ "%03d"|format(commande.id) }}</h2>
+            {% if signature_flow_pdf|default(false) %}
+                <p class="text-muted mb-3">Pour afficher votre facture, dessinez votre signature ci-dessous puis validez. Vous pourrez ensuite la prévisualiser et l’exporter en PDF.</p>
+            {% else %}
+                <p class="text-muted mb-3">Dessinez votre signature puis enregistrez-la. Elle sera affichée dans la facture PDF.</p>
+            {% endif %}
+
+            {% if commande.factureSignaturePath %}
+                <div class="mb-3">
+                    <p class="small fw-semibold mb-2">Signature actuelle</p>
+                    <img src="{{ asset(commande.factureSignaturePath) }}" alt="Signature actuelle" style="max-width: 320px; border:1px solid #d1d5db; border-radius:8px; background:#fff;">
+                </div>
+            {% endif %}
+
+            <form method="post" action="{{ path('mes_commandes_signature_save', { id: commande.id }) }}" id="mcSignatureForm">
+                <input type="hidden" name="_token" value="{{ csrf_token('mes_commandes_signature_' ~ commande.id) }}">
+                <input type="hidden" name="signature_data" id="mcSignatureData">
+                {% if signature_flow_pdf|default(false) %}
+                    <input type="hidden" name="next" value="facture">
+                {% endif %}
+
+                <div class="border rounded-3 p-2 bg-white mb-3" style="max-width: 720px;">
+                    <canvas id="mcSignatureCanvas" width="680" height="220" style="width:100%; border:1px dashed #94a3b8; border-radius:8px; touch-action:none;"></canvas>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-secondary" id="mcSignatureClear">Effacer</button>
+                    <button type="submit" class="btn btn-success">{% if signature_flow_pdf|default(false) %}Enregistrer et continuer vers la facture{% else %}Enregistrer la signature{% endif %}</button>
+                    <a href="{{ path('mes_commandes_show', { id: commande.id }) }}" class="btn btn-light">Retour à la commande</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    var canvas = document.getElementById('mcSignatureCanvas');
+    var clearBtn = document.getElementById('mcSignatureClear');
+    var form = document.getElementById('mcSignatureForm');
+    var dataInput = document.getElementById('mcSignatureData');
+    if (!canvas || !form || !dataInput) return;
+
+    var ctx = canvas.getContext('2d');
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#111827';
+
+    var drawing = false;
+    var hasStroke = false;
+
+    function pointFromEvent(e) {
+        var rect = canvas.getBoundingClientRect();
+        var touch = e.touches && e.touches[0] ? e.touches[0] : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0] : null);
+        var clientX = touch ? touch.clientX : e.clientX;
+        var clientY = touch ? touch.clientY : e.clientY;
+        var scaleX = canvas.width / rect.width;
+        var scaleY = canvas.height / rect.height;
+        return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+    }
+
+    function start(e) {
+        e.preventDefault();
+        drawing = true;
+        var p = pointFromEvent(e);
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+    }
+
+    function move(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        var p = pointFromEvent(e);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        hasStroke = true;
+    }
+
+    function end(e) {
+        if (!drawing) return;
+        e.preventDefault();
+        drawing = false;
+    }
+
+    canvas.addEventListener('mousedown', start);
+    canvas.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', end);
+    canvas.addEventListener('touchstart', start, { passive: false });
+    canvas.addEventListener('touchmove', move, { passive: false });
+    canvas.addEventListener('touchend', end, { passive: false });
+
+    clearBtn.addEventListener('click', function () {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        hasStroke = false;
+    });
+
+    form.addEventListener('submit', function (e) {
+        if (!hasStroke) {
+            e.preventDefault();
+            window.alert('Veuillez signer avant d’enregistrer.');
+            return;
+        }
+        dataInput.value = canvas.toDataURL('image/png');
+    });
+})();
+</script>
+{% endblock %}

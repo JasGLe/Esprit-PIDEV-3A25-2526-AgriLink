@@ -2245,6 +2245,16 @@ document.addEventListener('DOMContentLoaded', function () {
         var form = e.target;
         if (!form || !form.classList || !form.classList.contains('js-marketplace-panier-form')) return;
         e.preventDefault();
+
+        var fallbackSubmit = function () {
+            try {
+                form.classList.remove('js-marketplace-panier-form');
+                form.submit();
+            } catch (err) {
+                window.location.href = form.action;
+            }
+        };
+
         var fd = new FormData(form);
         fetch(form.action, {
             method: 'POST',
@@ -2258,20 +2268,30 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(function (r) {
                 return r.text().then(function (text) {
                     var data = {};
-                    try { data = text ? JSON.parse(text) : {}; } catch (err) { data = {}; }
+                    var parsed = true;
+                    try { data = text ? JSON.parse(text) : {}; } catch (err) { parsed = false; data = {}; }
                     return { ok: r.ok, data: data };
                 });
             })
             .then(function (res) {
+                if (!res.data || typeof res.data !== 'object') {
+                    fallbackSubmit();
+                    return;
+                }
+
                 if (res.data && typeof res.data.count !== 'undefined') {
                     applyCartPreview(res.data);
+                } else if (res.ok) {
+                    // Response is successful but not in expected JSON shape: fallback to normal submit.
+                    fallbackSubmit();
+                    return;
                 }
                 if (!res.ok && res.data && res.data.message) {
                     window.alert(res.data.message);
                 }
             })
             .catch(function () {
-                window.alert('Impossible d’ajouter au panier. Réessayez.');
+                fallbackSubmit();
             });
     });
 })();

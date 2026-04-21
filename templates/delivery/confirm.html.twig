@@ -1,0 +1,53 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Confirmation de livraison — AgriLink{% endblock %}
+
+{% block body %}
+<div class="container py-5" style="max-width: 520px;">
+    <div class="text-center mb-4">
+        <img src="{{ asset('logo_without_text.png') }}" alt="AgriLink" width="56" height="56" class="mb-2">
+        <h1 class="h4 fw-semibold text-dark">Confirmation de livraison</h1>
+        <p class="text-muted small mb-0">Commande <span class="fw-semibold">#CMD{{ "%03d"|format(commande.id) }}</span></p>
+    </div>
+
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label == 'error' ? 'danger' : (label == 'success' ? 'success' : 'info') }} mb-3" role="alert">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+
+    {% if state == 'invalid' %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <p class="mb-0">Ce lien n’est plus utilisable pour confirmer la livraison (commande non expédiée ou annulée).</p>
+            </div>
+        </div>
+    {% elseif state == 'delivered' %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center py-4">
+                <div class="text-success mb-2" style="font-size:2.5rem;line-height:1" aria-hidden="true">✓</div>
+                <p class="fw-semibold mb-1">Livraison enregistrée</p>
+                <p class="text-muted small mb-0">Merci, la commande est marquée comme <strong>livrée</strong>.</p>
+            </div>
+        </div>
+    {% else %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <p class="text-muted small">Vérifiez les informations ci-dessous, puis confirmez que le colis a bien été remis au destinataire.</p>
+                <dl class="row small mb-4">
+                    <dt class="col-4 text-muted">Client</dt>
+                    <dd class="col-8">{{ commande.prenom }} {{ commande.nom }}</dd>
+                    <dt class="col-4 text-muted">Adresse</dt>
+                    <dd class="col-8">{{ commande.adresse|default('—') }}{% if commande.complement %}<br><span class="text-muted">{{ commande.complement }}</span>{% endif %}</dd>
+                    <dt class="col-4 text-muted">Ville</dt>
+                    <dd class="col-8">{{ [commande.codePostal, commande.ville]|filter(v => v)|join(' ')|default('—') }}</dd>
+                </dl>
+                <form method="post" action="{{ path('delivery_confirm', { token: commande.deliveryConfirmationToken }) }}" class="d-grid">
+                    <input type="hidden" name="_token" value="{{ csrf_token('delivery_confirm_' ~ commande.id) }}">
+                    <button type="submit" class="btn btn-success btn-lg">Confirmer la livraison</button>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

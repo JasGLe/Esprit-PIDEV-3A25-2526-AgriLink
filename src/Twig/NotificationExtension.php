@@ -24,7 +24,7 @@ class NotificationExtension extends AbstractExtension
 
         return [
             'notif_count'     => $this->repo->countUnreadByUser($user),
-            'notifs_recentes' => $this->repo->findRecentByUser($user, 5),
+            'notifs_recentes' => $this->repo->findUnreadByUserId((int) $user->getId(), 5),
         ];
     }
 }

@@ -2,9 +2,11 @@
 
 namespace App\Controller\UserManagement;
 
+use App\Entity\Notifications;
 use App\Entity\UserManagement\User;
 use App\Repository\NotificationsRepository;
 use App\Service\AdminActivityNotificationService;
+use App\Service\OneSignalPushService;
 use App\Service\UserProfileNotificationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -18,6 +20,7 @@ class NotificationsController extends AbstractController
 {
     public function __construct(
         private NotificationsRepository $notificationsRepository,
+        private OneSignalPushService $oneSignalPushService,
         private UserProfileNotificationService $profileNotificationService,
         private AdminActivityNotificationService $adminActivityNotificationService,
     ) {}
@@ -169,6 +172,44 @@ class NotificationsController extends AbstractController
     public function preferences(): Response
     {
         return $this->json(['message' => 'Preferences endpoint']);
+    }
+
+    #[Route('/test-push', name: 'test_push', methods: ['POST'])]
+    public function testPush(): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        $userId = (int) ($user->getId() ?? 0);
+        $displayName = trim((string) ($user->getDisplayName() ?? $user->getEmail() ?? 'Utilisateur'));
+
+        $title = 'Test notification OneSignal';
+        $body = sprintf('Bonjour %s, ceci est un test push + in-app.', $displayName);
+
+        $notif = new Notifications();
+        $notif->setUserId($userId);
+        $notif->setType('test_push');
+        $notif->setTitle('🔔 '.$title);
+        $notif->setBody($body);
+        $notif->setCreatedAt(new \DateTimeImmutable());
+        $this->notificationsRepository->save($notif, flush: true);
+
+        $pushResult = $this->oneSignalPushService->sendToUserIds(
+            [$userId],
+            $title,
+            $body,
+            [
+                'type' => 'test_push',
+                'targetRole' => (string) $user->getRole(),
+                'userId' => (string) $userId,
+            ]
+        );
+
+        return $this->json([
+            'success' => true,
+            'message' => 'Test notification envoyee (in-app + OneSignal).',
+            'userId' => $userId,
+            'push' => $pushResult,
+        ]);
     }
 
     /**

@@ -57,6 +57,12 @@ services:
             $libreTranslateBaseUrl: '%env(LIBRETRANSLATE_BASE_URL)%'
             $libreTranslateApiKey: '%env(LIBRETRANSLATE_API_KEY)%'
 
+    App\Service\OneSignalPushService:
+        arguments:
+            $oneSignalAppId: '%env(ONESIGNAL_APP_ID)%'
+            $oneSignalApiKey: '%env(ONESIGNAL_API_KEY)%'
+            $oneSignalEnabled: '%env(bool:ONESIGNAL_ENABLED)%'
+
     # Login event listeners
     App\EventListener\LoginSuccessListener:
         tags:

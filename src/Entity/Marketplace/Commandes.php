@@ -63,6 +63,13 @@ class Commandes
     #[ORM\Column(type: Types::FLOAT, nullable: true)]
     private ?float $promoDiscountTotal = null;
 
+    #[ORM\Column(name: 'factureSignaturePath', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $factureSignaturePath = null;
+
+    /** Jeton secret pour confirmation de livraison (QR, sans auth). */
+    #[ORM\Column(name: 'deliveryConfirmationToken', type: Types::STRING, length: 64, nullable: true, unique: true)]
+    private ?string $deliveryConfirmationToken = null;
+
     public function getId(): int
     {
         return $this->id;
@@ -256,6 +263,30 @@ class Commandes
     public function setPromoDiscountTotal(?float $promoDiscountTotal): static
     {
         $this->promoDiscountTotal = $promoDiscountTotal;
+
+        return $this;
+    }
+
+    public function getFactureSignaturePath(): ?string
+    {
+        return $this->factureSignaturePath;
+    }
+
+    public function setFactureSignaturePath(?string $factureSignaturePath): static
+    {
+        $this->factureSignaturePath = $factureSignaturePath;
+
+        return $this;
+    }
+
+    public function getDeliveryConfirmationToken(): ?string
+    {
+        return $this->deliveryConfirmationToken;
+    }
+
+    public function setDeliveryConfirmationToken(?string $deliveryConfirmationToken): static
+    {
+        $this->deliveryConfirmationToken = $deliveryConfirmationToken;
 
         return $this;
     }
