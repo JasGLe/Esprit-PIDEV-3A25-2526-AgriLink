@@ -1,0 +1,578 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Recommandations IA — vos activités{% endblock %}
+{% block page_title %}Recommandations IA{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        .reco-ia-wrap { max-width: 960px; margin: 0 auto; }
+
+        /* ── Hero ── */
+        .reco-hero {
+            background: linear-gradient(135deg, #14532d 0%, #22c55e 100%);
+            color: #fff;
+            border-radius: 16px;
+            padding: 1.75rem 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 12px 40px rgba(20, 83, 45, 0.25);
+        }
+        .reco-hero h1 { font-size: 1.35rem; font-weight: 700; margin: 0 0 .5rem; }
+        .reco-hero p  { margin: 0; opacity: .92; font-size: .95rem; line-height: 1.55; }
+
+        /* ── Stats ── */
+        .reco-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: .75rem;
+            margin-bottom: 1.5rem;
+        }
+        .reco-stat {
+            background: #ecfdf5;
+            border: 1px solid #bbf7d0;
+            border-radius: 12px;
+            padding: .85rem 1rem;
+            text-align: center;
+        }
+        .reco-stat .num { font-size: 1.5rem; font-weight: 700; color: #166534; line-height: 1.2; }
+        .reco-stat .lbl { font-size: .75rem; color: #15803d; text-transform: uppercase; letter-spacing: .04em; margin-top: .25rem; }
+
+        /* ── Tabs ── */
+        .reco-tabs {
+            display: flex;
+            gap: .5rem;
+            margin-bottom: 1.25rem;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .reco-tab-btn {
+            padding: .55rem 1.15rem;
+            border: none;
+            background: none;
+            font-size: .9rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            border-radius: 6px 6px 0 0;
+            transition: color .15s, border-color .15s;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+        }
+        .reco-tab-btn:hover { color: #15803d; }
+        .reco-tab-btn.active { color: #15803d; border-bottom-color: #22c55e; background: #f0fdf4; }
+        .reco-tab-btn .tab-count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px; height: 20px;
+            border-radius: 50%;
+            font-size: .72rem;
+            font-weight: 700;
+            background: #bbf7d0;
+            color: #166534;
+        }
+        .reco-tab-btn.has-critical .tab-count { background: #fee2e2; color: #991b1b; }
+        .reco-tab-btn.has-warning  .tab-count { background: #fef9c3; color: #854d0e; }
+        .reco-tab-pane { display: none; }
+        .reco-tab-pane.active { display: block; }
+
+        /* ── Cards ── */
+        .reco-act-card {
+            background: #fff;
+            border-radius: 14px;
+            padding: 1.1rem 1.25rem;
+            margin-bottom: .85rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,.06);
+            border-left: 4px solid #22c55e;
+            cursor: pointer;
+            transition: box-shadow .18s, transform .18s;
+            position: relative;
+        }
+        .reco-act-card:hover {
+            box-shadow: 0 6px 24px rgba(0,0,0,.12);
+            transform: translateY(-2px);
+        }
+        .reco-act-card::after {
+            content: "Voir détails →";
+            position: absolute;
+            bottom: .75rem;
+            right: 1rem;
+            font-size: .72rem;
+            font-weight: 600;
+            color: #16a34a;
+            opacity: 0;
+            transition: opacity .18s;
+        }
+        .reco-act-card:hover::after { opacity: 1; }
+        .reco-act-card.severity-critical { border-left-color: #dc2626; }
+        .reco-act-card.severity-warning  { border-left-color: #ca8a04; }
+        .reco-act-card.severity-ok       { border-left-color: #16a34a; }
+        .reco-act-header {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            margin-bottom: .6rem;
+            flex-wrap: wrap;
+        }
+        .reco-act-title { font-weight: 600; font-size: .98rem; color: #0f172a; }
+        .reco-act-meta  { font-size: .78rem; color: #64748b; }
+        .reco-act-badge {
+            font-size: .72rem;
+            font-weight: 700;
+            padding: .2rem .6rem;
+            border-radius: 999px;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+        .badge-critical { background: #fee2e2; color: #991b1b; }
+        .badge-warning  { background: #fef9c3; color: #854d0e; }
+        .badge-ok       { background: #dcfce7; color: #166534; }
+        .reco-act-bullets {
+            margin: 0; padding-left: 1.25rem;
+            color: #475569; font-size: .9rem; line-height: 1.6;
+        }
+        .reco-act-bullets li { margin-bottom: .15rem; }
+
+        /* ── Weather bar ── */
+        .reco-weather-bar {
+            background: #f0f9ff;
+            border: 1px solid #bae6fd;
+            border-radius: 10px;
+            padding: .65rem 1rem;
+            font-size: .85rem;
+            color: #0369a1;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        /* ── Empty state ── */
+        .reco-empty {
+            text-align: center;
+            padding: 2.5rem 1.25rem;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 16px;
+        }
+        .reco-empty .icon { font-size: 2.75rem; margin-bottom: .75rem; }
+
+        /* ── Footer ── */
+        .reco-foot {
+            font-size: .8rem;
+            color: #64748b;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        /* ── Spinner ── */
+        .reco-loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 1rem;
+            gap: 1rem;
+        }
+        .reco-spinner {
+            width: 48px; height: 48px;
+            border: 4px solid #bbf7d0;
+            border-top-color: #16a34a;
+            border-radius: 50%;
+            animation: reco-spin .8s linear infinite;
+        }
+        @keyframes reco-spin { to { transform: rotate(360deg); } }
+        .reco-loader p { color: #15803d; font-size: .9rem; font-weight: 500; margin: 0; }
+
+        /* ── Detail Modal ── */
+        .reco-modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(3px);
+            z-index: 1050;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .reco-modal-backdrop.open { display: flex; }
+        .reco-modal {
+            background: #fff;
+            border-radius: 20px;
+            max-width: 560px;
+            width: 100%;
+            box-shadow: 0 24px 64px rgba(0,0,0,.2);
+            overflow: hidden;
+            animation: modal-in .22s ease;
+        }
+        @keyframes modal-in {
+            from { opacity: 0; transform: scale(.94) translateY(12px); }
+            to   { opacity: 1; transform: none; }
+        }
+        .reco-modal-header {
+            padding: 1.25rem 1.5rem 1rem;
+            border-bottom: 1px solid #f1f5f9;
+            display: flex;
+            align-items: flex-start;
+            gap: .75rem;
+        }
+        .reco-modal-header .modal-icon { font-size: 1.6rem; flex-shrink: 0; }
+        .reco-modal-header .modal-title { font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0; }
+        .reco-modal-header .modal-meta  { font-size: .8rem; color: #64748b; margin-top: .15rem; }
+        .reco-modal-close {
+            margin-left: auto;
+            flex-shrink: 0;
+            background: none;
+            border: none;
+            font-size: 1.3rem;
+            color: #94a3b8;
+            cursor: pointer;
+            line-height: 1;
+            padding: .2rem .4rem;
+            border-radius: 6px;
+            transition: color .15s, background .15s;
+        }
+        .reco-modal-close:hover { color: #0f172a; background: #f1f5f9; }
+        .reco-modal-body { padding: 1.25rem 1.5rem; }
+        .reco-modal-body .modal-section-label {
+            font-size: .75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            color: #64748b;
+            margin-bottom: .5rem;
+        }
+        .reco-modal-body ul {
+            padding-left: 1.25rem;
+            color: #334155;
+            font-size: .9rem;
+            line-height: 1.7;
+            margin-bottom: 1rem;
+        }
+        .reco-modal-body .modal-detail {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: .9rem 1rem;
+            color: #475569;
+            font-size: .88rem;
+            line-height: 1.7;
+        }
+        .reco-modal-footer {
+            padding: .9rem 1.5rem;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .modal-sev-stripe { height: 4px; width: 100%; }
+        .stripe-critical { background: #dc2626; }
+        .stripe-warning  { background: #ca8a04; }
+        .stripe-ok       { background: #16a34a; }
+    </style>
+{% endblock %}
+
+{% block dashboard_content %}
+    <div class="reco-ia-wrap">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+            <a href="{{ path('activite_list') }}" class="btn btn-outline-secondary btn-sm">← Retour aux activités</a>
+        </div>
+
+        <header class="reco-hero">
+            <h1>🤖 Bonjour {{ recoUserDisplayName|e }}</h1>
+            <p>
+                Analyse de <strong>vos activités agricoles</strong> sur les
+                <strong>{{ nextDays }} prochains jours</strong> — recommandations de planification
+                et conseils météo personnalisés. Cliquez sur une carte pour voir les détails.
+            </p>
+        </header>
+
+        <div class="reco-stats">
+            <div class="reco-stat">
+                <div class="num">{{ plannedActivitiesCount }}</div>
+                <div class="lbl">Activités planifiées ({{ nextDays }} j.)</div>
+            </div>
+            <div class="reco-stat" id="stat-planning-count">
+                <div class="num">—</div>
+                <div class="lbl">Conseils planification</div>
+            </div>
+            <div class="reco-stat" id="stat-weather-count">
+                <div class="num">—</div>
+                <div class="lbl">Alertes météo</div>
+            </div>
+            <div class="reco-stat" id="stat-status">
+                <div class="num">⏳</div>
+                <div class="lbl">Analyse en cours…</div>
+            </div>
+        </div>
+
+        {# ── Spinner ── #}
+        <div id="reco-loader-wrap">
+            <div class="reco-loader">
+                <div class="reco-spinner" aria-hidden="true"></div>
+                <p>Analyse IA en cours, veuillez patienter…</p>
+            </div>
+        </div>
+
+        {# ── Tabs (hidden until loaded) ── #}
+        <div id="reco-content" style="display:none">
+            <div class="reco-tabs" role="tablist">
+                <button class="reco-tab-btn active" id="tab-btn-planning" role="tab"
+                        aria-selected="true" aria-controls="tab-planning"
+                        onclick="switchTab('planning')">
+                    📅 Planification
+                    <span class="tab-count" id="tc-planning">—</span>
+                </button>
+                <button class="reco-tab-btn" id="tab-btn-weather" role="tab"
+                        aria-selected="false" aria-controls="tab-weather"
+                        onclick="switchTab('weather')">
+                    🌤️ Météo
+                    <span class="tab-count" id="tc-weather">—</span>
+                </button>
+            </div>
+
+            <div id="tab-planning" class="reco-tab-pane active" role="tabpanel">
+                <div id="planning-cards"></div>
+            </div>
+            <div id="tab-weather" class="reco-tab-pane" role="tabpanel">
+                <div id="weather-bar-slot"></div>
+                <div id="weather-cards"></div>
+            </div>
+        </div>
+
+        <p class="reco-foot mb-0">
+            Les suggestions sont générées automatiquement à partir <strong>de vos données d'activités</strong> et des prévisions météo.
+            En cas de doute (phyto, irrigation, assurance), croisez toujours avec un conseiller ou la réglementation en vigueur.
+        </p>
+    </div>
+
+    {# ── Detail Modal ── #}
+    <div class="reco-modal-backdrop" id="reco-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title-text">
+        <div class="reco-modal" id="reco-modal">
+            <div class="modal-sev-stripe" id="modal-stripe"></div>
+            <div class="reco-modal-header">
+                <span class="modal-icon" id="modal-icon" aria-hidden="true">🟢</span>
+                <div>
+                    <p class="modal-title" id="modal-title-text">—</p>
+                    <p class="modal-meta" id="modal-meta">—</p>
+                </div>
+                <button class="reco-modal-close" onclick="closeModal()" aria-label="Fermer">✕</button>
+            </div>
+            <div class="reco-modal-body">
+                <p class="modal-section-label">Points clés</p>
+                <ul id="modal-bullets"></ul>
+                <p class="modal-section-label">Analyse détaillée</p>
+                <div class="modal-detail" id="modal-detail">—</div>
+            </div>
+            <div class="reco-modal-footer">
+                <button class="btn btn-sm btn-outline-secondary" onclick="closeModal()">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function () {
+        const payloadUrl     = {{ payloadUrl|json_encode|raw }};
+        const loaderWrap     = document.getElementById('reco-loader-wrap');
+        const contentWrap    = document.getElementById('reco-content');
+        const planningCards  = document.getElementById('planning-cards');
+        const weatherCards   = document.getElementById('weather-cards');
+        const weatherBarSlot = document.getElementById('weather-bar-slot');
+        const statPlanning   = document.getElementById('stat-planning-count');
+        const statWeather    = document.getElementById('stat-weather-count');
+        const statStatus     = document.getElementById('stat-status');
+
+        // ── Tab switching ─────────────────────────────────────────────────────
+        window.switchTab = function (name) {
+            document.querySelectorAll('.reco-tab-pane').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.reco-tab-btn').forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-selected', 'false');
+            });
+            document.getElementById('tab-' + name).classList.add('active');
+            const btn = document.getElementById('tab-btn-' + name);
+            btn.classList.add('active');
+            btn.setAttribute('aria-selected', 'true');
+        };
+
+        // ── Modal ─────────────────────────────────────────────────────────────
+        const backdrop = document.getElementById('reco-modal-backdrop');
+
+        window.openModal = function (rec, section) {
+            const sev    = rec.severity ?? 'ok';
+            const icons  = { critical: '🔴', warning: '🟡', ok: '🟢' };
+            const stripe = document.getElementById('modal-stripe');
+
+            stripe.className = 'modal-sev-stripe stripe-' + sev;
+            document.getElementById('modal-icon').textContent       = icons[sev] ?? '🟢';
+            document.getElementById('modal-title-text').textContent = rec.activity ?? '—';
+            document.getElementById('modal-meta').textContent       =
+                (rec.type ?? '') + ' · ' + (rec.date ?? '') + ' · ' + (section === 'planning' ? 'Planification' : 'Météo');
+
+            const ul = document.getElementById('modal-bullets');
+            ul.innerHTML = (rec.bullets ?? []).map(b => `<li>${esc(b)}</li>`).join('');
+
+            document.getElementById('modal-detail').textContent = rec.detail ?? 'Aucun détail disponible.';
+
+            backdrop.classList.add('open');
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeModal = function () {
+            backdrop.classList.remove('open');
+            document.body.style.overflow = '';
+        };
+
+        backdrop.addEventListener('click', function (e) {
+            if (e.target === backdrop) closeModal();
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeModal();
+        });
+
+        // ── Helpers ───────────────────────────────────────────────────────────
+        function esc(str) {
+            return String(str ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+
+        function sevIcon(s) {
+            return s === 'critical' ? '🔴' : s === 'warning' ? '🟡' : '🟢';
+        }
+
+        function worstSeverity(recs) {
+            if (recs.some(r => r.severity === 'critical')) return 'critical';
+            if (recs.some(r => r.severity === 'warning'))  return 'warning';
+            return 'ok';
+        }
+
+        function renderCards(recs, section) {
+            if (!recs || recs.length === 0) {
+                return `<div class="reco-empty">
+                    <div class="icon">✅</div>
+                    <h2 class="h5 fw-bold text-success mb-2">Aucun point d'attention détecté</h2>
+                    <p class="text-muted mb-0" style="max-width:32rem;margin:0 auto;">Tout semble bien organisé pour cette période.</p>
+                </div>`;
+            }
+
+            return recs.map((rec, idx) => {
+                const sev     = rec.severity ?? 'ok';
+                const bullets = (rec.bullets ?? []).map(b => `<li>${esc(b)}</li>`).join('');
+                const dataIdx = 'recs_' + section + '_' + idx;
+
+                return `<div class="reco-act-card severity-${esc(sev)}" role="button" tabindex="0"
+                             onclick="openModal(window.__recs['${dataIdx}'], '${section}')"
+                             onkeydown="if(event.key==='Enter'||event.key===' ')openModal(window.__recs['${dataIdx}'],'${section}')"
+                             title="Cliquer pour voir les détails">
+                    <div class="reco-act-header">
+                        <span style="font-size:1.1rem">${sevIcon(sev)}</span>
+                        <span class="reco-act-title">${esc(rec.activity ?? rec.type ?? '')}</span>
+                        <span class="reco-act-meta">${esc(rec.type ?? '')} · ${esc(rec.date ?? '')}</span>
+                        <span class="reco-act-badge badge-${esc(sev)}">${esc(sev)}</span>
+                    </div>
+                    <ul class="reco-act-bullets">${bullets}</ul>
+                </div>`;
+            }).join('');
+        }
+
+        function updateTabBadge(btn, count, severity) {
+            btn.querySelector('.tab-count').textContent = count;
+            btn.classList.remove('has-critical', 'has-warning');
+            if (severity === 'critical') btn.classList.add('has-critical');
+            else if (severity === 'warning') btn.classList.add('has-warning');
+        }
+
+        // ── Render ────────────────────────────────────────────────────────────
+        window.__recs = {};
+
+        function render(data) {
+            if (data.status === 'no_activities') {
+                loaderWrap.innerHTML = `<div class="reco-empty">
+                    <div class="icon">📋</div>
+                    <h2 class="h5 fw-bold text-success mb-2">Aucune activité planifiée</h2>
+                    <p class="text-muted mb-0" style="max-width:32rem;margin:0 auto;">
+                        Ajoutez des activités dans votre calendrier pour recevoir des recommandations personnalisées.
+                    </p>
+                </div>`;
+                statStatus.querySelector('.num').textContent = '📋';
+                statStatus.querySelector('.lbl').textContent = 'Aucune activité';
+                return;
+            }
+
+            const planning = data.planning ?? [];
+            const weather  = data.weather  ?? [];
+
+            // Store rec objects for modal access
+            planning.forEach((r, i) => { window.__recs['recs_planning_' + i] = r; });
+            weather.forEach((r, i)  => { window.__recs['recs_weather_'  + i] = r; });
+
+            // Planning tab
+            planningCards.innerHTML = renderCards(planning, 'planning');
+            const planSev = worstSeverity(planning);
+            updateTabBadge(document.getElementById('tab-btn-planning'), planning.length, planSev);
+            statPlanning.querySelector('.num').textContent = planning.length;
+
+            // Weather tab
+            if (data.weather_summary) {
+                weatherBarSlot.innerHTML = `<div class="reco-weather-bar">
+                    🌤️ <strong>Météo :</strong>&nbsp;${esc(data.weather_summary)}</div>`;
+            }
+            weatherCards.innerHTML = renderCards(weather, 'weather');
+            const wSev = worstSeverity(weather);
+            updateTabBadge(document.getElementById('tab-btn-weather'), weather.length, wSev);
+            statWeather.querySelector('.num').textContent = weather.length;
+
+            // Status stat
+            const overallSev = planSev === 'critical' || wSev === 'critical' ? 'critical'
+                             : planSev === 'warning'  || wSev === 'warning'  ? 'warning' : 'ok';
+            const icons  = { critical: '🔴', warning: '🟡', ok: '✅' };
+            const labels = { critical: 'Alertes critiques', warning: 'Points à surveiller', ok: 'Tout est OK' };
+            statStatus.querySelector('.num').textContent = icons[overallSev];
+            statStatus.querySelector('.lbl').textContent = labels[overallSev];
+
+            loaderWrap.style.display  = 'none';
+            contentWrap.style.display = 'block';
+
+            if (overallSev !== 'ok' && planSev === 'ok' && wSev !== 'ok') {
+                switchTab('weather');
+            }
+        }
+
+        function renderError(msg) {
+            loaderWrap.innerHTML = `<div class="reco-act-card severity-critical">
+                <div class="reco-act-header">
+                    <span style="font-size:1.1rem">🔴</span>
+                    <span class="reco-act-title">Erreur lors du chargement</span>
+                </div>
+                <ul class="reco-act-bullets"><li>${esc(msg)}</li></ul>
+                <button class="btn btn-outline-danger btn-sm mt-2" onclick="location.reload()">Réessayer</button>
+            </div>`;
+            statStatus.querySelector('.num').textContent = '❌';
+            statStatus.querySelector('.lbl').textContent = 'Erreur';
+        }
+
+        // ── Fetch ─────────────────────────────────────────────────────────────
+        fetch(payloadUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function (data) {
+                if (data.error) throw new Error(data.error);
+                render(data);
+            })
+            .catch(function (err) {
+                renderError(err.message || 'Erreur inconnue');
+            });
+    })();
+    </script>
+{% endblock %}

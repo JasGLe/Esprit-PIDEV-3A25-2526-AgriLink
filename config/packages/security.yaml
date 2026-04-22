@@ -21,7 +21,8 @@ security:
             user_checker: App\Security\UserChecker
             custom_authenticators:
                 - App\Security\UserAuthenticator
-                
+            
+            entry_point: App\Security\UserAuthenticator
             remember_me:
                 secret: '%kernel.secret%'
                 lifetime: 604800 # 1 week in seconds
@@ -39,6 +40,8 @@ security:
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/register, roles: PUBLIC_ACCESS }
+        - { path: ^/api/face/verify, roles: PUBLIC_ACCESS }
+        - { path: ^/profile/api/security/capture-intrusion, roles: PUBLIC_ACCESS }
         - { path: ^/admin, roles: ROLE_ADMIN }
         - { path: ^/profile, roles: ROLE_USER }
         - { path: ^/dashboard, roles: ROLE_USER }

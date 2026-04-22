@@ -203,6 +203,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'backup_codes', type: Types::JSON, nullable: true)]
     private ?array $backupCodes = null;
 
+    #[ORM\Column(name: 'login_count', type: Types::INTEGER, options: ['default' => 0])]
+    private int $loginCount = 0;
+
+    #[ORM\Column(name: 'user_points', type: Types::INTEGER, options: ['default' => 0])]
+    private int $userPoints = 0;
+
+    #[ORM\Column(name: 'earned_badges', type: Types::JSON, nullable: true)]
+    private ?array $earnedBadges = null;
+
     #[ORM\OneToMany(targetEntity: Exploitation::class, mappedBy: 'user')]
     private Collection $exploitations;
 
@@ -1133,6 +1142,47 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             }
         }
 
+        return $this;
+    }
+
+    // ==================== GAMIFICATION ====================
+
+    public function getLoginCount(): int
+    {
+        return $this->loginCount;
+    }
+
+    public function setLoginCount(int $loginCount): static
+    {
+        $this->loginCount = $loginCount;
+        return $this;
+    }
+
+    public function incrementLoginCount(): static
+    {
+        $this->loginCount++;
+        return $this;
+    }
+
+    public function getUserPoints(): int
+    {
+        return $this->userPoints;
+    }
+
+    public function setUserPoints(int $userPoints): static
+    {
+        $this->userPoints = $userPoints;
+        return $this;
+    }
+
+    public function getEarnedBadges(): array
+    {
+        return $this->earnedBadges ?? [];
+    }
+
+    public function setEarnedBadges(?array $earnedBadges): static
+    {
+        $this->earnedBadges = $earnedBadges;
         return $this;
     }
 }

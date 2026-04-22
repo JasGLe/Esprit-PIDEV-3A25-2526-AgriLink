@@ -7,6 +7,7 @@ use App\Entity\UserManagement\User;
 use App\Repository\NotificationsRepository;
 use App\Service\AdminActivityNotificationService;
 use App\Service\OneSignalPushService;
+use App\Service\UserGamificationService;
 use App\Service\UserProfileNotificationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,6 +24,7 @@ class NotificationsController extends AbstractController
         private OneSignalPushService $oneSignalPushService,
         private UserProfileNotificationService $profileNotificationService,
         private AdminActivityNotificationService $adminActivityNotificationService,
+        private UserGamificationService $gamificationService,
     ) {}
 
     /**
@@ -85,6 +87,18 @@ class NotificationsController extends AbstractController
         $this->notificationsRepository->remove($notification, flush: true);
 
         return $this->json(['success' => true]);
+    }
+
+    /**
+     * Gamification summary (level, points, badges) for the current user
+     */
+    #[Route('/gamification', name: 'gamification', methods: ['GET'])]
+    public function getGamification(): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        return $this->json($this->gamificationService->getSummary($user));
     }
 
     /**
