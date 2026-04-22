@@ -64,7 +64,7 @@ class IACultureService
             throw new \Exception('Réponse Groq vide: ' . json_encode($data));
         }
 
-        return $this->extractJson($text);
+        return $this->extractJsonSafe($text);
     }
 
     private function buildSystemPrompt(): string
@@ -114,7 +114,7 @@ public function analyserImage($file, string $nomCulture = ''): array
 
         $response = $this->client->request(
             'POST',
-            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=".$this->apiKey,
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=".$this->geminiKey,
             [
                 'headers' => [
                     'Content-Type' => 'application/json'
