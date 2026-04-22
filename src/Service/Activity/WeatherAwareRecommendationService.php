@@ -5,7 +5,7 @@ namespace App\Service\Activity;
 use App\Entity\Activity\Activite;
 use App\Entity\UserManagement\User;
 use App\Repository\Activity\ActiviteRepository;
-use App\Service\GeminiService;
+use App\Service\Activity\GeminiActivityService;
 use App\Service\OpenWeatherMapService;
 
 class WeatherAwareRecommendationService
@@ -13,7 +13,7 @@ class WeatherAwareRecommendationService
     public function __construct(
         private readonly ActiviteRepository $activiteRepository,
         private readonly OpenWeatherMapService $weatherService,
-        private readonly GeminiService $geminiService,
+        private readonly GeminiActivityService $geminiService,
     ) {
     }
 
