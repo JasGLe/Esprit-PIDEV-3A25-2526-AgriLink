@@ -28,6 +28,7 @@ services:
             string $pollinations_api_key: '%env(POLLINATIONS_API_KEY)%'
             string $mapboxToken: '%env(MAPBOX_TOKEN)%'
             string $apiKey:               '%env(PERENUAL_API_KEY)%'
+            string  $groqKey:   '%env(GROQ_API_KEY)%'
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     App\:
@@ -58,6 +59,12 @@ services:
             $facebookAppId: '%env(FACEBOOK_APP_ID)%'
             $facebookAppSecret: '%env(FACEBOOK_APP_SECRET)%'
             $facebookRedirectUri: '%env(FACEBOOK_REDIRECT_URI)%'
+
+
+    App\Service\RecapitulatifMailService:
+        arguments:
+            $mailerFrom: '%env(MAILER_FROM_EMAIL)%'
+            $appName:    'AgriLink'
 
     App\Service\LibreTranslateService:
         arguments:
