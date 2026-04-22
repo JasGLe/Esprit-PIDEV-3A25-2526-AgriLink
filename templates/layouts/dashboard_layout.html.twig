@@ -311,6 +311,17 @@
                             <span class="small fw-medium sidebar-hide">Mon profil</span>
                         </a>
 
+                        {# Achievements link — non-admin only #}
+                        {% if not is_granted('ROLE_ADMIN') %}
+                        <button type="button" onclick="openAchievementsPanel()" title="Mes succès" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 w-100 border-0 bg-transparent text-start text-dark" style="cursor:pointer;">
+                            <svg class="me-3 flex-shrink-0" style="width:1.25rem;height:1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                            </svg>
+                            <span class="small fw-medium sidebar-hide">Mes succès</span>
+                            <span id="sidebar-badge-count" class="ms-auto badge rounded-pill sidebar-hide" style="background:#f0fdf4;color:#16a34a;font-size:.65rem;"></span>
+                        </button>
+                        {% endif %}
+
                         <hr class="my-2 border-secondary opacity-25">
                         <div class="px-3 py-1 text-muted text-uppercase small fw-semibold" style="letter-spacing: 0.05em; font-size: 0.65rem;">
                             Planification
@@ -864,5 +875,201 @@ document.querySelectorAll('.notif-item').forEach(item => {
             });
     });
 });
+</script>
+
+{# ── Achievements Offcanvas ── #}
+<div class="offcanvas offcanvas-end" tabindex="-1" id="achievementsOffcanvas" style="width:min(420px,100vw);">
+    <div class="offcanvas-header border-bottom" style="padding:1rem 1.25rem;">
+        <div>
+            <h5 class="offcanvas-title fw-bold mb-0">🏆 Mes Succès</h5>
+            <p class="text-muted mb-0" style="font-size:.78rem;" id="ach-subtitle">Chargement…</p>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body p-0" id="ach-body" style="overflow-y:auto;">
+        <div class="d-flex align-items-center justify-content-center" style="height:200px;">
+            <div class="spinner-border spinner-border-sm text-success" role="status"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Achievements panel */
+.ach-level-row {
+    display:flex; align-items:center; gap:.75rem;
+    padding:.65rem 1.25rem; border-bottom:1px solid #f3f4f6;
+}
+.ach-level-circle {
+    width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:1.3rem; flex-shrink:0;
+}
+.ach-level-current { font-weight:700; font-size:.82rem; }
+.ach-level-sub     { font-size:.72rem; color:#6b7280; }
+
+.ach-progress-section { padding:.85rem 1.25rem; border-bottom:1px solid #f3f4f6; }
+.ach-progress-label { display:flex; justify-content:space-between; font-size:.73rem; color:#6b7280; margin-bottom:.3rem; }
+.ach-progress-track { height:10px; border-radius:999px; background:#f3f4f6; overflow:hidden; }
+.ach-progress-fill  { height:100%; border-radius:999px; transition:width .8s ease; }
+
+.ach-section { padding:.75rem 1.25rem .5rem; }
+.ach-section-title { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#6b7280; margin-bottom:.6rem; }
+
+.ach-badge-grid { display:grid; grid-template-columns:1fr 1fr; gap:.5rem; margin-bottom:.5rem; }
+.ach-badge-card {
+    display:flex; align-items:center; gap:.5rem;
+    padding:.6rem .75rem; border-radius:10px; font-size:.76rem;
+}
+.ach-badge-card.earned  { background:#f0fdf4; border:1px solid #bbf7d0; }
+.ach-badge-card.locked  { background:#f9fafb; border:1px solid #e5e7eb; opacity:.75; }
+.ach-badge-icon { font-size:1.2rem; flex-shrink:0; }
+.ach-badge-name { font-weight:600; color:#374151; font-size:.73rem; }
+.ach-badge-desc { font-size:.67rem; color:#6b7280; line-height:1.3; }
+.ach-badge-card.locked .ach-badge-name { color:#9ca3af; }
+
+.ach-tip-section { padding:.75rem 1.25rem; background:#f9fafb; border-top:1px solid #f3f4f6; }
+.ach-tip-title { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#6b7280; margin-bottom:.55rem; }
+.ach-tip-item {
+    display:flex; align-items:flex-start; gap:.5rem;
+    padding:.5rem .65rem; border-radius:8px;
+    background:#fff; border:1px solid #e5e7eb; margin-bottom:.4rem; font-size:.74rem;
+}
+.ach-tip-item-icon { font-size:.95rem; flex-shrink:0; margin-top:.1rem; }
+.ach-tip-label { font-weight:700; color:#374151; display:block; margin-bottom:.1rem; }
+.ach-tip-text  { color:#6b7280; line-height:1.4; }
+
+.ach-stats-bar { display:flex; gap:1rem; padding:.75rem 1.25rem; border-bottom:1px solid #f3f4f6; }
+.ach-stat { flex:1; text-align:center; }
+.ach-stat-value { font-size:1.3rem; font-weight:700; color:#374151; }
+.ach-stat-label { font-size:.68rem; color:#6b7280; }
+</style>
+
+<script>
+const LEVEL_COLORS_ACH = {
+    1:{ bg:'#f0fdf4', text:'#16a34a', bar:'linear-gradient(90deg,#4ade80,#86efac)' },
+    2:{ bg:'#f0fdf4', text:'#15803d', bar:'linear-gradient(90deg,#22c55e,#4ade80)' },
+    3:{ bg:'#fefce8', text:'#a16207', bar:'linear-gradient(90deg,#eab308,#fde047)' },
+    4:{ bg:'#fff7ed', text:'#c2410c', bar:'linear-gradient(90deg,#f97316,#fb923c)' },
+    5:{ bg:'#eff6ff', text:'#1d4ed8', bar:'linear-gradient(90deg,#3b82f6,#60a5fa)' },
+    6:{ bg:'#f5f3ff', text:'#7c3aed', bar:'linear-gradient(90deg,#8b5cf6,#a78bfa)' },
+    7:{ bg:'#fff1f2', text:'#be123c', bar:'linear-gradient(90deg,#f43f5e,#fb7185)' },
+};
+
+function openAchievementsPanel() {
+    const offcanvas = new bootstrap.Offcanvas(document.getElementById('achievementsOffcanvas'));
+    offcanvas.show();
+    loadAchievements();
+}
+
+async function loadAchievements() {
+    const body = document.getElementById('ach-body');
+    const subtitle = document.getElementById('ach-subtitle');
+
+    try {
+        // Reuse cached data from widget if available, otherwise fetch
+        const data = window._ulwData || await fetch('{{ path('app_notifications_gamification') }}').then(r => r.json());
+        window._ulwData = data;
+        renderAchievements(data, body, subtitle);
+
+        // Update sidebar badge count
+        const countEl = document.getElementById('sidebar-badge-count');
+        if (countEl && data.badges.length > 0) {
+            countEl.textContent = data.badges.length;
+        }
+    } catch (e) {
+        body.innerHTML = '<p class="text-muted p-4">Impossible de charger les succès.</p>';
+    }
+}
+
+function renderAchievements(data, body, subtitle) {
+    const { points, loginCount, level, allBadges, nextBadges, levels } = data;
+    const col = LEVEL_COLORS_ACH[level.number] || LEVEL_COLORS_ACH[1];
+
+    const earnedCount = allBadges.filter(b => b.earned).length;
+    subtitle.textContent = `${earnedCount} badge${earnedCount > 1 ? 's' : ''} débloqué${earnedCount > 1 ? 's' : ''} · ${points} pts`;
+
+    const progressLabel = level.number < 7
+        ? `${level.points_to_next} pts jusqu'au niveau ${level.number + 1}`
+        : 'Niveau maximum atteint !';
+
+    // Badge grid
+    const earnedBadgesHtml = allBadges.filter(b => b.earned).map(b => `
+        <div class="ach-badge-card earned">
+            <span class="ach-badge-icon">${b.icon}</span>
+            <div><div class="ach-badge-name">${b.label}</div><div class="ach-badge-desc">${b.description}</div></div>
+        </div>`).join('');
+
+    const lockedBadgesHtml = allBadges.filter(b => !b.earned).map(b => `
+        <div class="ach-badge-card locked">
+            <span class="ach-badge-icon" style="filter:grayscale(1);opacity:.5">🔒</span>
+            <div><div class="ach-badge-name">${b.label}</div><div class="ach-badge-desc">${b.description}</div></div>
+        </div>`).join('');
+
+    // Tips for next badges
+    const tipsHtml = nextBadges.map(b => `
+        <div class="ach-tip-item">
+            <span class="ach-tip-item-icon">${b.icon}</span>
+            <div>
+                <span class="ach-tip-label">${b.label}</span>
+                <span class="ach-tip-text">${b.tip}</span>
+            </div>
+        </div>`).join('');
+
+    body.innerHTML = `
+        <div class="ach-level-row">
+            <div class="ach-level-circle" style="background:${col.bg}">${level.icon}</div>
+            <div>
+                <div class="ach-level-current" style="color:${col.text}">Niveau ${level.number} — ${level.label}</div>
+                <div class="ach-level-sub">${progressLabel}</div>
+            </div>
+        </div>
+
+        <div class="ach-progress-section">
+            <div class="ach-progress-label"><span>Progression vers le niveau ${level.number + 1 <= 7 ? level.number + 1 : level.number}</span><span>${level.progress}%</span></div>
+            <div class="ach-progress-track">
+                <div class="ach-progress-fill" style="width:${level.progress}%;background:${col.bar}"></div>
+            </div>
+        </div>
+
+        <div class="ach-stats-bar">
+            <div class="ach-stat"><div class="ach-stat-value">${points}</div><div class="ach-stat-label">Points</div></div>
+            <div class="ach-stat"><div class="ach-stat-value">${loginCount}</div><div class="ach-stat-label">Connexions</div></div>
+            <div class="ach-stat"><div class="ach-stat-value">${earnedCount}/${allBadges.length}</div><div class="ach-stat-label">Badges</div></div>
+        </div>
+
+        ${earnedCount > 0 ? `
+        <div class="ach-section">
+            <div class="ach-section-title">✅ Badges obtenus</div>
+            <div class="ach-badge-grid">${earnedBadgesHtml}</div>
+        </div>` : ''}
+
+        ${lockedBadgesHtml ? `
+        <div class="ach-section">
+            <div class="ach-section-title">🔒 Badges à débloquer</div>
+            <div class="ach-badge-grid">${lockedBadgesHtml}</div>
+        </div>` : ''}
+
+        ${tipsHtml ? `
+        <div class="ach-tip-section">
+            <div class="ach-tip-title">💡 Comment débloquer les prochains</div>
+            ${tipsHtml}
+        </div>` : ''}
+    `;
+}
+
+// Pre-load badge count for sidebar on page load (non-admin only)
+{% if not is_granted('ROLE_ADMIN') %}
+document.addEventListener('DOMContentLoaded', function () {
+    const countEl = document.getElementById('sidebar-badge-count');
+    if (!countEl) return;
+    fetch('{{ path('app_notifications_gamification') }}')
+        .then(r => r.json())
+        .then(data => {
+            window._ulwData = data;
+            if (data.badges.length > 0) {
+                countEl.textContent = data.badges.length;
+            }
+        }).catch(() => {});
+});
+{% endif %}
 </script>
 {% endblock %}

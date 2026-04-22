@@ -2,12 +2,16 @@
 
 namespace App\Controller\UserManagement;
 
+use App\Service\FaceRecognitionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
+use Symfony\Component\Security\Core\Authentication\Token\UsernamePasswordToken;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use App\Repository\UserManagement\UserRepository;
 
 class SecurityController extends AbstractController
 {
@@ -24,15 +28,79 @@ class SecurityController extends AbstractController
 
         $error = $authenticationUtils->getLastAuthenticationError();
         $lastUsername = $authenticationUtils->getLastUsername();
-        
+
         // Get remembered email from cookie
         $rememberedEmail = $request->cookies->get('remembered_email', '');
 
-        return $this->render('user_management/security/login.html.twig', [
+        // Prepare response data
+        $responseData = [
             'last_username' => $lastUsername ?: $rememberedEmail,
             'remembered_email' => $rememberedEmail,
             'error' => $error,
             'recaptcha_site_key' => $this->recaptchaSiteKey,
+        ];
+
+        return $this->render('user_management/security/login.html.twig', $responseData);
+    }
+
+    #[Route('/api/face/verify', name: 'app_face_verify', methods: ['POST'])]
+    public function verifyFace(
+        Request $request,
+        FaceRecognitionService $faceRecognitionService,
+        UserRepository $userRepository,
+        TokenStorageInterface $tokenStorage
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['descriptor'])) {
+            return new JsonResponse(['error' => 'Descriptor requis.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $capturedDescriptor = json_decode($data['descriptor'], true);
+        if (!is_array($capturedDescriptor) || count($capturedDescriptor) !== 128) {
+            return new JsonResponse(['error' => 'Format de descriptor invalide (128 valeurs attendues).'], Response::HTTP_BAD_REQUEST);
+        }
+
+        // Scan all active enrolled users to find the closest face match
+        $enrolledUsers = $userRepository->findAllWithFaceDescriptor();
+        if (empty($enrolledUsers)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Aucun visage enregistré dans le système.',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $bestUser     = null;
+        $bestDistance = PHP_FLOAT_MAX;
+
+        foreach ($enrolledUsers as $candidate) {
+            $stored = json_decode($candidate->getFaceDescriptor(), true);
+            if (!is_array($stored) || count($stored) !== 128) {
+                continue;
+            }
+            $distance = $faceRecognitionService->euclideanDistance($stored, $capturedDescriptor);
+            if ($distance < $bestDistance) {
+                $bestDistance = $distance;
+                $bestUser     = $candidate;
+            }
+        }
+
+        if ($bestUser === null || !$faceRecognitionService->isWithinThreshold($bestDistance)) {
+            return new JsonResponse([
+                'success' => false,
+                'message' => 'Visage non reconnu. Veuillez réessayer.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        // Authenticate: create a session token directly so 2FA is not re-triggered
+        // (face recognition is itself a strong second factor).
+        $token = new UsernamePasswordToken($bestUser, 'main', $bestUser->getRoles());
+        $tokenStorage->setToken($token);
+
+        return new JsonResponse([
+            'success'      => true,
+            'message'      => 'Visage reconnu avec succès.',
+            'redirect_url' => $this->generateUrl('app_dashboard'),
         ]);
     }
 

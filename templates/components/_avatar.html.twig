@@ -15,22 +15,22 @@
 
 <div class="position-relative d-inline-block {{ classes|default('') }}">
     {% if user.photoProfil %}
-        {# 
+        {#
            Image URL construction:
            - photoProfil stores relative path: profiles/filename.jpg
            - uploads_base_url is set from .env: /agrilink/uploads (MAMP), /uploads (standard), etc.
            - Result URL is: {uploads_base_url}/profiles/filename.jpg
-           
+
            This works consistently across all platforms:
            - MAMP: /agrilink/uploads/profiles/filename.jpg
            - XAMPP/WAMP: /agrilink/uploads/profiles/filename.jpg (or /uploads/profiles/filename.jpg if configured differently)
         #}
-        <img src="{{ uploads_base_url }}/{{ user.photoProfil }}" 
-             alt="{{ user.nom }}" 
+        <img src="{{ uploads_base_url }}/{{ user.photoProfil }}"
+             alt="{{ user.nom }}"
              class="avatar {{ sizeClass }} border border-2 border-gray-200"
              onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
         {# Fallback if image fails to load #}
-        <div class="avatar {{ sizeClass }} bg-success text-white fw-semibold d-none">
+        <div class="avatar {{ sizeClass }} bg-success text-white fw-semibold d-none align-items-center justify-content-center">
             {% set names = user.nom|split(' ') %}
             {% if names|length > 0 %}
                 {{ names[0]|first|upper }}{% if names|length > 1 %}{{ names[1]|first|upper }}{% endif %}
@@ -39,7 +39,7 @@
             {% endif %}
         </div>
     {% else %}
-        <div class="avatar {{ sizeClass }} bg-success text-white fw-semibold">
+        <div class="avatar {{ sizeClass }} bg-success text-white fw-semibold d-flex align-items-center justify-content-center">
             {% set names = user.nom|split(' ') %}
             {% if names|length > 0 %}
                 {{ names[0]|first|upper }}{% if names|length > 1 %}{{ names[1]|first|upper }}{% endif %}

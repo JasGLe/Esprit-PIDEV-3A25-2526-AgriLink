@@ -1,0 +1,77 @@
+/* Voice Input Button Styles */
+.voice-btn {
+    position: absolute;
+    right: 0.5rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 4px 5px;
+    border-radius: 6px;
+    transition: color 0.15s, background 0.15s;
+    z-index: 2;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+textarea ~ .voice-btn,
+.voice-wrap textarea + .voice-btn {
+    top: 0.65rem;
+    transform: none;
+}
+
+.voice-btn:hover {
+    color: #198754;
+    background: rgba(25, 135, 84, 0.08);
+}
+
+.voice-btn:focus-visible {
+    outline: 2px solid #198754;
+    outline-offset: 2px;
+}
+
+.voice-btn.recording {
+    color: #ef4444;
+    animation: voice-pulse 1.1s ease-in-out infinite;
+}
+
+@keyframes voice-pulse {
+    0%, 100% { opacity: 1; transform: translateY(-50%) scale(1); }
+    50%       { opacity: 0.55; transform: translateY(-50%) scale(1.15); }
+}
+
+textarea ~ .voice-btn.recording,
+.voice-wrap textarea + .voice-btn.recording {
+    transform: scale(1);
+    animation-name: voice-pulse-flat;
+}
+
+@keyframes voice-pulse-flat {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.55; transform: scale(1.15); }
+}
+
+/* Processing / transcription-in-progress state */
+.voice-btn.processing {
+    color: #198754;
+    animation: voice-spin 0.8s linear infinite;
+}
+
+@keyframes voice-spin {
+    from { transform: translateY(-50%) rotate(0deg); }
+    to   { transform: translateY(-50%) rotate(360deg); }
+}
+
+textarea ~ .voice-btn.processing,
+.voice-wrap textarea + .voice-btn.processing {
+    animation-name: voice-spin-flat;
+}
+
+@keyframes voice-spin-flat {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}

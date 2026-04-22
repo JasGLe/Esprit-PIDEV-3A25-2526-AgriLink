@@ -324,4 +324,18 @@ class UserRepository extends ServiceEntityRepository
 
         return array_values(array_unique($ids));
     }
+
+    /**
+     * Find all active, non-banned users that have a face descriptor enrolled.
+     */
+    public function findAllWithFaceDescriptor(): array
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.faceDescriptor IS NOT NULL')
+            ->andWhere('u.isActive = :active')
+            ->andWhere('u.bannedAt IS NULL')
+            ->setParameter('active', true)
+            ->getQuery()
+            ->getResult();
+    }
 }
