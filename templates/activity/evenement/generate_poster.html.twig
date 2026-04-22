@@ -139,6 +139,12 @@
                                 onclick="downloadPoster()">
                             ⬇️ Télécharger l'affiche
                         </button>
+                        <button type="button"
+                                id="btn-linkedin"
+                                class="btn btn-outline-primary px-4"
+                                onclick="shareOnLinkedIn()">
+                            💼 Partager sur LinkedIn
+                        </button>
                     </div>
                 </div>
 
@@ -184,6 +190,7 @@
     const EVENT_ID       = {{ evenement.id }};
     const GENERATE_URL   = '/evenement/' + EVENT_ID + '/generate-poster';
     const POSTER_IMG_URL = '/evenement/' + EVENT_ID + '/poster-image';
+    const LINKEDIN_POST_URL = '/evenement/' + EVENT_ID + '/generate-linkedin-post';
     const ESTIMATE_SEC   = 75;
 
     let timerInterval  = null;
@@ -346,6 +353,47 @@
         var img = document.getElementById('poster-img');
         if (img) img.removeAttribute('src');
         startGeneration();
+    };
+
+    window.shareOnLinkedIn = function () {
+        if (!currentUrl || !downloadBlob) return;
+
+        var btn = document.getElementById('btn-linkedin');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '⏳ Génération du post…';
+        }
+
+        fetch(LINKEDIN_POST_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (!data.success) throw new Error(data.message || 'Impossible de générer le texte LinkedIn.');
+
+            var text = (data.post_text || '').trim();
+            if (!text) throw new Error('Texte LinkedIn vide.');
+
+            var shareText = text;
+            var linkedInUrl = 'https://www.linkedin.com/feed/?shareActive=true&text=' + encodeURIComponent(shareText);
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(shareText).catch(function () {});
+            }
+
+            window.open(linkedInUrl, '_blank', 'noopener');
+        })
+        .catch(function (err) {
+            showError(err.message || 'Erreur de partage LinkedIn.');
+        })
+        .finally(function () {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = '💼 Partager sur LinkedIn';
+            }
+        });
     };
 
     function showError(msg) {
