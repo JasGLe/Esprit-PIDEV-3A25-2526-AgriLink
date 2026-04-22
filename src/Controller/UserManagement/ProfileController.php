@@ -7,6 +7,7 @@ use App\Form\UserManagement\ChangePasswordType;
 use App\Form\UserManagement\ProfileEditFormType;
 use App\Repository\UserManagement\SecurityEventRepository;
 use App\Repository\UserManagement\UserSessionRepository;
+use App\Service\AvatarService;
 use App\Service\BackupCodeService;
 use App\Service\EmailVerificationService;
 use App\Service\FaceRecognitionService;
@@ -508,6 +509,97 @@ class ProfileController extends AbstractController
         } catch (\Exception $e) {
             return new JsonResponse(
                 ['error' => 'Erreur lors de la mise à jour: ' . $e->getMessage()],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    #[Route('/generate-avatar', name: 'app_profile_generate_avatar', methods: ['POST'])]
+    public function generateAvatar(
+        Request $request,
+        AvatarService $avatarService,
+        EntityManagerInterface $entityManager,
+        FileUploader $fileUploader,
+        Security $security,
+        #[Autowire('%kernel.project_dir%')] string $projectDir
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('generate_avatar', $request->request->get('_token'))) {
+            return new JsonResponse(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$user->getPhotoProfil()) {
+            return new JsonResponse(
+                ['error' => 'Aucune photo de profil trouvée. Veuillez d\'abord télécharger une photo.'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        if (!$avatarService->isConfigured()) {
+            return new JsonResponse(
+                ['error' => 'Le service d\'avatar n\'est pas configuré. ' . $avatarService->getConfigurationStatus()],
+                Response::HTTP_SERVICE_UNAVAILABLE
+            );
+        }
+
+        try {
+            // Get full path to profile photo
+            $uploadsDir = $projectDir . '/public/agrilink/uploads';
+            $imagePath = $uploadsDir . '/' . $user->getPhotoProfil();
+
+            // Generate avatar from profile photo
+            $avatarImageData = $avatarService->generateAvatar($imagePath, $user->getPhotoProfil());
+
+            // Save generated avatar as temporary file
+            $tempAvatarPath = $uploadsDir . '/temp_avatar_' . uniqid() . '.png';
+            $written = file_put_contents($tempAvatarPath, $avatarImageData);
+            
+            if ($written === false) {
+                throw new \Exception('Failed to write temporary avatar file to disk.');
+            }
+
+            try {
+                // Create UploadedFile from the generated image
+                $avatarFile = new \Symfony\Component\HttpFoundation\File\UploadedFile(
+                    $tempAvatarPath,
+                    'avatar-' . uniqid() . '.png',
+                    'image/png',
+                    \UPLOAD_ERR_OK,
+                    true
+                );
+
+                // Upload the generated avatar, replacing the original photo
+                $newPhotoPath = $fileUploader->upload(
+                    $avatarFile,
+                    'profiles',
+                    $user->getPhotoProfil()
+                );
+
+                $user->setPhotoProfil($newPhotoPath);
+                $entityManager->flush();
+
+                $entityManager->refresh($user);
+                $token = $security->getToken();
+                if ($token) {
+                    $token->setUser($user);
+                }
+
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Votre avatar a été généré avec succès!',
+                    'photo' => $newPhotoPath,
+                ]);
+            } finally {
+                // Clean up temporary file in finally block to ensure cleanup
+                if (file_exists($tempAvatarPath)) {
+                    @unlink($tempAvatarPath);
+                }
+            }
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                ['error' => 'Erreur lors de la génération de l\'avatar: ' . $e->getMessage()],
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }

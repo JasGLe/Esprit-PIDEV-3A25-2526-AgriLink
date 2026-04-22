@@ -58,12 +58,12 @@ class PerenualApiService
 
     /**
      * Appelle Perenual et retourne saison + dates suggérées
-     * Même logique que CultureApiService.resolve() en JavaFX
+     
      */
     public function resolve(string $nomCulture, string $typeCulture): ?array
     {
         try {
-            // 1. Rechercher la plante par nom
+            // Rechercher la plante par nom
             $response = $this->http->request('GET', self::BASE_URL . '/species-list', [
                 'query' => [
                     'key'    => $this->apiKey,
@@ -76,7 +76,7 @@ class PerenualApiService
             $data = $response->toArray();
 
             if (empty($data['data'])) {
-                // Fallback sur le keyword du type
+                
                 return $this->resolveByKeyword(
                     self::TYPE_KEYWORDS[$typeCulture] ?? $nomCulture
                 );
@@ -112,14 +112,12 @@ class PerenualApiService
 
     /**
      * Construit le résultat depuis la réponse Perenual
-     * Retourne : saison, dateSemis, dateRecolte (comme AutoFillResult en Java)
+     * Retourne : saison, dateSemis, dateRecolte
      */
     private function buildResult(array $plant, ?string $typeCulture): array
     {
-        // ── Saison ──────────────────────────────────────────
+        
         $saison = $this->extractSaison($plant, $typeCulture);
-
-        // ── Dates selon la saison ────────────────────────────
         [$dateSemis, $dateRecolte] = $this->computeDates($saison, $typeCulture);
 
         return [
@@ -139,10 +137,10 @@ class PerenualApiService
      */
     private function extractSaison(array $plant, ?string $type): string
     {
-        // Perenual fournit parfois harvest_season ou growth_rate
+        
         $cycle = strtolower($plant['cycle'] ?? '');
 
-        // Mapping basé sur le type de culture (logique métier tunisienne)
+        
         $saisonParType = [
             'OLEICULTURE'             => 'AUTOMNE',
             'GRANDES_CULTURES'        => 'HIVER',
@@ -156,7 +154,7 @@ class PerenualApiService
             return $saisonParType[$type];
         }
 
-        // Fallback sur le cycle Perenual
+       
         if (str_contains($cycle, 'annual')) return 'PRINTEMPS';
         if (str_contains($cycle, 'perennial')) return 'AUTOMNE';
 
@@ -209,9 +207,7 @@ class PerenualApiService
         ];
     }
 
-    /**
-     * Résultat par défaut si l'API est indisponible
-     */
+   
     private function fallbackResult(string $typeCulture): array
     {
         $saison = 'PRINTEMPS';
@@ -229,8 +225,3 @@ class PerenualApiService
         ];
     }
 }
-
-
-
-
-

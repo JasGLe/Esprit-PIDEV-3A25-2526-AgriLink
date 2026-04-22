@@ -5,6 +5,8 @@ namespace App\Controller\UserManagement;
 use App\Entity\UserManagement\User;
 use App\Repository\Activity\ActiviteRepository;
 use App\Repository\Activity\EvenementRepository;
+use App\Repository\EquipementRepository;
+use App\Repository\MaintenanceRepository;
 use App\Service\OpenWeatherMapService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
@@ -47,64 +49,63 @@ class DashboardController extends AbstractController
     #[Route('/dashboard/agriculteur', name: 'app_dashboard_agriculteur')]
     #[IsGranted('ROLE_AGRICULTEUR')]
     public function agriculteurDashboard(
-        EvenementRepository $evenementRepository,
-        ActiviteRepository $activiteRepository,
-    ): Response
-    {
+        EvenementRepository   $evenementRepository,
+        EquipementRepository  $equipementRepository,
+        MaintenanceRepository $maintenanceRepository
+    ): Response {
         /** @var User $user */
-        $user = $this->getUser();
-        $userCity = $user->getVille();
-        $weather = $this->openWeatherMapService->getCurrentWeatherForCity($userCity);
-        $events = [];
+        $user   = $this->getUser();
+        $userId = (int) $user->getId();
 
-        $todayStart = new \DateTimeImmutable('today 00:00:00');
-        $todayEnd = new \DateTimeImmutable('today 23:59:59');
+        // ── Équipements de l'utilisateur ────────────────────────────────────
+        $equipements   = $equipementRepository->findBy(['userlog' => $userId]);
+        $equipementIds = array_map(fn($e) => $e->getId(), $equipements);
 
-        $todayActivites = $activiteRepository->findBetweenDates($todayStart, $todayEnd);
-        foreach ($todayActivites as $activite) {
-            if ($activite->getIdAgriculteur() !== $user->getId()) {
-                continue;
-            }
-
-            $start = $activite->getDateDebut();
-            $events[] = [
-                'type' => 'ACTIVITY',
-                'typeLabel' => 'Activité',
-                'title' => $activite->getTitre(),
-                'time' => $start?->format('H:i'),
-                'sortKey' => $start?->getTimestamp() ?? PHP_INT_MAX,
-            ];
+        // Map id → objet Equipement (pour le template)
+        $equipMap = [];
+        foreach ($equipements as $eq) {
+            $equipMap[$eq->getId()] = $eq;
         }
 
-        $todayEvenements = $evenementRepository->findBetweenDates($todayStart, $todayEnd);
-        foreach ($todayEvenements as $evenement) {
-            if ($evenement->getOrganisateur()?->getId() !== $user->getId()) {
-                continue;
-            }
+        // Répartition par statut (Actif, En panne, En maintenance, Hors service)
+        $equipementsParStatut = $equipementRepository->countByStatut($userId);
 
-            $eventDate = $evenement->getDateEvenement();
-            $events[] = [
-                'type' => 'EVENT',
-                'typeLabel' => 'Événement',
-                'title' => $evenement->getTitre(),
-                'time' => $eventDate?->format('H:i'),
-                'sortKey' => $eventDate?->getTimestamp() ?? PHP_INT_MAX,
-            ];
+        // Équipements géolocalisés (lat + lng non null) pour la carte Leaflet
+        $equipementsGeo = [];
+        foreach ($equipements as $eq) {
+            if ($eq->getLatitude() !== null && $eq->getLongitude() !== null) {
+                $equipementsGeo[] = [
+                    'id'     => $eq->getId(),
+                    'nom'    => $eq->getNom(),
+                    'type'   => $eq->getType(),
+                    'statut' => $eq->getStatut(),
+                    'lat'    => $eq->getLatitude(),
+                    'lng'    => $eq->getLongitude(),
+                    'url'    => $this->generateUrl('equipement_show', ['id' => $eq->getId()]),
+                ];
+            }
         }
 
-        usort(
-            $events,
-            static fn (array $a, array $b): int => $a['sortKey'] <=> $b['sortKey']
-        );
+        // ── Statistiques maintenances ────────────────────────────────────────
+        $totalMaintenances       = $maintenanceRepository->countTotalForUser($equipementIds);
+        $maintenancesEnRetard    = $maintenanceRepository->countEnRetardForUser($equipementIds);
+        $coutTotalMaintenances   = $maintenanceRepository->sumCoutForUser($equipementIds);
+        $prochainesMaintenances  = $maintenanceRepository->findProchainesForUser($equipementIds, 3);
 
         return $this->render('user_management/dashboard/agriculteur.html.twig', [
-            'myEvenementsCount' => $evenementRepository->countByOrganisateurId((int) $user->getId()),
-            'myEvenements' => $evenementRepository->findLatestByOrganisateurId((int) $user->getId(), 6),
-            'temperature' => $weather['temperature'] ?? null,
-            'weatherIcon' => $weather['icon'] ?? null,
-            'weatherDescription' => $weather['description'] ?? null,
-            'userCity' => $userCity,
-            'events' => $events,
+            // Événements (existants)
+            'myEvenementsCount' => $evenementRepository->countByOrganisateurId($userId),
+            'myEvenements'      => $evenementRepository->findLatestByOrganisateurId($userId, 6),
+            // Équipements
+            'totalEquipements'    => count($equipements),
+            'equipementsParStatut' => $equipementsParStatut,
+            'equipementsGeo'      => $equipementsGeo,
+            'equipMap'            => $equipMap,
+            // Maintenances
+            'totalMaintenances'      => $totalMaintenances,
+            'maintenancesEnRetard'   => $maintenancesEnRetard,
+            'coutTotalMaintenances'  => $coutTotalMaintenances,
+            'prochainesMaintenances' => $prochainesMaintenances,
         ]);
     }
 

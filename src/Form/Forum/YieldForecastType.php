@@ -6,6 +6,8 @@ use App\Dto\Forum\YieldForecastData;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class YieldForecastType extends AbstractType
@@ -40,6 +42,24 @@ class YieldForecastType extends AbstractType
                     'inputmode' => 'decimal',
                 ],
             ]);
+
+        $builder->addEventListener(FormEvents::PRE_SUBMIT, function (FormEvent $event): void {
+            $data = $event->getData();
+            if (!is_array($data)) {
+                return;
+            }
+
+            foreach (['surface', 'cropCoefficient', 'weatherCoefficient'] as $field) {
+                if (!isset($data[$field]) || !is_string($data[$field])) {
+                    continue;
+                }
+
+                $normalized = str_replace(',', '.', preg_replace('/\s+/', '', trim($data[$field])) ?? '');
+                $data[$field] = $normalized;
+            }
+
+            $event->setData($data);
+        });
     }
 
     public function configureOptions(OptionsResolver $resolver): void

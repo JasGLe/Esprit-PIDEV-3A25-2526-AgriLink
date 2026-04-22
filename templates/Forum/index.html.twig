@@ -50,56 +50,6 @@
             line-height: 1;
         }
 
-        .forum-yield-panel__hint {
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-
-        .forum-reco-panel {
-            border-radius: 1.25rem;
-            overflow: hidden;
-            border: 1px solid #d7e3ef;
-            background: linear-gradient(135deg, #f8fbff 0%, #ffffff 100%);
-        }
-
-        .forum-reco-panel__hero {
-            padding: 1.5rem;
-            background:
-                radial-gradient(circle at top right, rgba(59, 130, 246, 0.16), transparent 28%),
-                linear-gradient(135deg, #1d4ed8 0%, #2563eb 100%);
-            color: #fff;
-        }
-
-        .forum-reco-panel__hero-badge {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 2.75rem;
-            height: 2.75rem;
-            border-radius: 0.9rem;
-            background: rgba(255, 255, 255, 0.16);
-            font-weight: 700;
-            font-size: 1rem;
-        }
-
-        .forum-reco-panel__body {
-            padding: 1.5rem;
-        }
-
-        .forum-reco-panel__result {
-            padding: 1rem 1.1rem;
-            border-radius: 1rem;
-            background: #eff6ff;
-            border: 1px solid #bfdbfe;
-        }
-
-        .forum-reco-panel__result-value {
-            font-size: 1.6rem;
-            font-weight: 800;
-            color: #1d4ed8;
-            line-height: 1.1;
-        }
-
         .forum-profit-panel {
             border-radius: 1.25rem;
             overflow: hidden;
@@ -147,8 +97,6 @@
 
         .forum-yield-panel .form-control.is-invalid,
         .forum-yield-panel .form-select.is-invalid,
-        .forum-reco-panel .form-control.is-invalid,
-        .forum-reco-panel .form-select.is-invalid,
         .forum-profit-panel .form-control.is-invalid,
         .forum-profit-panel .form-select.is-invalid {
             border-color: #dc3545 !important;
@@ -157,7 +105,6 @@
         }
 
         .forum-yield-panel .invalid-feedback,
-        .forum-reco-panel .invalid-feedback,
         .forum-profit-panel .invalid-feedback {
             display: block;
             font-size: 0.875rem;
@@ -165,13 +112,266 @@
             color: #dc3545;
             margin-top: 0.35rem;
         }
+
+        .forum-tool-hint {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .forum-ai-widget {
+            position: fixed;
+            right: 1.5rem;
+            bottom: 1.5rem;
+            z-index: 1080;
+        }
+
+        .forum-ai-toggle {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            border: 0;
+            background: linear-gradient(135deg, #14532d 0%, #16a34a 100%);
+            color: #fff;
+            box-shadow: 0 1rem 2.4rem rgba(22, 101, 52, 0.35);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+        }
+
+        .forum-ai-toggle:hover,
+        .forum-ai-toggle:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 1.25rem 2.8rem rgba(22, 101, 52, 0.42);
+        }
+
+        .forum-ai-toggle__icon {
+            width: 1.65rem;
+            height: 1.65rem;
+        }
+
+        .forum-ai-toggle__status {
+            position: absolute;
+            right: 0.35rem;
+            top: 0.35rem;
+            width: 0.72rem;
+            height: 0.72rem;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            background: #facc15;
+        }
+
+        .forum-ai-panel {
+            position: absolute;
+            right: 0;
+            bottom: 5rem;
+            width: min(26rem, calc(100vw - 2rem));
+            overflow: hidden;
+            border-radius: 1rem;
+            border: 1px solid rgba(20, 83, 45, 0.14);
+            background: #fff;
+            box-shadow: 0 1.5rem 4rem rgba(15, 23, 42, 0.2);
+            display: none;
+            transform-origin: bottom right;
+        }
+
+        .forum-ai-panel.is-open {
+            display: block;
+            animation: forumAiPanelIn 0.16s ease-out;
+        }
+
+        .forum-ai-panel__header {
+            padding: 1rem;
+            background:
+                radial-gradient(circle at top right, rgba(250, 204, 21, 0.22), transparent 30%),
+                linear-gradient(135deg, #14532d 0%, #166534 58%, #15803d 100%);
+            color: #fff;
+        }
+
+        .forum-ai-panel__avatar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 0.85rem;
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .forum-ai-panel__avatar svg {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .forum-ai-close {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2rem;
+            height: 2rem;
+            border-radius: 0.65rem;
+            border: 1px solid rgba(255, 255, 255, 0.28);
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .forum-ai-close:hover,
+        .forum-ai-close:focus {
+            background: rgba(255, 255, 255, 0.18);
+            color: #fff;
+        }
+
+        .forum-ai-panel__messages {
+            height: 20rem;
+            overflow-y: auto;
+            padding: 1rem;
+            background:
+                linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        .forum-ai-message-row {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.55rem;
+        }
+
+        .forum-ai-message-row + .forum-ai-message-row {
+            margin-top: 0.75rem;
+        }
+
+        .forum-ai-message-row--user {
+            justify-content: flex-end;
+        }
+
+        .forum-ai-message-avatar {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.75rem;
+            height: 1.75rem;
+            border-radius: 50%;
+            flex: 0 0 auto;
+            font-size: 0.72rem;
+            font-weight: 800;
+        }
+
+        .forum-ai-message-avatar--assistant {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .forum-ai-message-avatar--user {
+            background: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .forum-ai-message {
+            max-width: 85%;
+            padding: 0.7rem 0.85rem;
+            border-radius: 0.85rem;
+            font-size: 0.9rem;
+            line-height: 1.45;
+            white-space: pre-wrap;
+            box-shadow: 0 0.35rem 0.9rem rgba(15, 23, 42, 0.06);
+        }
+
+        .forum-ai-message--assistant {
+            background: #fff;
+            color: #14532d;
+            border: 1px solid #dbe7d8;
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        .forum-ai-message--user {
+            background: #166534;
+            color: #fff;
+            border-bottom-right-radius: 0.25rem;
+        }
+
+        .forum-ai-panel__form {
+            padding: 0.9rem;
+            border-top: 1px solid #e2e8f0;
+            background: #fff;
+        }
+
+        .forum-ai-input-wrap {
+            display: flex;
+            gap: 0.55rem;
+            align-items: center;
+            padding: 0.35rem;
+            border: 1px solid #dbe7d8;
+            border-radius: 0.85rem;
+            background: #f8fafc;
+        }
+
+        .forum-ai-input-wrap:focus-within {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 0.18rem rgba(34, 197, 94, 0.15);
+            background: #fff;
+        }
+
+        .forum-ai-input {
+            border: 0;
+            background: transparent;
+            box-shadow: none !important;
+            min-width: 0;
+        }
+
+        .forum-ai-send {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.45rem;
+            height: 2.45rem;
+            border-radius: 0.7rem;
+            flex: 0 0 auto;
+        }
+
+        .forum-ai-send svg {
+            width: 1rem;
+            height: 1rem;
+        }
+
+        @keyframes forumAiPanelIn {
+            from {
+                opacity: 0;
+                transform: translateY(0.5rem) scale(0.98);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .forum-ai-widget {
+                right: 1rem;
+                bottom: 1rem;
+            }
+
+            .forum-ai-panel {
+                width: calc(100vw - 2rem);
+                bottom: 4.75rem;
+            }
+
+            .forum-ai-panel__messages {
+                height: 18rem;
+            }
+        }
     </style>
 {% endblock %}
 
 {% block javascripts %}
     {{ parent() }}
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        function initForumCalculators() {
+            function normalizeNumericValue(value) {
+                return (value || '').trim().replace(/\s+/g, '').replace(',', '.');
+            }
+
             function setFieldError(field, message) {
                 field.classList.add('is-invalid');
 
@@ -193,8 +393,18 @@
                 }
             }
 
+            function clearFormErrors(form) {
+                form.querySelectorAll('.is-invalid').forEach(function (field) {
+                    field.classList.remove('is-invalid');
+                });
+
+                form.querySelectorAll('.invalid-feedback').forEach(function (feedback) {
+                    feedback.remove();
+                });
+            }
+
             function validateRequiredTextField(field, emptyMessage, numericMessage) {
-                const value = field.value.trim();
+                const value = normalizeNumericValue(field.value);
                 clearFieldError(field);
 
                 if (value === '') {
@@ -204,15 +414,12 @@
 
                 if (numericMessage !== null) {
                     const parsed = Number(value);
-                    if (!Number.isFinite(parsed)) {
+                    if (!Number.isFinite(parsed) || parsed < 0) {
                         setFieldError(field, numericMessage);
                         return false;
                     }
 
-                    if (parsed < 0) {
-                        setFieldError(field, numericMessage);
-                        return false;
-                    }
+                    field.value = value;
                 }
 
                 return true;
@@ -229,6 +436,77 @@
                 return true;
             }
 
+            function parseNumericField(form, selector) {
+                const field = form.querySelector(selector);
+                return field ? Number(normalizeNumericValue(field.value)) : 0;
+            }
+
+            function renderYieldResult(form) {
+                const surface = parseNumericField(form, '#yield_forecast_surface');
+                const cropCoefficient = parseNumericField(form, '#yield_forecast_cropCoefficient');
+                const weatherCoefficient = parseNumericField(form, '#yield_forecast_weatherCoefficient');
+                const result = (surface * cropCoefficient * weatherCoefficient).toFixed(2);
+
+                const resultValue = document.getElementById('yield-result-value');
+                const resultMessage = document.getElementById('yield-result-message');
+
+                if (resultValue) {
+                    resultValue.textContent = result;
+                }
+
+                if (resultMessage) {
+                    resultMessage.textContent = 'Calcul effectue avec succes.';
+                }
+            }
+
+            function renderProfitResult(form) {
+                const revenue = parseNumericField(form, '#profitability_revenue');
+                const fertilizer = parseNumericField(form, '#profitability_fertilizer');
+                const water = parseNumericField(form, '#profitability_water');
+                const labor = parseNumericField(form, '#profitability_labor');
+                const seeds = parseNumericField(form, '#profitability_seeds');
+                const result = (revenue - (fertilizer + water + labor + seeds)).toFixed(2);
+
+                const resultValue = document.getElementById('profit-result-value');
+                const resultMessage = document.getElementById('profit-result-message');
+
+                if (resultValue) {
+                    resultValue.textContent = result;
+                }
+
+                if (resultMessage) {
+                    if (Number(result) > 0) {
+                        resultMessage.textContent = 'Exploitation rentable selon les valeurs saisies.';
+                    } else if (Number(result) < 0) {
+                        resultMessage.textContent = 'Le resultat indique une perte selon les valeurs saisies.';
+                    } else {
+                        resultMessage.textContent = 'Le resultat est a l\'equilibre.';
+                    }
+                }
+            }
+
+            function validateConfiguredForm(form, config) {
+                let valid = true;
+
+                config.fields.forEach(function (fieldConfig) {
+                    const field = form.querySelector(fieldConfig[0]);
+                    if (!field) {
+                        return;
+                    }
+
+                    const isChoice = field.tagName === 'SELECT';
+                    const fieldValid = isChoice
+                        ? validateRequiredChoice(field, fieldConfig[1])
+                        : validateRequiredTextField(field, fieldConfig[1], fieldConfig[2]);
+
+                    if (!fieldValid) {
+                        valid = false;
+                    }
+                });
+
+                return valid;
+            }
+
             const configs = [
                 {
                     formId: 'forum-yield-form',
@@ -236,13 +514,6 @@
                         ['#yield_forecast_surface', 'Surface est obligatoire.', 'Surface doit etre numerique.'],
                         ['#yield_forecast_cropCoefficient', 'Coefficient culture est obligatoire.', 'Coefficient culture doit etre numerique.'],
                         ['#yield_forecast_weatherCoefficient', 'Coefficient meteo est obligatoire.', 'Coefficient meteo doit etre numerique.']
-                    ]
-                },
-                {
-                    formId: 'forum-reco-form',
-                    fields: [
-                        ['#crop_recommendation_soil', 'Le type de sol est obligatoire.', null],
-                        ['#crop_recommendation_season', 'La saison est obligatoire.', null]
                     ]
                 },
                 {
@@ -259,31 +530,27 @@
 
             configs.forEach(function (config) {
                 const form = document.getElementById(config.formId);
-                if (!form) {
+                if (!form || form.dataset.forumCalculatorBound === '1') {
                     return;
                 }
 
+                form.dataset.forumCalculatorBound = '1';
+
                 form.addEventListener('submit', function (event) {
-                    let valid = true;
-
-                    config.fields.forEach(function (fieldConfig) {
-                        const field = form.querySelector(fieldConfig[0]);
-                        if (!field) {
-                            return;
-                        }
-
-                        const isChoice = field.tagName === 'SELECT';
-                        const fieldValid = isChoice
-                            ? validateRequiredChoice(field, fieldConfig[1])
-                            : validateRequiredTextField(field, fieldConfig[1], fieldConfig[2]);
-
-                        if (!fieldValid) {
-                            valid = false;
-                        }
-                    });
-
+                    const valid = validateConfiguredForm(form, config);
                     if (!valid) {
                         event.preventDefault();
+                        return;
+                    }
+
+                    if (config.formId === 'forum-yield-form') {
+                        event.preventDefault();
+                        renderYieldResult(form);
+                    }
+
+                    if (config.formId === 'forum-profit-form') {
+                        event.preventDefault();
+                        renderProfitResult(form);
                     }
                 });
 
@@ -301,13 +568,202 @@
                     });
                 });
             });
-        });
+
+            const yieldCalculateButton = document.getElementById('forum-yield-calculate');
+            const yieldForm = document.getElementById('forum-yield-form');
+            const yieldConfig = configs.find(function (config) {
+                return config.formId === 'forum-yield-form';
+            });
+
+            if (yieldCalculateButton && yieldForm && yieldCalculateButton.dataset.forumCalcBound !== '1') {
+                yieldCalculateButton.dataset.forumCalcBound = '1';
+                yieldCalculateButton.addEventListener('click', function () {
+                    if (!yieldConfig || !validateConfiguredForm(yieldForm, yieldConfig)) {
+                        return;
+                    }
+
+                    renderYieldResult(yieldForm);
+                });
+            }
+
+            const profitCalculateButton = document.getElementById('forum-profit-calculate');
+            const profitForm = document.getElementById('forum-profit-form');
+            const profitConfig = configs.find(function (config) {
+                return config.formId === 'forum-profit-form';
+            });
+
+            if (profitCalculateButton && profitForm && profitCalculateButton.dataset.forumCalcBound !== '1') {
+                profitCalculateButton.dataset.forumCalcBound = '1';
+                profitCalculateButton.addEventListener('click', function () {
+                    if (!profitConfig || !validateConfiguredForm(profitForm, profitConfig)) {
+                        return;
+                    }
+
+                    renderProfitResult(profitForm);
+                });
+            }
+
+            document.querySelectorAll('[data-forum-reset-form]').forEach(function (button) {
+                if (button.dataset.forumResetBound === '1') {
+                    return;
+                }
+
+                button.dataset.forumResetBound = '1';
+
+                button.addEventListener('click', function () {
+                    const form = document.getElementById(button.getAttribute('data-forum-reset-form'));
+                    if (!form) {
+                        return;
+                    }
+
+                    form.reset();
+                    clearFormErrors(form);
+
+                    const resultValue = document.getElementById(button.getAttribute('data-forum-reset-value'));
+                    const resultMessage = document.getElementById(button.getAttribute('data-forum-reset-message'));
+
+                    if (resultValue) {
+                        resultValue.textContent = button.getAttribute('data-forum-default-value') || '';
+                    }
+
+                    if (resultMessage) {
+                        resultMessage.textContent = button.getAttribute('data-forum-default-message') || '';
+                    }
+                });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initForumCalculators);
+        document.addEventListener('turbo:load', initForumCalculators);
+
+        function initForumAiAssistant() {
+            const widget = document.getElementById('forum-ai-widget');
+            if (!widget || widget.dataset.forumAiBound === '1') {
+                return;
+            }
+
+            widget.dataset.forumAiBound = '1';
+
+            const toggle = document.getElementById('forum-ai-toggle');
+            const panel = document.getElementById('forum-ai-panel');
+            const closeButton = document.getElementById('forum-ai-close');
+            const form = document.getElementById('forum-ai-form');
+            const input = document.getElementById('forum-ai-input');
+            const submit = document.getElementById('forum-ai-submit');
+            const messages = document.getElementById('forum-ai-messages');
+            const endpoint = widget.getAttribute('data-endpoint');
+            const token = widget.getAttribute('data-token');
+
+            function scrollMessages() {
+                messages.scrollTop = messages.scrollHeight;
+            }
+
+            function addMessage(content, type) {
+                const row = document.createElement('div');
+                row.className = 'forum-ai-message-row forum-ai-message-row--' + type;
+
+                const avatar = document.createElement('div');
+                avatar.className = 'forum-ai-message-avatar forum-ai-message-avatar--' + type;
+                avatar.textContent = type === 'user' ? 'VO' : 'IA';
+
+                const item = document.createElement('div');
+                item.className = 'forum-ai-message forum-ai-message--' + type;
+                item.textContent = content;
+
+                if (type === 'user') {
+                    row.appendChild(item);
+                    row.appendChild(avatar);
+                } else {
+                    row.appendChild(avatar);
+                    row.appendChild(item);
+                }
+
+                messages.appendChild(row);
+                scrollMessages();
+
+                return item;
+            }
+
+            function setLoading(loading) {
+                input.disabled = loading;
+                submit.disabled = loading;
+                submit.setAttribute('aria-busy', loading ? 'true' : 'false');
+            }
+
+            toggle.addEventListener('click', function () {
+                panel.classList.toggle('is-open');
+                if (panel.classList.contains('is-open')) {
+                    input.focus();
+                    scrollMessages();
+                }
+            });
+
+            closeButton.addEventListener('click', function () {
+                panel.classList.remove('is-open');
+            });
+
+            form.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                const question = input.value.trim();
+                if (question.length < 2) {
+                    return;
+                }
+
+                if (question.length > 500) {
+                    addMessage('La question ne doit pas depasser 500 caracteres.', 'assistant');
+                    return;
+                }
+
+                addMessage(question, 'user');
+                input.value = '';
+                const pending = addMessage('Groq prepare une reponse agricole...', 'assistant');
+                setLoading(true);
+
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': token
+                    },
+                    body: JSON.stringify({
+                        message: question,
+                        _token: token
+                    })
+                })
+                    .then(function (response) {
+                        return response.json().then(function (data) {
+                            return {
+                                ok: response.ok,
+                                data: data
+                            };
+                        });
+                    })
+                    .then(function (result) {
+                        if (!result.ok || !result.data.success) {
+                            pending.textContent = result.data.error || 'Impossible de contacter Groq.';
+                            return;
+                        }
+
+                        pending.textContent = result.data.answer;
+                    })
+                    .catch(function () {
+                        pending.textContent = 'Erreur reseau. Reessayez dans un moment.';
+                    })
+                    .finally(function () {
+                        setLoading(false);
+                        input.focus();
+                    });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', initForumAiAssistant);
+        document.addEventListener('turbo:load', initForumAiAssistant);
     </script>
 {% endblock %}
 
 {% block dashboard_content %}
     {% set yield_state = tool_state.yield %}
-    {% set reco_state = tool_state.recommendation %}
     {% set profit_state = tool_state.profitability %}
 
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
@@ -325,16 +781,6 @@
                 aria-controls="forumYieldForecastPanel"
             >
                 Prevision de rendement
-            </button>
-            <button
-                type="button"
-                class="btn btn-outline-primary"
-                data-bs-toggle="collapse"
-                data-bs-target="#forumCropRecommendationPanel"
-                aria-expanded="false"
-                aria-controls="forumCropRecommendationPanel"
-            >
-                Recommandation de culture
             </button>
             <button
                 type="button"
@@ -368,7 +814,7 @@
             <div class="forum-yield-panel__body">
                 <div class="row g-4 align-items-start">
                     <div class="col-12 col-xl-7">
-                        {{ form_start(yield_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-yield-form', 'novalidate': 'novalidate', 'class': 'row g-3'}}) }}
+                        {{ form_start(yield_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-yield-form', 'novalidate': 'novalidate', 'data-turbo': 'false', 'class': 'row g-3'}}) }}
                             <div class="col-12 col-md-4">
                                 {{ form_label(yield_form.surface, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
                                 {{ form_widget(yield_form.surface, {'attr': {'class': 'form-control' ~ (yield_form.surface.vars.errors|length ? ' is-invalid' : '')}}) }}
@@ -391,8 +837,18 @@
                                 {% endif %}
                             </div>
                             <div class="col-12 d-flex flex-wrap gap-2">
-                                <button type="submit" class="btn btn-success">Calculer</button>
-                                <a href="{{ path('forum_index') }}" class="btn btn-outline-secondary">Reinitialiser</a>
+                                <button type="button" class="btn btn-success" id="forum-yield-calculate">Calculer</button>
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-secondary"
+                                    data-forum-reset-form="forum-yield-form"
+                                    data-forum-reset-value="yield-result-value"
+                                    data-forum-reset-message="yield-result-message"
+                                    data-forum-default-value="0.00"
+                                    data-forum-default-message="Renseignez les trois champs puis cliquez sur Calculer."
+                                >
+                                    Reinitialiser
+                                </button>
                             </div>
                         {{ form_end(yield_form) }}
                     </div>
@@ -400,64 +856,8 @@
                     <div class="col-12 col-xl-5">
                         <div class="forum-yield-panel__result">
                             <div class="small text-uppercase fw-semibold text-success mb-2">Rendement estime</div>
-                            <div class="forum-yield-panel__result-value">{{ yield_state.result }}</div>
-                            <div class="forum-yield-panel__hint mt-2">
-                                {{ yield_state.message }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="collapse mb-4 {{ tool_state.active_panel == 'recommendation' ? 'show' : '' }}" id="forumCropRecommendationPanel">
-        <div class="forum-reco-panel shadow-sm">
-            <div class="forum-reco-panel__hero">
-                <div class="d-flex flex-wrap align-items-start justify-content-between gap-3">
-                    <div class="d-flex align-items-start gap-3">
-                        <div class="forum-reco-panel__hero-badge">RC</div>
-                        <div>
-                            <h3 class="fs-5 fw-bold mb-1">Systeme Intelligent de Recommandation de Culture</h3>
-                            <p class="mb-0 text-white text-opacity-75">Choisissez le type de sol et la saison pour obtenir une suggestion de culture selon les regles definies.</p>
-                        </div>
-                    </div>
-                    <span class="badge rounded-pill text-bg-light">Assistant rapide</span>
-                </div>
-            </div>
-
-            <div class="forum-reco-panel__body">
-                <div class="row g-4 align-items-start">
-                    <div class="col-12 col-xl-7">
-                        {{ form_start(recommendation_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-reco-form', 'novalidate': 'novalidate', 'class': 'row g-3'}}) }}
-                            <div class="col-12 col-md-6">
-                                {{ form_label(recommendation_form.soil, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
-                                {{ form_widget(recommendation_form.soil, {'attr': {'class': 'form-select' ~ (recommendation_form.soil.vars.errors|length ? ' is-invalid' : '')}}) }}
-                                {% if recommendation_form.soil.vars.errors|length %}
-                                    <div class="invalid-feedback d-block">{{ form_errors(recommendation_form.soil) }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-12 col-md-6">
-                                {{ form_label(recommendation_form.season, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
-                                {{ form_widget(recommendation_form.season, {'attr': {'class': 'form-select' ~ (recommendation_form.season.vars.errors|length ? ' is-invalid' : '')}}) }}
-                                {% if recommendation_form.season.vars.errors|length %}
-                                    <div class="invalid-feedback d-block">{{ form_errors(recommendation_form.season) }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-12 d-flex flex-wrap gap-2">
-                                <button type="submit" class="btn btn-primary">Recommander</button>
-                                <a href="{{ path('forum_index') }}" class="btn btn-outline-secondary">Reinitialiser</a>
-                            </div>
-                        {{ form_end(recommendation_form) }}
-                    </div>
-
-                    <div class="col-12 col-xl-5">
-                        <div class="forum-reco-panel__result">
-                            <div class="small text-uppercase fw-semibold text-primary mb-2">Culture recommandee</div>
-                            <div class="forum-reco-panel__result-value">{{ reco_state.result }}</div>
-                            <div class="forum-yield-panel__hint mt-2">
-                                {{ reco_state.message }}
-                            </div>
+                            <div id="yield-result-value" class="forum-yield-panel__result-value">{{ yield_state.result }}</div>
+                            <div id="yield-result-message" class="forum-tool-hint mt-2">{{ yield_state.message }}</div>
                         </div>
                     </div>
                 </div>
@@ -483,7 +883,7 @@
             <div class="forum-profit-panel__body">
                 <div class="row g-4 align-items-start">
                     <div class="col-12 col-xl-7">
-                        {{ form_start(profitability_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-profit-form', 'novalidate': 'novalidate', 'class': 'row g-3'}}) }}
+                        {{ form_start(profitability_form, {'method': 'POST', 'action': path('forum_index'), 'attr': {'id': 'forum-profit-form', 'novalidate': 'novalidate', 'data-turbo': 'false', 'class': 'row g-3'}}) }}
                             <div class="col-12 col-md-6">
                                 {{ form_label(profitability_form.revenue, null, {'label_attr': {'class': 'form-label fw-semibold small text-dark'}}) }}
                                 {{ form_widget(profitability_form.revenue, {'attr': {'class': 'form-control' ~ (profitability_form.revenue.vars.errors|length ? ' is-invalid' : '')}}) }}
@@ -520,8 +920,18 @@
                                 {% endif %}
                             </div>
                             <div class="col-12 d-flex flex-wrap gap-2">
-                                <button type="submit" class="btn btn-warning text-dark">Calculer</button>
-                                <a href="{{ path('forum_index') }}" class="btn btn-outline-secondary">Reinitialiser</a>
+                                <button type="button" class="btn btn-warning text-dark" id="forum-profit-calculate">Calculer</button>
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-secondary"
+                                    data-forum-reset-form="forum-profit-form"
+                                    data-forum-reset-value="profit-result-value"
+                                    data-forum-reset-message="profit-result-message"
+                                    data-forum-default-value="0.00"
+                                    data-forum-default-message="Saisissez le revenu et les charges puis cliquez sur Calculer."
+                                >
+                                    Reinitialiser
+                                </button>
                             </div>
                         {{ form_end(profitability_form) }}
                     </div>
@@ -529,10 +939,8 @@
                     <div class="col-12 col-xl-5">
                         <div class="forum-profit-panel__result">
                             <div class="small text-uppercase fw-semibold text-warning-emphasis mb-2">Profit estime</div>
-                            <div class="forum-profit-panel__result-value">{{ profit_state.result }}</div>
-                            <div class="forum-yield-panel__hint mt-2">
-                                {{ profit_state.message }}
-                            </div>
+                            <div id="profit-result-value" class="forum-profit-panel__result-value">{{ profit_state.result }}</div>
+                            <div id="profit-result-message" class="forum-tool-hint mt-2">{{ profit_state.message }}</div>
                         </div>
                     </div>
                 </div>
@@ -599,5 +1007,66 @@
                 </div>
             </div>
         {% endfor %}
+    </div>
+
+    <div
+        id="forum-ai-widget"
+        class="forum-ai-widget"
+        data-endpoint="{{ path('forum_ai_assistant') }}"
+        data-token="{{ csrf_token('forum_ai_assistant') }}"
+    >
+        <div id="forum-ai-panel" class="forum-ai-panel" aria-live="polite">
+            <div class="forum-ai-panel__header d-flex align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="forum-ai-panel__avatar" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18m8-11c-4.5 0-8 3.5-8 8 0-4.5-3.5-8-8-8 4.5 0 8-3.5 8-8 0 4.5 3.5 8 8 8z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="fw-bold">Assistant agricole</div>
+                        <div class="small text-white text-opacity-75">Questions agricoles uniquement</div>
+                    </div>
+                </div>
+                <button type="button" id="forum-ai-close" class="forum-ai-close" aria-label="Fermer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6L6 18" />
+                    </svg>
+                </button>
+            </div>
+
+            <div id="forum-ai-messages" class="forum-ai-panel__messages">
+                <div class="forum-ai-message-row forum-ai-message-row--assistant">
+                    <div class="forum-ai-message-avatar forum-ai-message-avatar--assistant">IA</div>
+                    <div class="forum-ai-message forum-ai-message--assistant">Bonjour, posez une question agricole sur les cultures, le sol, l irrigation, les maladies ou le rendement.</div>
+                </div>
+            </div>
+
+            <form id="forum-ai-form" class="forum-ai-panel__form">
+                <label for="forum-ai-input" class="form-label small fw-semibold text-dark mb-2">Votre question agricole</label>
+                <div class="forum-ai-input-wrap">
+                    <input
+                        id="forum-ai-input"
+                        type="text"
+                        class="form-control forum-ai-input"
+                        maxlength="500"
+                        autocomplete="off"
+                        placeholder="Ex: Comment traiter le mildiou ?"
+                    >
+                    <button id="forum-ai-submit" type="submit" class="btn btn-success forum-ai-send" aria-label="Envoyer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M13 6l6 6-6 6" />
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <button id="forum-ai-toggle" type="button" class="forum-ai-toggle" aria-label="Ouvrir assistant agricole">
+            <span class="forum-ai-toggle__status" aria-hidden="true"></span>
+            <svg class="forum-ai-toggle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h6m-1 8l-4-4H6a3 3 0 01-3-3V7a3 3 0 013-3h12a3 3 0 013 3v6a3 3 0 01-3 3h-2l-4 4z" />
+            </svg>
+        </button>
     </div>
 {% endblock %}

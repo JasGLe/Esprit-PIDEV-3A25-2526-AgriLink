@@ -7,12 +7,19 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
- * @extends ServiceEntityRepository<Equipement>
+ * EquipementRepository
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Repository Doctrine pour l'entité Equipement.
  *
- * @method Equipement|null find($id, $lockMode = null, $lockVersion = null)
- * @method Equipement|null findOneBy(array $criteria, array $orderBy = null)
- * @method Equipement[]    findAll()
- * @method Equipement[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * Fournit les méthodes de requête personnalisées nécessaires au tableau de bord
+ * statistique (StatistiquesController) ainsi que les méthodes utilitaires
+ * save() et remove() pour expliciter les opérations de persistance.
+ *
+ * Toutes les méthodes de statistiques filtrent par userId pour n'opérer que
+ * sur les équipements appartenant à l'agriculteur connecté.
+ *
+ * @extends ServiceEntityRepository<Equipement>
+ * ─────────────────────────────────────────────────────────────────────────────
  */
 class EquipementRepository extends ServiceEntityRepository
 {
@@ -21,171 +28,125 @@ class EquipementRepository extends ServiceEntityRepository
         parent::__construct($registry, Equipement::class);
     }
 
+    /**
+     * Persiste un équipement en base avec flush optionnel.
+     *
+     * @param Equipement $entity  Entité à persister
+     * @param bool       $flush   Si true, exécute immédiatement le flush Doctrine
+     */
     public function save(Equipement $entity, bool $flush = false): void
     {
         $this->getEntityManager()->persist($entity);
-
         if ($flush) {
             $this->getEntityManager()->flush();
         }
     }
 
+    /**
+     * Marque un équipement pour suppression avec flush optionnel.
+     *
+     * @param Equipement $entity  Entité à supprimer
+     * @param bool       $flush   Si true, exécute immédiatement le flush Doctrine
+     */
     public function remove(Equipement $entity, bool $flush = false): void
     {
         $this->getEntityManager()->remove($entity);
-
         if ($flush) {
             $this->getEntityManager()->flush();
         }
     }
 
-
-
-
-
-
-
-
+    /**
+     * Compte les équipements d'un utilisateur, regroupés par statut.
+     *
+     * Garantit que les 4 statuts canoniques apparaissent toujours dans le résultat
+     * (même avec un count 0), pour que Chart.js affiche toujours 4 secteurs.
+     * Les statuts null, vides ou inconnus sont normalisés vers "Hors service".
+     *
+     * @param int $userId  ID de l'utilisateur connecté
+     *
+     * @return array<string, int>  Ex: ['Actif' => 3, 'En panne' => 1, 'En maintenance' => 0, 'Hors service' => 2]
+     */
     public function countByStatut(int $userId): array
-{
-    $results = $this->createQueryBuilder('e')
-        ->select('e.statut, COUNT(e.id) as total')
-        ->where('e.userlog = :userId')
-        ->setParameter('userId', $userId)
-        ->groupBy('e.statut')
-        ->getQuery()
-        ->getResult();
+    {
+        // Valeurs canoniques — tout ce qui n'est pas dans cette liste est normalisé vers "Hors service"
+        $statutsConnus = ['Actif', 'En panne', 'En maintenance', 'Hors service'];
 
-    $data = [];
-    foreach ($results as $r) {
-        $data[$r['statut'] ?? 'Inconnu'] = (int) $r['total'];
-    }
-    return $data;
-}
+        // Initialiser à 0 pour garantir que tous les statuts apparaissent dans le graphique
+        $data = array_fill_keys($statutsConnus, 0);
 
-public function countByCategorie(int $userId): array
-{
-    $results = $this->createQueryBuilder('e')
-        ->select('e.categorie, COUNT(e.id) as total')
-        ->where('e.userlog = :userId')
-        ->setParameter('userId', $userId)
-        ->groupBy('e.categorie')
-        ->getQuery()
-        ->getResult();
+        $results = $this->createQueryBuilder('e')
+            ->select('e.statut, COUNT(e.id) as total')
+            ->where('e.userlog = :userId')
+            ->setParameter('userId', $userId)
+            ->groupBy('e.statut')
+            ->getQuery()
+            ->getResult();
 
-    $data = [];
-    foreach ($results as $r) {
-        $data[$r['categorie'] ?? 'Inconnu'] = (int) $r['total'];
-    }
-    return $data;
-}
-
-public function countByType(int $userId): array
-{
-    $results = $this->createQueryBuilder('e')
-        ->select('e.type, COUNT(e.id) as total')
-        ->where('e.userlog = :userId')
-        ->setParameter('userId', $userId)
-        ->groupBy('e.type')
-        ->orderBy('total', 'DESC')
-        ->getQuery()
-        ->getResult();
-
-    $data = [];
-    foreach ($results as $r) {
-        $data[$r['type'] ?? 'Inconnu'] = (int) $r['total'];
-    }
-    return $data;
-}
-
-
-
-
-
-
-
-public function countByStatutForUser(array $equipementIds): array
-{
-    if (empty($equipementIds)) return [];
-
-    $results = $this->createQueryBuilder('m')
-        ->select('m.statut, COUNT(m.id) as total')
-        ->where('m.equipementId IN (:ids)')
-        ->setParameter('ids', $equipementIds)
-        ->groupBy('m.statut')
-        ->getQuery()
-        ->getResult();
-
-    $data = [];
-    foreach ($results as $r) {
-        $data[$r['statut'] ?? 'Inconnu'] = (int) $r['total'];
-    }
-    return $data;
-}
-
-public function countByTypeForUser(array $equipementIds): array
-{
-    if (empty($equipementIds)) return [];
-
-    $results = $this->createQueryBuilder('m')
-        ->select('m.type, COUNT(m.id) as total')
-        ->where('m.equipementId IN (:ids)')
-        ->setParameter('ids', $equipementIds)
-        ->groupBy('m.type')
-        ->getQuery()
-        ->getResult();
-
-    $data = [];
-    foreach ($results as $r) {
-        $data[$r['type'] ?? 'Inconnu'] = (int) $r['total'];
-    }
-    return $data;
-}
-
-public function countByMoisForUser(array $equipementIds): array
-{
-    if (empty($equipementIds)) return [];
-
-    // 12 derniers mois initialisés à 0
-    $mois = [];
-    for ($i = 11; $i >= 0; $i--) {
-        $date = new \DateTime("-$i months");
-        $mois[$date->format('Y-m')] = 0;
-    }
-
-    $results = $this->createQueryBuilder('m')
-        ->select("DATE_FORMAT(m.datePlanifiee, '%Y-%m') as mois, COUNT(m.id) as total")
-        ->where('m.equipementId IN (:ids)')
-        ->andWhere('m.datePlanifiee >= :debut')
-        ->setParameter('ids', $equipementIds)
-        ->setParameter('debut', new \DateTime('-12 months'))
-        ->groupBy('mois')
-        ->orderBy('mois', 'ASC')
-        ->getQuery()
-        ->getResult();
-
-    foreach ($results as $r) {
-        if (isset($mois[$r['mois']])) {
-            $mois[$r['mois']] = (int) $r['total'];
+        foreach ($results as $r) {
+            $statut = $r['statut'];
+            // Normaliser : null / vide / valeur inconnue → "Hors service"
+            if ($statut === null || $statut === '' || !in_array($statut, $statutsConnus, true)) {
+                $statut = 'Hors service';
+            }
+            $data[$statut] = ($data[$statut] ?? 0) + (int) $r['total'];
         }
+
+        return $data;
     }
 
-    return $mois;
-}
+    /**
+     * Compte les équipements d'un utilisateur, regroupés par catégorie.
+     *
+     * Les catégories null sont normalisées vers 'Inconnu' pour éviter
+     * les clés null dans le tableau retourné.
+     *
+     * @param int $userId  ID de l'utilisateur connecté
+     *
+     * @return array<string, int>  Ex: ['Véhicule Motorisé' => 2, 'Outil Agricole' => 5]
+     */
+    public function countByCategorie(int $userId): array
+    {
+        $results = $this->createQueryBuilder('e')
+            ->select('e.categorie, COUNT(e.id) as total')
+            ->where('e.userlog = :userId')
+            ->setParameter('userId', $userId)
+            ->groupBy('e.categorie')
+            ->getQuery()
+            ->getResult();
 
-public function countEnRetardForUser(array $equipementIds): int
-{
-    if (empty($equipementIds)) return 0;
+        $data = [];
+        foreach ($results as $r) {
+            $data[$r['categorie'] ?? 'Inconnu'] = (int) $r['total'];
+        }
+        return $data;
+    }
 
-    return (int) $this->createQueryBuilder('m')
-        ->select('COUNT(m.id)')
-        ->where('m.equipementId IN (:ids)')
-        ->andWhere('m.statut NOT IN (:statuts)')
-        ->andWhere('m.datePlanifiee < :today')
-        ->setParameter('ids', $equipementIds)
-        ->setParameter('statuts', ['Terminée', 'Annulée'])
-        ->setParameter('today', new \DateTime('today'))
-        ->getQuery()
-        ->getSingleScalarResult();
-}
+    /**
+     * Compte les équipements d'un utilisateur, regroupés par type.
+     *
+     * Trié par nombre décroissant pour que les types les plus fréquents
+     * apparaissent en premier dans le graphique.
+     *
+     * @param int $userId  ID de l'utilisateur connecté
+     *
+     * @return array<string, int>  Ex: ['Tracteur' => 3, 'Pulvérisateur' => 2]
+     */
+    public function countByType(int $userId): array
+    {
+        $results = $this->createQueryBuilder('e')
+            ->select('e.type, COUNT(e.id) as total')
+            ->where('e.userlog = :userId')
+            ->setParameter('userId', $userId)
+            ->groupBy('e.type')
+            ->orderBy('total', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        $data = [];
+        foreach ($results as $r) {
+            $data[$r['type'] ?? 'Inconnu'] = (int) $r['total'];
+        }
+        return $data;
+    }
 }

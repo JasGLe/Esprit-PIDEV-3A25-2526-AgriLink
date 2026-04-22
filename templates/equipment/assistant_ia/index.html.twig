@@ -1,0 +1,644 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block page_title %}Assistant IA AgriBot{% endblock %}
+
+{% block stylesheets %}
+<style>
+/* ── Layout ── */
+.agribot-sidebar {
+    background: #fff;
+    border-radius: .75rem;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+.agribot-chat-card {
+    background: #fff;
+    border-radius: .75rem;
+    border: 1px solid #dee2e6;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    display: flex;
+    flex-direction: column;
+    height: 680px;
+}
+
+/* ── Header chat ── */
+.agribot-header {
+    background: linear-gradient(135deg, #198754 0%, #146c43 100%);
+    border-radius: .75rem .75rem 0 0;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+}
+.agribot-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(255,255,255,.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem; flex-shrink: 0;
+}
+.agribot-header-info .name { color: #fff; font-weight: 700; font-size: 1rem; line-height: 1.2; }
+.agribot-header-info .subtitle { color: rgba(255,255,255,.8); font-size: .78rem; }
+.agribot-online-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: #a3e635; box-shadow: 0 0 0 2px rgba(255,255,255,.4);
+    display: inline-block; margin-right: .35rem;
+}
+
+/* ── Messages zone ── */
+.agribot-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    background: #f8fdf9;
+}
+.agribot-messages::-webkit-scrollbar { width: 5px; }
+.agribot-messages::-webkit-scrollbar-track { background: transparent; }
+.agribot-messages::-webkit-scrollbar-thumb { background: #c8e6c9; border-radius: 3px; }
+
+/* ── Bulles ── */
+.msg-row { display: flex; align-items: flex-end; gap: .5rem; }
+.msg-row.user { flex-direction: row-reverse; }
+
+.msg-avatar {
+    width: 32px; height: 32px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem; background: #e8f5e9; border: 1px solid #c8e6c9;
+}
+.msg-row.user .msg-avatar { background: #198754; border-color: #146c43; color: #fff; font-size: .8rem; font-weight: 700; }
+
+.msg-bubble {
+    max-width: 72%;
+    padding: .65rem .9rem;
+    border-radius: 1rem;
+    font-size: .9rem;
+    line-height: 1.55;
+    word-break: break-word;
+}
+.msg-row.bot  .msg-bubble {
+    background: #fff;
+    border: 1px solid #c8e6c9;
+    border-bottom-left-radius: .2rem;
+    color: #1a2a1a;
+}
+.msg-row.user .msg-bubble {
+    background: #198754;
+    color: #fff;
+    border-bottom-right-radius: .2rem;
+}
+.msg-bubble.error {
+    background: #fff8e1;
+    border-color: #ffc107;
+    color: #856404;
+}
+.msg-bubble img.msg-img {
+    max-width: 100%; border-radius: .5rem; margin-bottom: .5rem;
+    display: block; max-height: 200px; object-fit: contain;
+}
+.msg-time {
+    font-size: .68rem;
+    color: #9e9e9e;
+    margin-top: .25rem;
+    text-align: right;
+}
+.msg-row.bot .msg-time { text-align: left; }
+
+/* ── Typing indicator ── */
+.typing-indicator { display: none; }
+.typing-dots span {
+    display: inline-block; width: 7px; height: 7px; margin: 0 2px;
+    border-radius: 50%; background: #198754;
+    animation: typingBounce .9s infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: .2s; }
+.typing-dots span:nth-child(3) { animation-delay: .4s; }
+@keyframes typingBounce {
+    0%, 60%, 100% { transform: translateY(0); opacity:.5; }
+    30% { transform: translateY(-6px); opacity:1; }
+}
+
+/* ── Input zone ── */
+.agribot-input-zone {
+    border-top: 1px solid #e8f5e9;
+    padding: .75rem 1rem;
+    background: #fff;
+    border-radius: 0 0 .75rem .75rem;
+}
+#img-preview-bar {
+    display: none;
+    align-items: center;
+    gap: .5rem;
+    background: #f1f8e9;
+    border: 1px solid #c8e6c9;
+    border-radius: .5rem;
+    padding: .4rem .7rem;
+    margin-bottom: .6rem;
+    font-size: .82rem;
+    color: #2e7d32;
+}
+#img-preview-bar img {
+    height: 40px; width: 40px; object-fit: cover; border-radius: .35rem;
+}
+.input-row {
+    display: flex; gap: .5rem; align-items: flex-end;
+}
+#chat-input {
+    flex: 1; resize: none; border: 1.5px solid #c8e6c9; border-radius: .6rem;
+    padding: .6rem .85rem; font-size: .9rem; line-height: 1.45;
+    min-height: 44px; max-height: 100px; overflow-y: auto;
+    transition: border-color .2s;
+    outline: none; font-family: inherit;
+}
+#chat-input:focus { border-color: #198754; box-shadow: 0 0 0 .18rem rgba(25,135,84,.15); }
+.btn-img-upload {
+    width: 42px; height: 42px; border-radius: .6rem;
+    border: 1.5px solid #c8e6c9; background: #f1f8e9; color: #198754;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; transition: all .2s;
+    font-size: 1.15rem;
+}
+.btn-img-upload:hover { background: #c8e6c9; border-color: #198754; }
+#btn-send {
+    width: 42px; height: 42px; border-radius: .6rem;
+    background: #198754; border: none; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; cursor: pointer; transition: background .2s;
+    font-size: 1.1rem;
+}
+#btn-send:hover { background: #146c43; }
+#btn-send:disabled { background: #adb5bd; cursor: not-allowed; }
+
+/* ── Sidebar info ── */
+.capability-item {
+    display: flex; align-items: flex-start; gap: .5rem;
+    font-size: .875rem; color: #2e7d32; margin-bottom: .45rem;
+}
+.capability-item .icon { font-size: 1rem; flex-shrink: 0; margin-top: .05rem; }
+.quick-btn {
+    width: 100%; text-align: left; background: #f1f8e9;
+    border: 1px solid #c8e6c9; border-radius: .5rem;
+    padding: .45rem .7rem; font-size: .82rem; color: #1a5c2a;
+    cursor: pointer; transition: all .15s; margin-bottom: .4rem;
+}
+.quick-btn:hover { background: #c8e6c9; border-color: #198754; color: #198754; }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+
+{# ── Header page ── #}
+<div class="d-flex align-items-center gap-3 mb-4 flex-wrap">
+    <div>
+        <h2 class="fw-bold mb-1">🤖 Assistant IA AgriBot</h2>
+        <span class="badge" style="background:#e8f5e9; color:#1a5c2a; border:1px solid #c8e6c9; font-size:.78rem; font-weight:500;">
+            Équipements &amp; Maintenances
+        </span>
+    </div>
+    <div class="ms-auto">
+        <button type="button" id="btn-clear" class="btn btn-sm btn-outline-secondary">
+            🗑️ Effacer la conversation
+        </button>
+    </div>
+</div>
+
+{# ── Layout deux colonnes ── #}
+<div class="row g-4 align-items-start">
+
+    {# ── Colonne gauche : info + questions rapides ── #}
+    <div class="col-lg-4">
+        <div class="agribot-sidebar p-4">
+
+            {# Description #}
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <span style="font-size:1.5rem">🌱</span>
+                <div>
+                    <div class="fw-semibold text-success" style="font-size:.95rem">AgriBot</div>
+                    <div class="text-muted" style="font-size:.78rem">Assistant IA agricole</div>
+                </div>
+            </div>
+            <p class="text-muted small mb-3">
+                Posez vos questions sur vos équipements agricoles — pannes, maintenance, pièces,
+                ou uploadez une photo pour une analyse visuelle instantanée.
+            </p>
+
+            <hr class="my-3" style="border-color:#e8f5e9">
+
+            {# Capacités #}
+            <div class="fw-semibold mb-2" style="font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:#6c757d;">
+                Capacités
+            </div>
+            <div class="capability-item"><span class="icon">✅</span><span>Diagnostic de pannes</span></div>
+            <div class="capability-item"><span class="icon">✅</span><span>Conseils de maintenance</span></div>
+            <div class="capability-item"><span class="icon">✅</span><span>Identification d'équipements sur photo</span></div>
+            <div class="capability-item"><span class="icon">✅</span><span>Entretien préventif</span></div>
+            <div class="capability-item"><span class="icon">✅</span><span>Pièces de rechange</span></div>
+
+            <hr class="my-3" style="border-color:#e8f5e9">
+
+            {# Questions rapides #}
+            <div class="fw-semibold mb-2" style="font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:#6c757d;">
+                Questions rapides
+            </div>
+            <button class="quick-btn" data-q="Comment entretenir un tracteur ?">💬 Comment entretenir un tracteur ?</button>
+            <button class="quick-btn" data-q="Quels sont les signes d'une panne hydraulique ?">💬 Signes d'une panne hydraulique ?</button>
+            <button class="quick-btn" data-q="Quelle est la fréquence de maintenance recommandée pour une moissonneuse-batteuse ?">💬 Fréquence de maintenance d'une moissonneuse ?</button>
+            <button class="quick-btn" data-q="Comment vérifier l'état d'un pulvérisateur agricole ?">💬 Comment vérifier l'état d'un pulvérisateur ?</button>
+
+            <hr class="my-3" style="border-color:#e8f5e9">
+
+            <div class="p-2 rounded" style="background:#fff8e1; border:1px solid #ffe082; font-size:.78rem; color:#856404;">
+                ⚠️ AgriBot donne des conseils à titre indicatif. Consultez un technicien agréé pour toute intervention critique.
+            </div>
+        </div>
+    </div>
+
+    {# ── Colonne droite : interface chat ── #}
+    <div class="col-lg-8">
+        <div class="agribot-chat-card">
+
+            {# Header chat #}
+            <div class="agribot-header">
+                <div class="agribot-avatar">🤖</div>
+                <div class="agribot-header-info flex-fill">
+                    <div class="name">AgriBot</div>
+                    <div class="subtitle">
+                        <span class="agribot-online-dot"></span>
+                        Spécialiste équipements &amp; maintenances agricoles
+                    </div>
+                </div>
+                <div class="text-white-50 small">
+                    <span style="font-size:.72rem; background:rgba(255,255,255,.15); padding:.2rem .5rem; border-radius:.4rem;">
+                        LLaMA 4 Scout
+                    </span>
+                </div>
+            </div>
+
+            {# Zone messages #}
+            <div class="agribot-messages" id="messages-zone">
+
+                {# Message de bienvenue (statique, hors historique) #}
+                <div class="msg-row bot" id="welcome-msg">
+                    <div class="msg-avatar">🤖</div>
+                    <div>
+                        <div class="msg-bubble">
+                            Bonjour ! Je suis <strong>AgriBot</strong> 🌱<br>
+                            Posez-moi vos questions sur vos <strong>équipements agricoles</strong> et leurs <strong>maintenances</strong>.<br>
+                            Vous pouvez aussi m'envoyer une <strong>photo</strong> pour une analyse visuelle.
+                        </div>
+                        <div class="msg-time">Maintenant</div>
+                    </div>
+                </div>
+
+                {# Indicateur de frappe #}
+                <div class="msg-row bot typing-indicator" id="typing-indicator">
+                    <div class="msg-avatar">🤖</div>
+                    <div>
+                        <div class="msg-bubble">
+                            <div class="typing-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                        </div>
+                        <div class="msg-time">AgriBot est en train d'écrire…</div>
+                    </div>
+                </div>
+
+            </div>
+
+            {# Zone de saisie #}
+            <div class="agribot-input-zone">
+
+                {# Barre prévisualisation image #}
+                <div id="img-preview-bar">
+                    <img id="img-preview-thumb" src="" alt="Aperçu">
+                    <span id="img-preview-name" class="flex-fill text-truncate"></span>
+                    <button type="button" id="btn-remove-img" class="btn btn-sm btn-link text-danger p-0" style="font-size:.8rem;">✕</button>
+                </div>
+
+                <div class="input-row">
+                    {# Bouton upload image #}
+                    <label class="btn-img-upload" title="Joindre une photo" tabindex="0"
+                           onkeydown="if(event.key==='Enter'||event.key===' ')this.querySelector('input').click()">
+                        📸
+                        <input type="file" id="img-input" accept="image/jpeg,image/png,image/webp"
+                               style="display:none" aria-label="Joindre une photo">
+                    </label>
+
+                    {# Textarea saisie #}
+                    <textarea id="chat-input"
+                              placeholder="Posez votre question sur vos équipements…"
+                              rows="1"
+                              aria-label="Message pour AgriBot"></textarea>
+
+                    {# Bouton envoyer #}
+                    <button type="button" id="btn-send" title="Envoyer (Entrée)" aria-label="Envoyer">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="text-muted mt-1" style="font-size:.72rem;">
+                    <kbd style="font-size:.7rem; padding:.1rem .3rem;">Entrée</kbd> pour envoyer &nbsp;·&nbsp;
+                    <kbd style="font-size:.7rem; padding:.1rem .3rem;">Shift+Entrée</kbd> pour nouvelle ligne &nbsp;·&nbsp;
+                    JPG/PNG/WEBP max 5 MB
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{# ── JS AgriBot Chat ──────────────────────────────────────────────────────── #}
+<script>
+(function () {
+
+    var CHAT_URL = {{ path('equipement_assistant_ia_chat')|json_encode|raw }};
+
+    // ── État ──────────────────────────────────────────────────────────────────
+    var history  = [];  // [{role: 'user'|'assistant', content: '...'}]
+    var pendingImage    = null; // base64 string
+    var pendingMimeType = null;
+    var isSending = false;
+
+    // ── Éléments DOM ──────────────────────────────────────────────────────────
+    var messagesZone  = document.getElementById('messages-zone');
+    var typingEl      = document.getElementById('typing-indicator');
+    var chatInput     = document.getElementById('chat-input');
+    var btnSend       = document.getElementById('btn-send');
+    var imgInput      = document.getElementById('img-input');
+    var imgPreviewBar = document.getElementById('img-preview-bar');
+    var imgPreviewThumb = document.getElementById('img-preview-thumb');
+    var imgPreviewName  = document.getElementById('img-preview-name');
+    var btnRemoveImg  = document.getElementById('btn-remove-img');
+    var btnClear      = document.getElementById('btn-clear');
+
+    // ── Auto-resize textarea ──────────────────────────────────────────────────
+    chatInput.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+    });
+
+    // ── Keyboard: Enter = send, Shift+Enter = newline ─────────────────────────
+    chatInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            envoyerMessage();
+        }
+    });
+
+    btnSend.addEventListener('click', envoyerMessage);
+
+    // ── Image upload ──────────────────────────────────────────────────────────
+    imgInput.addEventListener('change', function () {
+        if (!imgInput.files.length) return;
+        var file = imgInput.files[0];
+
+        var allowed = ['image/jpeg', 'image/png', 'image/webp'];
+        if (!allowed.includes(file.type)) {
+            appendBotMessage('⚠️ Format non supporté. Veuillez utiliser JPG, PNG ou WEBP.', true);
+            imgInput.value = '';
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            appendBotMessage('⚠️ L\'image dépasse 5 MB. Veuillez choisir une image plus petite.', true);
+            imgInput.value = '';
+            return;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            // Extraire base64 pur (sans le préfixe "data:...;base64,")
+            var dataUrl = e.target.result;
+            var commaIdx = dataUrl.indexOf(',');
+            pendingImage    = dataUrl.substring(commaIdx + 1);
+            pendingMimeType = file.type;
+
+            imgPreviewThumb.src = dataUrl;
+            imgPreviewName.textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+            imgPreviewBar.style.display = 'flex';
+        };
+        reader.readAsDataURL(file);
+    });
+
+    btnRemoveImg.addEventListener('click', clearImage);
+
+    // ── Effacer conversation ──────────────────────────────────────────────────
+    btnClear.addEventListener('click', function () {
+        history = [];
+        clearImage();
+        // Supprimer tous les messages sauf le message de bienvenue
+        var msgs = messagesZone.querySelectorAll('.msg-row:not(#welcome-msg):not(#typing-indicator)');
+        msgs.forEach(function (el) { el.remove(); });
+        chatInput.value = '';
+        chatInput.style.height = 'auto';
+    });
+
+    // ── Questions rapides ─────────────────────────────────────────────────────
+    document.querySelectorAll('.quick-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var q = btn.getAttribute('data-q');
+            if (q) {
+                chatInput.value = q;
+                chatInput.style.height = 'auto';
+                chatInput.style.height = Math.min(chatInput.scrollHeight, 100) + 'px';
+                chatInput.focus();
+            }
+        });
+    });
+
+    // ── Envoyer un message ────────────────────────────────────────────────────
+    function envoyerMessage() {
+        if (isSending) return;
+
+        var text = chatInput.value.trim();
+        if (!text && !pendingImage) return;
+
+        var userText = text || '📸 Photo envoyée pour analyse';
+
+        // Afficher la bulle user
+        appendUserMessage(userText, pendingImage ? imgPreviewThumb.src : null);
+
+        // Ajouter à l'historique
+        history.push({ role: 'user', content: text || 'Analyse cette photo d\'équipement agricole.' });
+
+        // Préparer payload
+        var payload = { messages: history.slice() };
+        if (pendingImage) {
+            payload.image    = pendingImage;
+            payload.mimeType = pendingMimeType;
+        }
+
+        // Réinitialiser l'input
+        chatInput.value = '';
+        chatInput.style.height = 'auto';
+        clearImage();
+
+        // Afficher le spinner
+        isSending = true;
+        btnSend.disabled = true;
+        showTyping(true);
+
+        // Appel AJAX
+        fetch(CHAT_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept':       'application/json',
+            },
+            body: JSON.stringify(payload),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            showTyping(false);
+            isSending = false;
+            btnSend.disabled = false;
+
+            if (!data.success) {
+                appendBotMessage('⚠️ ' + (data.error || 'Erreur inconnue.'), true);
+                return;
+            }
+
+            var botMsg = data.message || '';
+            history.push({ role: 'assistant', content: botMsg });
+            appendBotMessage(botMsg, false);
+        })
+        .catch(function () {
+            showTyping(false);
+            isSending = false;
+            btnSend.disabled = false;
+            appendBotMessage('⚠️ Erreur réseau : impossible de contacter AgriBot.', true);
+        });
+    }
+
+    // ── Render helpers ────────────────────────────────────────────────────────
+
+    function appendUserMessage(text, imageDataUrl) {
+        var row = document.createElement('div');
+        row.className = 'msg-row user';
+
+        var avatar = document.createElement('div');
+        avatar.className = 'msg-avatar';
+        avatar.textContent = '🧑';
+
+        var wrap = document.createElement('div');
+
+        var bubble = document.createElement('div');
+        bubble.className = 'msg-bubble';
+
+        if (imageDataUrl) {
+            var img = document.createElement('img');
+            img.src = imageDataUrl;
+            img.className = 'msg-img';
+            img.alt = 'Photo envoyée';
+            bubble.appendChild(img);
+        }
+
+        if (text && !(imageDataUrl && text === '📸 Photo envoyée pour analyse')) {
+            var p = document.createElement('span');
+            p.textContent = text;
+            bubble.appendChild(p);
+        } else if (!imageDataUrl) {
+            bubble.textContent = text;
+        }
+
+        var time = document.createElement('div');
+        time.className = 'msg-time';
+        time.textContent = nowTime();
+
+        wrap.appendChild(bubble);
+        wrap.appendChild(time);
+
+        row.appendChild(avatar);
+        row.appendChild(wrap);
+
+        messagesZone.insertBefore(row, typingEl);
+        scrollBottom();
+    }
+
+    function appendBotMessage(text, isError) {
+        var row = document.createElement('div');
+        row.className = 'msg-row bot';
+
+        var avatar = document.createElement('div');
+        avatar.className = 'msg-avatar';
+        avatar.textContent = '🤖';
+
+        var wrap = document.createElement('div');
+
+        var bubble = document.createElement('div');
+        bubble.className = 'msg-bubble' + (isError ? ' error' : '');
+
+        // Rendu Markdown minimaliste : **gras**, *italic*, listes, sauts de ligne
+        bubble.innerHTML = renderMarkdown(text);
+
+        var time = document.createElement('div');
+        time.className = 'msg-time';
+        time.textContent = isError ? '⚠️ Erreur' : nowTime();
+
+        wrap.appendChild(bubble);
+        wrap.appendChild(time);
+
+        row.appendChild(avatar);
+        row.appendChild(wrap);
+
+        messagesZone.insertBefore(row, typingEl);
+        scrollBottom();
+    }
+
+    function showTyping(show) {
+        typingEl.style.display = show ? 'flex' : 'none';
+        if (show) scrollBottom();
+    }
+
+    function clearImage() {
+        pendingImage    = null;
+        pendingMimeType = null;
+        imgInput.value  = '';
+        imgPreviewBar.style.display = 'none';
+        imgPreviewThumb.src = '';
+        imgPreviewName.textContent = '';
+    }
+
+    function scrollBottom() {
+        setTimeout(function () {
+            messagesZone.scrollTop = messagesZone.scrollHeight;
+        }, 30);
+    }
+
+    function nowTime() {
+        var d = new Date();
+        return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+    }
+
+    /**
+     * Rendu Markdown minimaliste pour les réponses du LLM.
+     * Gère : **gras**, *italique*, `code`, listes à tirets, sauts de ligne.
+     */
+    function renderMarkdown(text) {
+        // Échapper le HTML d'abord
+        var escaped = text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+        return escaped
+            // Code inline
+            .replace(/`([^`]+)`/g, '<code style="background:#f1f8e9;padding:.1em .3em;border-radius:.25em;font-size:.88em;">$1</code>')
+            // Gras **...**
+            .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+            // Italique *...*
+            .replace(/\*(.+?)\*/g, '<em>$1</em>')
+            // Listes (- item ou * item)
+            .replace(/^[-*]\s+(.+)$/gm, '<li style="margin-bottom:.25rem;">$1</li>')
+            .replace(/(<li[^>]*>.*<\/li>)/s, '<ul style="padding-left:1.2rem;margin:.3rem 0;">$1</ul>')
+            // Sauts de ligne
+            .replace(/\n{2,}/g, '<br><br>')
+            .replace(/\n/g, '<br>');
+    }
+
+})();
+</script>
+
+{% endblock %}

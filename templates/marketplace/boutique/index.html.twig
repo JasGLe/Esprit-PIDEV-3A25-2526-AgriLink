@@ -934,6 +934,86 @@
 
     <script>
     (function () {
+        function initPriceOptimizer(root) {
+            const scope = root || document;
+            const forms = scope.querySelectorAll('.js-price-optimizer-form');
+            forms.forEach((form) => {
+                if (form.dataset.aiPriceBound === '1') {
+                    return;
+                }
+                form.dataset.aiPriceBound = '1';
+
+                const nomInput = form.querySelector('[id$="_nom"]');
+                const catInput = form.querySelector('[id$="_category"]');
+                const unitInput = form.querySelector('[id$="_uniteVente"]');
+                const qtyInput = form.querySelector('[id$="_quantite"]');
+                const priceInput = form.querySelector('[id$="_prixUnitaire"]');
+                const box = form.querySelector('.js-ai-price-box');
+                const txt = form.querySelector('.js-ai-price-text');
+                const applyBtn = form.querySelector('.js-ai-price-apply');
+                const url = form.getAttribute('data-price-optimizer-url') || '';
+                if (!nomInput || !catInput || !unitInput || !qtyInput || !priceInput || !box || !txt || !applyBtn || !url) {
+                    return;
+                }
+
+                let lastSuggested = null;
+                let timer = null;
+                const askSuggestion = async () => {
+                    const payload = {
+                        nom: nomInput.value || '',
+                        category: catInput.value || '',
+                        uniteVente: unitInput.value || '',
+                        quantite: parseInt(qtyInput.value || '0', 10)
+                    };
+                    if (!payload.category || payload.quantite <= 0) {
+                        box.classList.add('d-none');
+                        return;
+                    }
+                    try {
+                        const res = await fetch(url, {
+                            method: 'POST',
+                            headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await res.json();
+                        if (!data || data.ok !== true) {
+                            box.classList.add('d-none');
+                            return;
+                        }
+                        lastSuggested = data.suggestedPrice;
+                        txt.textContent = 'Prix suggere: ' + Number(data.suggestedPrice).toFixed(3) + ' DT (moyenne marche: ' + Number(data.marketAverage).toFixed(3) + ' DT, confiance: ' + data.confidence + '%)';
+                        applyBtn.classList.remove('d-none');
+                        box.classList.remove('d-none');
+                    } catch (e) {
+                        box.classList.add('d-none');
+                    }
+                };
+
+                const schedule = () => {
+                    if (timer) clearTimeout(timer);
+                    timer = setTimeout(askSuggestion, 400);
+                };
+
+                [nomInput, catInput, unitInput, qtyInput].forEach((el) => {
+                    el.addEventListener('input', schedule);
+                    el.addEventListener('change', schedule);
+                });
+                applyBtn.addEventListener('click', () => {
+                    if (lastSuggested !== null) {
+                        priceInput.value = Number(lastSuggested).toFixed(3);
+                    }
+                });
+                askSuggestion();
+            });
+        }
+
+        window.initPriceOptimizer = initPriceOptimizer;
+        initPriceOptimizer(document);
+    })();
+    </script>
+
+    <script>
+    (function () {
         const modalEl = document.getElementById('modalEditBoutiqueAnnonce');
         const bodyEl = document.getElementById('modalEditBoutiqueAnnonceBody');
         const boutiqueUrl = {{ path('boutique_index')|json_encode|raw }};
@@ -965,6 +1045,9 @@
                     throw new Error('HTTP ' + res.status);
                 }
                 bodyEl.innerHTML = await res.text();
+                if (window.initPriceOptimizer) {
+                    window.initPriceOptimizer(bodyEl);
+                }
             } catch (err) {
                 bodyEl.innerHTML = '<div class="alert alert-danger m-3 mb-0">Impossible de charger le formulaire. Réessayez.</div>';
             }

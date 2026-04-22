@@ -1,0 +1,71 @@
+{# Shared facture content: PDF (wkhtmltopdf) + HTML preview. For PDF pass signature_abs_path (file://...). Otherwise use asset(commande.factureSignaturePath) when set. #}
+<div class="mc-invoice-body">
+    <div class="header">
+        <p class="title">Facture commande</p>
+        <p class="muted">Référence: #CMD{{ "%03d"|format(commande.id) }} | Date: {{ commande.dateCommande|date('Y-m-d H:i') }}</p>
+    </div>
+
+    <div class="grid">
+        <div class="col">
+            <div class="card">
+                <h3>Client</h3>
+                <div>{{ commande.prenom }} {{ commande.nom }}</div>
+                <div class="muted">{{ commande.email ?: '—' }}</div>
+                <div class="muted">{{ commande.telephone ?: '—' }}</div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="card">
+                <h3>Livraison</h3>
+                <div>{{ commande.adresse ?: '—' }}</div>
+                {% if commande.complement %}<div class="muted">{{ commande.complement }}</div>{% endif %}
+                <div class="muted">{{ [commande.codePostal, commande.ville]|filter(v => v)|join(' ') }}</div>
+                <div>Statut: {{ commande.status }}</div>
+            </div>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Produit</th>
+                <th class="text-end">Qté</th>
+                <th class="text-end">Prix unit.</th>
+                <th class="text-end">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for l in lignes %}
+                <tr>
+                    <td>{{ l.nomProduit }}</td>
+                    <td class="text-end">{{ l.quantite }}</td>
+                    <td class="text-end">{{ l.prixUnitaire|number_format(3, ',', ' ') }} DT</td>
+                    <td class="text-end">{{ l.prixTotal|number_format(3, ',', ' ') }} DT</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4">Aucune ligne.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% set total_to_display = montant_vendeur is not null ? montant_vendeur : commande.prixTotal %}
+    <div class="total">Total: {{ total_to_display|number_format(3, ',', ' ') }} DT</div>
+
+    {% if signature_abs_path is defined and signature_abs_path %}
+        <div class="signature-wrap">
+            <div class="signature-box">
+                <img src="{{ signature_abs_path }}" alt="Signature vendeur">
+            </div>
+            <div class="signature-label">Signature agriculteur / fournisseur</div>
+        </div>
+    {% elseif commande.factureSignaturePath %}
+        <div class="signature-wrap">
+            <div class="signature-box">
+                <img src="{{ asset(commande.factureSignaturePath) }}" alt="Signature vendeur">
+            </div>
+            <div class="signature-label">Signature agriculteur / fournisseur</div>
+        </div>
+    {% endif %}
+</div>

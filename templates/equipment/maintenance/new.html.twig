@@ -20,7 +20,7 @@
     {% endfor %}
     {% if allErrors|length > 0 %}
         <div class="alert alert-danger shadow-sm mb-4">
-            <div class="fw-semibold mb-1">⚠️ Veuillez corriger les erreurs :</div>
+            <div class="fw-semibold mb-1">⚠️ Veuillez verifierr les erreurs de saisi :</div>
             <ul class="mb-0">
                 {% for msg in allErrors %}<li>{{ msg }}</li>{% endfor %}
             </ul>
@@ -75,6 +75,18 @@
                 {{ form_widget(form.description) }}
                 {{ form_errors(form.description) }}
                 <small class="text-muted">Minimum 10 caractères</small>
+            </div>
+
+            <div class="col-md-6">
+                {{ form_label(form.technicien, '👷 Technicien') }}
+                {{ form_widget(form.technicien, {attr: {placeholder: 'Nom du technicien', autocomplete: 'off'}}) }}
+                {{ form_errors(form.technicien) }}
+            </div>
+
+            <div class="col-md-6">
+                {{ form_label(form.cout, '💰 Coût (TND)') }}
+                {{ form_widget(form.cout, {attr: {placeholder: '0.00'}}) }}
+                {{ form_errors(form.cout) }}
             </div>
 
         </div>
