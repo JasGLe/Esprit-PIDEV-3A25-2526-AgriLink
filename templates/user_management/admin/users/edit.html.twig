@@ -2,6 +2,10 @@
 
 {% block title %}Modifier {{ user.nom }} - Administration{% endblock %}
 
+{% block stylesheets %}
+{% endblock %}
+
+
 {% block dashboard_content %}
 <div class="py-2">
 
@@ -296,40 +300,47 @@
                 </div>
             </div>
 
-            {# Photo de profil #}
+            {# Photo de profil - SIMPLE VERSION #}
             <div class="card border-0 shadow-sm mb-4">
                 <div class="card-header bg-white border-bottom py-3 px-4">
                     <h5 class="mb-0 fw-semibold">Photo de profil</h5>
                 </div>
-                <div class="card-body p-4 text-center">
-                    {% if user.photoProfil %}
-                        <img src="{{ asset('agrilink/uploads/' ~ user.photoProfil) }}" alt="{{ user.displayName }}"
-                             class="rounded-circle mb-3" width="80" height="80" style="object-fit:cover;" id="avatar-preview">
-                        <div id="avatar-placeholder" class="d-none"></div>
-                    {% else %}
-                        <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 fw-bold text-white"
-                             style="width:80px;height:80px;background:linear-gradient(135deg,#667eea,#764ba2);font-size:1.5rem;" id="avatar-placeholder">
-                            {{ user.initials }}
-                        </div>
-                        <img id="avatar-preview" src="" alt="" class="rounded-circle mb-3 d-none" width="80" height="80" style="object-fit:cover;">
-                    {% endif %}
-                    {{ form_label(form.profilePhoto, null, {label_attr: {class: 'form-label fw-semibold d-block mt-3'}}) }}
-                    {{ form_widget(form.profilePhoto, {attr: {class: 'form-control form-control-sm', accept: 'image/jpeg,image/png,image/webp', id: 'profile-photo-input'}}) }}
-                    {{ form_errors(form.profilePhoto) }}
-                    <div class="mt-2 d-flex gap-2 justify-content-center">
+                <div class="card-body p-4">
+                    {# Show current avatar #}
+                    <div style="text-align: center; margin-bottom: 1.5rem;">
                         {% if user.photoProfil %}
-                            <small class="text-muted d-block">Photo actuelle : <strong>{{ user.photoProfil|split('/')|last }}</strong></small>
+                            <img src="{{ asset('agrilink/uploads/' ~ user.photoProfil) }}" alt="{{ user.displayName }}"
+                                style="width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 3px solid #e9ecef;">
+                        {% else %}
+                            <div style="width: 90px; height: 90px; border-radius: 50%; margin: 0 auto; background: linear-gradient(135deg, #667eea, #764ba2); color: white; font-size: 2rem; font-weight: bold; display: flex; align-items: center; justify-content: center;">
+                                {{ user.initials }}
+                            </div>
                         {% endif %}
+                        <p style="margin-top: 0.75rem; font-size: 0.875rem; color: #6c757d;">
+                            {% if user.photoProfil %}
+                                {{ user.photoProfil|split('/')|last }}
+                            {% else %}
+                                Aucune photo
+                            {% endif %}
+                        </p>
                     </div>
-                    {% if user.photoProfil %}
-                        <button type="button" class="btn btn-sm btn-outline-danger mt-2" id="delete-avatar-btn">
-                            <svg class="me-1" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                            Supprimer la photo
-                        </button>
-                    {% endif %}
+
+                    {# Simple file input #}
+                    {{ form_label(form.profilePhoto, 'Choisir une photo', {label_attr: {class: 'form-label fw-semibold'}}) }}
+                    {{ form_widget(form.profilePhoto, {attr: {accept: 'image/jpeg,image/png,image/webp', class: 'form-control'}}) }}
+                    {{ form_errors(form.profilePhoto) }}
                     <small class="text-muted d-block mt-2">JPG, PNG ou WEBP · max 2 Mo</small>
+
+                    {# Delete button if photo exists #}
+                    {% if user.photoProfil %}
+                        <form method="POST" action="{{ path('admin_users_delete_photo', {id: user.id}) }}" style="display: inline;">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete-photo-' ~ user.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger mt-3 w-100"
+                                    onclick="return confirm('Supprimer la photo de profil ?');">
+                                Supprimer la photo
+                            </button>
+                        </form>
+                    {% endif %}
                 </div>
             </div>
 
@@ -381,42 +392,23 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('Edit page: DOM loaded, initializing...');
-    
-    // Get elements using name attribute (more reliable than ID)
     const roleSelect = document.querySelector('select[name*="[role]"]');
     const fournisseurTypeSelect = document.querySelector('select[name*="[fournisseurTypeFournisseur]"]');
-    
-    console.log('Role select found:', roleSelect);
-    console.log('Fournisseur type select found:', fournisseurTypeSelect);
-    
-    // Role sections
     const adminFields = document.getElementById('admin-fields');
     const agriculteurFields = document.getElementById('agriculteur-fields');
     const agriplusFields = document.getElementById('agriplus-fields');
     const fournisseurFields = document.getElementById('fournisseur-fields');
-    
-    // Fournisseur sub-sections
     const fournisseurPersonneFields = document.getElementById('fournisseur-personne-fields');
     const fournisseurSocieteFields = document.getElementById('fournisseur-societe-fields');
-    
-    // Toggle role-specific fields
+
     function toggleRoleFields() {
-        if (!roleSelect) {
-            console.error('Role select not found!');
-            return;
-        }
-        
+        if (!roleSelect) return;
         const selectedRole = roleSelect.value;
-        console.log('Selected role:', selectedRole);
-        
-        // Hide all role sections
         if (adminFields) adminFields.classList.add('d-none');
         if (agriculteurFields) agriculteurFields.classList.add('d-none');
         if (agriplusFields) agriplusFields.classList.add('d-none');
         if (fournisseurFields) fournisseurFields.classList.add('d-none');
-        
-        // Show selected role section
+
         switch(selectedRole) {
             case 'ADMIN':
                 if (adminFields) adminFields.classList.remove('d-none');
@@ -430,84 +422,280 @@ document.addEventListener('DOMContentLoaded', function () {
             case 'FOURNISSEUR':
                 if (fournisseurFields) {
                     fournisseurFields.classList.remove('d-none');
-                    // Also trigger fournisseur type fields
                     setTimeout(toggleFournisseurTypeFields, 100);
                 }
                 break;
         }
     }
-    
-    // Toggle fournisseur type-specific fields
+
     function toggleFournisseurTypeFields() {
-        if (!fournisseurTypeSelect) {
-            console.error('Fournisseur type select not found!');
-            return;
-        }
-        
+        if (!fournisseurTypeSelect) return;
         const selectedType = fournisseurTypeSelect.value;
-        console.log('Selected fournisseur type:', selectedType);
-        
-        // Hide both sub-sections
         if (fournisseurPersonneFields) fournisseurPersonneFields.classList.add('d-none');
         if (fournisseurSocieteFields) fournisseurSocieteFields.classList.add('d-none');
-        
-        // Show selected type section
+
         if (selectedType === 'PERSONNE' && fournisseurPersonneFields) {
             fournisseurPersonneFields.classList.remove('d-none');
         } else if (selectedType === 'SOCIETE' && fournisseurSocieteFields) {
             fournisseurSocieteFields.classList.remove('d-none');
         }
     }
-    
-    // Attach event listeners
+
     if (roleSelect) {
-        roleSelect.addEventListener('change', function() {
-            console.log('Role changed to:', this.value);
-            toggleRoleFields();
-        });
+        roleSelect.addEventListener('change', toggleRoleFields);
     }
-    
+
     if (fournisseurTypeSelect) {
-        fournisseurTypeSelect.addEventListener('change', function() {
-            console.log('Fournisseur type changed to:', this.value);
-            toggleFournisseurTypeFields();
-        });
+        fournisseurTypeSelect.addEventListener('change', toggleFournisseurTypeFields);
     }
-    
-    // Initialize on page load
+
     toggleRoleFields();
     toggleFournisseurTypeFields();
-    
-    // Live photo preview
-    // Photo upload preview
+    const uploader = document.getElementById('photo-uploader');
+    if (!uploader) return;
+
+    const form = document.querySelector('form[name="admin_user"]');
+    const uploadUrl = uploader.dataset.uploadUrl;
     const input = document.getElementById('profile-photo-input');
-    if (input) {
-        input.addEventListener('change', function () {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    const placeholder = document.getElementById('avatar-placeholder');
-                    if (placeholder) placeholder.classList.add('d-none');
-                    const img = document.getElementById('avatar-preview');
-                    img.src = e.target.result;
-                    img.classList.remove('d-none');
-                };
-                reader.readAsDataURL(file);
+    const uploadZone = document.getElementById('uploadZone');
+    const uploadZoneText = document.getElementById('uploadZoneText');
+    const feedback = document.getElementById('photo-feedback');
+    const currentPhotoLabel = document.getElementById('current-photo-label');
+    const photoPreviewSection = document.getElementById('photo-preview-section');
+    const photoPreviewImg = document.getElementById('photo-preview-img');
+    const photoPreviewFilename = document.getElementById('photo-preview-filename');
+    const photoSubmitWrap = document.getElementById('photo-submit-wrap');
+    const submitPhotoBtn = document.getElementById('submit-photo-btn');
+    const cancelPhotoBtn = document.getElementById('cancel-photo-btn');
+    const deleteAvatarBtn = document.getElementById('delete-avatar-btn');
+    const deleteForm = document.getElementById('delete-photo-form');
+    const avatarPlaceholder = document.getElementById('avatar-placeholder');
+    const avatarPreview = document.getElementById('avatar-preview');
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const maxSizeBytes = 2 * 1024 * 1024;
+    const defaultUploadText = '<span style="text-decoration:underline;">Cliquez ici</span> pour choisir une photo';
+    const originalPhotoSrc = avatarPreview && !avatarPreview.classList.contains('d-none') ? avatarPreview.getAttribute('src') : '';
+    let selectedPhotoFile = null;
+
+    function showFeedback(type, message) {
+        if (!feedback) return;
+        feedback.className = `alert alert-${type} mt-3 mb-0 py-2 small`;
+        feedback.textContent = message;
+    }
+
+    function clearFeedback() {
+        if (!feedback) return;
+        feedback.className = 'alert d-none mt-3 mb-0 py-2 small';
+        feedback.textContent = '';
+    }
+
+    function setUploadZoneActive(isActive) {
+        if (!uploadZone) return;
+        uploadZone.classList.toggle('is-active', isActive);
+    }
+
+    function resetUploadUI() {
+        selectedPhotoFile = null;
+        if (input) input.value = '';
+        if (uploadZoneText) uploadZoneText.innerHTML = defaultUploadText;
+        if (photoPreviewSection) photoPreviewSection.classList.add('d-none');
+        if (photoSubmitWrap) photoSubmitWrap.classList.add('d-none');
+        setUploadZoneActive(false);
+    }
+
+    function formatSize(bytes) {
+        return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+    }
+
+    function validateFile(file) {
+        if (!file) {
+            showFeedback('warning', 'Veuillez choisir une photo.');
+            return false;
+        }
+
+        if (!allowedTypes.includes(file.type)) {
+            showFeedback('danger', 'Format non supporte. Utilisez JPG, PNG ou WEBP.');
+            return false;
+        }
+
+        if (file.size > maxSizeBytes) {
+            showFeedback('danger', `Le fichier est trop volumineux (${formatSize(file.size)}). Limite: 2 Mo.`);
+            return false;
+        }
+
+        return true;
+    }
+
+    function applyFileSelection(file) {
+        if (!validateFile(file)) {
+            resetUploadUI();
+            return;
+        }
+
+        clearFeedback();
+        selectedPhotoFile = file;
+        if (uploadZoneText) uploadZoneText.innerHTML = `<strong style="color:#198754;">${file.name.replace(/</g, '&lt;')}</strong>`;
+        if (photoPreviewFilename) {
+            photoPreviewFilename.textContent = `${file.name} · ${formatSize(file.size)}`;
+        }
+        if (photoSubmitWrap) photoSubmitWrap.classList.remove('d-none');
+        if (photoPreviewSection) photoPreviewSection.classList.remove('d-none');
+        setUploadZoneActive(true);
+
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            if (avatarPreview && event.target) {
+                avatarPreview.src = event.target.result;
+                avatarPreview.classList.remove('d-none');
             }
+            if (avatarPlaceholder) avatarPlaceholder.classList.add('d-none');
+            if (photoPreviewImg && event.target) photoPreviewImg.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    async function submitPhotoUpdate() {
+        if (!submitPhotoBtn || !form || !uploadUrl) return;
+        if (!selectedPhotoFile) {
+            showFeedback('warning', 'Veuillez choisir une photo avant de continuer.');
+            return;
+        }
+
+        const csrfInput = form.querySelector('input[name="admin_user[_token]"]');
+        if (!csrfInput) {
+            showFeedback('danger', 'Token de securite introuvable.');
+            return;
+        }
+
+        submitPhotoBtn.disabled = true;
+        const originalButtonHtml = submitPhotoBtn.innerHTML;
+        submitPhotoBtn.innerHTML = '<svg class="me-1" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Enregistrement...';
+        clearFeedback();
+
+        const formData = new FormData();
+        formData.append('admin_user[_token]', csrfInput.value);
+        formData.append('admin_user[profilePhoto]', selectedPhotoFile);
+
+        try {
+            const response = await fetch(uploadUrl, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                body: formData
+            });
+
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Erreur lors de la mise a jour de la photo.');
+            }
+
+            if (avatarPreview && data.photoUrl) {
+                avatarPreview.src = data.photoUrl;
+                avatarPreview.classList.remove('d-none');
+            }
+            if (avatarPlaceholder) avatarPlaceholder.classList.add('d-none');
+            if (currentPhotoLabel && data.photoFilename) {
+                currentPhotoLabel.innerHTML = `Photo actuelle : <strong>${data.photoFilename.split('/').pop()}</strong>`;
+            }
+            showFeedback('success', 'Photo de profil mise a jour avec succes.');
+            resetUploadUI();
+        } catch (error) {
+            showFeedback('danger', error.message || 'Erreur lors de la mise a jour de la photo.');
+        } finally {
+            submitPhotoBtn.disabled = false;
+            submitPhotoBtn.innerHTML = originalButtonHtml;
+        }
+    }
+
+    function cancelSelection() {
+        resetUploadUI();
+        clearFeedback();
+        if (avatarPreview) {
+            if (originalPhotoSrc) {
+                avatarPreview.src = originalPhotoSrc;
+                avatarPreview.classList.remove('d-none');
+                if (avatarPlaceholder) avatarPlaceholder.classList.add('d-none');
+            } else {
+                avatarPreview.classList.add('d-none');
+                if (avatarPlaceholder) avatarPlaceholder.classList.remove('d-none');
+            }
+        }
+    }
+
+    async function deletePhoto() {
+        if (!deleteAvatarBtn || !deleteForm) return;
+        if (!confirm('Supprimer la photo de profil ? Cette action est irreversible.')) return;
+
+        deleteAvatarBtn.disabled = true;
+        const originalButtonHtml = deleteAvatarBtn.innerHTML;
+        deleteAvatarBtn.innerHTML = '<svg class="me-1" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Suppression...';
+        clearFeedback();
+
+        try {
+            const response = await fetch(deleteForm.action, {
+                method: 'POST',
+                headers: { 'Accept': 'application/json' },
+                body: new FormData(deleteForm)
+            });
+            const data = await response.json();
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || 'Erreur lors de la suppression de la photo.');
+            }
+
+            resetUploadUI();
+            if (avatarPreview) avatarPreview.classList.add('d-none');
+            if (avatarPlaceholder) avatarPlaceholder.classList.remove('d-none');
+            if (currentPhotoLabel) currentPhotoLabel.textContent = 'Aucune photo';
+            showFeedback('success', 'Photo supprimee avec succes.');
+        } catch (error) {
+            showFeedback('danger', error.message || 'Erreur lors de la suppression de la photo.');
+        } finally {
+            deleteAvatarBtn.disabled = false;
+            deleteAvatarBtn.innerHTML = originalButtonHtml;
+        }
+    }
+
+    if (uploadZone && input) {
+        // Simple click handler
+        uploadZone.addEventListener('click', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            input.click();
+        });
+        
+        uploadZone.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.stopPropagation();
+                input.click();
+            }
+        });
+        uploadZone.addEventListener('dragover', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            setUploadZoneActive(true);
+        });
+        uploadZone.addEventListener('dragleave', function () {
+            if (!selectedPhotoFile) setUploadZoneActive(false);
+        });
+        uploadZone.addEventListener('drop', function (event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const droppedFile = event.dataTransfer?.files?.[0] || null;
+            if (droppedFile) applyFileSelection(droppedFile);
         });
     }
 
-    // Delete avatar button
-    const deleteAvatarBtn = document.getElementById('delete-avatar-btn');
-    if (deleteAvatarBtn) {
-        deleteAvatarBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            if (confirm('Supprimer la photo de profil ? Cette action est irréversible.')) {
-                document.getElementById('delete-photo-form').submit();
-            }
+    if (input) {
+        input.addEventListener('change', function () {
+            const file = this.files && this.files[0] ? this.files[0] : null;
+            if (file) applyFileSelection(file);
         });
     }
+
+    if (submitPhotoBtn) submitPhotoBtn.addEventListener('click', submitPhotoUpdate);
+    if (cancelPhotoBtn) cancelPhotoBtn.addEventListener('click', cancelSelection);
+    if (deleteAvatarBtn) deleteAvatarBtn.addEventListener('click', deletePhoto);
 });
 </script>
 {% endblock dashboard_content %}

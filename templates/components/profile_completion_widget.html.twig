@@ -1,0 +1,321 @@
+{# Profile Completion Widget - Shows progress and motivational message #}
+
+{% set data = this.getCompletionData() %}
+
+<div class="profile-completion-widget" data-completion-score="{{ data.score }}">
+    <div class="completion-header">
+        <h3 class="completion-title">📊 Profil</h3>
+        <div class="completion-header-right">
+            <span class="completion-percentage">
+                <span class="completion-value">{{ data.score }}</span>
+                <span class="completion-unit">%</span>
+            </span>
+            <button type="button" id="pcw-minimize-btn" class="pcw-minimize-btn" title="Réduire/Agrandir">
+                <svg id="pcw-minimize-icon" class="pcw-minimize-icon" style="width:1.2rem;height:1.2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="completion-progress-bar">
+        <div class="progress-bar-fill" style="width: {{ data.score }}%; background-color: {{ data.color }};"></div>
+    </div>
+
+    <div id="pcw-content" style="display:block;">
+        <div class="completion-status">
+            <span class="status-label status-{{ data.statusClass }}">{{ data.status }}</span>
+        </div>
+
+        <p class="completion-message">{{ data.motivationalMessage }}</p>
+
+        {% if data.score < 100 %}
+            <a href="{{ path('app_profile_edit') }}" class="btn btn-sm btn-primary completion-action">
+                Compléter votre profil →
+            </a>
+        {% else %}
+            <div class="completion-badge">
+                <span class="badge-icon">⭐</span>
+                <span class="badge-text">Félicitations!</span>
+            </div>
+        {% endif %}
+    </div>
+
+    {# Minimized view #}
+    <div id="pcw-minimized-info" class="pcw-minimized-info" style="display:none;">
+        <div class="pcw-mini-stat">
+            <span class="pcw-mini-stat-label">Complétion</span>
+            <span class="pcw-mini-stat-value" id="pcw-mini-score">{{ data.score }}%</span>
+        </div>
+    </div>
+</div>
+
+<style>
+.profile-completion-widget {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.profile-completion-widget.minimized {
+    padding: 0.75rem 1.25rem;
+}
+
+.profile-completion-widget.minimized #pcw-content {
+    display: none !important;
+}
+
+.profile-completion-widget.minimized #pcw-minimized-info {
+    display: block !important;
+}
+
+.pcw-minimized-info {
+    display: none;
+}
+
+.pcw-mini-stat {
+    text-align: center;
+    padding: 0.5rem 0;
+}
+
+.pcw-mini-stat-label {
+    display: block;
+    font-size: 0.7rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.pcw-mini-stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #2563eb;
+}
+
+.profile-completion-widget {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.completion-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 12px !important;
+}
+
+.completion-header-right {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+}
+
+.pcw-minimize-btn {
+    transition: all 0.2s ease !important;
+    color: #6b7280 !important;
+    padding: 0.35rem !important;
+    border-radius: 0.35rem !important;
+    cursor: pointer !important;
+    background: none !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 24px !important;
+    height: 24px !important;
+    flex-shrink: 0 !important;
+    z-index: 10 !important;
+}
+
+.pcw-minimize-btn:hover {
+    color: #374151 !important;
+    transform: scale(1.1) !important;
+    background: rgba(107, 114, 128, 0.08) !important;
+}
+
+.profile-completion-widget.minimized .pcw-minimize-btn {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.08) 0%, rgba(37, 99, 235, 0.04) 100%) !important;
+    color: #2563eb !important;
+}
+
+.profile-completion-widget.minimized .pcw-minimize-icon {
+    transform: rotate(45deg) !important;
+    transition: transform 0.2s ease !important;
+}
+
+.pcw-minimize-icon {
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    color: inherit !important;
+    stroke: currentColor !important;
+    flex-shrink: 0 !important;
+}
+
+.completion-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.completion-percentage {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 2px;
+}
+
+.completion-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: #2563eb;
+    line-height: 1;
+}
+
+.completion-unit {
+    font-size: 14px;
+    font-weight: 600;
+    color: #6b7280;
+    line-height: 1;
+}
+
+.completion-progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.4s ease, background-color 0.3s ease;
+    box-shadow: 0 0 10px currentColor;
+}
+
+.completion-status {
+    margin-bottom: 12px;
+}
+
+.status-label {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-complete {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-excellent {
+    background: #cffafe;
+    color: #164e63;
+}
+
+.status-good {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-fair {
+    background: #fee2e2;
+    color: #7f1d1d;
+}
+
+.status-incomplete {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.completion-message {
+    margin: 0 0 16px 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #4b5563;
+}
+
+.completion-action {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.completion-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(34, 197, 94, 0.3);
+}
+
+.completion-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-radius: 8px;
+    color: #78350f;
+}
+
+.badge-icon {
+    font-size: 18px;
+}
+
+.badge-text {
+    font-weight: 600;
+}
+</style>
+
+<script>
+(function () {
+    function initializeMinimizeButton() {
+        const widget = document.querySelector('.profile-completion-widget');
+        const minimizeBtn = document.getElementById('pcw-minimize-btn');
+        const storageKey = 'pcw-minimized';
+
+        if (!widget || !minimizeBtn) return;
+
+        // Check if widget was previously minimized
+        const wasMinimized = localStorage.getItem(storageKey) === 'true';
+        if (wasMinimized) {
+            widget.classList.add('minimized');
+        }
+
+        // Toggle minimize state
+        minimizeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            widget.classList.toggle('minimized');
+            localStorage.setItem(storageKey, widget.classList.contains('minimized').toString());
+        });
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeMinimizeButton);
+    } else {
+        initializeMinimizeButton();
+    }
+})();
+</script>

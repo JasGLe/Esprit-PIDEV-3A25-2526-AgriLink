@@ -191,8 +191,26 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'ban_reason', length: 500, nullable: true)]
     private ?string $banReason = null;
 
+    #[ORM\Column(name: 'ban_count', type: Types::INTEGER, options: ['default' => 0])]
+    private int $banCount = 0;
+
+    #[ORM\Column(name: 'banned_until', type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $bannedUntil = null;
+
+    #[ORM\Column(name: 'is_permanently_banned', type: Types::BOOLEAN, options: ['default' => false])]
+    private bool $isPermanentlyBanned = false;
+
     #[ORM\Column(name: 'backup_codes', type: Types::JSON, nullable: true)]
     private ?array $backupCodes = null;
+
+    #[ORM\Column(name: 'login_count', type: Types::INTEGER, options: ['default' => 0])]
+    private int $loginCount = 0;
+
+    #[ORM\Column(name: 'user_points', type: Types::INTEGER, options: ['default' => 0])]
+    private int $userPoints = 0;
+
+    #[ORM\Column(name: 'earned_badges', type: Types::JSON, nullable: true)]
+    private ?array $earnedBadges = null;
 
     #[ORM\OneToMany(targetEntity: Exploitation::class, mappedBy: 'user')]
     private Collection $exploitations;
@@ -754,7 +772,59 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->isBanned = false;
         $this->bannedAt = null;
         $this->banReason = null;
+        $this->bannedUntil = null;
+        $this->isPermanentlyBanned = false;
         return $this;
+    }
+
+    public function getBanCount(): int
+    {
+        return $this->banCount;
+    }
+
+    public function setBanCount(int $banCount): static
+    {
+        $this->banCount = max(0, $banCount);
+
+        return $this;
+    }
+
+    public function getBannedUntil(): ?\DateTimeInterface
+    {
+        return $this->bannedUntil;
+    }
+
+    public function setBannedUntil(?\DateTimeInterface $bannedUntil): static
+    {
+        $this->bannedUntil = $bannedUntil;
+
+        return $this;
+    }
+
+    public function isPermanentlyBanned(): bool
+    {
+        return $this->isPermanentlyBanned;
+    }
+
+    public function setIsPermanentlyBanned(bool $isPermanentlyBanned): static
+    {
+        $this->isPermanentlyBanned = $isPermanentlyBanned;
+
+        return $this;
+    }
+
+    public function isCurrentlyBanned(): bool
+    {
+        if ($this->isPermanentlyBanned) {
+            return true;
+        }
+
+        if ($this->bannedUntil !== null) {
+            return $this->bannedUntil > new \DateTimeImmutable();
+        }
+
+        // Legacy/manual ban flag without timed ban metadata.
+        return $this->isBanned;
     }
 
     public function getBackupCodes(): ?array
@@ -1072,6 +1142,47 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             }
         }
 
+        return $this;
+    }
+
+    // ==================== GAMIFICATION ====================
+
+    public function getLoginCount(): int
+    {
+        return $this->loginCount;
+    }
+
+    public function setLoginCount(int $loginCount): static
+    {
+        $this->loginCount = $loginCount;
+        return $this;
+    }
+
+    public function incrementLoginCount(): static
+    {
+        $this->loginCount++;
+        return $this;
+    }
+
+    public function getUserPoints(): int
+    {
+        return $this->userPoints;
+    }
+
+    public function setUserPoints(int $userPoints): static
+    {
+        $this->userPoints = $userPoints;
+        return $this;
+    }
+
+    public function getEarnedBadges(): array
+    {
+        return $this->earnedBadges ?? [];
+    }
+
+    public function setEarnedBadges(?array $earnedBadges): static
+    {
+        $this->earnedBadges = $earnedBadges;
         return $this;
     }
 }

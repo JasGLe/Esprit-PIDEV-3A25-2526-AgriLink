@@ -2,13 +2,13 @@
    Usage: {{ include('components/_role_badge.html.twig', {role: 'ROLE_ADMIN'}) }}
 #}
 
-{% set badgeClasses = {
-    'ROLE_ADMIN': 'bg-danger text-white',
-    'ROLE_AGRIPLUS': 'bg-warning text-dark',
-    'ROLE_FOURNISSEUR': 'bg-primary text-white',
-    'ROLE_FOURNISSEUR_SOCIETE': 'bg-primary text-white',
-    'ROLE_FOURNISSEUR_PERSONNE': 'bg-primary text-white',
-    'ROLE_AGRICULTEUR': 'bg-success text-white',
+{% set badgeStyles = {
+    'ROLE_ADMIN': {color: '#dc2626', bg: 'rgba(220,38,38,.12)', border: 'rgba(220,38,38,.18)'},
+    'ROLE_AGRIPLUS': {color: '#d97706', bg: 'rgba(217,119,6,.12)', border: 'rgba(217,119,6,.2)'},
+    'ROLE_FOURNISSEUR': {color: '#2563eb', bg: 'rgba(37,99,235,.12)', border: 'rgba(37,99,235,.2)'},
+    'ROLE_FOURNISSEUR_SOCIETE': {color: '#2563eb', bg: 'rgba(37,99,235,.12)', border: 'rgba(37,99,235,.2)'},
+    'ROLE_FOURNISSEUR_PERSONNE': {color: '#2563eb', bg: 'rgba(37,99,235,.12)', border: 'rgba(37,99,235,.2)'},
+    'ROLE_AGRICULTEUR': {color: '#16a34a', bg: 'rgba(22,163,74,.12)', border: 'rgba(22,163,74,.2)'},
 } %}
 
 {% set badgeTexts = {
@@ -29,6 +29,9 @@
     'ROLE_AGRICULTEUR': '🌱',
 } %}
 
-<span class="badge rounded-pill {{ badgeClasses[role]|default('bg-secondary text-white') }}">
+{% set roleStyle = badgeStyles[role]|default({color: '#4b5563', bg: 'rgba(107,114,128,.1)', border: 'rgba(107,114,128,.2)'}) %}
+
+<span class="badge rounded-pill d-inline-flex align-items-center px-3 py-2 fw-semibold"
+    style="background:{{ roleStyle.bg }};color:{{ roleStyle.color }};border:1px solid {{ roleStyle.border }};">
     {{ badgeIcons[role]|default('👤') }} {{ badgeTexts[role]|default('Utilisateur') }}
 </span>

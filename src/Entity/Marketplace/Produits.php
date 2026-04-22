@@ -7,8 +7,13 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: \App\Repository\Marketplace\ProduitsRepository::class)]
 #[ORM\Table(name: 'produits')]
+#[ORM\HasLifecycleCallbacks]
 class Produits
 {
+    public const MODERATION_PENDING = 'pending';
+    public const MODERATION_APPROVED = 'approved';
+    public const MODERATION_BANNED = 'banned';
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER)]
@@ -49,6 +54,36 @@ class Produits
 
     #[ORM\Column(type: Types::INTEGER)]
     private ?int $quantite = null;
+
+    #[ORM\Column(type: Types::STRING, length: 40, nullable: true)]
+    private ?string $promoCode = null;
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    private ?float $promoDiscountPercent = null;
+
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $promoActive = false;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $promoStartAt = null;
+
+    #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $promoEndAt = null;
+
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $isRental = false;
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    private ?float $rentalPricePerDay = null;
+
+    #[ORM\Column(type: Types::STRING, length: 800, nullable: true)]
+    private ?string $rentalDescription = null;
+
+    #[ORM\Column(type: Types::STRING, length: 20, options: ['default' => self::MODERATION_PENDING])]
+    private string $moderationStatus = self::MODERATION_PENDING;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $createdAt = null;
 
     public function getId(): int
     {
@@ -224,5 +259,145 @@ class Produits
         $this->quantite = $quantite;
 
         return $this;
+    }
+
+    public function getPromoCode(): ?string
+    {
+        return $this->promoCode;
+    }
+
+    public function setPromoCode(?string $promoCode): static
+    {
+        $this->promoCode = $promoCode !== null ? mb_strtoupper(trim($promoCode)) : null;
+
+        return $this;
+    }
+
+    public function getPromoDiscountPercent(): ?float
+    {
+        return $this->promoDiscountPercent;
+    }
+
+    public function setPromoDiscountPercent(?float $promoDiscountPercent): static
+    {
+        $this->promoDiscountPercent = $promoDiscountPercent;
+
+        return $this;
+    }
+
+    public function isPromoActive(): bool
+    {
+        return $this->promoActive;
+    }
+
+    public function setPromoActive(bool $promoActive): static
+    {
+        $this->promoActive = $promoActive;
+
+        return $this;
+    }
+
+    public function getPromoStartAt(): ?\DateTimeInterface
+    {
+        return $this->promoStartAt;
+    }
+
+    public function setPromoStartAt(?\DateTimeInterface $promoStartAt): static
+    {
+        $this->promoStartAt = $promoStartAt;
+
+        return $this;
+    }
+
+    public function getPromoEndAt(): ?\DateTimeInterface
+    {
+        return $this->promoEndAt;
+    }
+
+    public function setPromoEndAt(?\DateTimeInterface $promoEndAt): static
+    {
+        $this->promoEndAt = $promoEndAt;
+
+        return $this;
+    }
+
+    public function isRental(): bool
+    {
+        return $this->isRental;
+    }
+
+    public function setIsRental(bool $isRental): static
+    {
+        $this->isRental = $isRental;
+
+        return $this;
+    }
+
+    public function getRentalPricePerDay(): ?float
+    {
+        return $this->rentalPricePerDay;
+    }
+
+    public function setRentalPricePerDay(?float $rentalPricePerDay): static
+    {
+        $this->rentalPricePerDay = $rentalPricePerDay;
+
+        return $this;
+    }
+
+    public function getRentalDescription(): ?string
+    {
+        return $this->rentalDescription;
+    }
+
+    public function setRentalDescription(?string $rentalDescription): static
+    {
+        $this->rentalDescription = $rentalDescription;
+
+        return $this;
+    }
+
+    public function getModerationStatus(): string
+    {
+        return $this->moderationStatus;
+    }
+
+    public function setModerationStatus(string $moderationStatus): static
+    {
+        $allowed = [
+            self::MODERATION_PENDING,
+            self::MODERATION_APPROVED,
+            self::MODERATION_BANNED,
+        ];
+        if (!\in_array($moderationStatus, $allowed, true)) {
+            $moderationStatus = self::MODERATION_PENDING;
+        }
+
+        $this->moderationStatus = $moderationStatus;
+
+        return $this;
+    }
+
+    public function getCreatedAt(): ?\DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    public function setCreatedAt(?\DateTimeInterface $createdAt): static
+    {
+        $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        if ($this->createdAt === null) {
+            $this->createdAt = new \DateTime();
+        }
+        if ($this->moderationStatus === '') {
+            $this->moderationStatus = self::MODERATION_PENDING;
+        }
     }
 }

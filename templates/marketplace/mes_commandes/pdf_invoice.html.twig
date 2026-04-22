@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Facture commande #{{ commande.id }}</title>
+    <style>
+        body { font-family: DejaVu Sans, Arial, sans-serif; color: #111827; font-size: 12px; }
+        .header { border-bottom: 2px solid #16a34a; padding-bottom: 10px; margin-bottom: 14px; }
+        .title { font-size: 22px; font-weight: 700; color: #065f46; margin: 0; }
+        .muted { color: #6b7280; }
+        .grid { display: table; width: 100%; margin-bottom: 14px; }
+        .col { display: table-cell; width: 50%; vertical-align: top; }
+        .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; margin-right: 8px; }
+        .card h3 { margin: 0 0 8px; font-size: 13px; color: #111827; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #e5e7eb; padding: 7px; text-align: left; }
+        th { background: #f3f4f6; font-size: 11px; text-transform: uppercase; }
+        .text-end { text-align: right; }
+        .total { margin-top: 12px; text-align: right; font-weight: 700; font-size: 14px; color: #065f46; }
+        .signature-wrap { margin-top: 24px; width: 300px; margin-left: auto; text-align: center; }
+        .signature-box { border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px; min-height: 90px; background: #fff; }
+        .signature-box img { max-width: 100%; max-height: 80px; }
+        .signature-label { margin-top: 6px; font-size: 11px; color: #6b7280; }
+    </style>
+</head>
+<body>
+{% include 'marketplace/mes_commandes/_invoice_body.html.twig' %}
+</body>
+</html>

@@ -11,6 +11,7 @@ parameters:
     uploads_base_url: '/uploads'
     equipements_directory: '%env(UPLOADS_BASE_DIR)%/equipements'
     opencage_api_key: '%env(OPENCAGE_API_KEY)%'
+    mapbox_token: '%env(MAPBOX_TOKEN)%'
 
 services:
     # default configuration for services in *this* file
@@ -20,8 +21,27 @@ services:
         bind:
             string $uploadsBaseDir: '%env(UPLOADS_BASE_DIR)%'
             string $appUrl: '%env(APP_URL)%'
+            string $facebookPageId: '%env(FACEBOOK_PAGE_ID)%'
+            string $facebookPageAccessToken: '%env(FACEBOOK_PAGE_ACCESS_TOKEN)%'
+            string $mailtrapApiToken: '%env(MAILTRAP_API_TOKEN)%'
+            string $mailtrapFromEmail: '%env(MAILTRAP_FROM_EMAIL)%'
+            string $mailtrapFromName: '%env(MAILTRAP_FROM_NAME)%'
+            string $adminContactEmail: '%env(ADMIN_CONTACT_EMAIL)%'
+            string $openWeatherApiKey: '%env(OPENWEATHER_API_KEY)%'
+            string $openWeatherBaseUrl: '%env(OPENWEATHER_BASE_URL)%'
+            string $geminiApiKey: '%env(GEMINI_API_KEY)%'
+            string $geminiApiBaseUrl: '%env(GEMINI_API_BASE_URL)%'
+            string $geminiModel: '%env(GEMINI_MODEL)%'
+            string $groqApiKey: '%env(GROQ_API_KEY)%'
+            string $groqApiBaseUrl: '%env(GROQ_API_BASE_URL)%'
+            string $groqModel: '%env(GROQ_MODEL)%'
             string $recaptchaSiteKey: '%env(RECAPTCHA_SITE_KEY)%'
             string $recaptchaSecretKey: '%env(RECAPTCHA_SECRET_KEY)%'
+            string $geminiApiKey:         '%env(GEMINI_API_KEY)%'
+            string $pollinations_api_key: '%env(POLLINATIONS_API_KEY)%'
+            string $mapboxToken: '%env(MAPBOX_TOKEN)%'
+            string $apiKey:               '%env(PERENUAL_API_KEY)%'
+            string  $groqKey:   '%env(GROQ_API_KEY)%'
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     App\:
@@ -30,6 +50,12 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # AvatarService — uses Pollinations.ai free API (no key needed)
+    App\Service\AvatarService:
+        arguments:
+            $appUrl: '%env(APP_URL)%'
+            $uploadsBaseUrl: '%env(UPLOADS_BASE_URL)%'
 
     # FileUploader service with explicit parameters
     App\Service\FileUploader:
@@ -46,6 +72,27 @@ services:
             $facebookAppId: '%env(FACEBOOK_APP_ID)%'
             $facebookAppSecret: '%env(FACEBOOK_APP_SECRET)%'
             $facebookRedirectUri: '%env(FACEBOOK_REDIRECT_URI)%'
+
+
+    App\Service\RecapitulatifMailService:
+        arguments:
+            $mailerFrom: '%env(MAILER_FROM_EMAIL)%'
+            $appName:    'AgriLink'
+
+    App\Service\LibreTranslateService:
+        arguments:
+            $libreTranslateBaseUrl: '%env(LIBRETRANSLATE_BASE_URL)%'
+            $libreTranslateApiKey: '%env(LIBRETRANSLATE_API_KEY)%'
+
+    App\Service\OneSignalPushService:
+        arguments:
+            $oneSignalAppId: '%env(ONESIGNAL_APP_ID)%'
+            $oneSignalApiKey: '%env(ONESIGNAL_API_KEY)%'
+            $oneSignalEnabled: '%env(bool:ONESIGNAL_ENABLED)%'
+
+    App\Service\MarketplaceProductRecommendationService:
+        arguments:
+            $projectDir: '%kernel.project_dir%'
 
     # Login event listeners
     App\EventListener\LoginSuccessListener:

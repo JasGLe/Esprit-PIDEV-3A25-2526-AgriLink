@@ -4,7 +4,7 @@
             <div class="display-6 mb-3">📅</div>
             <h3 class="h5 fw-bold text-dark mb-2">Aucun événement</h3>
             <p class="text-muted mb-4">Aucun événement ne correspond aux critères saisis.</p>
-            <a href="{{ path('evenement_new') }}" class="btn btn-success">Créer un événement</a>
+            <a href="{{ path('evenement_new', {'redirect': app.request.uri}) }}" class="btn btn-success">Créer un événement</a>
         </div>
     </div>
 {% else %}
@@ -12,7 +12,7 @@
         {% for evenement in evenements %}
             {% set canManage = is_granted('ROLE_ADMIN') or (app.user and evenement.idOrganisateur == app.user.id) %}
             <div class="col-12">
-                <div class="card border-0 shadow-sm h-100 activity-record-card" style="border-left: 4px solid #2563eb !important;">
+                <div class="card border-0 shadow-sm h-100 activity-record-card" style="border-left: 4px solid #16a34a !important;">
                     <div class="card-body p-3 p-lg-4">
                         <div class="d-flex flex-column flex-lg-row gap-3 align-items-lg-start">
                             <div class="flex-grow-1">
@@ -29,11 +29,27 @@
                                 </div>
                             </div>
                             <div class="d-flex flex-wrap gap-2 ms-lg-auto">
+                                <button type="button" 
+                                    class="btn btn-outline-secondary btn-sm"
+                                    data-action="show-qr"
+                                    data-qr-url="{{ path('qr_event', {'id': evenement.id}) }}"
+                                    data-qr-type="event"
+                                    data-qr-item="{{ evenement.titre }}">
+                                    📱 QR
+                                </button>
+                                {% if canManage %}
+                                    <a href="{{ path('evenement_poster_page', {'id': evenement.id}) }}"
+                                       class="btn btn-outline-success btn-sm"
+                                       title="Générer une affiche IA">
+                                        🤖 Affiche IA
+                                    </a>
+                                {% endif %}
                                 <a href="{{ path('evenement_show', {'id': evenement.id}) }}" class="btn btn-outline-success btn-sm">Voir</a>
                                 {% if canManage %}
                                     <a href="{{ path('evenement_edit', {'id': evenement.id}) }}" class="btn btn-success btn-sm">Modifier</a>
                                     <form method="post" action="{{ path('evenement_delete', {'id': evenement.id}) }}" onsubmit="return confirm('Supprimer cet événement ?');" class="d-inline">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ evenement.id) }}">
+                                        <input type="hidden" name="redirect" value="{{ app.request.uri }}">
                                         <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
                                     </form>
                                 {% endif %}

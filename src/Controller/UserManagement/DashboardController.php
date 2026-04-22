@@ -3,9 +3,11 @@
 namespace App\Controller\UserManagement;
 
 use App\Entity\UserManagement\User;
+use App\Repository\Activity\ActiviteRepository;
 use App\Repository\Activity\EvenementRepository;
 use App\Repository\EquipementRepository;
 use App\Repository\MaintenanceRepository;
+use App\Service\OpenWeatherMapService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -14,6 +16,11 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class DashboardController extends AbstractController
 {
+    public function __construct(
+        private readonly OpenWeatherMapService $openWeatherMapService,
+    ) {
+    }
+
     #[Route('/dashboard', name: 'app_dashboard')]
     public function index(): Response
     {
@@ -131,4 +138,5 @@ class DashboardController extends AbstractController
 
         return $this->render('user_management/home/landing.html.twig');
     }
+
 }

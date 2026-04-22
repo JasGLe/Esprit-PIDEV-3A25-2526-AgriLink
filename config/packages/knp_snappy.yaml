@@ -1,0 +1,12 @@
+knp_snappy:
+    process_timeout: 180
+    pdf:
+        enabled:    true
+        binary:     '"%env(WKHTMLTOPDF_PATH)%"'
+        options:
+            enable-local-file-access: true
+            encoding: utf-8
+    image:
+        enabled:    true
+        binary:     '"%env(WKHTMLTOIMAGE_PATH)%"'
+        options:    []

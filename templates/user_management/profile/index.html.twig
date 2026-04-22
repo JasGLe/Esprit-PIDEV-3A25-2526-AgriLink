@@ -2,326 +2,330 @@
 
 {% block title %}Mon profil - AgriLink{% endblock %}
 
-{% block dashboard_content %}
-    <div class="mb-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <h1 class="h3 fw-bold mb-0">Mon profil</h1>
-            <div>
-                <a href="{{ path('app_profile_edit') }}" class="btn btn-primary">
-                    <svg class="icon-sm me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                    Modifier mon profil
-                </a>
-            </div>
-        </div>
-    </div>
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/profile-enhanced.css') }}">
+{% endblock %}
 
-    <div class="row g-4">
-        {# Colonne gauche: Avatar et infos de base #}
-        <div class="col-lg-4">
-            {% embed 'components/_card.html.twig' %}
-                {% block card_content %}
-                    <div class="text-center">
-                        <div class="mx-auto">
-                            {{ include('components/_avatar.html.twig', {user: app.user, size: 'large'}) }}
-                        </div>
-                        <h3 class="mt-3 h5 fw-semibold">{{ app.user.displayName }}</h3>
-                        <p class="small text-muted">{{ app.user.email }}</p>
-                        <div class="mt-3 d-flex justify-content-center">
-                            {{ include('components/_role_badge.html.twig', {role: app.user.roles|first}) }}
-                        </div>
-                        <div class="mt-3 pt-3 border-top">
-                            <div class="d-flex align-items-center justify-content-center small text-muted">
-                                <svg class="icon-sm me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16">
+{% block dashboard_content %}
+    
+    <div class="profile-container">
+        {# Header avec titre et bouton de modification #}
+        <div class="profile-header d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="profile-header-title">Mon profil</h1>
+                <p class="mb-0 text-muted">Gérez vos informations personnelles et paramètres de compte</p>
+            </div>
+            <a href="{{ path('app_profile_edit') }}" class="profile-edit-button">
+                <svg class="profile-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Modifier
+            </a>
+        </div>
+
+        <div class="row g-4">
+            {# Colonne gauche: Avatar et infos de base #}
+            <div class="col-lg-4">
+                {# Hero Profile Card #}
+                <div class="profile-card profile-hero-card">
+                    <div class="profile-card-body">
+                        <div class="profile-avatar-section">
+                            <label class="profile-avatar-wrapper" for="avatarUploadInput">
+                                {{ include('components/_avatar.html.twig', {user: app.user, size: 'large'}) }}
+                                <div class="profile-avatar-overlay">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                    </svg>
+                                </div>
+                            </label>
+                            <input type="file" id="avatarUploadInput" class="d-none" accept="image/*">
+                            <input type="hidden" id="avatarCsrfToken" value="{{ csrf_token('profile_photo_upload') }}">
+                            <div>
+                                <h3 class="profile-user-name">{{ app.user.displayName }}</h3>
+                                <p class="profile-user-email">{{ app.user.email }}</p>
+                            </div>
+                            <div>
+                                {{ include('components/_role_badge.html.twig', {role: app.user.roles|first}) }}
+                            </div>
+                            <div class="profile-member-since">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="profile-icon-sm">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                                Membre depuis {{ app.user.createdAt ? app.user.createdAt|date('d/m/Y') : 'N/A' }}
+                                <span>Membre depuis {{ app.user.createdAt ? app.user.createdAt|date('d/m/Y') : 'N/A' }}</span>
                             </div>
                         </div>
                     </div>
-                {% endblock %}
-            {% endembed %}
+                </div>
 
-            {% embed 'components/_card.html.twig' with {classes: 'mt-3'} %}
-                {% block card_title %}Statut du compte{% endblock %}
-                {% block card_content %}
-                    <div class="vstack gap-3">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="small text-muted">Compte</span>
-                            {% if app.user.isActive %}
-                                <span class="badge bg-success-subtle text-success d-inline-flex align-items-center">
-                                    <svg class="icon-xs me-1" fill="currentColor" viewBox="0 0 20 20" width="12" height="12">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                    </svg>
-                                    Actif
-                                </span>
-                            {% else %}
-                                <span class="badge bg-danger-subtle text-danger d-inline-flex align-items-center">
-                                    <svg class="icon-xs me-1" fill="currentColor" viewBox="0 0 20 20" width="12" height="12">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
-                                    </svg>
-                                    Inactif
-                                </span>
-                            {% endif %}
-                        </div>
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="small text-muted">Email vérifié</span>
-                            {% if app.user.emailVerified %}
-                                <span class="badge bg-success-subtle text-success d-inline-flex align-items-center">
-                                    <svg class="icon-xs me-1" fill="currentColor" viewBox="0 0 20 20" width="12" height="12">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                    </svg>
-                                    Vérifié
-                                </span>
-                            {% else %}
-                                <span class="badge bg-warning-subtle text-warning d-inline-flex align-items-center">
-                                    <svg class="icon-xs me-1" fill="currentColor" viewBox="0 0 20 20" width="12" height="12">
-                                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
-                                    </svg>
-                                    Non vérifié
-                                </span>
-                            {% endif %}
-                        </div>
-                        {% if app.user.twoFactorEnabled %}
-                        <div class="d-flex align-items-center justify-content-between">
-                            <span class="small text-muted">2FA</span>
-                            <span class="badge bg-success-subtle text-success d-inline-flex align-items-center">
-                                <svg class="icon-xs me-1" fill="currentColor" viewBox="0 0 20 20" width="12" height="12">
-                                    <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
-                                </svg>
-                                Activé
-                            </span>
-                        </div>
-                        {% endif %}
+                {# Account Status Card #}
+                <div class="profile-card profile-card-accented mt-4">
+                    <div class="profile-card-header">
+                        <h4 class="profile-card-title">
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v2h8v-2zM16 11a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd" />
+                            </svg>
+                            Statut du compte
+                        </h4>
                     </div>
-                {% endblock %}
-            {% endembed %}
+                    <div class="profile-card-body">
+                        <div class="profile-status-compact">
+                            <div class="profile-status-row">
+                                <span class="profile-status-label">Compte</span>
+                                {% if app.user.isActive %}
+                                    <span class="profile-badge profile-badge-success">
+                                        <svg class="profile-icon-xs" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                        </svg>
+                                        Actif
+                                    </span>
+                                {% else %}
+                                    <span class="profile-badge profile-badge-danger">
+                                        <svg class="profile-icon-xs" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                        </svg>
+                                        Inactif
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="profile-status-row">
+                                <span class="profile-status-label">Email vérifié</span>
+                                {% if app.user.emailVerified %}
+                                    <span class="profile-badge profile-badge-success">
+                                        <svg class="profile-icon-xs" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                        </svg>
+                                        Vérifié
+                                    </span>
+                                {% else %}
+                                    <span class="profile-badge profile-badge-warning">
+                                        <svg class="profile-icon-xs" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                        </svg>
+                                        Non vérifié
+                                    </span>
+                                {% endif %}
+                            </div>
+                            {% if app.user.twoFactorEnabled %}
+                            <div class="profile-status-row">
+                                <span class="profile-status-label">2FA</span>
+                                <span class="profile-badge profile-badge-success">
+                                    <svg class="profile-icon-xs" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
+                                    </svg>
+                                    Activé
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
 
-            {# Lien vers les paramètres de sécurité #}
-            {% embed 'components/_card.html.twig' with {classes: 'mt-3'} %}
-                {% block card_content %}
-                    <a href="{{ path('app_profile_security') }}" class="d-flex align-items-center justify-content-between text-decoration-none small fw-medium">
-                        <span class="d-flex align-items-center text-primary">
-                            <svg class="icon-sm me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                {# Security Settings Link #}
+                <div class="profile-card mt-4">
+                    <a href="{{ path('app_profile_security') }}" class="profile-card-body d-flex align-items-center justify-content-between text-decoration-none">
+                        <span class="d-flex align-items-center" style="color: var(--profile-primary); font-weight: 600;">
+                            <svg class="profile-icon me-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                             </svg>
                             Paramètres de sécurité
                         </span>
-                        <svg class="icon-sm text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                        <svg class="profile-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--profile-text-tertiary);">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                         </svg>
                     </a>
-                {% endblock %}
-            {% endembed %}
-        </div>
+                </div>
+            </div>
 
-        {# Colonne droite: Informations détaillées #}
-        <div class="col-lg-8">
-            {# Informations personnelles #}
-            {% embed 'components/_card.html.twig' %}
-                {% block card_title %}Informations personnelles{% endblock %}
-                {% block card_content %}
-                    <dl class="row g-0 mb-0">
-                        <div class="col-12 py-3 border-bottom">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Nom complet</dt>
-                                <dd class="col-sm-8 mb-0 small">
-                                    {{ app.user.nom ?: 'Non renseigné' }}
-                                </dd>
+            {# Colonne droite: Informations détaillées #}
+            <div class="col-lg-8">
+                {# Personal Information Card #}
+                <div class="profile-card profile-card-accented">
+                    <div class="profile-card-header">
+                        <h4 class="profile-card-title">
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10.5 1.5H5.75A2.25 2.25 0 003.5 3.75v12.5A2.25 2.25 0 005.75 18.5h8.5a2.25 2.25 0 002.25-2.25V9.5m-12-6h8m-8 3h8m-8 3h5M17 1.5v4m0 0l-1.5-1.5m1.5 1.5l1.5-1.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                            Informations personnelles
+                        </h4>
+                    </div>
+                    <div class="profile-card-body">
+                        <div class="profile-info-list">
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Nom complet</span>
+                                <span class="profile-info-value">{{ app.user.nom ?: 'Non renseigné' }}</span>
                             </div>
-                        </div>
-                        <div class="col-12 py-3 border-bottom">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Email</dt>
-                                <dd class="col-sm-8 mb-0 small d-flex align-items-center">
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Email</span>
+                                <span class="profile-info-value">
                                     {{ app.user.email }}
                                     {% if app.user.emailVerified %}
-                                        <svg class="icon-sm ms-2 text-success" fill="currentColor" viewBox="0 0 20 20" width="16" height="16">
+                                        <svg class="profile-icon-sm" fill="currentColor" viewBox="0 0 20 20" style="color: var(--profile-primary); margin-left: 0.5rem;">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                                         </svg>
                                     {% endif %}
-                                </dd>
+                                </span>
+                            </div>
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Date de naissance</span>
+                                <span class="profile-info-value">{{ app.user.dateNaissance ? app.user.dateNaissance|date('d/m/Y') : 'Non renseigné' }}</span>
                             </div>
                         </div>
-                        <div class="col-12 py-3 border-bottom">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Date de naissance</dt>
-                                <dd class="col-sm-8 mb-0 small">
-                                    {{ app.user.dateNaissance ? app.user.dateNaissance|date('d/m/Y') : 'Non renseigné' }}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="col-12 py-3">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Rôle</dt>
-                                <dd class="col-sm-8 mb-0 small">
-                                    {{ app.user.roleBadge }}
-                                </dd>
-                            </div>
-                        </div>
-                    </dl>
-                {% endblock %}
-            {% endembed %}
+                    </div>
+                </div>
 
-            {# Informations de contact #}
-            {% embed 'components/_card.html.twig' with {classes: 'mt-3'} %}
-                {% block card_title %}Contact{% endblock %}
-                {% block card_content %}
-                    <dl class="row g-0 mb-0">
-                        <div class="col-12 py-3">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Téléphone</dt>
-                                <dd class="col-sm-8 mb-0 small d-flex align-items-center">
+                {# Contact Card #}
+                <div class="profile-card profile-card-accented mt-4">
+                    <div class="profile-card-header">
+                        <h4 class="profile-card-title">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                            </svg>
+                            Contact
+                        </h4>
+                    </div>
+                    <div class="profile-card-body">
+                        <div class="profile-info-list">
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Téléphone</span>
+                                <span class="profile-info-value">
                                     {{ app.user.telephone ?: 'Non renseigné' }}
                                     {% if app.user.telephone and app.user.phoneVerified %}
-                                        <svg class="icon-sm ms-2 text-success" fill="currentColor" viewBox="0 0 20 20" width="16" height="16">
+                                        <svg class="profile-icon-sm" fill="currentColor" viewBox="0 0 20 20" style="color: var(--profile-primary); margin-left: 0.5rem;">
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                                         </svg>
                                     {% endif %}
-                                </dd>
+                                </span>
                             </div>
                         </div>
-                    </dl>
-                {% endblock %}
-            {% endembed %}
+                    </div>
+                </div>
 
-            {# Localisation #}
-            {% embed 'components/_card.html.twig' with {classes: 'mt-3'} %}
-                {% block card_title %}Localisation{% endblock %}
-                {% block card_content %}
-                    <dl class="row g-0 mb-0">
-                        <div class="col-12 py-3 border-bottom">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Gouvernorat</dt>
-                                <dd class="col-sm-8 mb-0 small">
-                                    {{ app.user.gouvernant ?: 'Non renseigné' }}
-                                </dd>
+                {# Location Card #}
+                <div class="profile-card profile-card-accented mt-4">
+                    <div class="profile-card-header">
+                        <h4 class="profile-card-title">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            Localisation
+                        </h4>
+                    </div>
+                    <div class="profile-card-body">
+                        <div class="profile-info-list">
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Gouvernorat</span>
+                                <span class="profile-info-value">{{ app.user.gouvernant ?: 'Non renseigné' }}</span>
+                            </div>
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Ville</span>
+                                <span class="profile-info-value">{{ app.user.ville ?: 'Non renseigné' }}</span>
+                            </div>
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Code postal</span>
+                                <span class="profile-info-value">{{ app.user.codePostale ?: 'Non renseigné' }}</span>
                             </div>
                         </div>
-                        <div class="col-12 py-3 border-bottom">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Ville</dt>
-                                <dd class="col-sm-8 mb-0 small">
-                                    {{ app.user.ville ?: 'Non renseigné' }}
-                                </dd>
-                            </div>
-                        </div>
-                        <div class="col-12 py-3">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Code postal</dt>
-                                <dd class="col-sm-8 mb-0 small">
-                                    {{ app.user.codePostale ?: 'Non renseigné' }}
-                                </dd>
-                            </div>
-                        </div>
-                    </dl>
-                {% endblock %}
-            {% endembed %}
+                    </div>
+                </div>
 
-            {# Section spécifique Agriculteur #}
-            {% if app.user.isAgriculteur or app.user.isAgriPlus %}
-            {% embed 'components/_card.html.twig' with {classes: 'mt-3'} %}
-                {% block card_title %}
-                    <span class="d-flex align-items-center">
-                        <svg class="icon-sm me-2 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Informations agriculteur
-                    </span>
-                {% endblock %}
-                {% block card_content %}
-                    <dl class="row g-0 mb-0">
-                        <div class="col-12 py-3">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Années d'expérience</dt>
-                                <dd class="col-sm-8 mb-0 small">
+                {# Agriculteur Section #}
+                {% if app.user.isAgriculteur or app.user.isAgriPlus %}
+                <div class="profile-card profile-card-accented agricultural mt-4">
+                    <div class="profile-card-header">
+                        <h4 class="profile-card-title">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Informations agriculteur
+                        </h4>
+                    </div>
+                    <div class="profile-card-body">
+                        <div class="profile-info-list">
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Années d'expérience</span>
+                                <span class="profile-info-value">
                                     {% if app.user.agriculteurExpAnnee is not null %}
                                         {{ app.user.agriculteurExpAnnee }} an{% if app.user.agriculteurExpAnnee > 1 %}s{% endif %}
                                     {% else %}
-                                        Non renseigné
+                                        <span class="profile-info-value-muted">Non renseigné</span>
                                     {% endif %}
-                                </dd>
+                                </span>
                             </div>
                         </div>
-                    </dl>
-                {% endblock %}
-            {% endembed %}
-            {% endif %}
+                    </div>
+                </div>
+                {% endif %}
 
-            {# Section spécifique AgriPlus #}
-            {% if app.user.isAgriPlus %}
-            {% embed 'components/_card.html.twig' with {classes: 'mt-3'} %}
-                {% block card_title %}
-                    <span class="d-flex align-items-center">
-                        <svg class="icon-sm me-2 text-warning" fill="currentColor" viewBox="0 0 20 20" width="20" height="20">
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                        Abonnement AgriPlus
-                    </span>
-                {% endblock %}
-                {% block card_content %}
-                    <dl class="row g-0 mb-0">
-                        <div class="col-12 py-3 border-bottom">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Plan d'abonnement</dt>
-                                <dd class="col-sm-8 mb-0 small">
+                {# AgriPlus Section #}
+                {% if app.user.isAgriPlus %}
+                <div class="profile-card profile-card-accented premium mt-4">
+                    <div class="profile-card-header">
+                        <h4 class="profile-card-title">
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            Abonnement AgriPlus
+                        </h4>
+                    </div>
+                    <div class="profile-card-body">
+                        <div class="profile-info-list">
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Plan d'abonnement</span>
+                                <span class="profile-info-value">
                                     {% set planColors = {
-                                        'BASIC': 'bg-primary-subtle text-primary',
-                                        'PREMIUM': 'bg-secondary-subtle text-secondary',
-                                        'ENTERPRISE': 'bg-warning-subtle text-warning'
+                                        'BASIC': 'profile-subscription-badge-basic',
+                                        'PREMIUM': 'profile-subscription-badge-premium',
+                                        'ENTERPRISE': 'profile-subscription-badge-enterprise'
                                     } %}
                                     {% set planLabels = {
                                         'BASIC': 'Basic',
                                         'PREMIUM': 'Premium',
                                         'ENTERPRISE': 'Enterprise'
                                     } %}
-                                    <span class="badge {{ planColors[app.user.agriplusAbonnement] ?? 'bg-secondary-subtle text-secondary' }}">
+                                    <span class="profile-subscription-badge {{ planColors[app.user.agriplusAbonnement] ?? 'profile-subscription-badge-basic' }}">
                                         {{ planLabels[app.user.agriplusAbonnement] ?? app.user.agriplusAbonnement ?? 'Non défini' }}
                                     </span>
-                                </dd>
+                                </span>
                             </div>
-                        </div>
-                        <div class="col-12 py-3">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Date d'expiration</dt>
-                                <dd class="col-sm-8 mb-0 small">
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Date d'expiration</span>
+                                <span class="profile-info-value">
                                     {% if app.user.agriplusDateExpiration %}
                                         {% if app.user.hasValidAgriplusSubscription %}
-                                            <span class="text-success">{{ app.user.agriplusDateExpiration|date('d/m/Y') }}</span>
-                                            <span class="text-muted ms-2">(Actif)</span>
+                                            <span style="color: var(--profile-success);">{{ app.user.agriplusDateExpiration|date('d/m/Y') }}</span>
+                                            <span style="color: var(--profile-text-secondary); margin-left: 0.5rem;">(Actif)</span>
                                         {% else %}
-                                            <span class="text-danger">{{ app.user.agriplusDateExpiration|date('d/m/Y') }}</span>
-                                            <span class="text-danger ms-2">(Expiré)</span>
+                                            <span style="color: var(--profile-danger);">{{ app.user.agriplusDateExpiration|date('d/m/Y') }}</span>
+                                            <span style="color: var(--profile-danger); margin-left: 0.5rem;">(Expiré)</span>
                                         {% endif %}
                                     {% else %}
-                                        <span class="text-muted">Non définie</span>
+                                        <span class="profile-info-value-muted">Non définie</span>
                                     {% endif %}
-                                </dd>
+                                </span>
                             </div>
                         </div>
-                    </dl>
-                {% endblock %}
-            {% endembed %}
-            {% endif %}
+                    </div>
+                </div>
+                {% endif %}
 
-            {# Section spécifique Fournisseur #}
-            {% if app.user.isFournisseur %}
-            {% embed 'components/_card.html.twig' with {classes: 'mt-3'} %}
-                {% block card_title %}
-                    <span class="d-flex align-items-center">
-                        <svg class="icon-sm me-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                        Informations fournisseur
-                    </span>
-                {% endblock %}
-                {% block card_content %}
-                    <dl class="row g-0 mb-0">
-                        <div class="col-12 py-3 border-bottom">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Type de fournisseur</dt>
-                                <dd class="col-sm-8 mb-0 small">
+                {# Supplier Section #}
+                {% if app.user.isFournisseur %}
+                <div class="profile-card profile-card-accented supplier mt-4">
+                    <div class="profile-card-header">
+                        <h4 class="profile-card-title">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                            Informations fournisseur
+                        </h4>
+                    </div>
+                    <div class="profile-card-body">
+                        <div class="profile-info-list">
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Type de fournisseur</span>
+                                <span class="profile-info-value">
                                     {% if app.user.fournisseurTypeFournisseur == 'PERSONNE' %}
                                         Personne physique
                                     {% elseif app.user.fournisseurTypeFournisseur == 'SOCIETE' %}
@@ -329,85 +333,127 @@
                                     {% else %}
                                         Non renseigné
                                     {% endif %}
-                                </dd>
+                                </span>
                             </div>
-                        </div>
 
-                        {# Champs Personne Physique #}
-                        {% if app.user.fournisseurTypeFournisseur == 'PERSONNE' %}
-                        <div class="col-12 py-3">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">CIN</dt>
-                                <dd class="col-sm-8 mb-0 small">
-                                    {{ app.user.fournisseurCin ?: 'Non renseigné' }}
-                                    <span class="ms-2 text-muted" style="font-size: 0.75rem;">(Non modifiable)</span>
-                                </dd>
+                            {# Champs Personne Physique #}
+                            {% if app.user.fournisseurTypeFournisseur == 'PERSONNE' %}
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">CIN</span>
+                                <span class="profile-info-value">{{ app.user.fournisseurCin ?: 'Non renseigné' }}</span>
                             </div>
-                        </div>
-                        {% endif %}
+                            {% endif %}
 
-                        {# Champs Société #}
-                        {% if app.user.fournisseurTypeFournisseur == 'SOCIETE' %}
-                        <div class="col-12 py-3 border-bottom">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Raison sociale</dt>
-                                <dd class="col-sm-8 mb-0 small">
-                                    {{ app.user.fournisseurRaisonSocial ?: 'Non renseigné' }}
-                                </dd>
+                            {# Champs Société #}
+                            {% if app.user.fournisseurTypeFournisseur == 'SOCIETE' %}
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Raison sociale</span>
+                                <span class="profile-info-value">{{ app.user.fournisseurRaisonSocial ?: 'Non renseigné' }}</span>
                             </div>
-                        </div>
-                        <div class="col-12 py-3 border-bottom">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">N° Registre de commerce</dt>
-                                <dd class="col-sm-8 mb-0 small">
-                                    {{ app.user.fournisseurNumRegistre ?: 'Non renseigné' }}
-                                    <span class="ms-2 text-muted" style="font-size: 0.75rem;">(Non modifiable)</span>
-                                </dd>
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">N° Registre de commerce</span>
+                                <span class="profile-info-value">{{ app.user.fournisseurNumRegistre ?: 'Non renseigné' }}</span>
                             </div>
-                        </div>
-                        <div class="col-12 py-3 border-bottom">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Forme juridique</dt>
-                                <dd class="col-sm-8 mb-0 small">
-                                    {{ app.user.fournisseurFormeJuridique ?: 'Non renseigné' }}
-                                </dd>
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Forme juridique</span>
+                                <span class="profile-info-value">{{ app.user.fournisseurFormeJuridique ?: 'Non renseigné' }}</span>
                             </div>
-                        </div>
-                        <div class="col-12 py-3 border-bottom">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Capital social</dt>
-                                <dd class="col-sm-8 mb-0 small">
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Capital social</span>
+                                <span class="profile-info-value">
                                     {% if app.user.fournisseurCapital %}
                                         {{ app.user.fournisseurCapital|number_format(2, ',', ' ') }} TND
                                     {% else %}
-                                        Non renseigné
+                                        <span class="profile-info-value-muted">Non renseigné</span>
                                     {% endif %}
-                                </dd>
+                                </span>
                             </div>
-                        </div>
-                        {% endif %}
+                            {% endif %}
 
-                        <div class="col-12 py-3">
-                            <div class="row">
-                                <dt class="col-sm-4 small fw-medium text-muted">Certifications</dt>
-                                <dd class="col-sm-8 mb-0 small">
+                            <div class="profile-info-item">
+                                <span class="profile-info-label">Certifications</span>
+                                <span class="profile-info-value">
                                     {% if app.user.fournisseurCertifications %}
                                         <div style="white-space: pre-line;">{{ app.user.fournisseurCertifications }}</div>
                                     {% else %}
-                                        <span class="text-muted fst-italic">Aucune certification renseignée</span>
+                                        <span class="profile-info-value-muted">Aucune certification renseignée</span>
                                     {% endif %}
-                                </dd>
+                                </span>
                             </div>
                         </div>
-                    </dl>
-                {% endblock %}
-            {% endembed %}
-            {% endif %}
-
-            {# Dernière mise à jour #}
-            <div class="text-end small text-muted mt-3">
-                Dernière mise à jour : {{ app.user.updatedAt ? app.user.updatedAt|date('d/m/Y à H:i') : 'N/A' }}
+                    </div>
+                </div>
+                {% endif %}
             </div>
         </div>
+
+        {# Last Updated Footer #}
+        <div class="profile-last-updated">
+            Dernière mise à jour : {{ app.user.updatedAt ? app.user.updatedAt|date('d/m/Y à H:i') : 'N/A' }}
+        </div>
     </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const avatarWrapper = document.querySelector('.profile-avatar-wrapper');
+    const avatarInput = document.getElementById('avatarUploadInput');
+
+    if (!avatarWrapper || !avatarInput) return;
+
+    // Handle file selection
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+            alert('Veuillez sélectionner une image valide (JPEG, PNG, WebP ou GIF)');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            alert('L\'image doit faire moins de 5 MB');
+            return;
+        }
+
+        // Show loading state
+        avatarWrapper.classList.add('avatar-loading');
+
+        // Create FormData and submit
+        const formData = new FormData();
+        formData.append('profile_edit_form[profilePhoto]', file);
+        formData.append('photo_only', '1');
+        formData.append('_token', document.getElementById('avatarCsrfToken').value);
+
+        // Send to edit endpoint
+        fetch('{{ path("app_profile_edit") }}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            if (response.ok || response.status === 302) {
+                // Success - reload page to show new avatar
+                setTimeout(() => {
+                    window.location.reload();
+                }, 500);
+            } else {
+                throw new Error('Erreur lors de la mise à jour');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Erreur lors de la mise à jour de la photo. Veuillez réessayer.');
+            avatarWrapper.classList.remove('avatar-loading');
+            // Reset input
+            avatarInput.value = '';
+        });
+    });
+});
+</script>
 {% endblock %}

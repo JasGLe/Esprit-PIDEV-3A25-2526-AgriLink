@@ -5,11 +5,118 @@
 
 {% block stylesheets %}
     {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/bootstrap-custom2.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{{ asset('css/mes-commandes-dashboard.css') }}">
 {% endblock %}
 
 {% block dashboard_content %}
+{% import _self as mc %}
+
+{% macro render_status(mes_commandes_mode, status, commande_id, dropdown_choices, pending_cancel, show_buyer_cancel_request, buyer_cancel_order_ref, force_statut_edit) %}
+    {% set s = status|lower %}
+    {% set redirect_target = 'index' %}
+    {% set force_edit = force_statut_edit|default(false) %}
+    {% if pending_cancel %}
+        <p class="small text-warning mb-1"><i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>Demande d’annulation en attente</p>
+    {% endif %}
+
+    {% if s matches '/annul|cancel/' %}
+        <span class="mc-badge mc-badge--danger"><i class="bi bi-x-circle me-1" aria-hidden="true"></i>Annulée</span>
+    {% elseif s matches '/livree|livrée|livré|termine|reception|reçue|recue/' %}
+        <span class="mc-badge mc-badge--success"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Livrée</span>
+    {% elseif dropdown_choices is iterable and dropdown_choices|length > 0 and commande_id is defined %}
+        {% if s matches '/prepar/' %}
+            {% set summary_badge = 'mc-badge--prep' %}
+            {% set summary_icon = 'bi-box-seam' %}
+            {% set summary_text = 'En préparation' %}
+        {% elseif s matches '/exped/' %}
+            {% set summary_badge = 'mc-badge--info' %}
+            {% set summary_icon = 'bi-truck' %}
+            {% set summary_text = 'Expédiée' %}
+        {% else %}
+            {% set summary_badge = 'mc-badge--warning' %}
+            {% set summary_icon = 'bi-hourglass-split' %}
+            {% set summary_text = 'En cours' %}
+        {% endif %}
+        <details class="mc-status-details">
+            <summary class="mc-badge {{ summary_badge }} mc-status-details__summary">
+                <i class="bi {{ summary_icon }} me-1" aria-hidden="true"></i>{{ summary_text }}
+                <i class="bi bi-chevron-up ms-1 mc-status-details__caret" aria-hidden="true"></i>
+            </summary>
+            <div class="mc-status-popover mc-status-popover--above" role="region" aria-label="Changer le statut">
+                <div class="mc-status-popover__inner">
+                    <header class="mc-status-popover__head">
+                        <span class="mc-status-popover__title">Changer le statut</span>
+                    </header>
+                    <div class="mc-status-popover__scroller">
+                        <ul class="mc-status-popover__list">
+                            {% for value, label in dropdown_choices %}
+                                <li class="mc-status-popover__item{% if value == 'ANNULEE' %} mc-status-popover__item--danger-zone{% endif %}">
+                                    <form method="post" action="{{ path('mes_commandes_statut', { id: commande_id }) }}" class="mc-status-popover__form">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('mes_commandes_statut') }}">
+                                        <input type="hidden" name="_redirect" value="{{ redirect_target }}">
+                                        <button type="submit" name="status" value="{{ value }}" class="mc-status-popover__opt{% if value == 'ANNULEE' %} mc-status-popover__opt--danger{% endif %}">
+                                            <span class="mc-status-popover__opt-label">{{ label }}</span>
+                                            <i class="bi bi-arrow-right-short mc-status-popover__opt-icon" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <span class="mc-status-popover__pointer" aria-hidden="true"></span>
+                </div>
+            </div>
+        </details>
+    {% else %}
+        {% if s matches '/exped/' %}
+            <span class="mc-badge mc-badge--info"><i class="bi bi-truck me-1" aria-hidden="true"></i>Expédiée</span>
+        {% elseif s matches '/prepar/' %}
+            <span class="mc-badge mc-badge--prep"><i class="bi bi-box-seam me-1" aria-hidden="true"></i>En préparation</span>
+        {% else %}
+            <span class="mc-badge mc-badge--warning"><i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>En cours</span>
+        {% endif %}
+    {% endif %}
+{% endmacro %}
+
+{% macro render_actions(commande, mes_commandes_mode, deletable_commande_ids, pending_cancellation_map, buyer_cancel_eligible_map, buyer_cancel_reason_map) %}
+    {% set can_delete = deletable_commande_ids[commande.id] ?? false %}
+    {% set pending_cancel = pending_cancellation_map[commande.id] ?? false %}
+    {% set cancel_eligible = buyer_cancel_eligible_map[commande.id] ?? false %}
+    {% set cancel_reason = buyer_cancel_reason_map[commande.id] ?? '' %}
+    {% set is_agriplus_buyer = mes_commandes_mode == 'acheteur' and is_granted('ROLE_AGRIPLUS') %}
+    {% set del_title_disabled = mes_commandes_mode == 'vendeur'
+        ? 'Suppression impossible (commande livrée ou multi-producteurs)'
+        : (mes_commandes_mode == 'admin'
+            ? 'Suppression réservée aux commandes livrées ou annulées'
+            : 'Suppression impossible (commande livrée)') %}
+    <div class="mc-act-toolbar">
+        <button type="button" class="btn btn-sm mc-act mc-act--view" title="Voir les détails" data-bs-toggle="modal" data-bs-target="#mcOrderDetailModal" data-mc-order-detail-url="{{ path('mes_commandes_detail_modal', { id: commande.id }) }}"><i class="bi bi-search" aria-hidden="true"></i></button>
+        <button type="button" class="btn btn-sm mc-act mc-act--edit" title="Modifier les coordonnées de livraison" data-bs-toggle="modal" data-bs-target="#mcOrderEditModal" data-mc-order-edit-url="{{ path('mes_commandes_edit_modal', { id: commande.id }) }}"><i class="bi bi-pencil" aria-hidden="true"></i></button>
+        {% if is_agriplus_buyer %}
+            {% if cancel_eligible %}
+                <form method="post" action="{{ path('mes_commandes_cancel_request', { id: commande.id }) }}" class="d-inline js-mc-cancel-request-form" data-mc-order-ref="#CMD{{ "%03d"|format(commande.id) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('cancel_request_' ~ commande.id) }}">
+                    <button type="button" class="btn btn-sm mc-act mc-act--agriplus-cancel js-mc-cancel-open" title="Demander l’annulation"><i class="bi bi-x-lg" aria-hidden="true"></i><span class="visually-hidden"> Demander l’annulation</span></button>
+                </form>
+            {% elseif pending_cancel %}
+                <button type="button" class="btn btn-sm mc-act mc-act--agriplus-cancel" disabled title="Demande d’annulation en attente de traitement"><i class="bi bi-hourglass-split" aria-hidden="true"></i><span class="visually-hidden"> Annulation en attente</span></button>
+            {% else %}
+                <button type="button" class="btn btn-sm mc-act mc-act--agriplus-cancel" disabled title="{{ cancel_reason != '' ? cancel_reason : 'Annulation indisponible (délai 48 h dépassé, commande expédiée ou terminée)' }}"><i class="bi bi-x-lg" aria-hidden="true"></i><span class="visually-hidden"> Annulation indisponible</span></button>
+            {% endif %}
+        {% elseif can_delete %}
+            <form method="post" action="{{ path('mes_commandes_delete', { id: commande.id }) }}" class="d-inline js-mc-delete-form" data-mc-order-ref="#CMD{{ "%03d"|format(commande.id) }}">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete_commande_' ~ commande.id) }}">
+                <button type="submit" class="btn btn-sm mc-act mc-act--delete" title="Supprimer la commande"><i class="bi bi-trash" aria-hidden="true"></i></button>
+            </form>
+        {% else %}
+            <button type="button" class="btn btn-sm mc-act mc-act--delete" disabled title="{{ del_title_disabled }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
+        {% endif %}
+        <a href="{{ path('mes_commandes_facture', { id: commande.id }) }}" class="btn btn-sm mc-act mc-act--pdf" title="{% if mes_commandes_mode == 'vendeur' %}Voir la facture (signature si besoin), puis export PDF{% else %}Voir la facture et exporter en PDF{% endif %}"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Facture</a>
+    </div>
+{% endmacro %}
+
 <div class="mc-orders-scope">
     <div class="mc-orders-head d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
         <div class="flex-grow-1 min-w-0">
@@ -27,9 +134,11 @@
                 <p class="mc-orders-sub mb-0 small">Vos achats marketplace (liés à l’email de votre compte : {{ app.user.email }})</p>
             {% endif %}
         </div>
-        <a href="{{ path('mes_commandes_index') }}" class="btn mc-btn-refresh d-inline-flex align-items-center gap-2 flex-shrink-0">
-            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Actualiser
-        </a>
+        <div class="mc-head-actions d-flex flex-column align-items-end gap-2 flex-shrink-0">
+            <a href="{{ path('mes_commandes_index') }}" class="btn mc-btn-refresh d-inline-flex align-items-center gap-2">
+                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Actualiser
+            </a>
+        </div>
     </div>
 
     <div class="row g-3 mb-4">
@@ -126,7 +235,7 @@
                                 <td><span class="mc-num mc-num--nowrap">#CMD{{ "%03d"|format(c.id) }}</span></td>
                                 <td class="mc-date mc-date--nowrap">{{ c.dateCommande|date('Y-m-d') }}</td>
                                 <td><span class="mc-amount">{{ mv|number_format(3, ',', ' ') }} DT</span></td>
-                                <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { mes_commandes_mode: mes_commandes_mode, status: c.status, commande_id: c.id, dropdown_choices: statut_choices_seller, statut_redirect: 'index', cancellation_request_pending: pending_cancellation_map[c.id]|default(false) } %}</td>
+                                <td class="mc-status-cell">{{ mc.render_status(mes_commandes_mode, c.status, c.id, statut_choices_seller, pending_cancellation_map[c.id]|default(false), false, '', false) }}</td>
                                 <td class="text-end mc-actions-cell">
                                     {% if pending_cancellation_map[c.id]|default(false) %}
                                         <div class="d-flex flex-wrap justify-content-end gap-1 mb-2">
@@ -140,7 +249,7 @@
                                             </form>
                                         </div>
                                     {% endif %}
-                                    {% include 'marketplace/mes_commandes/_actions_toolbar.html.twig' with { commande: c } %}
+                                    {{ mc.render_actions(commande=c, mes_commandes_mode=mes_commandes_mode, deletable_commande_ids=deletable_commande_ids|default({}), pending_cancellation_map=pending_cancellation_map|default({}), buyer_cancel_eligible_map=buyer_cancel_eligible_map|default({}), buyer_cancel_reason_map=buyer_cancel_reason_map|default({})) }}
                                 </td>
                             </tr>
                         {% else %}
@@ -189,7 +298,7 @@
                                 <td><span class="mc-num mc-num--nowrap">#CMD{{ "%03d"|format(c.id) }}</span></td>
                                 <td class="mc-date mc-date--nowrap">{{ c.dateCommande|date('Y-m-d') }}</td>
                                 <td class="mc-seller-cell"><span class="mc-seller-name">{{ vendeurs_par_commande[c.id]|default('—') }}</span></td>
-                                <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { mes_commandes_mode: mes_commandes_mode, status: c.status, commande_id: c.id, dropdown_choices: statut_choices_by_commande[c.id]|default({}), statut_redirect: 'index', force_statut_edit: true, cancellation_request_pending: pending_cancellation_map[c.id]|default(false) } %}</td>
+                                <td class="mc-status-cell">{{ mc.render_status(mes_commandes_mode, c.status, c.id, statut_choices_by_commande[c.id]|default({}), pending_cancellation_map[c.id]|default(false), false, '', true) }}</td>
                                 <td class="text-end mc-actions-cell">
                                     {% if pending_cancellation_map[c.id]|default(false) %}
                                         <div class="d-flex flex-wrap justify-content-end gap-1 mb-2">
@@ -203,7 +312,7 @@
                                             </form>
                                         </div>
                                     {% endif %}
-                                    {% include 'marketplace/mes_commandes/_actions_toolbar.html.twig' with { commande: c } %}
+                                    {{ mc.render_actions(commande=c, mes_commandes_mode=mes_commandes_mode, deletable_commande_ids=deletable_commande_ids|default({}), pending_cancellation_map=pending_cancellation_map|default({}), buyer_cancel_eligible_map=buyer_cancel_eligible_map|default({}), buyer_cancel_reason_map=buyer_cancel_reason_map|default({})) }}
                                 </td>
                             </tr>
                         {% else %}
@@ -216,12 +325,12 @@
                     {% else %}
                         {% for c in commandes %}
                             <tr>
-                                <td><span class="mc-num">{% if app.user.isAgriPlus %}#CMD{{ "%03d"|format(c.id) }}{% else %}#{{ c.numCommande }}{% endif %}</span></td>
+                                <td><span class="mc-num">{% if is_granted('ROLE_AGRIPLUS') %}#CMD{{ "%03d"|format(c.id) }}{% else %}#{{ c.numCommande }}{% endif %}</span></td>
                                 <td class="mc-date mc-date--nowrap">{{ c.dateCommande|date('Y-m-d') }}</td>
                                 <td><span class="mc-amount">{{ c.prixTotal|number_format(3, ',', ' ') }} DT</span></td>
-                                <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { mes_commandes_mode: mes_commandes_mode, status: c.status, commande_id: c.id, dropdown_choices: statut_choices_by_commande[c.id]|default({}), statut_redirect: 'index', cancellation_request_pending: pending_cancellation_map[c.id]|default(false), show_buyer_cancel_request: buyer_cancel_eligible_map[c.id]|default(false), buyer_cancel_order_ref: '#CMD' ~ ('%03d'|format(c.id)) } %}</td>
+                                <td class="mc-status-cell">{{ mc.render_status(mes_commandes_mode, c.status, c.id, statut_choices_by_commande[c.id]|default({}), pending_cancellation_map[c.id]|default(false), buyer_cancel_eligible_map[c.id]|default(false), '#CMD' ~ ('%03d'|format(c.id)), false) }}</td>
                                 <td class="text-end mc-actions-cell">
-                                    {% include 'marketplace/mes_commandes/_actions_toolbar.html.twig' with { commande: c } %}
+                                    {{ mc.render_actions(commande=c, mes_commandes_mode=mes_commandes_mode, deletable_commande_ids=deletable_commande_ids|default({}), pending_cancellation_map=pending_cancellation_map|default({}), buyer_cancel_eligible_map=buyer_cancel_eligible_map|default({}), buyer_cancel_reason_map=buyer_cancel_reason_map|default({})) }}
                                 </td>
                             </tr>
                         {% else %}
@@ -235,6 +344,9 @@
                 </tbody>
             </table>
         </div>
+    </div>
+    <div class="mc-pagination mt-3 d-flex justify-content-end">
+        {{ knp_pagination_render(commandes, 'marketplace/mes_commandes/_pagination.html.twig') }}
     </div>
 </div>
 
@@ -253,9 +365,52 @@
 </div>
 
 {% include 'marketplace/mes_commandes/_order_edit_modal.html.twig' %}
-{% include 'marketplace/mes_commandes/_delete_confirm_modal.html.twig' %}
+
+<div class="modal fade" id="mcDeleteConfirmModal" tabindex="-1" aria-labelledby="mcDeleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content boutique-confirm__content border-0 shadow-lg">
+            <div class="modal-header boutique-confirm__header border-0">
+                <h2 class="modal-title h6 mb-0 boutique-confirm__title" id="mcDeleteConfirmModalLabel">
+                    <span class="boutique-confirm__icon" aria-hidden="true">🗑️</span>
+                    Supprimer la commande
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body boutique-confirm__body">
+                <p class="mb-1">Cette action est définitive et ne peut pas être annulée.</p>
+            </div>
+            <div class="modal-footer boutique-confirm__footer border-0">
+                <button type="button" class="btn btn-sm btn-outline-secondary boutique-confirm__btn-cancel" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-sm btn-danger boutique-confirm__btn-confirm js-mc-delete-confirm">Supprimer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% if mes_commandes_mode == 'acheteur' %}
-    {% include 'marketplace/mes_commandes/_cancel_request_modal.html.twig' %}
+<div class="modal fade" id="mcCancelRequestModal" tabindex="-1" aria-labelledby="mcCancelRequestModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content boutique-confirm__content mc-cancel-request-modal__content border-0 shadow-lg">
+            <div class="modal-header boutique-confirm__header mc-cancel-request-modal__header border-0">
+                <h2 class="modal-title h6 mb-0 boutique-confirm__title mc-cancel-request-modal__title" id="mcCancelRequestModalLabel">
+                    <span class="boutique-confirm__icon mc-cancel-request-modal__icon" aria-hidden="true"><i class="bi bi-x-lg"></i></span>
+                    Demande d’annulation
+                </h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body boutique-confirm__body mc-cancel-request-modal__body">
+                <p class="mb-2">Commande <strong class="js-mc-cancel-order-ref">—</strong>.</p>
+                <p class="mb-2">Votre demande d’annulation sera envoyée pour traitement.</p>
+                <p class="mb-2 text-secondary small">Traitée par : <strong>Admin</strong> ou <strong>Responsable de la commande</strong>.</p>
+                <p class="mb-0 text-secondary small">Disponible dans les 48 h suivant la commande.</p>
+            </div>
+            <div class="modal-footer boutique-confirm__footer mc-cancel-request-modal__footer border-0">
+                <button type="button" class="btn btn-sm btn-outline-secondary boutique-confirm__btn-cancel" data-bs-dismiss="modal">Retour</button>
+                <button type="button" class="btn btn-sm btn-danger boutique-confirm__btn-confirm js-mc-cancel-confirm"><i class="bi bi-x-lg me-1" aria-hidden="true"></i>Confirmer la demande</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endif %}
 
 <script>
@@ -268,6 +423,10 @@
             }
             el.dataset.mcStatusBound = '1';
             el.addEventListener('toggle', function () {
+                var row = el.closest('tr');
+                if (row) {
+                    row.classList.toggle('mc-row-status-open', !!el.open);
+                }
                 if (!el.open) {
                     return;
                 }
@@ -277,6 +436,10 @@
                 }
                 scopeRoot.querySelectorAll('.mc-status-details').forEach(function (o) {
                     if (o !== el) {
+                        var otherRow = o.closest('tr');
+                        if (otherRow) {
+                            otherRow.classList.remove('mc-row-status-open');
+                        }
                         o.removeAttribute('open');
                     }
                 });
@@ -325,6 +488,62 @@
     modalEl.addEventListener('hidden.bs.modal', function () {
         bodyEl.innerHTML = '<div class="mc-order-detail-modal__loading p-4 text-center mc-muted">Chargement…</div>';
     });
+})();
+</script>
+
+<script>
+(function () {
+    var deleteModalEl = document.getElementById('mcDeleteConfirmModal');
+    if (deleteModalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        var deleteModal = bootstrap.Modal.getOrCreateInstance(deleteModalEl, { backdrop: 'static' });
+        var deleteConfirmBtn = deleteModalEl.querySelector('.js-mc-delete-confirm');
+        var pendingDeleteForm = null;
+        document.addEventListener('submit', function (event) {
+            var form = event.target;
+            if (!(form instanceof HTMLFormElement) || !form.classList.contains('js-mc-delete-form')) return;
+            event.preventDefault();
+            pendingDeleteForm = form;
+            deleteModal.show();
+        }, true);
+        if (deleteConfirmBtn) {
+            deleteConfirmBtn.addEventListener('click', function () {
+                if (!pendingDeleteForm) return deleteModal.hide();
+                var f = pendingDeleteForm;
+                pendingDeleteForm = null;
+                deleteModal.hide();
+                f.submit();
+            });
+        }
+        deleteModalEl.addEventListener('hidden.bs.modal', function () { pendingDeleteForm = null; });
+    }
+
+    var cancelModalEl = document.getElementById('mcCancelRequestModal');
+    if (cancelModalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        var cancelModal = bootstrap.Modal.getOrCreateInstance(cancelModalEl, { backdrop: 'static' });
+        var refEl = cancelModalEl.querySelector('.js-mc-cancel-order-ref');
+        var cancelConfirmBtn = cancelModalEl.querySelector('.js-mc-cancel-confirm');
+        var pendingCancelForm = null;
+        document.addEventListener('click', function (event) {
+            var btn = event.target && event.target.closest && event.target.closest('.js-mc-cancel-open');
+            if (!btn) return;
+            var form = btn.closest('form.js-mc-cancel-request-form');
+            if (!form) return;
+            event.preventDefault();
+            pendingCancelForm = form;
+            if (refEl) refEl.textContent = form.getAttribute('data-mc-order-ref') || 'cette commande';
+            cancelModal.show();
+        }, true);
+        if (cancelConfirmBtn) {
+            cancelConfirmBtn.addEventListener('click', function () {
+                if (!pendingCancelForm) return cancelModal.hide();
+                var f = pendingCancelForm;
+                pendingCancelForm = null;
+                cancelModal.hide();
+                f.submit();
+            });
+        }
+        cancelModalEl.addEventListener('hidden.bs.modal', function () { pendingCancelForm = null; });
+    }
 })();
 </script>
 {% endblock %}

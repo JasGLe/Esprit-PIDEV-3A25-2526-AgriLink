@@ -120,6 +120,14 @@
         <p class="text-muted mb-0 small">Surveillance, analyse et contrôle de la sécurité de la plateforme</p>
     </div>
     <div class="d-flex flex-wrap align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-outline-primary" onclick="exportSecurityPDF()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+            Export PDF
+        </button>
+        <button type="button" class="btn btn-sm btn-outline-success" onclick="exportSecurityExcel()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+            Export Excel
+        </button>
         {% if accountStats.lockedNow > 0 %}
         <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill">
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1" style="vertical-align:-2px;">
@@ -548,9 +556,17 @@
 {{ parent() }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-(function () {
+function handleSecurityPageLoad() {
     'use strict';
+    requestAnimationFrame(() => {
+        initializeCharts();
+    });
+}
 
+document.addEventListener('DOMContentLoaded', handleSecurityPageLoad);
+document.addEventListener('turbo:load', handleSecurityPageLoad);
+
+function initializeCharts() {
     // ── Security Score Gauge ──────────────────────────────────────────
     {# Recompute score here since block-scoped variables don't cross blocks #}
     {% set _score = 0 %}
@@ -679,6 +695,25 @@
             }
         }
     });
-})();
+}
+
+// ── Export Functions ─────────────────────────────────────────────────
+function exportSecurityPDF() { 
+    window.location.href = '{{ path('admin_security_export_pdf') }}';
+}
+
+function exportSecurityExcel() {
+    window.location.href = '{{ path('admin_security_export_excel') }}';
+}
+
+
 </script>
+<style>
+@media print {
+    #desktop-sidebar, .d-lg-none, button, .btn, .nav-pills { display: none !important; }
+    .dashboard-main-content { margin-left: 0 !important; }
+    .dashboard-main { padding-top: 0 !important; }
+    .chart-card, .sec-kpi-card { break-inside: avoid; }
+}
+</style>
 {% endblock %}

@@ -2,17 +2,29 @@
 
 namespace App\Controller\Activity;
 
+use App\Dto\Activity\EvenementInvitationMailDto;
 use App\Entity\Activity\Evenement;
 use App\Entity\UserManagement\User;
+use App\Form\Activity\EvenementInvitationMailType;
 use App\Form\Activity\EvenementType;
 use App\Repository\Activity\EvenementRepository;
+use App\Repository\UserManagement\UserRepository;
+use App\Service\EventPosterGeneratorService;
 use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Mailer\MailerInterface;
+use Symfony\Component\Mime\Address;
+use Symfony\Component\Mime\Email;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 #[Route('/evenement')]
 #[IsGranted('ROLE_USER')]
@@ -20,7 +32,16 @@ class EvenementController extends AbstractController
 {
     public function __construct(
         private readonly EvenementRepository $evenementRepository,
+        private readonly UserRepository $userRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly EventPosterGeneratorService $posterGeneratorService,
+        #[Autowire('%env(MAILER_FROM_EMAIL)%')]
+        private readonly string $mailerFromEmail,
+        #[Autowire('%env(MAILER_FROM_NAME)%')]
+        private readonly string $mailerFromName,
+        #[Autowire('%env(APP_URL)%')]
+        private readonly string $appUrl,
+        private readonly HttpClientInterface $httpClient,
     ) {
     }
 
@@ -42,6 +63,7 @@ class EvenementController extends AbstractController
                 'type' => $type,
             ],
             'typeOptions' => $this->evenementRepository->findAvailableTypes(),
+            'invitationMailForm' => $this->createInvitationMailForm()->createView(),
         ];
 
         if ($request->isXmlHttpRequest()) {
@@ -53,12 +75,131 @@ class EvenementController extends AbstractController
         ]);
     }
 
+    #[Route('/invitation/mail', name: 'evenement_send_invitation_mail', methods: ['POST'])]
+    public function sendInvitationMail(Request $request, MailerInterface $mailer): Response
+    {
+        $this->assertModuleAccess();
+
+        $form = $this->createInvitationMailForm();
+        $form->handleRequest($request);
+
+        if (!$form->isSubmitted()) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Soumission invalide du formulaire.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (!$form->isValid()) {
+            $errors = $this->extractFormErrors($form);
+
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => false,
+                    'errors' => $errors,
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            foreach ($errors as $error) {
+                $this->addFlash('error', $error);
+            }
+
+            return $this->redirectToRoute('evenement_list');
+        }
+
+        /** @var EvenementInvitationMailDto $payload */
+        $payload = $form->getData();
+        $pdfFile = $payload->getPdfFile();
+
+        if (!$pdfFile instanceof UploadedFile) {
+            $message = 'Veuillez importer un fichier PDF.';
+
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => false,
+                    'errors' => [$message],
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $this->addFlash('error', $message);
+
+            return $this->redirectToRoute('evenement_list');
+        }
+
+        if (($pdfFile->getMimeType() ?? '') !== 'application/pdf') {
+            $message = 'Le fichier doit être au format PDF.';
+
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => false,
+                    'errors' => [$message],
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $this->addFlash('error', $message);
+
+            return $this->redirectToRoute('evenement_list');
+        }
+
+        try {
+            // Render the HTML email template
+            $htmlContent = $this->renderView('emails/invitation.html.twig', [
+                'recipientEmail' => $payload->getEmail(),
+                'senderName' => $this->mailerFromName,
+                'appUrl' => $this->appUrl,
+            ]);
+
+            // Create and send the email with HTML content
+            $email = (new Email())
+                ->from(new Address($this->mailerFromEmail, $this->mailerFromName))
+                ->to((string) $payload->getEmail())
+                ->subject('Invitation à un événement')
+                ->html($htmlContent)
+                ->attachFromPath(
+                    $pdfFile->getPathname(),
+                    $pdfFile->getClientOriginalName() ?: 'invitation.pdf',
+                    'application/pdf'
+                );
+
+            $mailer->send($email);
+
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => true,
+                    'message' => 'Invitation envoyée avec succès.',
+                ]);
+            }
+
+            $this->addFlash('success', 'Invitation envoyée avec succès.');
+
+            return $this->redirectToRoute('evenement_list');
+        } catch (\Throwable) {
+            $message = 'Erreur lors de l\'envoi de l\'invitation. Veuillez réessayer.';
+
+            if ($request->isXmlHttpRequest()) {
+                return $this->json([
+                    'success' => false,
+                    'errors' => [$message],
+                ], Response::HTTP_INTERNAL_SERVER_ERROR);
+            }
+
+            $this->addFlash('error', $message);
+
+            return $this->redirectToRoute('evenement_list');
+        }
+    }
+
     #[Route('/new', name: 'evenement_new', methods: ['GET', 'POST'])]
     public function new(Request $request): Response
     {
         $this->assertModuleAccess();
 
         $evenement = new Evenement();
+        $prefilledDate = $this->resolvePrefillDateTime($request);
+        if ($prefilledDate instanceof \DateTimeImmutable) {
+            $evenement->setDateEvenement($prefilledDate);
+        }
+
         $form = $this->createForm(EvenementType::class, $evenement, [
             'is_admin' => $this->isGranted('ROLE_ADMIN'),
         ]);
@@ -79,7 +220,7 @@ class EvenementController extends AbstractController
 
                     $this->addFlash('success', 'L\'événement a été créé avec succès.');
 
-                    return $this->redirectToRoute('evenement_show', ['id' => $evenement->getId()]);
+                    return $this->redirectBackOrFallback($request, 'evenement_list');
                 } catch (\Exception $e) {
                     $this->addFlash('error', 'Une erreur est survenue lors de l\'enregistrement de l\'événement. Veuillez réessayer.');
                 }
@@ -200,7 +341,7 @@ class EvenementController extends AbstractController
     }
 
     #[Route('/{id}/delete', name: 'evenement_delete', requirements: ['id' => '\\d+'], methods: ['POST'])]
-    public function delete(Request $request, Evenement $evenement): Response
+    public function delete(Request $request, Evenement $evenement, MailerInterface $mailer): Response
     {
         $this->assertModuleAccess();
 
@@ -209,13 +350,66 @@ class EvenementController extends AbstractController
         }
 
         if ($this->isCsrfTokenValid('delete' . $evenement->getId(), (string) $request->request->get('_token'))) {
+            // Store event data before deletion for email notification
+            $eventTitle = $evenement->getTitre();
+            $eventDate = $evenement->getDateEvenement();
+
+            // Delete the event
             $this->entityManager->remove($evenement);
             $this->entityManager->flush();
+
+            // Send cancellation notification to all AGRICULTEUR users
+            try {
+                $this->sendEventCancellationNotifications($eventTitle, $eventDate, $mailer);
+            } catch (\Throwable $e) {
+                // Log error but don't block deletion
+                error_log('Failed to send event cancellation emails: ' . $e->getMessage());
+            }
 
             $this->addFlash('success', 'L\'événement a été supprimé avec succès.');
         }
 
-        return $this->redirectToRoute('evenement_list');
+        return $this->redirectBackOrFallback($request, 'evenement_list');
+    }
+
+    /**
+     * Send event cancellation notification emails to all AGRICULTEUR users
+     */
+    private function sendEventCancellationNotifications(?string $eventTitle, ?\DateTimeInterface $eventDate, MailerInterface $mailer): void
+    {
+        // Fetch all users with ROLE_AGRICULTEUR
+        $agriculteurs = $this->userRepository->findByRole(User::ROLE_AGRICULTEUR);
+
+        if (empty($agriculteurs)) {
+            return; // No users to notify
+        }
+
+        // Prepare email data
+        $emailData = [
+            'appUrl' => $this->appUrl,
+            'event' => [
+                'titre' => $eventTitle,
+                'dateEvenement' => $eventDate,
+            ],
+        ];
+
+        // Send email to each agriculteur
+        foreach ($agriculteurs as $user) {
+            try {
+                $htmlContent = $this->renderView('emails/event_cancelled.html.twig', $emailData);
+
+                $email = (new Email())
+                    ->from(new Address($this->mailerFromEmail, $this->mailerFromName))
+                    ->to((string) $user->getEmail())
+                    ->subject('Annulation d\'un événement')
+                    ->html($htmlContent);
+
+                $mailer->send($email);
+            } catch (\Throwable $e) {
+                // Log but continue with other users
+                error_log("Failed to send event cancellation email to {$user->getEmail()}: " . $e->getMessage());
+            }
+        }
     }
 
     private function assertModuleAccess(): void
@@ -309,5 +503,234 @@ class EvenementController extends AbstractController
             'nextDate' => $nextDate?->format('d/m/Y H:i') ?? 'Aucune date à venir',
             'nextInDays' => $nextInDays,
         ];
+    }
+
+    private function resolvePrefillDateTime(Request $request): ?\DateTimeImmutable
+    {
+        $datetimeParam = trim((string) $request->query->get('datetime', ''));
+        if ($datetimeParam !== '') {
+            $normalized = str_replace(' ', 'T', $datetimeParam);
+            try {
+                $dateTime = new \DateTimeImmutable($normalized);
+                return $dateTime->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            } catch (\Exception) {
+            }
+        }
+
+        $startParam = trim((string) $request->query->get('start', ''));
+        if ($startParam !== '') {
+            try {
+                $dateTime = new \DateTimeImmutable($startParam);
+                return $dateTime->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            } catch (\Exception) {
+            }
+        }
+
+        $dateParam = trim((string) $request->query->get('date', ''));
+        if ($dateParam === '') {
+            return null;
+        }
+
+        $selectedDate = \DateTimeImmutable::createFromFormat('Y-m-d', $dateParam);
+        if (!$selectedDate instanceof \DateTimeImmutable) {
+            return null;
+        }
+
+        $timeParam = trim((string) $request->query->get('time', ''));
+        if ($timeParam !== '' && preg_match('/^\d{2}:\d{2}$/', $timeParam) === 1) {
+            [$hour, $minute] = array_map('intval', explode(':', $timeParam));
+            return $selectedDate->setTime($hour, $minute);
+        }
+
+        return $selectedDate->setTime(9, 0);
+    }
+
+    private function redirectBackOrFallback(Request $request, string $fallbackRoute, array $fallbackParams = []): Response
+    {
+        $redirectTarget = $this->sanitizeRedirectTarget((string) $request->request->get('redirect', ''), $request)
+            ?? $this->sanitizeRedirectTarget((string) $request->query->get('redirect', ''), $request)
+            ?? $this->sanitizeRedirectTarget((string) $request->headers->get('referer', ''), $request);
+
+        if ($redirectTarget !== null) {
+            return $this->redirect($redirectTarget);
+        }
+
+        return $this->redirectToRoute($fallbackRoute, $fallbackParams);
+    }
+
+    private function sanitizeRedirectTarget(string $target, Request $request): ?string
+    {
+        $target = trim($target);
+        if ($target === '') {
+            return null;
+        }
+
+        if (str_starts_with($target, '/')) {
+            return str_starts_with($target, '//') ? null : $target;
+        }
+
+        $origin = $request->getSchemeAndHttpHost();
+        if (!str_starts_with($target, $origin)) {
+            return null;
+        }
+
+        $parts = parse_url($target);
+        if ($parts === false || (($parts['host'] ?? null) !== $request->getHost())) {
+            return null;
+        }
+
+        $path = $parts['path'] ?? '/';
+        if (!str_starts_with($path, '/')) {
+            $path = '/' . $path;
+        }
+
+        $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+        $fragment = isset($parts['fragment']) ? '#' . $parts['fragment'] : '';
+
+        return $path . $query . $fragment;
+    }
+
+    private function createInvitationMailForm(): FormInterface
+    {
+        return $this->createForm(EvenementInvitationMailType::class, new EvenementInvitationMailDto(), [
+            'action' => $this->generateUrl('evenement_send_invitation_mail'),
+            'method' => 'POST',
+        ]);
+    }
+
+    /**
+     * @return string[]
+     */
+    private function extractFormErrors(FormInterface $form): array
+    {
+        $errors = [];
+
+        /** @var FormError $error */
+        foreach ($form->getErrors(true) as $error) {
+            $errors[] = $error->getMessage();
+        }
+
+        return array_values(array_unique($errors));
+    }
+
+    #[Route('/{id}/poster', name: 'evenement_poster_page', requirements: ['id' => '\\d+'], methods: ['GET'])]
+    public function posterPage(Evenement $evenement): Response
+    {
+        $this->assertModuleAccess();
+
+        if (!$this->canManageEvenement($evenement)) {
+            throw $this->createAccessDeniedException('Accès refusé.');
+        }
+
+        return $this->render('activity/evenement/generate_poster.html.twig', [
+            'evenement' => $evenement,
+        ]);
+    }
+
+    #[Route('/{id}/generate-poster', name: 'evenement_generate_poster', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function generatePoster(Evenement $evenement): Response
+    {
+        $this->assertModuleAccess();
+
+        if (!$this->canManageEvenement($evenement)) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Accès refusé.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            $result = $this->posterGeneratorService->buildPosterUrl($evenement);
+
+            return $this->json([
+                'success' => true,
+                'image_url' => $result['url'],
+            ]);
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Erreur lors de la génération: ' . $e->getMessage(),
+            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    /**
+     * Fetches the Pollinations image server-side and returns bytes with a safe image/* type,
+     * so the browser never loads the cross-origin URL in <img> (avoids CORB).
+     */
+    #[Route('/{id}/poster-image', name: 'evenement_poster_image', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function proxyPosterImage(Request $request, Evenement $evenement): Response
+    {
+        $this->assertModuleAccess();
+
+        if (!$this->canManageEvenement($evenement)) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Accès refusé.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            $payload = $request->toArray();
+        } catch (\Throwable) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Corps JSON invalide.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $imageUrl = trim((string) ($payload['image_url'] ?? ''));
+        if ($imageUrl === '' || !$this->posterGeneratorService->isAllowedRemotePosterUrl($imageUrl)) {
+            return $this->json([
+                'success' => false,
+                'message' => 'URL d\'image non autorisée.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $remote = $this->httpClient->request('GET', $imageUrl, [
+                'timeout' => 180,
+                'max_duration' => 180,
+                'headers' => [
+                    'Accept' => 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+                    'User-Agent' => 'Symfony EventPoster/1.0',
+                ],
+            ]);
+
+            $status = $remote->getStatusCode();
+            if ($status < 200 || $status >= 300) {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Le service d\'images a répondu avec une erreur (' . $status . ').',
+                ], Response::HTTP_BAD_GATEWAY);
+            }
+
+            $body = $remote->getContent(false);
+            if ($body === '') {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Image vide.',
+                ], Response::HTTP_BAD_GATEWAY);
+            }
+
+            $headerCt = $remote->getHeaders()['content-type'][0] ?? null;
+            $contentType = $this->posterGeneratorService->guessImageContentType($body, $headerCt);
+            if ($contentType === '') {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Réponse inattendue du service d\'images (pas une image).',
+                ], Response::HTTP_BAD_GATEWAY);
+            }
+
+            return new Response($body, Response::HTTP_OK, [
+                'Content-Type' => $contentType,
+                'Cache-Control' => 'private, max-age=300',
+            ]);
+        } catch (\Throwable $e) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Échec du téléchargement de l\'image: ' . $e->getMessage(),
+            ], Response::HTTP_BAD_GATEWAY);
+        }
     }
 }

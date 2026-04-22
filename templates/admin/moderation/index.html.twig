@@ -1,0 +1,211 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Modération boutique{% endblock %}
+{% block page_title %}Modération Boutique{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="{{ asset('css/bootstrap-custom2.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{{ asset('css/mes-commandes-dashboard.css') }}">
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="mc-orders-scope">
+
+    {# ── Header ── #}
+    <div class="mc-orders-head d-flex flex-wrap align-items-start justify-content-between gap-3 mb-4">
+        <div class="flex-grow-1 min-w-0">
+            <h2 class="mc-orders-title mb-1">Modération boutique</h2>
+            <p class="mc-orders-sub mb-0 small">Nouveaux produits en attente de validation.</p>
+        </div>
+        <a href="{{ path('admin_moderation_boutique_index') }}" class="btn mc-btn-refresh d-inline-flex align-items-center gap-2">
+            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Actualiser
+        </a>
+    </div>
+
+    {# ── KPI ── #}
+    <div class="row g-3 mb-4">
+        <div class="col-md-6">
+            <div class="mc-stat-card">
+                <span class="mc-stat-card__icon mc-stat-card__icon--green">
+                    <i class="bi bi-box-seam" aria-hidden="true"></i>
+                </span>
+                <div>
+                    <div class="mc-stat-card__label">Produits à modérer</div>
+                    <div class="mc-stat-card__val">{{ products|length }} élément{{ products|length > 1 ? 's' : '' }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mc-stat-card">
+                <span class="mc-stat-card__icon mc-stat-card__icon--orange">
+                    <i class="bi bi-bell" aria-hidden="true"></i>
+                </span>
+                <div>
+                    <div class="mc-stat-card__label">Notifications</div>
+                    <div class="mc-stat-card__val">{{ notifications|length }} notification{{ notifications|length > 1 ? 's' : '' }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Table ── #}
+    <div class="mc-table-wrap">
+        <div class="table-responsive">
+            <table class="table mc-table mb-0">
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th>Vendeur</th>
+                        <th>Ajouté le</th>
+                        <th>Statut</th>
+                        <th style="min-width: 200px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for p in products %}
+                    {% set seller = sellersById[p.idFournisseur|default(0)] ?? null %}
+                    {% set created_at = createdAtByProductId[p.id]|default(p.createdAt) %}
+                    <tr>
+                        {# Produit #}
+                        <td>
+                            <div class="fw-semibold">{{ p.nom }}</div>
+                            <div class="small text-muted">{{ p.categorie }}</div>
+                        </td>
+
+                        {# Vendeur #}
+                        <td>
+                            {% if seller %}
+                                <div class="fw-semibold">{{ seller.displayName }}</div>
+                                <div class="small text-muted">{{ seller.email }}</div>
+                            {% else %}
+                                <span class="text-muted">Inconnu</span>
+                            {% endif %}
+                        </td>
+
+                        {# Date #}
+                        <td>{{ created_at ? created_at|date('d/m/Y H:i', 'Africa/Tunis') : '-' }}</td>
+
+                        {# Statut #}
+                        <td>
+                            {% set status = p.moderationStatus %}
+                            {% if status == 'approved' %}
+                                <span class="mc-badge mc-badge--success">
+                                    <i class="bi bi-check2-circle me-1"></i>Approuvé
+                                </span>
+                            {% elseif status == 'banned' %}
+                                <span class="mc-badge mc-badge--danger">
+                                    <i class="bi bi-x-circle me-1"></i>Banni
+                                </span>
+                            {% else %}
+                                <span class="mc-badge mc-badge--warning">
+                                    <i class="bi bi-hourglass-split me-1"></i>En attente
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        {# Actions #}
+                        <td>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                <button type="button" class="btn btn-sm btn-outline-info text-nowrap"
+                                        onclick="toggleDetailsRow('details-row-{{ p.id }}')">
+                                    <i class="bi bi-eye me-1"></i>Détails
+                                </button>
+                                {# Approuver #}
+                                <form method="post" action="{{ path('admin_moderation_boutique_approve', {id: p.id}) }}" style="margin:0;">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('moderation_approve_' ~ p.id) }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-success text-nowrap">
+                                        <i class="bi bi-check2-circle me-1"></i>Approuver
+                                    </button>
+                                </form>
+                                {# Bannir toggle #}
+                                <button type="button" class="btn btn-sm btn-outline-danger text-nowrap" onclick="toggleBanForm('ban-form-{{ p.id }}')">
+                                    <i class="bi bi-slash-circle me-1"></i>Bannir
+                                </button>
+                                {# Débannir si banni #}
+                                {% if seller and seller.isCurrentlyBanned %}
+                                    <form method="post" action="{{ path('admin_moderation_boutique_unban_seller', {id: seller.id}) }}" style="margin:0;">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('moderation_unban_' ~ seller.id) }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">
+                                            <i class="bi bi-arrow-counterclockwise me-1"></i>Débannir
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                            {# Formulaire ban caché #}
+                            <form id="ban-form-{{ p.id }}" method="post" action="{{ path('admin_moderation_boutique_ban_seller', {id: p.id}) }}" class="d-none mt-2">
+                                <input type="hidden" name="_token" value="{{ csrf_token('moderation_ban_' ~ p.id) }}">
+                                <div class="d-flex gap-1">
+                                    <input type="text" name="reason" class="form-control form-control-sm" placeholder="Raison…" required>
+                                    <button type="submit" class="btn btn-sm btn-danger px-2 py-1 text-nowrap" title="Confirmer">
+                                        <i class="bi bi-check-lg"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary px-2 py-1" onclick="toggleBanForm('ban-form-{{ p.id }}')">
+                                        <i class="bi bi-x-lg"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </td>
+                    </tr>
+                    <tr id="details-row-{{ p.id }}" class="d-none">
+                        <td colspan="5" class="bg-light">
+                            <div class="row g-3 py-2">
+                                <div class="col-md-3">
+                                    <div class="small text-muted">Nom</div>
+                                    <div class="fw-semibold">{{ p.nom }}</div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="small text-muted">Catégorie</div>
+                                    <div class="fw-semibold">{{ p.categorie }}</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="small text-muted">Prix</div>
+                                    <div class="fw-semibold">{{ p.prixUnitaire|number_format(3, ',', ' ') }} DT</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="small text-muted">Quantité</div>
+                                    <div class="fw-semibold">{{ p.quantite }}</div>
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="small text-muted">Ajouté le</div>
+                                    <div class="fw-semibold">{{ created_at ? created_at|date('d/m/Y H:i', 'Africa/Tunis') : '-' }}</div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="small text-muted">Description</div>
+                                    <div>{{ p.description ?: 'Aucune description' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted py-4">
+                            <i class="bi bi-inbox fs-4 d-block mb-2"></i>
+                            Aucun produit à modérer pour le moment.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script>
+function toggleBanForm(id) {
+    var form = document.getElementById(id);
+    if (!form) return;
+    form.classList.toggle('d-none');
+    if (!form.classList.contains('d-none')) {
+        form.querySelector('input[name="reason"]').focus();
+    }
+}
+function toggleDetailsRow(id) {
+    var row = document.getElementById(id);
+    if (!row) return;
+    row.classList.toggle('d-none');
+}
+</script>
+{% endblock %}

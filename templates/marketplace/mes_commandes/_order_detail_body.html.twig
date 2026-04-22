@@ -24,7 +24,7 @@
     {% else %}
         <button type="button" class="btn btn-sm mc-act mc-act--delete" disabled title="{{ del_title_disabled }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
     {% endif %}
-    <a href="{{ path('mes_commandes_pdf', { id: commande.id }) }}" class="btn btn-sm mc-act mc-act--pdf"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Export PDF</a>
+    <a href="{{ path('mes_commandes_facture', { id: commande.id }) }}" class="btn btn-sm mc-act mc-act--pdf" title="{% if mes_commandes_mode == 'vendeur' %}Voir la facture (signature requise si absente), puis export PDF{% else %}Voir la facture et exporter en PDF{% endif %}"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Facture</a>
 </div>
 
 <div class="mc-order-detail mc-od">
@@ -124,7 +124,7 @@
             <div class="mc-od-card__pad">
                 <div class="mc-od-head mc-od-head--buyer">
                     <div class="mc-od-head__buyer-left">
-                        <h2 class="mc-od-title" id="mc-od-a-head"><span class="mc-num">{% if mes_commandes_mode == 'vendeur' or mes_commandes_mode == 'admin' or app.user.isAgriPlus %}#CMD{{ "%03d"|format(commande.id) }}{% else %}#{{ commande.numCommande }}{% endif %}</span></h2>
+                        <h2 class="mc-od-title" id="mc-od-a-head"><span class="mc-num">{% if mes_commandes_mode == 'vendeur' or mes_commandes_mode == 'admin' or is_granted('ROLE_AGRIPLUS') %}#CMD{{ "%03d"|format(commande.id) }}{% else %}#{{ commande.numCommande }}{% endif %}</span></h2>
                         <div class="mc-od-meta mc-od-meta--tight">
                             <time class="mc-od-meta__date" datetime="{{ commande.dateCommande|date('Y-m-d') }}">{{ commande.dateCommande|date('d/m/Y') }}</time>
                             <span class="mc-od-meta__sep" aria-hidden="true">·</span>

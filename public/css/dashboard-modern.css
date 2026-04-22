@@ -1,0 +1,549 @@
+/* =========================================================
+   AgriLink Dashboard – Modern Design System
+   ========================================================= */
+
+/* ── Design Tokens ── */
+:root {
+  --ag-green-50:  #f0fdf4;
+  --ag-green-100: #dcfce7;
+  --ag-green-200: #bbf7d0;
+  --ag-green-500: #22c55e;
+  --ag-green-600: #16a34a;
+  --ag-green-700: #15803d;
+  --ag-green-800: #166534;
+  --ag-blue-50:   #eff6ff;
+  --ag-blue-500:  #3b82f6;
+  --ag-blue-600:  #2563eb;
+  --ag-amber-50:  #fffbeb;
+  --ag-amber-500: #f59e0b;
+  --ag-amber-600: #d97706;
+  --ag-red-50:    #fef2f2;
+  --ag-red-500:   #ef4444;
+  --ag-red-600:   #dc2626;
+  --ag-gray-50:   #f9fafb;
+  --ag-gray-100:  #f3f4f6;
+  --ag-gray-200:  #e5e7eb;
+  --ag-gray-400:  #9ca3af;
+  --ag-gray-600:  #4b5563;
+  --ag-gray-700:  #374151;
+  --ag-gray-800:  #1f2937;
+  --ag-gray-900:  #111827;
+
+  --ag-shadow-sm:  0 1px 2px rgba(0,0,0,.05);
+  --ag-shadow-md:  0 4px 16px rgba(0,0,0,.07);
+  --ag-shadow-lg:  0 8px 32px rgba(0,0,0,.10);
+  --ag-shadow-xl:  0 20px 60px rgba(0,0,0,.12);
+
+  --ag-radius-sm:  0.5rem;
+  --ag-radius-md:  0.75rem;
+  --ag-radius-lg:  1rem;
+  --ag-radius-xl:  1.25rem;
+  --ag-radius-2xl: 1.5rem;
+}
+
+/* ── Global ── */
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Page Entry Animation ── */
+@keyframes ag-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes ag-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes ag-scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes ag-counter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.ag-animate-fade-up  { animation: ag-fade-up  0.45s cubic-bezier(0.22,1,0.36,1) both; }
+.ag-animate-fade-in  { animation: ag-fade-in  0.35s ease both; }
+.ag-animate-scale-in { animation: ag-scale-in 0.35s cubic-bezier(0.22,1,0.36,1) both; }
+
+.ag-delay-1 { animation-delay: 0.05s; }
+.ag-delay-2 { animation-delay: 0.10s; }
+.ag-delay-3 { animation-delay: 0.15s; }
+.ag-delay-4 { animation-delay: 0.20s; }
+.ag-delay-5 { animation-delay: 0.25s; }
+
+/* =========================================================
+   SIDEBAR – Modern Redesign
+   ========================================================= */
+#desktop-sidebar > div {
+  background: #ffffff !important;
+  border-right: 1px solid var(--ag-gray-200) !important;
+}
+
+/* Logo area */
+#desktop-sidebar .sidebar-logo-area {
+  background: linear-gradient(135deg, var(--ag-green-700) 0%, var(--ag-green-600) 100%);
+}
+
+/* Section labels */
+#sidebar-nav > div.px-3 {
+  font-size: 0.65rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  color: var(--ag-gray-400) !important;
+  margin-top: 0.25rem;
+}
+
+/* Nav items */
+#sidebar-nav a {
+  position: relative;
+  border-radius: var(--ag-radius-sm) !important;
+  transition: background 0.18s, color 0.18s, transform 0.18s !important;
+  font-size: 0.8125rem !important;
+  overflow: hidden;
+}
+#sidebar-nav a:hover:not(.text-success):not(.text-danger) {
+  background: var(--ag-gray-50) !important;
+  color: var(--ag-gray-900) !important;
+  transform: translateX(2px);
+}
+
+/* Active (green role) */
+#sidebar-nav a.bg-success.bg-opacity-10.text-success,
+#sidebar-nav a.text-success.fw-medium {
+  background: linear-gradient(90deg, rgba(22,163,74,.12) 0%, rgba(22,163,74,.05) 100%) !important;
+  color: var(--ag-green-600) !important;
+  font-weight: 600 !important;
+  border-left: 3px solid var(--ag-green-600);
+  padding-left: calc(0.75rem - 3px) !important;
+}
+
+/* Active (red admin) */
+#sidebar-nav a.bg-danger.bg-opacity-10.text-danger,
+#sidebar-nav a.text-danger.fw-medium {
+  background: linear-gradient(90deg, rgba(220,53,69,.10) 0%, rgba(220,53,69,.04) 100%) !important;
+  color: #dc3545 !important;
+  font-weight: 600 !important;
+  border-left: 3px solid #dc3545;
+  padding-left: calc(0.75rem - 3px) !important;
+}
+
+/* Sidebar user info */
+#desktop-sidebar .px-4.py-4 {
+  background: var(--ag-green-50);
+  border-bottom: 1px solid var(--ag-green-100) !important;
+}
+
+/* Logout link */
+.sidebar-logout-link {
+  transition: background 0.18s, color 0.18s !important;
+  border-radius: var(--ag-radius-sm) !important;
+}
+.sidebar-logout-link:hover {
+  background: var(--ag-red-50) !important;
+}
+
+/* =========================================================
+   TOP HEADER – Modern
+   ========================================================= */
+.dashboard-main-content > .d-none.d-lg-flex {
+  background: rgba(255,255,255,0.95) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--ag-gray-200) !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,.04);
+}
+
+/* =========================================================
+   KPI / STAT CARDS
+   ========================================================= */
+.ag-kpi-card {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid var(--ag-gray-200);
+  border-radius: var(--ag-radius-lg);
+  overflow: hidden;
+  transition: box-shadow 0.25s, transform 0.25s;
+}
+.ag-kpi-card:hover {
+  box-shadow: var(--ag-shadow-lg);
+  transform: translateY(-2px);
+}
+.ag-kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  border-radius: var(--ag-radius-lg) var(--ag-radius-lg) 0 0;
+}
+.ag-kpi-card.kpi-danger::before  { background: linear-gradient(90deg, #ef4444, #dc2626); }
+.ag-kpi-card.kpi-success::before { background: linear-gradient(90deg, #22c55e, #16a34a); }
+.ag-kpi-card.kpi-primary::before { background: linear-gradient(90deg, #60a5fa, #2563eb); }
+.ag-kpi-card.kpi-amber::before   { background: linear-gradient(90deg, #fcd34d, #f59e0b); }
+
+.ag-kpi-icon {
+  width: 52px; height: 52px;
+  border-radius: var(--ag-radius-md);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ag-kpi-icon.icon-danger  { background: linear-gradient(135deg, rgba(239,68,68,.15), rgba(220,38,38,.08)); }
+.ag-kpi-icon.icon-success { background: linear-gradient(135deg, rgba(34,197,94,.15), rgba(22,163,74,.08)); }
+.ag-kpi-icon.icon-primary { background: linear-gradient(135deg, rgba(96,165,250,.15), rgba(37,99,235,.08)); }
+.ag-kpi-icon.icon-amber   { background: linear-gradient(135deg, rgba(252,211,77,.18), rgba(245,158,11,.10)); }
+
+.ag-kpi-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ag-gray-400);
+  margin-bottom: 0.35rem;
+}
+.ag-kpi-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--ag-gray-900);
+  line-height: 1;
+  margin-bottom: 0.3rem;
+  animation: ag-counter 0.5s ease both;
+}
+.ag-kpi-trend {
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.ag-kpi-trend.up   { color: #16a34a; }
+.ag-kpi-trend.down { color: #dc2626; }
+.ag-kpi-trend.flat { color: var(--ag-gray-400); }
+
+.ag-kpi-footer {
+  padding: 0.65rem 1.25rem;
+  background: var(--ag-gray-50);
+  border-top: 1px solid var(--ag-gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* =========================================================
+   CONTENT CARDS
+   ========================================================= */
+.ag-card {
+  background: #ffffff;
+  border: 1px solid var(--ag-gray-200);
+  border-radius: var(--ag-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--ag-shadow-sm);
+  transition: box-shadow 0.25s;
+}
+.ag-card:hover {
+  box-shadow: var(--ag-shadow-md);
+}
+.ag-card-header {
+  padding: 1.25rem 1.5rem 0.875rem;
+  border-bottom: 1px solid var(--ag-gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+.ag-card-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ag-gray-900);
+  margin: 0;
+}
+.ag-card-subtitle {
+  font-size: 0.775rem;
+  color: var(--ag-gray-400);
+  margin-top: 0.15rem;
+}
+.ag-card-body { padding: 1.25rem 1.5rem; }
+.ag-card-footer {
+  padding: 0.75rem 1.5rem;
+  background: var(--ag-gray-50);
+  border-top: 1px solid var(--ag-gray-100);
+}
+
+/* Chart card */
+.ag-chart-card {
+  background: #ffffff;
+  border: 1px solid var(--ag-gray-200);
+  border-radius: var(--ag-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--ag-shadow-sm);
+}
+.ag-chart-header {
+  padding: 1.25rem 1.5rem 0.875rem;
+  border-bottom: 1px solid var(--ag-gray-100);
+}
+.ag-chart-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--ag-gray-900);
+  margin: 0 0 0.15rem;
+}
+.ag-chart-sub {
+  font-size: 0.75rem;
+  color: var(--ag-gray-400);
+}
+.ag-chart-body { padding: 1.25rem 1.5rem; }
+
+/* =========================================================
+   WELCOME BANNER
+   ========================================================= */
+.ag-welcome-banner {
+  background: linear-gradient(135deg, var(--ag-green-700) 0%, #0d9488 100%);
+  border-radius: var(--ag-radius-xl);
+  padding: 1.75rem 2rem;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.ag-welcome-banner::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 260px; height: 260px;
+  background: rgba(255,255,255,.06);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.ag-welcome-banner h2 { color: #fff; font-weight: 800; }
+.ag-welcome-banner p  { color: rgba(255,255,255,.8); }
+
+/* Admin header variant */
+.ag-welcome-admin {
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+}
+
+/* =========================================================
+   QUICK ACTION ITEMS
+   ========================================================= */
+.ag-action-item {
+  display: flex;
+  align-items: center;
+  padding: 0.875rem 1rem;
+  border-radius: var(--ag-radius-md);
+  border: 1px solid var(--ag-gray-200);
+  text-decoration: none;
+  transition: all 0.2s;
+  cursor: pointer;
+  background: #fff;
+  gap: 0.875rem;
+}
+.ag-action-item:hover {
+  border-color: var(--ag-gray-300);
+  background: var(--ag-gray-50);
+  transform: translateY(-1px);
+  box-shadow: var(--ag-shadow-sm);
+}
+.ag-action-icon {
+  width: 42px; height: 42px;
+  border-radius: var(--ag-radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.ag-action-chevron {
+  color: var(--ag-gray-300);
+  flex-shrink: 0;
+  transition: transform 0.2s, color 0.2s;
+}
+.ag-action-item:hover .ag-action-chevron {
+  transform: translateX(3px);
+  color: var(--ag-gray-500);
+}
+
+/* =========================================================
+   USER LIST ITEMS
+   ========================================================= */
+.ag-user-row {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--ag-gray-100);
+  transition: background 0.15s;
+}
+.ag-user-row:last-child { border-bottom: none; }
+.ag-user-row:hover { background: var(--ag-gray-50); }
+.ag-user-avatar {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   BADGES
+   ========================================================= */
+.ag-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+/* =========================================================
+   STAT MINI BARS
+   ========================================================= */
+.ag-mini-stat {
+  background: var(--ag-gray-50);
+  border-radius: var(--ag-radius-md);
+  padding: 0.75rem 1rem;
+}
+.ag-progress-bar {
+  height: 5px;
+  border-radius: 3px;
+  overflow: hidden;
+  background: var(--ag-gray-200);
+}
+.ag-progress-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* =========================================================
+   EXPORT MODAL
+   ========================================================= */
+.ag-export-option {
+  border: 1.5px solid var(--ag-gray-200);
+  border-radius: var(--ag-radius-lg);
+  padding: 1.25rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.22s;
+  background: #fff;
+}
+.ag-export-option:hover {
+  border-color: var(--ag-green-500);
+  background: var(--ag-green-50);
+  transform: translateY(-2px);
+  box-shadow: var(--ag-shadow-md);
+}
+.ag-export-option.export-pdf:hover  { border-color: #ef4444; background: var(--ag-red-50); }
+.ag-export-option.export-excel:hover{ border-color: #16a34a; background: var(--ag-green-50); }
+
+/* =========================================================
+   AGRICULTEUR – Stat Cards
+   ========================================================= */
+.ag-stat-card {
+  background: #fff;
+  border: 1px solid var(--ag-gray-200);
+  border-radius: var(--ag-radius-lg);
+  overflow: hidden;
+  transition: box-shadow 0.22s, transform 0.22s;
+  height: 100%;
+}
+.ag-stat-card:hover {
+  box-shadow: var(--ag-shadow-md);
+  transform: translateY(-2px);
+}
+.ag-stat-body { padding: 1.25rem; }
+.ag-stat-icon {
+  width: 48px; height: 48px;
+  border-radius: var(--ag-radius-md);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  font-size: 1.35rem;
+}
+.ag-stat-footer {
+  padding: 0.6rem 1.25rem;
+  background: var(--ag-gray-50);
+  border-top: 1px solid var(--ag-gray-100);
+}
+
+/* =========================================================
+   WEATHER CARD
+   ========================================================= */
+.ag-weather-card {
+  background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 60%, #38bdf8 100%);
+  border-radius: var(--ag-radius-lg);
+  color: #fff;
+  overflow: hidden;
+  position: relative;
+}
+.ag-weather-card::before {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  right: -10%;
+  width: 180px; height: 180px;
+  background: rgba(255,255,255,.07);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.ag-weather-card .ag-stat-body { padding: 1.25rem; }
+.ag-weather-card .ag-stat-footer {
+  background: rgba(0,0,0,.12);
+  border-top: 1px solid rgba(255,255,255,.12);
+  color: rgba(255,255,255,.85);
+}
+
+/* =========================================================
+   AGRIPLUS PROMO BANNER
+   ========================================================= */
+.ag-promo-banner {
+  background: linear-gradient(135deg, var(--ag-green-700) 0%, var(--ag-green-600) 50%, #0d9488 100%);
+  border-radius: var(--ag-radius-xl);
+  overflow: hidden;
+  position: relative;
+}
+.ag-promo-banner::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -5%;
+  width: 300px; height: 300px;
+  background: rgba(255,255,255,.06);
+  border-radius: 50%;
+}
+.ag-promo-banner::after {
+  content: '';
+  position: absolute;
+  bottom: -60%;
+  left: 10%;
+  width: 200px; height: 200px;
+  background: rgba(255,255,255,.04);
+  border-radius: 50%;
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+/* Sidebar button styling (matches links) */
+#sidebar-nav button {
+  position: relative;
+  border-radius: var(--ag-radius-sm) !important;
+  transition: background 0.18s, color 0.18s, transform 0.18s !important;
+  font-size: 0.8125rem !important;
+  overflow: hidden;
+}
+
+#sidebar-nav button:hover:not(.text-success):not(.text-danger) {
+  background: var(--ag-gray-50) !important;
+  color: var(--ag-gray-900) !important;
+  transform: translateX(2px);
+}
+
+@media (max-width: 991.98px) {
+  .ag-welcome-banner,
+  .ag-welcome-admin {
+    border-radius: var(--ag-radius-lg);
+    padding: 1.25rem 1.25rem;
+  }
+}

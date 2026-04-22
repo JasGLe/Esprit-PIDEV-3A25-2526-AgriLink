@@ -2,6 +2,10 @@
 
 {% block title %}Inscription Fournisseur - AgriLink{% endblock %}
 
+{% block stylesheets %}
+<link rel="stylesheet" href="{{ asset('css/voice-input.css') }}">
+{% endblock %}
+
 {% block body %}
 {{ include('components/_auth_background.html.twig') }}
 
@@ -278,12 +282,12 @@
                         <div class="row g-3">
                             <div class="col-12 col-md-6">
                                 {{ form_label(registrationForm.nom) }}
-                                {{ form_widget(registrationForm.nom) }}
+                                {{ form_widget(registrationForm.nom, {'attr': {'data-voice-input': ''}}) }}
                                 {{ form_errors(registrationForm.nom) }}
                             </div>
                             <div class="col-12 col-md-6">
                                 {{ form_label(registrationForm.email) }}
-                                {{ form_widget(registrationForm.email) }}
+                                {{ form_widget(registrationForm.email, {'attr': {'data-voice-input': ''}}) }}
                                 {{ form_errors(registrationForm.email) }}
                             </div>
                         </div>
@@ -331,7 +335,7 @@
                         <div class="row g-3">
                             <div class="col-12 col-md-6">
                                 {{ form_label(registrationForm.telephone) }}
-                                {{ form_widget(registrationForm.telephone) }}
+                                {{ form_widget(registrationForm.telephone, {'attr': {'data-voice-input': ''}}) }}
                                 {{ form_errors(registrationForm.telephone) }}
                             </div>
                             <div class="col-12 col-md-6">
@@ -361,7 +365,7 @@
                         <div class="row g-3">
                             <div class="col-12 col-md-6">
                                 {{ form_label(registrationForm.ville) }}
-                                {{ form_widget(registrationForm.ville) }}
+                                {{ form_widget(registrationForm.ville, {'attr': {'data-voice-input': ''}}) }}
                                 {{ form_errors(registrationForm.ville) }}
                             </div>
                             <div class="col-12 col-md-6">
@@ -382,7 +386,7 @@
                     
                     <div>
                         {{ form_label(registrationForm.fournisseurCin) }}
-                        {{ form_widget(registrationForm.fournisseurCin) }}
+                        {{ form_widget(registrationForm.fournisseurCin, {'attr': {'data-voice-input': ''}}) }}
                         {{ form_errors(registrationForm.fournisseurCin) }}
                         <p class="mt-1 small text-muted">8 chiffres, obligatoire pour les personnes physiques</p>
                     </div>
@@ -398,14 +402,14 @@
                     <div class="vstack gap-3">
                         <div>
                             {{ form_label(registrationForm.fournisseurRaisonSocial) }}
-                            {{ form_widget(registrationForm.fournisseurRaisonSocial) }}
+                            {{ form_widget(registrationForm.fournisseurRaisonSocial, {'attr': {'data-voice-input': ''}}) }}
                             {{ form_errors(registrationForm.fournisseurRaisonSocial) }}
                         </div>
 
                         <div class="row g-3">
                             <div class="col-12 col-md-6">
                                 {{ form_label(registrationForm.fournisseurNumRegistre) }}
-                                {{ form_widget(registrationForm.fournisseurNumRegistre) }}
+                                {{ form_widget(registrationForm.fournisseurNumRegistre, {'attr': {'data-voice-input': ''}}) }}
                                 {{ form_errors(registrationForm.fournisseurNumRegistre) }}
                             </div>
                             <div class="col-12 col-md-6">
@@ -432,7 +436,7 @@
                     
                     <div>
                         {{ form_label(registrationForm.fournisseurCertifications) }}
-                        {{ form_widget(registrationForm.fournisseurCertifications) }}
+                        {{ form_widget(registrationForm.fournisseurCertifications, {'attr': {'data-voice-input': ''}}) }}
                         {{ form_errors(registrationForm.fournisseurCertifications) }}
                         <p class="mt-1 small text-muted">Listez vos certifications séparées par des virgules (ex: Bio, ISO 9001, HACCP)</p>
                     </div>
@@ -1914,21 +1918,31 @@ function togglePasswordVisibility(button) {
     if (!siteKey || siteKey === 'YOUR_RECAPTCHA_V3_SITE_KEY') return;
     var script = document.createElement('script');
     script.src = 'https://www.google.com/recaptcha/api.js?render=' + siteKey;
-    document.head.appendChild(script);
-    var form = document.getElementById('fournisseur-form');
-    if (form) {
-        form.addEventListener('submit', function (e) {
-            var tokenField = document.getElementById('recaptchaResponse');
-            if (tokenField && tokenField.value) return;
-            e.preventDefault();
-            grecaptcha.ready(function () {
-                grecaptcha.execute(siteKey, { action: 'register' }).then(function (token) {
-                    tokenField.value = token;
-                    form.submit();
+    script.onload = function() {
+        var form = document.getElementById('fournisseur-form');
+        if (form) {
+            var isSubmitting = false;
+            form.addEventListener('submit', function (e) {
+                var tokenField = document.getElementById('recaptchaResponse');
+                if (tokenField && tokenField.value) {
+                    return true;
+                }
+                if (isSubmitting) {
+                    return true;
+                }
+                e.preventDefault();
+                isSubmitting = true;
+                grecaptcha.ready(function () {
+                    grecaptcha.execute(siteKey, { action: 'register' }).then(function (token) {
+                        tokenField.value = token;
+                        form.submit();
+                    });
                 });
             });
-        });
-    }
+        }
+    };
+    document.head.appendChild(script);
 })();
 </script>
+<script src="{{ asset('js/voice-input.js') }}" defer></script>
 {% endblock %}

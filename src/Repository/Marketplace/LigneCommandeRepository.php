@@ -2,8 +2,11 @@
 
 namespace App\Repository\Marketplace;
 
+use App\Entity\Marketplace\Commandes;
 use App\Entity\Marketplace\LigneCommande;
+use App\Entity\Marketplace\Produits;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -110,5 +113,221 @@ class LigneCommandeRepository extends ServiceEntityRepository
         }
 
         return $out;
+    }
+
+    /**
+     * @return array{
+     *   revenue_today: float,
+     *   revenue_month: float,
+     *   revenue_year: float,
+     *   orders_total: int
+     * }
+     */
+    public function fetchSalesKpisForSeller(int $sellerUserId): array
+    {
+        $today = new \DateTimeImmutable('today');
+        $monthStart = $today->modify('first day of this month');
+        $yearStart = $today->setDate((int) $today->format('Y'), 1, 1);
+
+        $row = $this->createQueryBuilder('lc')
+            ->select(
+                'COALESCE(SUM(CASE WHEN c.dateCommande = :today THEN lc.prixTotal ELSE 0 END), 0) AS revenue_today',
+                'COALESCE(SUM(CASE WHEN c.dateCommande >= :monthStart THEN lc.prixTotal ELSE 0 END), 0) AS revenue_month',
+                'COALESCE(SUM(CASE WHEN c.dateCommande >= :yearStart THEN lc.prixTotal ELSE 0 END), 0) AS revenue_year',
+                'COUNT(DISTINCT c.id) AS orders_total'
+            )
+            ->innerJoin(Commandes::class, 'c', Join::WITH, 'c.id = lc.idCommande')
+            ->andWhere('lc.idFournisseur = :sid')
+            ->andWhere('c.status != :cancelled')
+            ->setParameter('sid', $sellerUserId)
+            ->setParameter('cancelled', 'ANNULEE')
+            ->setParameter('today', $today)
+            ->setParameter('monthStart', $monthStart)
+            ->setParameter('yearStart', $yearStart)
+            ->getQuery()
+            ->getOneOrNullResult();
+
+        return [
+            'revenue_today' => (float) ($row['revenue_today'] ?? 0),
+            'revenue_month' => (float) ($row['revenue_month'] ?? 0),
+            'revenue_year' => (float) ($row['revenue_year'] ?? 0),
+            'orders_total' => (int) ($row['orders_total'] ?? 0),
+        ];
+    }
+
+    /**
+     * @return list<array{day_label: string, revenue: float}>
+     */
+    public function fetchSalesEvolutionLast30DaysForSeller(int $sellerUserId): array
+    {
+        $start = (new \DateTimeImmutable('today'))->modify('-29 days');
+        $rows = $this->createQueryBuilder('lc')
+            ->select('c.dateCommande AS day_date', 'COALESCE(SUM(lc.prixTotal), 0) AS revenue')
+            ->innerJoin(Commandes::class, 'c', Join::WITH, 'c.id = lc.idCommande')
+            ->andWhere('lc.idFournisseur = :sid')
+            ->andWhere('c.status != :cancelled')
+            ->andWhere('c.dateCommande >= :startDate')
+            ->setParameter('sid', $sellerUserId)
+            ->setParameter('cancelled', 'ANNULEE')
+            ->setParameter('startDate', $start)
+            ->groupBy('c.dateCommande')
+            ->orderBy('c.dateCommande', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $byDay = [];
+        foreach ($rows as $row) {
+            if (!$row['day_date'] instanceof \DateTimeInterface) {
+                continue;
+            }
+            $key = $row['day_date']->format('Y-m-d');
+            $byDay[$key] = (float) $row['revenue'];
+        }
+
+        $series = [];
+        for ($i = 0; $i < 30; ++$i) {
+            $day = $start->modify(sprintf('+%d days', $i));
+            $key = $day->format('Y-m-d');
+            $series[] = [
+                'day_label' => $day->format('d/m'),
+                'revenue' => $byDay[$key] ?? 0.0,
+            ];
+        }
+
+        return $series;
+    }
+
+    /**
+     * @return list<array{name: string, quantity: int, revenue: float}>
+     */
+    public function fetchTopSellingProductsForSeller(int $sellerUserId, int $limit = 5): array
+    {
+        $rows = $this->createQueryBuilder('lc')
+            ->select('lc.nomProduit AS product_name', 'SUM(lc.quantite) AS qty', 'SUM(lc.prixTotal) AS revenue')
+            ->innerJoin(Commandes::class, 'c', Join::WITH, 'c.id = lc.idCommande')
+            ->andWhere('lc.idFournisseur = :sid')
+            ->andWhere('c.status != :cancelled')
+            ->setParameter('sid', $sellerUserId)
+            ->setParameter('cancelled', 'ANNULEE')
+            ->groupBy('lc.nomProduit')
+            ->orderBy('qty', 'DESC')
+            ->addOrderBy('revenue', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getArrayResult();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = [
+                'name' => (string) $row['product_name'],
+                'quantity' => (int) $row['qty'],
+                'revenue' => (float) $row['revenue'],
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return list<array{category: string, revenue: float}>
+     */
+    public function fetchSalesDistributionByCategoryForSeller(int $sellerUserId): array
+    {
+        $rows = $this->createQueryBuilder('lc')
+            ->select('p.categorie AS category', 'SUM(lc.prixTotal) AS revenue')
+            ->innerJoin(Commandes::class, 'c', Join::WITH, 'c.id = lc.idCommande')
+            ->leftJoin(Produits::class, 'p', Join::WITH, 'p.id = lc.idProduit')
+            ->andWhere('lc.idFournisseur = :sid')
+            ->andWhere('c.status != :cancelled')
+            ->setParameter('sid', $sellerUserId)
+            ->setParameter('cancelled', 'ANNULEE')
+            ->groupBy('p.categorie')
+            ->orderBy('revenue', 'DESC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $out = [];
+        foreach ($rows as $row) {
+            $out[] = [
+                'category' => trim((string) ($row['category'] ?? 'Non classé')) !== ''
+                    ? (string) $row['category']
+                    : 'Non classé',
+                'revenue' => (float) $row['revenue'],
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return array<string, float> product_id => sold_quantity
+     */
+    public function fetchGlobalTopSellingProductScores(): array
+    {
+        $rows = $this->createQueryBuilder('lc')
+            ->select('lc.idProduit AS product_id', 'SUM(lc.quantite) AS qty')
+            ->innerJoin(Commandes::class, 'c', Join::WITH, 'c.id = lc.idCommande')
+            ->andWhere('c.status != :cancelled')
+            ->setParameter('cancelled', 'ANNULEE')
+            ->groupBy('lc.idProduit')
+            ->orderBy('qty', 'DESC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $scores = [];
+        foreach ($rows as $row) {
+            $pid = (int) ($row['product_id'] ?? 0);
+            if ($pid <= 0) {
+                continue;
+            }
+            $scores[(string) $pid] = (float) ($row['qty'] ?? 0.0);
+        }
+
+        return $scores;
+    }
+
+    /**
+     * @return array{
+     *     productScores: array<string, float>,
+     *     categoryScores: array<string, float>
+     * }
+     */
+    public function fetchBuyerPurchaseSignalsByEmail(string $email): array
+    {
+        $email = strtolower(trim($email));
+        if ($email === '') {
+            return ['productScores' => [], 'categoryScores' => []];
+        }
+
+        $rows = $this->createQueryBuilder('lc')
+            ->select('lc.idProduit AS product_id', 'SUM(lc.quantite) AS qty', 'UPPER(COALESCE(p.category, \'\')) AS category_code')
+            ->innerJoin(Commandes::class, 'c', Join::WITH, 'c.id = lc.idCommande')
+            ->leftJoin(Produits::class, 'p', Join::WITH, 'p.id = lc.idProduit')
+            ->andWhere('LOWER(COALESCE(c.email, \'\')) = :email')
+            ->andWhere('c.status != :cancelled')
+            ->setParameter('email', $email)
+            ->setParameter('cancelled', 'ANNULEE')
+            ->groupBy('lc.idProduit, p.category')
+            ->getQuery()
+            ->getArrayResult();
+
+        $productScores = [];
+        $categoryScores = [];
+        foreach ($rows as $row) {
+            $pid = (int) ($row['product_id'] ?? 0);
+            $qty = (float) ($row['qty'] ?? 0.0);
+            $cat = strtoupper(trim((string) ($row['category_code'] ?? '')));
+            if ($pid > 0 && $qty > 0) {
+                $productScores[(string) $pid] = (($productScores[(string) $pid] ?? 0.0) + $qty);
+            }
+            if ($cat !== '' && $qty > 0) {
+                $categoryScores[$cat] = (($categoryScores[$cat] ?? 0.0) + $qty);
+            }
+        }
+
+        return [
+            'productScores' => $productScores,
+            'categoryScores' => $categoryScores,
+        ];
     }
 }

@@ -6,6 +6,7 @@ use App\Entity\UserManagement\User;
 use App\Repository\UserManagement\UserRepository;
 use App\Service\SecurityEventService;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
 use Symfony\Component\Security\Http\Event\LoginFailureEvent;
@@ -22,13 +23,23 @@ class LoginFailureListener
         private UserRepository $userRepository,
         private SecurityEventService $securityEventService,
         private MailerInterface $mailer,
-        private Environment $twig
+        private Environment $twig,
+        #[Autowire('%env(APP_URL)%')]
+        private string $appUrl
     ) {
     }
 
     public function __invoke(LoginFailureEvent $event): void
     {
         $request = $event->getRequest();
+
+        // Guard: Check if this request has already been processed
+        if ($request->attributes->get('_login_failure_processed')) {
+            return;
+        }
+        
+        // Mark this request as processed to prevent double-processing
+        $request->attributes->set('_login_failure_processed', true);
 
         // Get email from the login form request
         $email = $request->request->get('_username');
@@ -43,6 +54,12 @@ class LoginFailureListener
 
         if (!$user instanceof User) {
             $this->securityEventService->logLoginFailed($email, 'User not found');
+            return;
+        }
+
+        // Only process failed attempts if intrusion capture is enabled
+        if (!$user->isIntrusionCaptureEnabled()) {
+            $this->securityEventService->logLoginFailed($email, 'Invalid credentials (intrusion capture disabled)');
             return;
         }
 
@@ -71,7 +88,9 @@ class LoginFailureListener
         }
 
         // Send suspicious login alert email at 3+ failed attempts
-        if ($user->getFailedLoginAttempts() >= self::SUSPICIOUS_THRESHOLD && $user->isEmailVerified()) {
+        // (intrusion capture is already enabled at this point, so just check email verification)
+        if ($user->getFailedLoginAttempts() >= self::SUSPICIOUS_THRESHOLD 
+            && $user->isEmailVerified()) {
             try {
                 $htmlContent = $this->twig->render('emails/suspicious_login.html.twig', [
                     'user' => $user,
@@ -80,6 +99,7 @@ class LoginFailureListener
                     'timestamp' => new \DateTime(),
                     'attempts' => $user->getFailedLoginAttempts(),
                     'accountLocked' => $accountLocked,
+                    'appUrl' => $this->appUrl,
                 ]);
 
                 $alertEmail = (new Email())
@@ -95,3 +115,4 @@ class LoginFailureListener
         }
     }
 }
+

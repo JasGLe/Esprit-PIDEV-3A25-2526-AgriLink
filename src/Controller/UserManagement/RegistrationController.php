@@ -82,9 +82,11 @@ class RegistrationController extends AbstractController
                 $this->addFlash('success', 'Votre compte Agriculteur a été créé avec succès ! Bienvenue sur AgriLink.');
             }
 
-            // Auto-login après inscription and redirect to verification
+            // Auto-login après inscription and redirect to verification choice
+            // Set session flag to skip notification creation during registration auto-login
+            $request->getSession()->set('skip_login_notifications', true);
             $security->login($user, 'App\\Security\\UserAuthenticator', 'main');
-            return $this->redirectToRoute('app_verify_email');
+            return $this->redirectToRoute('app_verification_choice');
         }
 
         return $this->render('user_management/security/register_agriculteur.html.twig', [
@@ -154,9 +156,11 @@ class RegistrationController extends AbstractController
                 $this->addFlash('success', 'Votre compte Fournisseur a été créé avec succès ! Bienvenue sur AgriLink.');
             }
 
-            // Auto-login after registration and redirect to verification
+            // Auto-login after registration and redirect to verification choice
+            // Set session flag to skip notification creation during registration auto-login
+            $request->getSession()->set('skip_login_notifications', true);
             $security->login($user, 'App\\Security\\UserAuthenticator', 'main');
-            return $this->redirectToRoute('app_verify_email');
+            return $this->redirectToRoute('app_verification_choice');
         }
 
         return $this->render('user_management/security/register_fournisseur.html.twig', [
@@ -217,9 +221,11 @@ class RegistrationController extends AbstractController
                 $this->addFlash('success', 'Votre compte AgriPlus a été créé avec succès ! Bienvenue parmi nos membres premium.');
             }
 
-            // Auto-login after registration and redirect to verification
+            // Auto-login after registration and redirect to verification choice
+            // Set session flag to skip notification creation during registration auto-login
+            $request->getSession()->set('skip_login_notifications', true);
             $security->login($user, 'App\\Security\\UserAuthenticator', 'main');
-            return $this->redirectToRoute('app_verify_email');
+            return $this->redirectToRoute('app_verification_choice');
         }
 
         return $this->render('user_management/security/register_agriplus.html.twig', [

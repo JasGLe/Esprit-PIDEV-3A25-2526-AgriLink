@@ -1,0 +1,262 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Choisir une méthode de vérification - AgriLink{% endblock %}
+
+{% block body %}
+<style>
+    .verification-choice-container {
+        min-height: 100vh;
+        background: linear-gradient(to bottom right, #f0fdf4, #eff6ff);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1rem;
+    }
+
+    .verification-choice-card {
+        background: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+        padding: 3rem 2rem;
+        max-width: 32rem;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .verification-choice-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .verification-choice-header h1 {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: #111827;
+        margin-bottom: 0.5rem;
+    }
+
+    .verification-choice-header p {
+        color: #4b5563;
+        font-size: 0.95rem;
+    }
+
+    .verification-method {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .verification-method:last-of-type {
+        margin-bottom: 0;
+    }
+
+    .verification-method:hover {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .verification-method.email:hover {
+        border-color: #22c55e;
+    }
+
+    .verification-method.sms:hover {
+        border-color: #3b82f6;
+    }
+
+    .method-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .method-icon.email {
+        background-color: #dcfce7;
+    }
+
+    .method-icon.sms {
+        background-color: #dbeafe;
+    }
+
+    .method-icon svg {
+        width: 1.5rem;
+        height: 1.5rem;
+    }
+
+    .method-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .method-content h3 {
+        font-weight: 600;
+        color: #111827;
+        font-size: 0.9rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .method-content p {
+        font-size: 0.8rem;
+        color: #4b5563;
+        margin: 0;
+    }
+
+    .method-content .meta {
+        color: #6b7280;
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    .method-arrow {
+        flex-shrink: 0;
+        color: #9ca3af;
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+
+    .verification-divider {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid #e5e7eb;
+        text-align: center;
+    }
+
+    .verification-divider p {
+        font-size: 0.875rem;
+        color: #4b5563;
+        margin-bottom: 1rem;
+    }
+
+    .skip-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #4b5563;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+    .skip-link:hover {
+        color: #111827;
+    }
+
+    .help-text {
+        margin-top: 2rem;
+        text-align: center;
+    }
+
+    .help-text p {
+        font-size: 0.875rem;
+        color: #4b5563;
+        margin: 0;
+    }
+
+    .help-text a {
+        color: #22c55e;
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+    .help-text a:hover {
+        color: #16a34a;
+    }
+
+    .alert {
+        margin-bottom: 1.5rem;
+        border-radius: 0.375rem;
+    }
+</style>
+
+<div class="verification-choice-container">
+    <div>
+        <div class="verification-choice-card">
+            <!-- Header -->
+            <div class="verification-choice-header">
+                <h1>Vérifier votre compte</h1>
+                <p>Choisissez votre méthode de vérification préférée</p>
+            </div>
+
+            <!-- Alert Messages -->
+            {% if app.flashes %}
+                {% for type, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ type == 'success' ? 'success' : (type == 'error' ? 'danger' : 'info') }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+            {% endif %}
+
+            <!-- Verification Methods -->
+            <div>
+                <!-- Email Verification Option -->
+                <a href="{{ path('app_verify_unified') }}" class="verification-method email">
+                    <div class="method-icon email">
+                        <svg fill="none" stroke="#22c55e" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <div class="method-content">
+                        <h3>Vérification par Email</h3>
+                        <p>Reçois un code à 6 chiffres par email</p>
+                        <p class="meta">Adresse: <strong>{{ app.user.email }}</strong></p>
+                    </div>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="method-arrow">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+
+                <!-- SMS Verification Option -->
+                <a href="{{ path('app_verify_unified') }}" class="verification-method sms">
+                    <div class="method-icon sms">
+                        <svg fill="none" stroke="#3b82f6" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M3 5a2 2 0 012-2h3.28a1 1 0 00.948.684l1.498 4.493a1 1 0 00.502.756l2.048 1.022a11.04 11.04 0 01-5.693 5.653l-1.022-2.047a1 1 0 00-.756-.502l-4.493-1.498a1 1 0 00-.684-.948V5z"/>
+                        </svg>
+                    </div>
+                    <div class="method-content">
+                        <h3>Vérification par SMS</h3>
+                        <p>Reçois un code à 6 chiffres par SMS</p>
+                        <p class="meta">Numéro requis pour cette méthode</p>
+                    </div>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="method-arrow">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
+
+            <!-- Skip Option -->
+            <div class="verification-divider">
+                <p>Vous pouvez vérifier plus tard</p>
+                <a href="{{ path('app_skip_verification') }}" class="skip-link">
+                    Ignorer pour le moment
+                    <svg class="method-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                    </svg>
+                </a>
+            </div>
+        </div>
+
+        <!-- Help Text -->
+        <div class="help-text">
+            <p>
+                Vous pouvez vérifier votre compte à tout moment depuis <a href="{{ path('app_profile_security') }}">les paramètres de sécurité</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

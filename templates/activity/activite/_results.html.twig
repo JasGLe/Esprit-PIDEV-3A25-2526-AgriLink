@@ -4,7 +4,7 @@
             <div class="display-6 mb-3">🌾</div>
             <h3 class="h5 fw-bold text-dark mb-2">Aucune activité</h3>
             <p class="text-muted mb-4">Aucune activité ne correspond aux critères saisis.</p>
-            <a href="{{ path('activite_new') }}" class="btn btn-success">Créer une activité</a>
+            <a href="{{ path('activite_new', {'redirect': app.request.uri}) }}" class="btn btn-success">Créer une activité</a>
         </div>
     </div>
 {% else %}
@@ -28,11 +28,20 @@
                                 </div>
                             </div>
                             <div class="d-flex flex-wrap gap-2 ms-lg-auto">
+                                <button type="button" 
+                                    class="btn btn-outline-secondary btn-sm"
+                                    data-action="show-qr"
+                                    data-qr-url="{{ path('qr_activity', {'id': activite.id}) }}"
+                                    data-qr-type="activity"
+                                    data-qr-item="{{ activite.titre }}">
+                                    📱 QR
+                                </button>
                                 <a href="{{ path('activite_show', {'id': activite.id}) }}" class="btn btn-outline-success btn-sm">Voir</a>
                                 {% if canManage %}
                                     <a href="{{ path('activite_edit', {'id': activite.id}) }}" class="btn btn-success btn-sm">Modifier</a>
                                     <form method="post" action="{{ path('activite_delete', {'id': activite.id}) }}" onsubmit="return confirm('Supprimer cette activité ?');" class="d-inline">
                                         <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ activite.id) }}">
+                                        <input type="hidden" name="redirect" value="{{ app.request.uri }}">
                                         <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
                                     </form>
                                 {% endif %}
