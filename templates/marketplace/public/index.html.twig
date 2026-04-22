@@ -417,6 +417,80 @@
     line-height: 1.45;
 }
 .rental-terms-box__list li { margin-bottom: .28rem; }
+
+/* --- New landing layout inspired by requested screenshot --- */
+.market-hero {
+    padding: 2rem 0 1.25rem;
+}
+.market-hero__grid {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 2rem;
+    align-items: center;
+}
+.market-hero__visual {
+    min-height: 360px;
+    border-radius: 1rem;
+    background: #d9fff2;
+    border: 1px dashed rgba(22,163,74,.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+.market-hero__visual-placeholder {
+    color: #15803d;
+    font-weight: 700;
+    font-size: 1rem;
+    text-align: center;
+    padding: 1rem;
+}
+.market-hero__title {
+    font-size: clamp(2rem, 4vw, 3.25rem);
+    line-height: 1.05;
+    font-weight: 800;
+    color: #0f2b1e;
+    margin-bottom: .85rem;
+    letter-spacing: -0.02em;
+}
+.market-hero__lead {
+    color: #3d5a4a;
+    max-width: 50ch;
+    margin-bottom: 1.4rem;
+}
+.market-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .8rem;
+}
+.market-hero__btn-primary {
+    border-radius: 999px;
+    background: linear-gradient(120deg, #22c55e, #16a34a);
+    color: #fff;
+    border: 0;
+    padding: .7rem 1.4rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+.market-hero__btn-secondary {
+    border-radius: 999px;
+    border: 1px solid rgba(22,163,74,.3);
+    color: #166534;
+    background: #fff;
+    padding: .7rem 1.3rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+@media (max-width: 991.98px) {
+    .market-hero__grid {
+        grid-template-columns: 1fr;
+        gap: 1.1rem;
+    }
+    .market-hero__visual {
+        min-height: 260px;
+    }
+}
+
     </style>
 {% endblock %}
 
@@ -436,19 +510,20 @@
             <div class="collapse navbar-collapse" id="tropicalNav">
                 <ul class="navbar-nav mx-auto mb-2 mb-lg-0 align-items-lg-center gap-lg-1">
                     <li class="nav-item"><a class="nav-link tropical-nav-link" href="#hero">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link tropical-nav-link" href="{{ is_granted('ROLE_USER') ? path('app_profile') : path('app_login') }}">Profil</a></li>
                     <li class="nav-item"><a class="nav-link tropical-nav-link" href="#about">À propos</a></li>
-                    <li class="nav-item"><a class="nav-link tropical-nav-link" href="#produits">Produits</a></li>
-                    <li class="nav-item"><a class="nav-link tropical-nav-link" href="{{ path('marketplace_index', { cat: 'location' }) }}#produits">Location</a></li>
+                    <li class="nav-item"><a class="nav-link tropical-nav-link" href="{{ path('marketplace_index', { cat: 'all' }) }}#produits">Boutique</a></li>
+                    <li class="nav-item"><a class="nav-link tropical-nav-link" href="#contact">Contact</a></li>
                 </ul>
-                <div class="d-flex flex-wrap align-items-center gap-2 gap-lg-3 ms-lg-3 tropical-nav-end">
+                <div class="d-flex flex-wrap align-items-center gap-2 gap-lg-3 tropical-nav-end">
                     {# Ordre : recherche (gauche du groupe) → panier (libellé + badge) → compte → tableau de bord #}
-                    <form method="get" action="{{ path('marketplace_index') }}" class="tropical-nav-search-form" id="tropicalNavSearchForm" role="search">
+                    <form method="get" action="{{ path('marketplace_index') }}" class="tropical-nav-search-form{{ filter_q != '' ? ' is-open has-query' : '' }}" id="tropicalNavSearchForm" role="search">
                         <input type="hidden" name="cat" value="{{ filter_cat }}">
                         <input type="hidden" name="region" value="{{ filter_region }}">
                         <input type="hidden" name="sort" value="{{ filter_sort }}">
                         <label class="visually-hidden" for="tropicalNavSearchInput">Rechercher par nom ou numéro de produit</label>
                         <input type="search" name="q" id="tropicalNavSearchInput" class="form-control tropical-nav-search-input" value="{{ filter_q }}" placeholder="Nom du produit ou n° (ID)…" title="Recherche par nom de produit ou par identifiant numérique du produit" autocomplete="off" maxlength="120">
-                        <button type="submit" class="tropical-nav-search-btn" id="tropicalNavSearch" title="Rechercher" aria-label="Rechercher">
+                        <button type="button" class="tropical-nav-search-btn" id="tropicalNavSearch" title="Rechercher" aria-label="Rechercher">
                             <i class="bi bi-search" aria-hidden="true"></i>
                         </button>
                     </form>
@@ -544,18 +619,41 @@
     </div>
 {% endfor %}
 
-{# ── Hero (centered headline, reference copy style) ── #}
-<section id="hero" class="tropical-hero text-center">
-    <div class="container px-2 px-md-3 py-0">
-        <p class="tropical-hero__kicker mb-2 mb-lg-2">AgriLink · Le marché agricole</p>
-        <h1 class="tropical-hero__title mx-auto mb-2 mb-lg-3">
-            Créez un intérieur tropical chez vous avec des produits frais et locaux.
-        </h1>
-        <p class="tropical-hero__lead mx-auto mb-0 tropical-hero__lead--spaced">
-            Parcourez les annonces publiées par les agriculteurs tunisiens : fruits, légumes, graines et équipements — livrés directement depuis la ferme.
-        </p>
+{# ── Hero redesigned to match requested screenshot layout ── #}
+<section id="hero" class="market-hero">
+    <div class="container-fluid px-2 px-md-3 tropical-page-gutter">
+        <div class="market-hero__grid">
+            <div class="market-hero__visual">
+                <img src="{{ asset('images/marketplace/p.png') }}" alt="Marché agricole AgriLink">
+            </div>
+            <div class="market-hero__content">
+                <h1 class="market-hero__title">Achetez frais, local et simple.</h1>
+                <p class="market-hero__lead">
+                    Découvrez des fruits, légumes, graines, équipements et articles de location proposés par nos agriculteurs et fournisseurs.
+                </p>
+                <div class="market-hero__actions">
+                    <a href="{{ path('marketplace_index', { cat: 'all' }) }}#produits" class="market-hero__btn-primary">Acheter maintenant</a>
+                    <a href="#about" class="market-hero__btn-secondary">En savoir plus</a>
+                </div>
+            </div>
+        </div>
     </div>
 </section>
+
+<style>
+body.marketplace-tropical,
+body.marketplace-tropical .tropical-header,
+body.marketplace-tropical .market-hero,
+body.marketplace-tropical .tropical-toolbar,
+body.marketplace-tropical .tropical-products-section,
+body.marketplace-tropical .tropical-about,
+body.marketplace-tropical .tropical-stats,
+body.marketplace-tropical .tropical-categories,
+body.marketplace-tropical .tropical-footer {
+    background-color: #d9fff2 !important;
+    background-image: none !important;
+}
+</style>
 
 {# ── Filters toolbar (server-side query preserved) ── #}
 {% set qp = query_params %}
@@ -576,6 +674,9 @@
                     <input type="hidden" name="cat" value="{{ filter_cat }}">
                     {% if filter_q != '' %}
                         <input type="hidden" name="q" value="{{ filter_q }}">
+                    {% endif %}
+                    {% if recommendation_mode is defined and recommendation_mode != '' %}
+                        <input type="hidden" name="rec_mode" value="{{ recommendation_mode }}">
                     {% endif %}
                     <div class="tropical-filter-field">
                         <label class="tropical-filter-label tropical-filter-label--inline" for="marketplace-region-select">Région</label>
@@ -607,12 +708,69 @@
                 </div>
             </div>
         </div>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2">
+            <form method="get" action="{{ path('marketplace_index') }}" class="d-flex flex-wrap align-items-center gap-2">
+                <input type="hidden" name="cat" value="{{ filter_cat }}">
+                <input type="hidden" name="region" value="{{ filter_region }}">
+                <input type="hidden" name="sort" value="{{ filter_sort }}">
+                {% if filter_q != '' %}
+                    <input type="hidden" name="q" value="{{ filter_q }}">
+                {% endif %}
+                <label for="recModeSelect" class="small tropical-muted mb-0">Recommandation</label>
+                <select id="recModeSelect" name="rec_mode" class="form-select form-select-sm tropical-select" style="min-width:220px;">
+                    <option value="">Choisir un mode…</option>
+                    <option value="top_selling" {{ recommendation_mode == 'top_selling' ? 'selected' : '' }}>Top ventes globales</option>
+                    <option value="history" {{ recommendation_mode == 'history' ? 'selected' : '' }}>Selon mon historique d'achat</option>
+                    <option value="category" {{ recommendation_mode == 'category' ? 'selected' : '' }}>Selon mes catégories préférées</option>
+                    <option value="hybrid" {{ recommendation_mode == 'hybrid' ? 'selected' : '' }}>Hybride (global + historique + catégorie)</option>
+                </select>
+                <button type="submit" class="btn btn-sm tropical-btn-register">Afficher recommandations</button>
+            </form>
+            {% if recommendation_mode != '' %}
+                <a href="{{ path('marketplace_index', qp|merge({rec_mode: null})) }}" class="small text-decoration-none tropical-link-reset tropical-link-reset--orange">Masquer recommandations</a>
+            {% endif %}
+        </div>
         <p class="small tropical-muted mb-0 tropical-toolbar-meta text-start">
             <i class="bi bi-box-seam me-1 tropical-lime"></i>
             <strong class="text-white" id="marketplaceLiveCount">{{ total_products }}</strong> produit{{ total_products > 1 ? 's' : '' }} disponible{{ total_products > 1 ? 's' : '' }}
         </p>
     </div>
 </section>
+
+{% if recommendation_mode != '' %}
+<section id="recommandes" class="tropical-products-section pt-1 pb-3">
+    <div class="container-fluid px-2 px-md-3 tropical-page-gutter">
+        <h2 class="tropical-section-title text-start mb-1">Recommandé pour vous</h2>
+        <p class="tropical-muted mb-3 small">
+            {% if recommendation_mode == 'top_selling' %}
+                Classement par produits les plus vendus globalement.
+            {% elseif recommendation_mode == 'history' %}
+                Basé uniquement sur votre historique d'achat.
+            {% elseif recommendation_mode == 'category' %}
+                Basé sur les catégories que vous achetez le plus.
+            {% else %}
+                Basé sur les ventes globales, votre historique d'achat et vos catégories les plus achetées.
+            {% endif %}
+        </p>
+        {% if recommended_products|default([])|length > 0 %}
+            <div class="tropical-products-wrap">
+                {% for p in recommended_products %}
+                    <div class="tropical-card-shell"
+                         data-product-id="{{ p.id }}"
+                         data-product-name="{{ (p.nom|default(''))|lower|e('html_attr') }}"
+                         data-product-search="{{ ((p.nom|default('')) ~ ' #' ~ p.id ~ ' ' ~ p.id)|lower|e('html_attr') }}">
+                        {% include 'marketplace/public/_product_card_tropical.html.twig' with { p: p, vendeurs: vendeurs } %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="tropical-empty text-center py-4 rounded-4">
+                <p class="tropical-muted mb-0">Aucune recommandation disponible pour ce mode pour le moment.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
 
 {# ── Products (horizontal scroll mobile / grid desktop) — data: même requête contrôleur ── #}
 <section id="produits" class="tropical-products-section py-3 py-md-4">
@@ -1732,7 +1890,7 @@
 </section>
 
 {# ── Footer ── #}
-<footer class="tropical-footer py-4 mt-auto">
+<footer id="contact" class="tropical-footer py-4 mt-auto">
     <div class="container-fluid px-2 px-md-3 tropical-page-gutter">
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
             <div class="d-flex align-items-center gap-2">
@@ -1808,6 +1966,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var nav = document.getElementById('tropicalNav');
     var form = document.getElementById('tropicalNavSearchForm');
     var input = document.getElementById('tropicalNavSearchInput');
+    var searchBtn = document.getElementById('tropicalNavSearch');
     var cards = Array.prototype.slice.call(document.querySelectorAll('#marketplaceProductsWrap .tropical-card-shell'));
     var emptyState = document.getElementById('marketplaceLiveEmpty');
     var liveCount = document.getElementById('marketplaceLiveCount');
@@ -1851,13 +2010,34 @@ document.addEventListener('DOMContentLoaded', function () {
             collapseNavIfOpen();
         });
     }
+    if (searchBtn && form) {
+        searchBtn.addEventListener('click', function () {
+            var isOpen = form.classList.contains('is-open');
+            if (!isOpen) {
+                form.classList.add('is-open');
+                if (input) {
+                    input.focus();
+                }
+                return;
+            }
+            form.requestSubmit ? form.requestSubmit() : form.submit();
+        });
+    }
     if (input) {
         input.addEventListener('input', function () {
             // Live filtering as the user types (including first letter and deletions).
             applyLiveFilter(input.value);
+            form.classList.toggle('has-query', input.value.trim() !== '');
         });
         input.addEventListener('search', function () {
             applyLiveFilter(input.value);
+            form.classList.toggle('has-query', input.value.trim() !== '');
+        });
+        input.addEventListener('blur', function () {
+            if (input.value.trim() === '') {
+                form.classList.remove('is-open');
+                form.classList.remove('has-query');
+            }
         });
     }
     try {
@@ -1866,6 +2046,12 @@ document.addEventListener('DOMContentLoaded', function () {
             applyLiveFilter(initialQ);
             if (input && initialQ !== '' && input.value !== initialQ) {
                 input.value = initialQ;
+            }
+            if (form) {
+                form.classList.toggle('has-query', initialQ !== '');
+                if (initialQ !== '') {
+                    form.classList.add('is-open');
+                }
             }
             if (input && initialQ === '') {
                 if (liveCount) liveCount.textContent = String(initialCount);
@@ -2120,6 +2306,16 @@ document.addEventListener('DOMContentLoaded', function () {
         var form = e.target;
         if (!form || !form.classList || !form.classList.contains('js-marketplace-panier-form')) return;
         e.preventDefault();
+
+        var fallbackSubmit = function () {
+            try {
+                form.classList.remove('js-marketplace-panier-form');
+                form.submit();
+            } catch (err) {
+                window.location.href = form.action;
+            }
+        };
+
         var fd = new FormData(form);
         fetch(form.action, {
             method: 'POST',
@@ -2133,20 +2329,30 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(function (r) {
                 return r.text().then(function (text) {
                     var data = {};
-                    try { data = text ? JSON.parse(text) : {}; } catch (err) { data = {}; }
+                    var parsed = true;
+                    try { data = text ? JSON.parse(text) : {}; } catch (err) { parsed = false; data = {}; }
                     return { ok: r.ok, data: data };
                 });
             })
             .then(function (res) {
+                if (!res.data || typeof res.data !== 'object') {
+                    fallbackSubmit();
+                    return;
+                }
+
                 if (res.data && typeof res.data.count !== 'undefined') {
                     applyCartPreview(res.data);
+                } else if (res.ok) {
+                    // Response is successful but not in expected JSON shape: fallback to normal submit.
+                    fallbackSubmit();
+                    return;
                 }
                 if (!res.ok && res.data && res.data.message) {
                     window.alert(res.data.message);
                 }
             })
             .catch(function () {
-                window.alert('Impossible d’ajouter au panier. Réessayez.');
+                fallbackSubmit();
             });
     });
 })();

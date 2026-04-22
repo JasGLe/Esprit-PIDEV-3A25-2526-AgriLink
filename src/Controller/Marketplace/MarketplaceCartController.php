@@ -9,7 +9,9 @@ use App\Entity\Marketplace\Produits;
 use App\Entity\UserManagement\User;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
+use App\Service\OrderNotificationService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -37,6 +39,8 @@ class MarketplaceCartController extends AbstractController
         private readonly PanierRepository $panierRepository,
         private readonly ProduitsRepository $produitsRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly OrderNotificationService $orderNotificationService,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -174,6 +178,7 @@ class MarketplaceCartController extends AbstractController
             $sousTotal = 0.0;
             $quantiteTotale = 0;
             $prepared = [];
+            $responsableUserIds = [];
 
             foreach ($lignesPanier as $lignePanier) {
                 $pid = $lignePanier->getIdProduit();
@@ -193,6 +198,10 @@ class MarketplaceCartController extends AbstractController
                 $sousTotal += $ligneTotal;
                 $quantiteTotale += $qty;
                 $prepared[] = [$lignePanier, $produit, $qty, $pu, $ligneTotal];
+                $sellerId = (int) ($produit->getIdFournisseur() ?? 0);
+                if ($sellerId > 0) {
+                    $responsableUserIds[$sellerId] = true;
+                }
             }
 
             if ($prepared === []) {
@@ -250,6 +259,21 @@ class MarketplaceCartController extends AbstractController
 
             $this->entityManager->flush();
             $conn->commit();
+
+            try {
+                $this->orderNotificationService->notifyOrderCreated(
+                    $commande,
+                    $user,
+                    array_keys($responsableUserIds),
+                    $nomComplet
+                );
+            } catch (\Throwable $e) {
+                // Do not block order flow if notification delivery fails.
+                $this->logger->warning('Order notifications failed after order creation', [
+                    'commandeId' => $commandeId,
+                    'message' => $e->getMessage(),
+                ]);
+            }
 
             $request->getSession()->set('marketplace_order_confirm', [
                 'numCommande' => $numCommande,

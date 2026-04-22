@@ -1,0 +1,390 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Statistiques ventes{% endblock %}
+{% block page_title %}Statistiques ventes{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red:   #ef4444;
+    --green: #22c55e;
+    --blue:  #3b82f6;
+    --amber: #f59e0b;
+    --bg:    #f1f5f9;
+    --card:  #ffffff;
+    --text:  #0f172a;
+    --muted: #64748b;
+    --border:#e2e8f0;
+    --radius:16px;
+  }
+
+  body, .dashboard-body { background: var(--bg) !important; font-family: 'DM Sans', sans-serif; }
+
+  /* ── KPI Cards ─────────────────────────────── */
+  .kpi-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 18px; }
+  @media(max-width:900px){ .kpi-grid{ grid-template-columns:repeat(2,1fr); } }
+  @media(max-width:540px){ .kpi-grid{ grid-template-columns:1fr 1fr; } }
+
+  .kpi-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 22px 20px 18px;
+    border-top: 4px solid transparent;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    transition: transform .18s, box-shadow .18s;
+    position: relative; overflow: hidden;
+  }
+  .kpi-card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.1); }
+  .kpi-card.red   { border-top-color: var(--red); }
+  .kpi-card.green { border-top-color: var(--green); }
+  .kpi-card.blue  { border-top-color: var(--blue); }
+  .kpi-card.amber { border-top-color: var(--amber); }
+
+  .kpi-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.25rem; margin-bottom: 14px;
+  }
+  .kpi-card.red   .kpi-icon { background: rgba(239,68,68,.10);  color: var(--red); }
+  .kpi-card.green .kpi-icon { background: rgba(34,197,94,.10);  color: var(--green); }
+  .kpi-card.blue  .kpi-icon { background: rgba(59,130,246,.10); color: var(--blue); }
+  .kpi-card.amber .kpi-icon { background: rgba(245,158,11,.10); color: var(--amber); }
+
+  .kpi-label {
+    font-family: 'Sora', sans-serif;
+    font-size: .65rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em;
+    color: var(--muted); margin-bottom: 4px;
+  }
+  .kpi-value {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.65rem; font-weight: 800; line-height: 1.1;
+    color: var(--text); font-variant-numeric: tabular-nums;
+  }
+  .kpi-card.red   .kpi-value { color: var(--red); }
+  .kpi-card.green .kpi-value { color: var(--green); }
+  .kpi-card.blue  .kpi-value { color: var(--blue); }
+  .kpi-card.amber .kpi-value { color: var(--amber); }
+
+  .kpi-sub {
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    font-size: .72rem; color: var(--muted);
+  }
+  .kpi-badge {
+    font-size: .65rem; font-weight: 700; padding: 2px 8px;
+    border-radius: 20px; font-family: 'Sora', sans-serif;
+  }
+  .kpi-card.red   .kpi-badge { background: rgba(239,68,68,.1);  color: var(--red); }
+  .kpi-card.green .kpi-badge { background: rgba(34,197,94,.1);  color: var(--green); }
+  .kpi-card.blue  .kpi-badge { background: rgba(59,130,246,.1); color: var(--blue); }
+  .kpi-card.amber .kpi-badge { background: rgba(245,158,11,.1); color: var(--amber); }
+
+  /* ── Chart Cards ────────────────────────────── */
+  .chart-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+  }
+  .chart-title {
+    font-family: 'Sora', sans-serif;
+    font-size: .9rem; font-weight: 700; color: var(--text);
+    margin-bottom: 4px;
+  }
+  .chart-sub {
+    font-size: .75rem; color: var(--muted); margin-bottom: 18px;
+  }
+
+  /* ── Header Banner ──────────────────────────── */
+  .stats-banner {
+    background: linear-gradient(135deg,#0f172a 0%,#1e3a5f 100%);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    color: #fff;
+    margin-bottom: 22px;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;
+  }
+  .stats-banner h2 { font-family:'Sora',sans-serif; font-size:1.1rem; font-weight:800; margin:0; }
+  .stats-banner p  { font-size:.78rem; color:#94a3b8; margin:4px 0 0; }
+
+  .live-dot { width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;animation:blink 2s infinite; }
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+  .btn-back {
+    background: rgba(255,255,255,.1); color: #e2e8f0;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 10px; padding: 6px 14px; font-size:.78rem;
+    text-decoration: none; transition: background .15s;
+  }
+  .btn-back:hover { background: rgba(255,255,255,.2); color:#fff; }
+  .btn-refresh {
+    background: #22c55e; color: #fff; border: none;
+    border-radius: 10px; padding: 6px 14px; font-size:.78rem;
+    cursor: pointer; font-weight: 600; transition: background .15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-refresh:hover { background: #16a34a; }
+
+  /* ── Top Products List ──────────────────────── */
+  .product-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--border);
+  }
+  .product-item:last-child { border-bottom: none; }
+  .product-rank {
+    font-family: 'Sora', sans-serif; font-size:.7rem; font-weight:800;
+    color: var(--muted); width: 20px; text-align:center; flex-shrink:0;
+  }
+  .product-name { font-size:.85rem; font-weight:600; color:var(--text); margin:0; }
+  .product-qty  { font-size:.72rem; color:var(--muted); }
+  .product-rev  { font-family:'Sora',sans-serif; font-size:.85rem; font-weight:700; color:var(--green); margin-left:auto; flex-shrink:0; }
+
+  #sales-last-update { font-size:.7rem; color:#94a3b8; }
+</style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid py-3">
+
+  {# ── Header Banner ──────────────────────────   #}
+  <div class="stats-banner">
+    <div>
+      <h2>📊 Statistiques commerciales</h2>
+      <p>Vue analytique de vos ventes</p>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span class="live-dot"></span>
+      <span id="sales-last-update">Chargement…</span>
+      <a href="{{ path('app_dashboard') }}" class="btn-back">← Retour</a>
+      <button class="btn-refresh" id="sales-refresh-btn">↻ Actualiser</button>
+    </div>
+  </div>
+
+  {# ── KPI Cards ──────────────────────────────   #}
+  <div class="kpi-grid mb-4">
+    <div class="kpi-card red">
+      <div class="kpi-icon">📅</div>
+      <div class="kpi-label">CA Journalier</div>
+      <div class="kpi-value" id="kpi-revenue-today">{{ payload.kpis.revenue_today|number_format(3, ',', ' ') }} TND</div>
+      <div class="kpi-sub"><span>Aujourd'hui</span><span class="kpi-badge">Jour J</span></div>
+    </div>
+    <div class="kpi-card green">
+      <div class="kpi-icon">📈</div>
+      <div class="kpi-label">CA Mensuel</div>
+      <div class="kpi-value" id="kpi-revenue-month">{{ payload.kpis.revenue_month|number_format(3, ',', ' ') }} TND</div>
+      <div class="kpi-sub"><span>Ce mois</span><span class="kpi-badge">Actif</span></div>
+    </div>
+    <div class="kpi-card blue">
+      <div class="kpi-icon">🏆</div>
+      <div class="kpi-label">CA Annuel</div>
+      <div class="kpi-value" id="kpi-revenue-year">{{ payload.kpis.revenue_year|number_format(3, ',', ' ') }} TND</div>
+      <div class="kpi-sub"><span>Cette année</span><span class="kpi-badge">Cumulé</span></div>
+    </div>
+    <div class="kpi-card amber">
+      <div class="kpi-icon">🛒</div>
+      <div class="kpi-label">Commandes totales</div>
+      <div class="kpi-value" id="kpi-orders-total">{{ payload.kpis.orders_total }}</div>
+      <div class="kpi-sub"><span>Toutes périodes</span><span class="kpi-badge">Total</span></div>
+    </div>
+  </div>
+
+  {# ── Charts Row 1 ───────────────────────────   #}
+  <div class="row g-3 mb-3">
+    <div class="col-12 col-xl-8">
+      <div class="chart-card h-100">
+        <div class="chart-title">Évolution des ventes</div>
+        <div class="chart-sub">30 derniers jours — chiffre d'affaires quotidien</div>
+        <div style="position:relative;height:300px;"><canvas id="sales-evolution-chart"></canvas></div>
+      </div>
+    </div>
+    <div class="col-12 col-xl-4">
+      <div class="chart-card h-100">
+        <div class="chart-title">Répartition par catégorie</div>
+        <div class="chart-sub">Distribution du CA par famille produit</div>
+        <div style="position:relative;height:300px;"><canvas id="category-distribution-chart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  {# ── Charts Row 2 ───────────────────────────   #}
+  <div class="row g-3">
+    <div class="col-12 col-lg-7">
+      <div class="chart-card h-100">
+        <div class="chart-title">Top produits vendus</div>
+        <div class="chart-sub">Classement par quantités écoulées</div>
+        <div style="position:relative;height:260px;"><canvas id="top-products-chart"></canvas></div>
+      </div>
+    </div>
+    <div class="col-12 col-lg-5">
+      <div class="chart-card h-100">
+        <div class="chart-title">Détail des meilleures ventes</div>
+        <div class="chart-sub">Revenus et quantités par produit</div>
+        <div id="top-products-list">
+          {% if payload.top_products is empty %}
+            <p style="color:var(--muted);font-size:.82rem;margin-top:12px;">Aucune vente enregistrée pour le moment.</p>
+          {% else %}
+            {% for p in payload.top_products %}
+              <div class="product-item">
+                <div class="product-rank">#{{ loop.index }}</div>
+                <div style="flex:1;min-width:0;">
+                  <p class="product-name">{{ p.name }}</p>
+                  <span class="product-qty">{{ p.quantity }} unités</span>
+                </div>
+                <span class="product-rev">{{ p.revenue|number_format(3, ',', ' ') }} TND</span>
+              </div>
+            {% endfor %}
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+  var initialPayload = {{ payload|json_encode|raw }};
+  var dataUrl = '{{ stats_data_url }}';
+  var charts = { evolution: null, category: null, top: null };
+
+  Chart.defaults.color = '#64748b';
+  Chart.defaults.borderColor = '#e2e8f0';
+  Chart.defaults.font.family = "'DM Sans', system-ui, sans-serif";
+  Chart.defaults.font.size = 12;
+
+  function fmt(v){ return Number(v||0).toLocaleString('fr-FR',{minimumFractionDigits:3,maximumFractionDigits:3})+' TND'; }
+
+  function renderTopProducts(items){
+    var root = document.getElementById('top-products-list');
+    if(!root) return;
+    if(!items||!items.length){ root.innerHTML='<p style="color:var(--muted);font-size:.82rem;margin-top:12px;">Aucune vente enregistrée pour le moment.</p>'; return; }
+    root.innerHTML = items.map(function(p,i){
+      return '<div class="product-item">'
+        +'<div class="product-rank">#'+(i+1)+'</div>'
+        +'<div style="flex:1;min-width:0;">'
+          +'<p class="product-name">'+(p.name||'')+'</p>'
+          +'<span class="product-qty">'+(p.quantity||0)+' unités</span>'
+        +'</div>'
+        +'<span class="product-rev">'+fmt(p.revenue||0)+'</span>'
+        +'</div>';
+    }).join('');
+  }
+
+  function initCharts(payload){
+    charts.evolution = new Chart(document.getElementById('sales-evolution-chart'),{
+      type:'line',
+      data:{
+        labels: payload.evolution.labels||[],
+        datasets:[{
+          label:'Ventes (TND)', data: payload.evolution.data||[],
+          fill:true,
+          borderColor:'#3b82f6',
+          backgroundColor:'rgba(59,130,246,.08)',
+          pointBackgroundColor:'#3b82f6',
+          pointRadius:3, pointHoverRadius:5,
+          tension:.4, borderWidth:2.5
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false}, tooltip:{
+          backgroundColor:'#0f172a', titleFont:{family:"'Sora',sans-serif",weight:'bold'},
+          bodyFont:{family:"'DM Sans',sans-serif"},
+          callbacks:{ label: function(ctx){ return ' '+fmt(ctx.raw); } }
+        }},
+        scales:{
+          y:{ beginAtZero:true, grid:{color:'rgba(0,0,0,.04)'}, ticks:{callback:function(v){return Number(v).toLocaleString('fr-FR');}} },
+          x:{ grid:{display:false} }
+        }
+      }
+    });
+
+    var cats = payload.categories;
+    var hasData = cats.data && cats.data.length;
+    charts.category = new Chart(document.getElementById('category-distribution-chart'),{
+      type:'doughnut',
+      data:{
+        labels: hasData ? cats.labels : ['Aucune donnée'],
+        datasets:[{
+          data: hasData ? cats.data : [1],
+          backgroundColor:['#22c55e','#3b82f6','#f59e0b','#ef4444','#8b5cf6','#14b8a6'],
+          borderWidth:2, borderColor:'#fff', hoverOffset:6
+        }]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        cutout:'62%',
+        plugins:{
+          legend:{ position:'bottom', labels:{ padding:14, usePointStyle:true, pointStyleWidth:8, font:{size:11,family:"'DM Sans',sans-serif"} } },
+          tooltip:{ callbacks:{ label: function(ctx){ return ' '+ctx.label+': '+fmt(ctx.raw); } } }
+        }
+      }
+    });
+
+    charts.top = new Chart(document.getElementById('top-products-chart'),{
+      type:'bar',
+      data:{
+        labels:(payload.top_products||[]).map(function(p){return p.name;}),
+        datasets:[{
+          label:'Quantités vendues',
+          data:(payload.top_products||[]).map(function(p){return p.quantity;}),
+          backgroundColor:['rgba(34,197,94,.75)','rgba(59,130,246,.75)','rgba(245,158,11,.75)','rgba(239,68,68,.75)','rgba(139,92,246,.75)','rgba(20,184,166,.75)'],
+          borderRadius:6, borderSkipped:false
+        }]
+      },
+      options:{
+        indexAxis:'y', responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:false} },
+        scales:{
+          x:{ beginAtZero:true, grid:{color:'rgba(0,0,0,.04)'} },
+          y:{ grid:{display:false} }
+        }
+      }
+    });
+  }
+
+  function applyPayload(payload){
+    if(!payload||!payload.kpis) return;
+    document.getElementById('kpi-revenue-today').textContent  = fmt(payload.kpis.revenue_today);
+    document.getElementById('kpi-revenue-month').textContent  = fmt(payload.kpis.revenue_month);
+    document.getElementById('kpi-revenue-year').textContent   = fmt(payload.kpis.revenue_year);
+    document.getElementById('kpi-orders-total').textContent   = String(payload.kpis.orders_total||0);
+
+    charts.evolution.data.labels = payload.evolution.labels||[];
+    charts.evolution.data.datasets[0].data = payload.evolution.data||[];
+    charts.evolution.update();
+
+    var hasData = payload.categories.data && payload.categories.data.length;
+    charts.category.data.labels = hasData ? payload.categories.labels : ['Aucune donnée'];
+    charts.category.data.datasets[0].data = hasData ? payload.categories.data : [1];
+    charts.category.update();
+
+    charts.top.data.labels = (payload.top_products||[]).map(function(p){return p.name;});
+    charts.top.data.datasets[0].data = (payload.top_products||[]).map(function(p){return p.quantity;});
+    charts.top.update();
+
+    renderTopProducts(payload.top_products||[]);
+
+    var badge = document.getElementById('sales-last-update');
+    if(badge) badge.textContent = 'MAJ '+new Date().toLocaleTimeString('fr-FR');
+  }
+
+  function refreshData(){
+    fetch(dataUrl,{headers:{'X-Requested-With':'XMLHttpRequest'}})
+      .then(function(r){return r.json();})
+      .then(applyPayload)
+      .catch(function(){});
+  }
+
+  document.getElementById('sales-refresh-btn').addEventListener('click', refreshData);
+  initCharts(initialPayload);
+  applyPayload(initialPayload);
+  window.setInterval(refreshData, 60000);
+})();
+</script>
+{% endblock %}

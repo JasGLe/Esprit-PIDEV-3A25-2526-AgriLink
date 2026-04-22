@@ -1,0 +1,48 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Facture #CMD{{ "%03d"|format(commande.id) }} — AgriLink{% endblock %}
+{% block page_title %}Facture · #CMD{{ "%03d"|format(commande.id) }}{% endblock %}
+
+{% block dashboard_content %}
+<div class="container-fluid py-3">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <a href="{{ path('mes_commandes_show', { id: commande.id }) }}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1" aria-hidden="true"></i>Retour à la commande
+            </a>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{{ path('mes_commandes_pdf', { id: commande.id }) }}" class="btn btn-danger btn-sm">
+                <i class="bi bi-download me-1" aria-hidden="true"></i>Exporter PDF
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-0">
+            <div class="mc-facture-preview-wrap p-3 p-md-4 bg-light">
+                <style>
+                    .mc-facture-preview-wrap .mc-invoice-body { font-family: system-ui, -apple-system, Segoe UI, Roboto, DejaVu Sans, Arial, sans-serif; color: #111827; font-size: 13px; max-width: 900px; margin: 0 auto; background: #fff; padding: 24px; border-radius: 8px; border: 1px solid #e5e7eb; }
+                    .mc-facture-preview-wrap .header { border-bottom: 2px solid #16a34a; padding-bottom: 10px; margin-bottom: 14px; }
+                    .mc-facture-preview-wrap .title { font-size: 22px; font-weight: 700; color: #065f46; margin: 0; }
+                    .mc-facture-preview-wrap .muted { color: #6b7280; }
+                    .mc-facture-preview-wrap .grid { display: table; width: 100%; margin-bottom: 14px; }
+                    .mc-facture-preview-wrap .col { display: table-cell; width: 50%; vertical-align: top; }
+                    .mc-facture-preview-wrap .card { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; margin-right: 8px; }
+                    .mc-facture-preview-wrap .card h3 { margin: 0 0 8px; font-size: 13px; color: #111827; }
+                    .mc-facture-preview-wrap table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+                    .mc-facture-preview-wrap th, .mc-facture-preview-wrap td { border: 1px solid #e5e7eb; padding: 7px; text-align: left; }
+                    .mc-facture-preview-wrap th { background: #f3f4f6; font-size: 11px; text-transform: uppercase; }
+                    .mc-facture-preview-wrap .text-end { text-align: right; }
+                    .mc-facture-preview-wrap .total { margin-top: 12px; text-align: right; font-weight: 700; font-size: 14px; color: #065f46; }
+                    .mc-facture-preview-wrap .signature-wrap { margin-top: 24px; width: 300px; margin-left: auto; text-align: center; }
+                    .mc-facture-preview-wrap .signature-box { border: 1px solid #e5e7eb; border-radius: 6px; padding: 6px; min-height: 90px; background: #fff; }
+                    .mc-facture-preview-wrap .signature-box img { max-width: 100%; max-height: 80px; }
+                    .mc-facture-preview-wrap .signature-label { margin-top: 6px; font-size: 11px; color: #6b7280; }
+                </style>
+                {% include 'marketplace/mes_commandes/_invoice_body.html.twig' %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

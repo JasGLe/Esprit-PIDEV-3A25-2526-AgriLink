@@ -84,4 +84,78 @@ class NotificationsRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * @return Notifications[]
+     */
+    public function findUnreadByUserIdAndType(int $userId, string $type, int $limit = 10): array
+    {
+        return $this->createQueryBuilder('n')
+            ->where('n.userId = :userId')
+            ->andWhere('n.type = :type')
+            ->andWhere('n.readAt IS NULL')
+            ->setParameter('userId', $userId)
+            ->setParameter('type', $type)
+            ->orderBy('n.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function markAllReadByUserId(int $userId): void
+    {
+        $this->createQueryBuilder('n')
+            ->update()
+            ->set('n.readAt', ':readAt')
+            ->where('n.userId = :userId')
+            ->andWhere('n.readAt IS NULL')
+            ->setParameter('readAt', new \DateTimeImmutable())
+            ->setParameter('userId', $userId)
+            ->getQuery()
+            ->execute();
+    }
+
+    /**
+     * @return Notifications[]
+     */
+    public function findRecentByUserAndType(User $user, string $type, int $limit = 10): array
+    {
+        return $this->createQueryBuilder('n')
+            ->where('n.userId = :userId')
+            ->andWhere('n.type = :type')
+            ->setParameter('userId', $user->getId())
+            ->setParameter('type', $type)
+            ->orderBy('n.createdAt', 'DESC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function countUnreadByUserAndType(User $user, string $type): int
+    {
+        return (int) $this->createQueryBuilder('n')
+            ->select('COUNT(n.id)')
+            ->where('n.userId = :userId')
+            ->andWhere('n.type = :type')
+            ->andWhere('n.readAt IS NULL')
+            ->setParameter('userId', $user->getId())
+            ->setParameter('type', $type)
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    public function markAllReadByUserIdAndType(int $userId, string $type): void
+    {
+        $this->createQueryBuilder('n')
+            ->update()
+            ->set('n.readAt', ':readAt')
+            ->where('n.userId = :userId')
+            ->andWhere('n.type = :type')
+            ->andWhere('n.readAt IS NULL')
+            ->setParameter('readAt', new \DateTimeImmutable())
+            ->setParameter('userId', $userId)
+            ->setParameter('type', $type)
+            ->getQuery()
+            ->execute();
+    }
 }

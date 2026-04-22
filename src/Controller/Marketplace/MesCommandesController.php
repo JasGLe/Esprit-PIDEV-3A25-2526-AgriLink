@@ -10,6 +10,7 @@ use App\Repository\CancellationRequestsRepository;
 use App\Repository\Marketplace\CommandesRepository;
 use App\Repository\Marketplace\LigneCommandeRepository;
 use App\Repository\UserManagement\UserRepository;
+use App\Service\OrderNotificationService;
 use Knp\Component\Pager\PaginatorInterface;
 use Knp\Snappy\Pdf;
 use Doctrine\ORM\EntityManagerInterface;
@@ -47,6 +48,7 @@ class MesCommandesController extends AbstractController
         private readonly LigneCommandeRepository $ligneCommandeRepository,
         private readonly UserRepository $userRepository,
         private readonly CancellationRequestsRepository $cancellationRequestsRepository,
+        private readonly OrderNotificationService $orderNotificationService,
         private readonly PaginatorInterface $paginator,
         private readonly Pdf $snappyPdf,
         private readonly EntityManagerInterface $entityManager,
@@ -323,6 +325,11 @@ class MesCommandesController extends AbstractController
         $req->setRequestedAt(new \DateTimeImmutable());
         $req->setStatus(CancellationRequestsRepository::STATUS_PENDING);
         $this->cancellationRequestsRepository->save($req, true);
+        try {
+            $this->orderNotificationService->notifyCancellationRequestedToAdmins($commande, $user);
+        } catch (\Throwable) {
+            // Silent: cancellation request flow must not fail due to notification.
+        }
         $this->addFlash('success', 'Votre demande d’annulation a été envoyée. Un administrateur ou le vendeur pourra l’accepter ou la refuser.');
 
         return $this->redirectToRoute('mes_commandes_index');
@@ -346,7 +353,13 @@ class MesCommandesController extends AbstractController
             return $this->redirectToRoute('mes_commandes_index');
         }
 
+        $oldStatus = (string) $commande->getStatus();
         $this->applyCancellationApproval($commande, $cr, $user);
+        try {
+            $this->orderNotificationService->notifyOrderStatusChanged($commande, $oldStatus, 'ANNULEE', $user);
+        } catch (\Throwable) {
+            // Silent: cancellation approval must not fail due to notification.
+        }
         $this->addFlash('success', 'La commande a été annulée (statut : Annulée).');
 
         return $this->redirectToRoute('mes_commandes_index');
@@ -437,14 +450,50 @@ class MesCommandesController extends AbstractController
             return $this->redirectAfterMesCommandesStatut($request, $id);
         }
 
+        $oldStatus = (string) $commande->getStatus();
         $commande->setStatus($new);
         if ($new === 'ANNULEE') {
             $this->closePendingCancellationAsApproved($commande, $user);
         }
         $this->commandesRepository->save($commande, true);
+        try {
+            $this->orderNotificationService->notifyOrderStatusChanged($commande, $oldStatus, $new, $user);
+        } catch (\Throwable) {
+            // Silent: status update must not fail due to notification.
+        }
         $this->addFlash('success', 'Statut de la commande mis à jour.');
 
         return $this->redirectAfterMesCommandesStatut($request, $id);
+    }
+
+    /** Prévisualisation facture dans l’app ; le téléchargement PDF se fait via {@see pdf()}. */
+    #[Route('/{id}/facture', name: 'facture', requirements: ['id' => '\\d+'], methods: ['GET'])]
+    public function facture(int $id): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if ($this->isGranted('ROLE_ADMIN')) {
+            $this->findCommandeAdmin($id);
+        } elseif ($this->isMarcheAcheteur()) {
+            $this->findOwnedCommandeAcheteur($id, $user);
+        } elseif ($this->isMesCommandesVendeurContext()) {
+            $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
+        } else {
+            $this->findOwnedCommandeAcheteur($id, $user);
+        }
+
+        $vars = $this->buildOrderDetailVars($id, $user);
+        if ($this->isMesCommandesVendeurContext() && $this->vendeurFactureSignatureMissingOrInvalid($vars['commande'])) {
+            $this->addFlash('info', 'Signez la facture en dessinant votre signature, puis vous pourrez la prévisualiser et l’exporter en PDF.');
+
+            return $this->redirectToRoute('mes_commandes_signature_form', [
+                'id' => $id,
+                'next' => 'facture',
+            ]);
+        }
+
+        return $this->render('marketplace/mes_commandes/facture_view.html.twig', $vars);
     }
 
     #[Route('/{id}/pdf', name: 'pdf', requirements: ['id' => '\\d+'], methods: ['GET'])]
@@ -464,6 +513,22 @@ class MesCommandesController extends AbstractController
         }
 
         $pdfVars = $this->buildOrderDetailVars($id, $user);
+        if ($this->isMesCommandesVendeurContext() && $this->vendeurFactureSignatureMissingOrInvalid($pdfVars['commande'])) {
+            $this->addFlash('info', 'Signez la facture en dessinant votre signature, puis vous pourrez la prévisualiser et l’exporter en PDF.');
+
+            return $this->redirectToRoute('mes_commandes_signature_form', [
+                'id' => $id,
+                'next' => 'facture',
+            ]);
+        }
+
+        $signaturePath = $pdfVars['commande']->getFactureSignaturePath();
+        if (is_string($signaturePath) && trim($signaturePath) !== '') {
+            $absolutePath = $this->getParameter('kernel.project_dir').'/public/'.ltrim($signaturePath, '/');
+            if (is_file($absolutePath)) {
+                $pdfVars['signature_abs_path'] = 'file:///'.str_replace('\\', '/', $absolutePath);
+            }
+        }
         $html = $this->renderView('marketplace/mes_commandes/pdf_invoice.html.twig', $pdfVars);
         $filename = 'facture_commande_'.$id.'.pdf';
         $output = $this->snappyPdf->getOutputFromHtml($html, [
@@ -479,6 +544,107 @@ class MesCommandesController extends AbstractController
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
+    }
+
+    #[Route('/{id}/signature', name: 'signature_form', requirements: ['id' => '\\d+'], methods: ['GET'])]
+    public function signatureForm(Request $request, int $id): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->isMesCommandesVendeurContext()) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $commande = $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
+        $signatureFlowPdf = \in_array($request->query->get('next'), ['facture', 'pdf'], true);
+
+        return $this->render('marketplace/mes_commandes/sign_facture.html.twig', [
+            'commande' => $commande,
+            'signature_flow_pdf' => $signatureFlowPdf,
+        ]);
+    }
+
+    #[Route('/{id}/signature', name: 'signature_save', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function signatureSave(Request $request, int $id): Response
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$this->isMesCommandesVendeurContext()) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$this->isCsrfTokenValid('mes_commandes_signature_'.$id, (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $afterFacture = \in_array($request->request->get('next'), ['facture', 'pdf'], true);
+        $formParams = ['id' => $id];
+        if ($afterFacture) {
+            $formParams['next'] = 'facture';
+        }
+
+        $commande = $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
+        $raw = trim((string) $request->request->get('signature_data'));
+        if ($raw === '') {
+            $this->addFlash('error', 'Veuillez dessiner une signature.');
+
+            return $this->redirectToRoute('mes_commandes_signature_form', $formParams);
+        }
+
+        if (!preg_match('#^data:image/png;base64,(.+)$#', $raw, $matches)) {
+            $this->addFlash('error', 'Format de signature invalide.');
+
+            return $this->redirectToRoute('mes_commandes_signature_form', $formParams);
+        }
+
+        $binary = base64_decode($matches[1], true);
+        if ($binary === false || strlen($binary) < 128) {
+            $this->addFlash('error', 'Signature invalide ou vide.');
+
+            return $this->redirectToRoute('mes_commandes_signature_form', $formParams);
+        }
+
+        $relativeDir = 'uploads/signatures/factures';
+        $absoluteDir = $this->getParameter('kernel.project_dir').'/public/'.$relativeDir;
+        if (!is_dir($absoluteDir)) {
+            mkdir($absoluteDir, 0775, true);
+        }
+
+        $filename = sprintf('cmd-%d-user-%d-%d.png', $commande->getId(), (int) $user->getId(), time());
+        $absolutePath = $absoluteDir.'/'.$filename;
+        file_put_contents($absolutePath, $binary);
+
+        $previous = $commande->getFactureSignaturePath();
+        $commande->setFactureSignaturePath($relativeDir.'/'.$filename);
+        $this->commandesRepository->save($commande, true);
+
+        if (is_string($previous) && str_starts_with($previous, $relativeDir.'/')) {
+            $previousAbsolute = $this->getParameter('kernel.project_dir').'/public/'.$previous;
+            if (is_file($previousAbsolute)) {
+                @unlink($previousAbsolute);
+            }
+        }
+
+        if ($afterFacture) {
+            return $this->redirectToRoute('mes_commandes_facture', ['id' => $id]);
+        }
+
+        $this->addFlash('success', 'Signature enregistrée pour la facture.');
+
+        return $this->redirectToRoute('mes_commandes_show', ['id' => $id]);
+    }
+
+    /** Vendeur : facture PDF exige une signature fichier valide sous public/. */
+    private function vendeurFactureSignatureMissingOrInvalid(Commandes $commande): bool
+    {
+        $path = $commande->getFactureSignaturePath();
+        if (!\is_string($path) || trim($path) === '') {
+            return true;
+        }
+
+        $absolute = $this->getParameter('kernel.project_dir').'/public/'.ltrim($path, '/');
+
+        return !is_file($absolute);
     }
 
     private function isMarcheAcheteur(): bool

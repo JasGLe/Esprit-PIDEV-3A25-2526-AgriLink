@@ -31,5 +31,5 @@
     {% else %}
         <button type="button" class="btn btn-sm mc-act mc-act--delete" disabled title="{{ del_title_disabled }}"><i class="bi bi-trash" aria-hidden="true"></i></button>
     {% endif %}
-    <a href="{{ path('mes_commandes_pdf', { id: commande.id }) }}" class="btn btn-sm mc-act mc-act--pdf"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Export PDF</a>
+    <a href="{{ path('mes_commandes_facture', { id: commande.id }) }}" class="btn btn-sm mc-act mc-act--pdf" title="{% if mes_commandes_mode|default('') == 'vendeur' %}Voir la facture (signature si besoin), puis export PDF{% else %}Voir la facture et exporter en PDF{% endif %}"><i class="bi bi-file-earmark-pdf me-1" aria-hidden="true"></i>Facture</a>
 </div>

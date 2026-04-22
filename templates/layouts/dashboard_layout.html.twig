@@ -52,6 +52,13 @@
                         <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                         <span class="small fw-medium">Centre de Sécurité</span>
                     </a>
+                    <a href="{{ path('admin_moderation_boutique_index') }}" class="d-flex align-items-center justify-content-between px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'admin_moderation_boutique_' ? 'bg-danger bg-opacity-10 text-danger fw-medium' : 'text-dark' }}">
+                        <span class="d-flex align-items-center">
+                            <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h6l4 4v10a2 2 0 01-2 2z" /></svg>
+                            <span class="small fw-medium">Modération boutique</span>
+                        </span>
+                        <span id="adminModerationBadgeMobile" class="badge text-bg-danger d-none">0</span>
+                    </a>
                     <hr class="my-2 border-secondary opacity-25">
                 {% endif %}
                 {# Same navigation as desktop #}
@@ -217,6 +224,14 @@
                     </svg>
                     <span class="small fw-medium">Mes locations</span>
                 </a>
+                {% if app.user.isAgriculteur %}
+                <a href="{{ path('sales_stats_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'sales_stats_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                    <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                    </svg>
+                    <span class="small fw-medium">Statistiques ventes</span>
+                </a>
+                {% endif %}
                 {% endif %}
                 {# ── FIN MARKETPLACE ── #}
 
@@ -292,6 +307,15 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                                 </svg>
                                 <span class="small fw-medium sidebar-hide">Centre de Sécurité</span>
+                            </a>
+                            <a href="{{ path('admin_moderation_boutique_index') }}" title="Modération boutique" class="d-flex align-items-center justify-content-between px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'admin_moderation_boutique_' ? 'bg-danger bg-opacity-10 text-danger fw-medium' : 'text-dark' }}">
+                                <span class="d-flex align-items-center">
+                                    <svg class="me-3 flex-shrink-0" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 4H7a2 2 0 01-2-2V6a2 2 0 012-2h6l4 4v10a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <span class="small fw-medium sidebar-hide">Modération boutique</span>
+                                </span>
+                                <span id="adminModerationBadgeDesktop" class="badge text-bg-danger d-none">0</span>
                             </a>
                             <hr class="my-2 border-secondary opacity-25">
                         {% endif %}
@@ -467,6 +491,14 @@
                             </svg>
                             <span class="small fw-medium sidebar-hide">Mes locations</span>
                         </a>
+                        {% if app.user.isAgriculteur %}
+                        <a href="{{ path('sales_stats_index') }}" title="Statistiques ventes" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'sales_stats_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                            <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                            <span class="small fw-medium sidebar-hide">Statistiques ventes</span>
+                        </a>
+                        {% endif %}
                         {% endif %}
                         {# ── FIN MARKETPLACE ── #}
                     </nav>
@@ -515,7 +547,9 @@
                                         d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                                 </svg>
                                 {# Badge rouge avec compteur #}
-                                {% set nbNotifs = notif_count|default(0) %}
+                                {% set notifCountValue = notif_count|default(0) %}
+                                {% set recentNotifsCount = notifs_recentes|default([])|length %}
+                                {% set nbNotifs = notifCountValue > recentNotifsCount ? notifCountValue : recentNotifsCount %}
                                 {% if nbNotifs > 0 %}
                                     <span class="position-absolute top-0 start-100
                                                 translate-middle badge rounded-pill bg-danger"
@@ -571,13 +605,22 @@
 
                                                     <div class="text-muted"
                                                         style="font-size:0.72rem;line-height:1.4;">
-                                                        {{ notif.body|slice(0, 80) }}
-                                                        {{ notif.body|length > 80 ? '…' : '' }}
+                                                        {% if notif.type in ['order_created_admin', 'order_received'] and notif.commandeId %}
+                                                            Commande <span class="fw-semibold text-dark">#CMD{{ '%03d'|format(notif.commandeId) }}</span>
+                                                            {% if notif.type == 'order_created_admin' %}
+                                                                (marketplace, côté admin)
+                                                            {% else %}
+                                                                reçue pour votre boutique
+                                                            {% endif %}
+                                                        {% else %}
+                                                            {{ notif.body|slice(0, 80) }}
+                                                            {{ notif.body|length > 80 ? '…' : '' }}
+                                                        {% endif %}
                                                     </div>
 
                                                     <div class="text-muted mt-1"
                                                         style="font-size:0.65rem;">
-                                                        {{ notif.createdAt|date('d/m/Y à H:i') }}
+                                                        {{ notif.createdAt|date('d/m/Y à H:i', 'Africa/Tunis') }}
                                                     </div>
 
                                                 </div>
@@ -826,6 +869,35 @@
             localStorage.setItem('sidebarCollapsed', nowCollapsed ? 'true' : 'false');
             applySidebarState(nowCollapsed, true);
         });
+    }
+
+    // ── Admin moderation unread badge polling ──
+    const isAdmin = {{ is_granted('ROLE_ADMIN') ? 'true' : 'false' }};
+    if (isAdmin) {
+        const desktopBadge = document.getElementById('adminModerationBadgeDesktop');
+        const mobileBadge = document.getElementById('adminModerationBadgeMobile');
+        const endpoint = '{{ path('admin_moderation_boutique_unread_count') }}';
+
+        const refreshBadge = () => {
+            fetch(endpoint, { credentials: 'same-origin' })
+                .then((r) => r.ok ? r.json() : null)
+                .then((payload) => {
+                    const count = Number(payload && payload.count ? payload.count : 0);
+                    [desktopBadge, mobileBadge].forEach((badge) => {
+                        if (!badge) return;
+                        if (count > 0) {
+                            badge.textContent = String(count > 99 ? '99+' : count);
+                            badge.classList.remove('d-none');
+                        } else {
+                            badge.classList.add('d-none');
+                        }
+                    });
+                })
+                .catch(() => {});
+        };
+
+        refreshBadge();
+        setInterval(refreshBadge, 15000);
     }
 
     // ── Sidebar scroll position persistence ──

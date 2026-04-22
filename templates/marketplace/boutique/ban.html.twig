@@ -1,0 +1,635 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}Accès boutique suspendu{% endblock %}
+{% block page_title %}Boutique suspendue{% endblock %}
+
+{% block stylesheets %}
+    {{ parent() }}
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@500&display=swap');
+
+        .ban-wrap {
+            max-width: 720px;
+            margin: 0 auto;
+            font-family: 'DM Sans', sans-serif;
+        }
+
+        /* ── Top status strip ── */
+        .ban-strip {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            padding: .6rem 1rem;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px 12px 0 0;
+            font-size: .8rem;
+            font-weight: 600;
+            color: #b91c1c;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+        }
+        .ban-strip-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: #ef4444;
+            animation: pulse 1.6s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50%       { opacity: .4; transform: scale(.7); }
+        }
+
+        /* ── Main card ── */
+        .ban-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-top: none;
+            border-radius: 0 0 18px 18px;
+            overflow: hidden;
+            box-shadow: 0 20px 48px rgba(15, 23, 42, .07);
+        }
+
+        /* ── Hero section ── */
+        .ban-hero {
+            padding: 2rem 2rem 1.5rem;
+            border-bottom: 1px solid #f3f4f6;
+            background: linear-gradient(160deg, #fff 60%, #fef9f9 100%);
+        }
+        .ban-icon-wrap {
+            width: 52px; height: 52px;
+            border-radius: 14px;
+            background: #fef2f2;
+            border: 1.5px solid #fecaca;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .ban-title {
+            margin: 0 0 .35rem;
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #111827;
+            line-height: 1.25;
+        }
+        .ban-sub {
+            margin: 0;
+            color: #6b7280;
+            font-size: .93rem;
+        }
+
+        /* ── Body ── */
+        .ban-body {
+            padding: 1.5rem 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* ── Section label ── */
+        .ban-label {
+            font-size: .75rem;
+            font-weight: 700;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #9ca3af;
+            margin-bottom: .45rem;
+        }
+
+        /* ── Reason box ── */
+        .ban-reason-box {
+            display: flex;
+            align-items: flex-start;
+            gap: .75rem;
+            padding: .9rem 1rem;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 10px;
+            color: #7f1d1d;
+            font-weight: 600;
+            font-size: .92rem;
+            line-height: 1.5;
+        }
+        .ban-reason-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+
+        /* ── Countdown block ── */
+        .ban-timer-block {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 1.1rem 1.25rem;
+        }
+        .ban-count {
+            font-family: 'DM Mono', monospace;
+            font-size: 2.4rem;
+            font-weight: 500;
+            color: #16a34a;
+            letter-spacing: .05em;
+            line-height: 1;
+            margin: .2rem 0 .75rem;
+        }
+        .ban-progress {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: .5rem;
+        }
+        .ban-progress__bar {
+            height: 100%;
+            border-radius: 999px;
+            width: 100%;
+            background: linear-gradient(90deg, #16a34a, #22c55e);
+            transition: width .4s linear, background .4s linear;
+        }
+        .ban-note {
+            font-size: .82rem;
+            color: #6b7280;
+        }
+
+        /* ── Permanent alert ── */
+        .ban-perm {
+            display: flex;
+            gap: .75rem;
+            align-items: flex-start;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            border-radius: 10px;
+            padding: .9rem 1rem;
+            color: #78350f;
+            font-size: .9rem;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+        .ban-perm-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: .05rem; }
+
+        /* ── Divider ── */
+        .ban-divider {
+            border: none;
+            border-top: 1px solid #f3f4f6;
+            margin: 0;
+        }
+
+        /* ── Contact section ── */
+        .ban-contact {
+            display: flex;
+            flex-direction: column;
+            gap: .7rem;
+        }
+        .ban-contact-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem 1.25rem;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+        }
+        .ban-contact-avatar {
+            width: 42px; height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+            color: #fff;
+        }
+        .ban-contact-info { flex: 1; min-width: 0; }
+        .ban-contact-name {
+            font-weight: 700;
+            font-size: .9rem;
+            color: #111827;
+        }
+        .ban-contact-role {
+            font-size: .77rem;
+            color: #9ca3af;
+            margin-top: .1rem;
+        }
+        .ban-contact-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .4rem;
+            padding: .45rem .9rem;
+            background: #fff;
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
+            color: #374151;
+            font-size: .82rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            transition: border-color .15s, color .15s, background .15s;
+            white-space: nowrap;
+        }
+        .ban-contact-btn:hover {
+            border-color: #16a34a;
+            color: #16a34a;
+            background: #f0fdf4;
+        }
+
+        /* ── Gmail-style compose ── */
+        .compose-wrap {
+            border-radius: 10px 10px 0 0;
+            box-shadow: 0 8px 32px rgba(15,23,42,.16), 0 1px 4px rgba(15,23,42,.06);
+            overflow: hidden;
+            border: 1px solid #c9cdd1;
+            font-size: .88rem;
+            background: #fff;
+        }
+
+        .compose-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .55rem .85rem;
+            background: #404040;
+            user-select: none;
+        }
+        .compose-header-title {
+            color: #fff;
+            font-size: .8rem;
+            font-weight: 600;
+            letter-spacing: .01em;
+        }
+        .compose-header-actions { display: flex; align-items: center; gap: .25rem; }
+        .compose-header-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            font-size: .85rem;
+            line-height: 1;
+            padding: .18rem .38rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background .12s, color .12s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .compose-header-btn:hover { background: rgba(255,255,255,.15); color: #fff; }
+        .compose-header-btn svg { width: 14px; height: 14px; fill: currentColor; }
+
+        .compose-row {
+            display: flex;
+            align-items: center;
+            padding: .42rem .85rem;
+            border-bottom: 1px solid #e8eaed;
+            gap: .5rem;
+            min-height: 36px;
+        }
+        .compose-row-label {
+            font-size: .78rem;
+            color: #5f6368;
+            width: 38px;
+            flex-shrink: 0;
+            font-weight: 500;
+        }
+        .compose-row-value { flex: 1; }
+
+        /* recipient chip */
+        .compose-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: .28rem;
+            padding: .13rem .5rem;
+            background: #e6f4ea;
+            border: 1px solid #c8e6c9;
+            border-radius: 999px;
+            font-size: .78rem;
+            color: #1e5128;
+            font-weight: 600;
+        }
+        .compose-chip-dot {
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: #16a34a;
+            flex-shrink: 0;
+        }
+
+        .compose-subject-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            font-size: .84rem;
+            font-family: inherit;
+            color: #202124;
+            background: transparent;
+            padding: 0;
+            width: 100%;
+        }
+        .compose-subject-input::placeholder { color: #bdc1c6; }
+
+        .compose-body {
+            padding: .6rem .85rem .4rem;
+            border-bottom: 1px solid #e8eaed;
+        }
+        .compose-textarea {
+            width: 100%;
+            border: none;
+            outline: none;
+            resize: none;
+            font-size: .84rem;
+            font-family: inherit;
+            color: #202124;
+            background: transparent;
+            min-height: 120px;
+            line-height: 1.55;
+        }
+        .compose-textarea::placeholder { color: #bdc1c6; }
+
+        .compose-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: .45rem .7rem;
+            background: #f6f8fc;
+        }
+        .compose-send-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: .38rem;
+            padding: .38rem 1.05rem;
+            background: #16a34a;
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            font-size: .8rem;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: background .15s;
+            letter-spacing: .01em;
+        }
+        .compose-send-btn:hover { background: #15803d; }
+        .compose-send-btn svg { width: 13px; height: 13px; fill: currentColor; }
+
+        .compose-discard-btn {
+            background: none;
+            border: none;
+            color: #5f6368;
+            padding: .38rem .42rem;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .12s, color .12s;
+        }
+        .compose-discard-btn:hover { background: #e8eaed; color: #c62828; }
+        .compose-discard-btn svg { width: 15px; height: 15px; fill: currentColor; }
+
+        /* ── Tips list ── */
+        .ban-tips {
+            list-style: none;
+            padding: 0; margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: .4rem;
+        }
+        .ban-tips li {
+            display: flex;
+            align-items: flex-start;
+            gap: .5rem;
+            font-size: .84rem;
+            color: #6b7280;
+            line-height: 1.5;
+        }
+        .ban-tips li span:first-child { flex-shrink: 0; margin-top: .1rem; }
+
+        /* ── Footer ── */
+        .ban-footer {
+            padding: .9rem 2rem;
+            background: #f9fafb;
+            border-top: 1px solid #f3f4f6;
+            font-size: .78rem;
+            color: #9ca3af;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .ban-footer a { color: #6b7280; text-decoration: underline; text-underline-offset: 2px; }
+    </style>
+{% endblock %}
+
+{% block dashboard_content %}
+<div class="container pt-2 pb-4">
+    <div class="ban-wrap">
+        {% for msg in app.flashes('success') %}
+            <div class="alert alert-success mb-3">{{ msg }}</div>
+        {% endfor %}
+        {% for msg in app.flashes('error') %}
+            <div class="alert alert-danger mb-3">{{ msg }}</div>
+        {% endfor %}
+
+        <!-- Status strip -->
+        <div class="ban-strip">
+            <div class="ban-strip-dot"></div>
+            Accès restreint · Boutique suspendue
+        </div>
+
+        <div class="ban-card">
+
+            <!-- Hero -->
+            <div class="ban-hero">
+                <div class="ban-icon-wrap">🔒</div>
+                <h2 class="ban-title">Votre boutique est temporairement bloquée</h2>
+                <p class="ban-sub">La modération a restreint votre accès à l'espace boutique. Veuillez lire les informations ci-dessous.</p>
+            </div>
+
+            <div class="ban-body">
+
+                <!-- Reason -->
+                <div>
+                    <div class="ban-label">Raison du bannissement</div>
+                    <div class="ban-reason-box">
+                        <span class="ban-reason-icon">⚠️</span>
+                        <span>{{ ban_reason }}</span>
+                    </div>
+                </div>
+
+                {% if is_permanent %}
+                    <div class="ban-perm">
+                        <span class="ban-perm-icon">🚫</span>
+                        <div>
+                            <strong>Suspension définitive.</strong><br>
+                            Votre compte a été suspendu de façon permanente. Contactez l'administrateur pour toute demande de réexamen.
+                        </div>
+                    </div>
+                {% else %}
+                    <div>
+                        <div class="ban-label">Temps restant avant réactivation</div>
+                        <div class="ban-timer-block">
+                            <div class="ban-count" id="ban-countdown">--:--:--</div>
+                            <div class="ban-progress" aria-label="Temps restant">
+                                <div id="ban-progress-bar" class="ban-progress__bar"></div>
+                            </div>
+                            <p class="ban-note" id="ban-human">Calcul en cours…</p>
+                        </div>
+                    </div>
+                    <script>
+                    (function () {
+                        const start  = new Date('{{ banned_at    ? banned_at|date('c')    : '' }}').getTime();
+                        const target = new Date('{{ banned_until ? banned_until|date('c') : '' }}').getTime();
+                        const countdownEl = document.getElementById('ban-countdown');
+                        const humanEl    = document.getElementById('ban-human');
+                        const barEl      = document.getElementById('ban-progress-bar');
+
+                        const totalMs = (Number.isFinite(start) && start > 0 && target > start)
+                            ? (target - start) : 24 * 3600 * 1000;
+
+                        function update() {
+                            const now  = Date.now();
+                            let diff   = Math.max(0, Math.floor((target - now) / 1000));
+                            const h = Math.floor(diff / 3600); diff -= h * 3600;
+                            const m = Math.floor(diff / 60);
+                            const s = diff - m * 60;
+
+                            countdownEl.textContent =
+                                String(h).padStart(2,'0') + ':' +
+                                String(m).padStart(2,'0') + ':' +
+                                String(s).padStart(2,'0');
+
+                            humanEl.textContent = h > 0
+                                ? 'Réactivation dans ' + h + ' h ' + m + ' min.'
+                                : 'Réactivation dans ' + m + ' min ' + s + ' sec.';
+
+                            const pct = Math.max(0, Math.min(100, ((target - now) / totalMs) * 100));
+                            barEl.style.width = pct.toFixed(2) + '%';
+                            barEl.style.background = pct < 25
+                                ? 'linear-gradient(90deg,#ef4444,#f87171)'
+                                : pct < 50
+                                    ? 'linear-gradient(90deg,#f59e0b,#fbbf24)'
+                                    : 'linear-gradient(90deg,#16a34a,#22c55e)';
+
+                            if (target <= now) { window.location.href = '{{ path('boutique_index') }}'; }
+                        }
+
+                        update();
+                        setInterval(update, 1000);
+                    })();
+                    </script>
+                {% endif %}
+
+                <hr class="ban-divider">
+
+                <!-- Contact admin -->
+                <div class="ban-contact">
+                    <div class="ban-label">Contacter l'administration</div>
+                    <p style="font-size:.88rem;color:#6b7280;margin:0;">
+                        Si vous pensez que cette suspension est une erreur ou si vous souhaitez obtenir plus d'informations, vous pouvez contacter directement l'équipe de modération.
+                    </p>
+
+                    <div class="ban-contact-card">
+                        <div class="ban-contact-avatar">👨‍💼</div>
+                        <div class="ban-contact-info">
+                            <div class="ban-contact-name">Équipe de modération AgriLink</div>
+                            <div class="ban-contact-role">Administrateur plateforme</div>
+                        </div>
+                        <button type="button" class="ban-contact-btn" id="compose-trigger">
+                            ✉️ Écrire un e-mail
+                        </button>
+                    </div>
+
+                    <!-- Gmail-style compose -->
+                    <form id="ban-compose" class="compose-wrap d-none"
+                          method="post" action="{{ path('boutique_ban_contact_admin') }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('boutique_ban_contact_admin') }}">
+
+                        <!-- Dark title bar -->
+                        <div class="compose-header">
+                            <span class="compose-header-title">Nouveau message</span>
+                            <div class="compose-header-actions">
+                                <button type="button" class="compose-header-btn" id="compose-close" title="Fermer">
+                                    <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- To row — fixed, not editable -->
+                        <div class="compose-row">
+                            <span class="compose-row-label">À</span>
+                            <div class="compose-row-value">
+                                <span class="compose-chip">
+                                    <span class="compose-chip-dot"></span>
+                                    {{ admin_contact_email }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Subject row -->
+                        <div class="compose-row">
+                            <span class="compose-row-label">Sujet</span>
+                            <input class="compose-subject-input"
+                                   id="ban-mail-subject"
+                                   name="subject"
+                                   type="text"
+                                   maxlength="160"
+                                   placeholder="Demande de réexamen de mon bannissement"
+                                   required>
+                        </div>
+
+                        <!-- Body -->
+                        <div class="compose-body">
+                            <textarea class="compose-textarea"
+                                      id="ban-mail-message"
+                                      name="message"
+                                      rows="6"
+                                      maxlength="2000"
+                                      placeholder="Rédigez votre message…"
+                                      required></textarea>
+                        </div>
+
+                        <!-- Toolbar -->
+                        <div class="compose-toolbar">
+                            <button type="submit" class="compose-send-btn">
+                                <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                                Envoyer
+                            </button>
+                            <button type="button" class="compose-discard-btn" id="compose-discard" title="Annuler">
+                                <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                            </button>
+                        </div>
+                    </form>
+
+                    <ul class="ban-tips">
+                        <li><span>💡</span><span>Précisez votre nom d'utilisateur et la raison contestée dans votre message.</span></li>
+                        <li><span>⏱️</span><span>L'équipe répond généralement sous 24 à 48 heures ouvrées.</span></li>
+                        <li><span>📋</span><span>Conservez une copie de vos échanges pour tout suivi.</span></li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="ban-footer">
+                <span>© AgriLink · Plateforme agricole</span>
+                <span>Support : <a href="mailto:{{ admin_contact_email }}">{{ admin_contact_email }}</a></span>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const trigger  = document.getElementById('compose-trigger');
+    const compose  = document.getElementById('ban-compose');
+    const closeBtn = document.getElementById('compose-close');
+    const discard  = document.getElementById('compose-discard');
+
+    function open() {
+        compose.classList.remove('d-none');
+        trigger.style.display = 'none';
+        document.getElementById('ban-mail-subject').focus();
+    }
+    function close() {
+        compose.classList.add('d-none');
+        trigger.style.display = '';
+    }
+
+    trigger.addEventListener('click', open);
+    closeBtn.addEventListener('click', close);
+    discard.addEventListener('click', close);
+})();
+</script>
+{% endblock %}
