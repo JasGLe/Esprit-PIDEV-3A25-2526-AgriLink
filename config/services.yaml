@@ -73,5 +73,10 @@ services:
             $groqApiKey: '%env(GROQ_API_KEY)%'
         tags: ['controller.service_arguments']
 
+    # ExchangeRateService — conversion de devises TND → USD/EUR/AED/SAR/GBP/KWD
+    App\Service\Equipment\ExchangeRateService:
+        arguments:
+            $exchangeRateApiKey: '%env(EXCHANGERATE_API_KEY)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

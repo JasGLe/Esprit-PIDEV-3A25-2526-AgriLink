@@ -3,8 +3,56 @@
 
 {% block stylesheets %}
 <style>
+    /* ── Labels/valeurs du bloc détails ── */
     .info-label { font-size:.8rem; color:#6c757d; text-transform:uppercase; letter-spacing:.05em; font-weight:600; }
     .info-value { font-size:1rem; font-weight:500; }
+
+    /* ── Widget conversion devises ── */
+    .currency-card {
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 2px 12px rgba(0,0,0,.08);
+        overflow: hidden;
+    }
+    .currency-card .currency-header {
+        /* Dégradé vert AgriLink identique au diagnostic IA */
+        background: linear-gradient(135deg, #1a5c2e, #198754);
+        padding: .85rem 1.2rem;
+        color: #fff;
+    }
+    .currency-header .badge-realtime {
+        background: rgba(255,255,255,.18);
+        color: #fff;
+        font-size: .7rem;
+        font-weight: 500;
+        padding: .25em .7em;
+        border-radius: 20px;
+        margin-left: .5rem;
+        vertical-align: middle;
+    }
+    /* Chaque tuile devise */
+    .currency-tile {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: .85rem .75rem;
+        text-align: center;
+        transition: box-shadow .15s ease;
+    }
+    .currency-tile:hover { box-shadow: 0 4px 14px rgba(0,0,0,.1); }
+    .currency-tile .ct-flag   { font-size: 1.6rem; margin-bottom: .25rem; }
+    .currency-tile .ct-code   { font-size: .7rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .06em; }
+    .currency-tile .ct-name   { font-size: .72rem; color: #94a3b8; margin-bottom: .3rem; }
+    .currency-tile .ct-amount { font-size: 1.1rem; font-weight: 700; color: #198754; }
+    .currency-tile .ct-rate   { font-size: .7rem; color: #94a3b8; margin-top: .15rem; }
+    /* Footer note */
+    .currency-footer {
+        background: #f8f9fa;
+        font-size: .75rem;
+        color: #6c757d;
+        font-style: italic;
+        padding: .55rem 1.2rem;
+    }
 </style>
 {% endblock %}
 
@@ -96,6 +144,47 @@
 
         </div>
     </div>
+
+    {# ════════════════════════════════
+       WIDGET CONVERSION DEVISES
+       Visible seulement si cout > 0 ET l'API a renvoyé des taux
+    ════════════════════════════════ #}
+    {% if maintenance.cout and maintenance.cout > 0 and rates is not empty %}
+    <div class="card currency-card mb-4">
+
+        {# ── Header vert dégradé AgriLink ── #}
+        <div class="currency-header d-flex align-items-center justify-content-between">
+            <span class="fw-semibold">💱 Valeur en devises internationales</span>
+            <span class="badge-realtime">Taux en temps réel</span>
+        </div>
+
+        {# ── Grille 3 colonnes (2 sur mobile) — une tuile par devise ── #}
+        <div class="card-body p-3">
+            <div class="row g-2 row-cols-2 row-cols-md-3">
+                {% for code, info in rates %}
+                    {# Montant converti = cout TND × taux #}
+                    {% set converted = maintenance.cout * info.rate %}
+                    <div class="col">
+                        <div class="currency-tile">
+                            <div class="ct-flag">{{ info.flag }}</div>
+                            <div class="ct-code">{{ code }}</div>
+                            <div class="ct-name">{{ info.name }}</div>
+                            <div class="ct-amount">{{ converted|number_format(2, '.', ',') }}</div>
+                            <div class="ct-rate">1 TND = {{ info.rate|number_format(4, '.', ',') }} {{ code }}</div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {# ── Pied de widget : source + horodatage indicatif ── #}
+        <div class="currency-footer d-flex justify-content-between align-items-center flex-wrap gap-1">
+            <span>Taux indicatifs — source ExchangeRate-API</span>
+            <span>{{ "now"|date('d/m/Y à H:i') }}</span>
+        </div>
+
+    </div>
+    {% endif %}
 
     <a href="{{ path('maintenance_index') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
 {% endblock %}

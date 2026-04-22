@@ -6,6 +6,7 @@ use App\Entity\Maintenance;
 use App\Form\Equipment\MaintenanceType;
 use App\Repository\EquipementRepository;
 use App\Repository\MaintenanceRepository;
+use App\Service\Equipment\ExchangeRateService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -24,6 +25,7 @@ class MaintenanceController extends AbstractController
         MaintenanceRepository $repo,
         EquipementRepository  $equipRepo,
         PaginatorInterface    $paginator,
+        ExchangeRateService   $exchangeRateService,
         Request               $request
     ): Response {
         $userId = $this->getUser()->getId();
@@ -54,6 +56,10 @@ class MaintenanceController extends AbstractController
             $equipMap[$eq->getId()] = $eq;
         }
 
+        // ── Taux de change TND → devises (mis en cache 1 heure) ───────────────
+        // Retourne [] si l'API est indisponible — les dropdowns seront masqués
+        $rates = $exchangeRateService->getRatesFromTND();
+
         return $this->render('equipment/maintenance/index.html.twig', [
             'maintenances' => $maintenances,
             'equipMap'     => $equipMap,
@@ -63,6 +69,7 @@ class MaintenanceController extends AbstractController
             'kpiTotal'     => $kpiTotal,
             'kpiRetard'    => $kpiRetard,
             'kpiCout'      => $kpiCout,
+            'rates'        => $rates,    // taux de change pour les dropdowns
         ]);
     }
 
@@ -114,16 +121,22 @@ class MaintenanceController extends AbstractController
     // ════════════════════════════════════════════════════════
     #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(
-        Maintenance $maintenance,
-        EquipementRepository $equipRepo
+        Maintenance         $maintenance,
+        EquipementRepository $equipRepo,
+        ExchangeRateService  $exchangeRateService
     ): Response {
         $this->denyAccessUnlessOwner($maintenance, $equipRepo);
 
         $equipement = $equipRepo->find($maintenance->getEquipementId());
 
+        // ── Taux de change TND → devises (mis en cache 1 heure) ───────────────
+        // Retourne [] si l'API est indisponible — le widget sera masqué
+        $rates = $exchangeRateService->getRatesFromTND();
+
         return $this->render('equipment/maintenance/show.html.twig', [
             'maintenance' => $maintenance,
             'equipement'  => $equipement,
+            'rates'       => $rates,    // taux de change pour le widget de conversion
         ]);
     }
 
