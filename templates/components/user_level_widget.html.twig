@@ -1,5 +1,13 @@
 {# ── User Level & Badge Widget ── #}
 <div id="user-level-widget" class="user-level-widget">
+    <div class="ulw-header-bar">
+        <h3 class="ulw-title">🎮 Gamification</h3>
+        <button type="button" id="ulw-minimize-btn" class="ulw-minimize-btn" title="Réduire/Agrandir" style="cursor:pointer;background:none;border:none;padding:0;color:#6b7280;font-size:1.1rem;display:flex;align-items:center;justify-content:center;width:24px;height:24px;">
+            <svg id="ulw-minimize-icon" class="ulw-minimize-icon" style="width:1.2rem;height:1.2rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+        </button>
+    </div>
 
     <div id="ulw-skeleton" class="ulw-skeleton">
         <div class="ulw-skeleton-bar" style="width:60%;height:18px;border-radius:6px;background:#e5e7eb;margin-bottom:10px;"></div>
@@ -8,6 +16,12 @@
     </div>
 
     <div id="ulw-content" style="display:none;"></div>
+
+    {# Minimized view with level info #}
+    <div id="ulw-minimized-info" class="ulw-minimized-info" style="display:none;">
+        <div class="ulw-mini-level" id="ulw-mini-level"></div>
+        <div class="ulw-mini-stats" id="ulw-mini-stats"></div>
+    </div>
 
 </div>
 
@@ -18,7 +32,124 @@
     border: 1px solid #e5e7eb;
     padding: 1.1rem 1.25rem;
     box-shadow: 0 1px 4px rgba(0,0,0,.06);
+    transition: all 0.25s ease;
 }
+
+.user-level-widget.minimized {
+    padding: 0.75rem 1.25rem;
+}
+
+.user-level-widget.minimized #ulw-skeleton,
+.user-level-widget.minimized #ulw-content {
+    display: none !important;
+}
+
+.user-level-widget.minimized #ulw-minimized-info {
+    display: block !important;
+}
+
+.ulw-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+}
+
+.user-level-widget.minimized .ulw-header-bar {
+    margin-bottom: 0.5rem;
+}
+
+.ulw-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #374151;
+    flex: 1;
+}
+
+.ulw-minimize-btn {
+    transition: all 0.2s ease;
+    color: #6b7280;
+    padding: 0.35rem;
+    border-radius: 0.35rem;
+}
+
+.ulw-minimize-btn:hover {
+    color: #374151;
+    transform: scale(1.1);
+    background: rgba(107, 114, 128, 0.08);
+}
+
+.user-level-widget.minimized .ulw-minimize-btn {
+    background: linear-gradient(135deg, rgba(22, 163, 74, 0.08) 0%, rgba(22, 163, 74, 0.04) 100%);
+    color: #16a34a;
+}
+
+.user-level-widget.minimized .ulw-minimize-icon {
+    transform: rotate(45deg);
+}
+
+.ulw-skeleton { animation: ulw-pulse 1.4s ease-in-out infinite; }
+@keyframes ulw-pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
+
+/* Minimized info styles */
+.ulw-minimized-info {
+    display: none;
+}
+
+.ulw-mini-level {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    margin-bottom: 0.4rem;
+}
+
+.ulw-mini-level-icon {
+    font-size: 1.25rem;
+}
+
+.ulw-mini-level-content {
+    flex: 1;
+}
+
+.ulw-mini-level-label {
+    font-size: 0.7rem;
+    color: #6b7280;
+    font-weight: 500;
+    margin: 0;
+}
+
+.ulw-mini-level-value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #374151;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.ulw-mini-stats {
+    display: flex;
+    gap: 0.5rem;
+    font-size: 0.7rem;
+    color: #6b7280;
+    padding-top: 0.4rem;
+    border-top: 1px solid #f3f4f6;
+}
+
+.ulw-mini-stat {
+    flex: 1;
+    text-align: center;
+}
+
+.ulw-mini-stat-value {
+    font-weight: 700;
+    color: #374151;
+    font-size: 0.8rem;
+    display: block;
+}
+
 .ulw-skeleton { animation: ulw-pulse 1.4s ease-in-out infinite; }
 @keyframes ulw-pulse { 0%,100%{opacity:1} 50%{opacity:.45} }
 
@@ -79,6 +210,26 @@
         6: { bg:'#f5f3ff', text:'#7c3aed', bar:'linear-gradient(90deg,#8b5cf6,#a78bfa)' },
         7: { bg:'#fff1f2', text:'#be123c', bar:'linear-gradient(90deg,#f43f5e,#fb7185)' },
     };
+
+    // Initialize minimize functionality
+    function initializeMinimizeButton() {
+        const widget = document.getElementById('user-level-widget');
+        const minimizeBtn = document.getElementById('ulw-minimize-btn');
+        const storageKey = 'ulw-minimized';
+
+        // Check if widget was previously minimized
+        const wasMinimized = localStorage.getItem(storageKey) === 'true';
+        if (wasMinimized) {
+            widget.classList.add('minimized');
+        }
+
+        // Toggle minimize state
+        minimizeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            widget.classList.toggle('minimized');
+            localStorage.setItem(storageKey, widget.classList.contains('minimized').toString());
+        });
+    }
 
     async function loadGamification() {
         try {
@@ -152,8 +303,48 @@
 
         document.getElementById('ulw-skeleton').style.display = 'none';
         document.getElementById('ulw-content').style.display  = 'block';
+
+        // Render minimized view
+        renderMinimizedInfo(data);
     }
 
+    function renderMinimizedInfo(data) {
+        const { points, loginCount, level, badges } = data;
+        const col = LEVEL_COLORS[level.number] || LEVEL_COLORS[1];
+
+        // Level display
+        const miniLevelHtml = `
+            <div class="ulw-mini-level-icon">${level.icon}</div>
+            <div class="ulw-mini-level-content">
+                <p class="ulw-mini-level-label">Niveau ${level.number}</p>
+                <p class="ulw-mini-level-value" style="color:${col.text}">${level.label}</p>
+            </div>
+        `;
+
+        // Brief stats
+        const miniStatsHtml = `
+            <div class="ulw-mini-stat">
+                <span class="ulw-mini-stat-value">${points}</span>
+                Points
+            </div>
+            <div class="ulw-mini-stat">
+                <span class="ulw-mini-stat-value">${badges.length}</span>
+                Badges
+            </div>
+            <div class="ulw-mini-stat">
+                <span class="ulw-mini-stat-value">${loginCount}</span>
+                Visites
+            </div>
+        `;
+
+        document.getElementById('ulw-mini-level').innerHTML = miniLevelHtml;
+        document.getElementById('ulw-mini-stats').innerHTML = miniStatsHtml;
+    }
+
+    // Initialize minimize button first
+    initializeMinimizeButton();
+    
+    // Load gamification data
     loadGamification();
 })();
 </script>
