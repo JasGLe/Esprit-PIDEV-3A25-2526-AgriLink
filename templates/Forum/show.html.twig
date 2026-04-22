@@ -639,6 +639,9 @@
             <p class="text-muted mb-0">Suivez la discussion et répondez depuis l’espace dashboard.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
+            <a href="{{ path('forum_export_pdf', {id: forum.id}) }}" class="btn btn-outline-danger" data-turbo="false">
+                Telecharger PDF
+            </a>
             <a href="{{ path('forum_edit', {id: forum.id}) }}" class="btn btn-outline-secondary">Modifier</a>
             <a href="{{ path('forum_index') }}" class="btn btn-outline-primary">Retour au forum</a>
         </div>

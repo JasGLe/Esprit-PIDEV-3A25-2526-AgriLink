@@ -17,6 +17,7 @@ use App\Service\ForumMessageTranslationService;
 use App\Service\ForumVoiceTranscriptionService;
 use App\Service\ForumAiAssistantException;
 use App\Service\ForumAiAssistantService;
+use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -211,6 +212,27 @@ class ForumController extends AbstractController
                 $messages
             ),
         ]);
+    }
+
+    #[Route('/{id}/export-pdf', name: 'forum_export_pdf', methods: ['GET'])]
+    public function exportPdf(Forum $forum, MessageRepository $messageRepository, PdfService $pdfService): Response
+    {
+        $messages = $messageRepository->findBy(['forum' => $forum], ['dateEnvoi' => 'ASC']);
+        $logoDataUri = $pdfService->getImageDataUri('logo_with_text.png');
+
+        $html = $this->renderView('Forum/export_pdf.html.twig', [
+            'forum' => $forum,
+            'messages' => $messages,
+            'messageCount' => count($messages),
+            'logoDataUri' => $logoDataUri,
+            'generatedAt' => new \DateTimeImmutable(),
+        ]);
+
+        $safeTitle = preg_replace('/[^a-zA-Z0-9_-]+/', '-', strtolower($forum->getTitre())) ?: 'discussion';
+        $safeTitle = trim($safeTitle, '-');
+        $filename = sprintf('discussion-forum-%d-%s.pdf', $forum->getId(), $safeTitle !== '' ? $safeTitle : 'export');
+
+        return $pdfService->generatePdf($html, $filename, 'A4', 'portrait');
     }
 
     #[Route('/{id}/messages', name: 'forum_message_create', methods: ['POST'])]
