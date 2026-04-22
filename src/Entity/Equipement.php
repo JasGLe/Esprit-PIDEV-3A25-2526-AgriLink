@@ -4,29 +4,53 @@ namespace App\Entity;
 
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Validator\Constraints as Assert;  // ← AJOUT
+use Symfony\Component\Validator\Constraints as Assert;
 
+/**
+ * Entité Equipement — représente un équipement agricole appartenant à un agriculteur.
+ *
+ * Règles métier :
+ * - Un équipement appartient à un unique utilisateur (userlog = id user).
+ * - Deux catégories possibles : "Véhicule Motorisé" et "Autre Équipement".
+ *   Les champs kilométrage/heures ne sont pertinents QUE pour les véhicules.
+ * - Les contraintes Assert\When sur les champs véhicule évitent une validation
+ *   côté serveur inutile quand la catégorie est "Autre Équipement".
+ * - Un code passeport unique (format EQ-YYYY-XXXX) est généré une seule fois
+ *   et reste immuable ; il est encodé dans un QR code.
+ * - Les champs latitude/longitude permettent la géolocalisation sur carte Leaflet.
+ *
+ * Relations :
+ * - Un équipement peut avoir plusieurs maintenances (relation via equipementId dans Maintenance).
+ * - L'exploitationId est une clé étrangère vers l'entité exploitation (non mappée en ORM ici).
+ *
+ * @ORM\Entity(repositoryClass: \App\Repository\EquipementRepository::class)
+ * @ORM\Table(name: "equipement")
+ * @ORM\HasLifecycleCallbacks
+ */
 #[ORM\Entity(repositoryClass: \App\Repository\EquipementRepository::class)]
 #[ORM\Table(name: 'equipement')]
-#[ORM\HasLifecycleCallbacks]  // ← AJOUT : pour PrePersist/PreUpdate
+#[ORM\HasLifecycleCallbacks]
 class Equipement
 {
     // ════════════════════════════════════════════════════════
-    // AJOUT : Constantes métier
+    // Constantes métier — utilisées dans les formulaires et validations
     // ════════════════════════════════════════════════════════
 
+    /** Catégories d'équipements acceptées par le système. */
     const CATEGORIES = [
         'Véhicule Motorisé' => 'Véhicule Motorisé',
         'Autre Équipement'  => 'Autre Équipement',
     ];
 
+    /** Types valides pour la catégorie "Véhicule Motorisé". */
     const TYPES_VEHICULES = [
         'Voiture'  => 'Voiture',
         'Camion'   => 'Camion',
         'Tracteur' => 'Tracteur',
-        'Semoir'   => 'Semoir',   // semoir peut être tracté
+        'Semoir'   => 'Semoir',   // le semoir peut être tracté, donc classé ici aussi
     ];
 
+    /** Types valides pour la catégorie "Autre Équipement". */
     const TYPES_EQUIPEMENTS = [
         'Pulvérisateur' => 'Pulvérisateur',
         'Moissonneuse'  => 'Moissonneuse',
@@ -36,6 +60,7 @@ class Equipement
         'Autre'         => 'Autre',
     ];
 
+    /** Statuts opérationnels d'un équipement. */
     const STATUTS = [
         'Actif'          => 'Actif',
         'En panne'       => 'En panne',
@@ -44,14 +69,19 @@ class Equipement
     ];
 
     // ════════════════════════════════════════════════════════
-    // Champs existants — on ajoute seulement les Assert
+    // Propriétés — champs communs à tous les équipements
     // ════════════════════════════════════════════════════════
 
+    /** Identifiant primaire auto-généré. */
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER)]
     private int $id;
 
+    /**
+     * Nom de l'équipement — identifiant humain affiché dans toute l'interface.
+     * Contrainte : 2–100 caractères, lettres/chiffres/tirets/espaces/underscores uniquement.
+     */
     #[ORM\Column(type: Types::STRING, length: 100)]
     #[Assert\NotBlank(message: 'Le nom est obligatoire.')]
     #[Assert\Length(
@@ -65,10 +95,18 @@ class Equipement
     )]
     private ?string $nom = null;
 
+    /**
+     * Type précis de l'équipement (ex: Tracteur, Pulvérisateur).
+     * Dépend de la catégorie : alimenté dynamiquement via AJAX dans le formulaire.
+     */
     #[ORM\Column(type: Types::STRING, length: 50)]
     #[Assert\NotBlank(message: 'Le type est obligatoire.')]
     private ?string $type = null;
 
+    /**
+     * Catégorie principale : "Véhicule Motorisé" ou "Autre Équipement".
+     * Détermine l'affichage des champs kilométrage/heures dans le formulaire.
+     */
     #[ORM\Column(type: Types::STRING)]
     #[Assert\NotBlank(message: 'La catégorie est obligatoire.')]
     #[Assert\Choice(
@@ -77,14 +115,21 @@ class Equipement
     )]
     private ?string $categorie = null;
 
+    /** Marque du fabricant (optionnel) — utilisée dans le diagnostic IA. */
     #[ORM\Column(type: Types::STRING, length: 50, nullable: true)]
     #[Assert\Length(max: 50, maxMessage: 'La marque ne peut pas dépasser {{ limit }} caractères.')]
     private ?string $marque = null;
 
+    /** Modèle commercial (optionnel) — complète la marque pour le diagnostic IA. */
     #[ORM\Column(type: Types::STRING, length: 50, nullable: true)]
     #[Assert\Length(max: 50, maxMessage: 'Le modèle ne peut pas dépasser {{ limit }} caractères.')]
     private ?string $modele = null;
 
+    /**
+     * Date d'acquisition — permet de calculer l'âge de l'équipement.
+     * L'âge est transmis au service GroqDiagnosticService pour enrichir le diagnostic.
+     * Contrainte : ne peut pas être dans le futur.
+     */
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     #[Assert\LessThanOrEqual(
         value: 'today',
@@ -92,6 +137,10 @@ class Equipement
     )]
     private ?\DateTimeInterface $dateAcquisition = null;
 
+    /**
+     * Statut opérationnel actuel — affiché dans les listes et le passeport.
+     * Déclenche une notification SMS via Twilio si modifié dans le formulaire edit.
+     */
     #[ORM\Column(type: Types::STRING, nullable: true)]
     #[Assert\Choice(
         choices: ['Actif', 'En panne', 'En maintenance', 'Hors service'],
@@ -99,6 +148,7 @@ class Equipement
     )]
     private ?string $statut = null;
 
+    /** Description libre — transmise au service IA pour enrichir le diagnostic. */
     #[ORM\Column(type: Types::TEXT, length: 65535, nullable: true)]
     #[Assert\Length(
         max: 1000,
@@ -106,23 +156,45 @@ class Equipement
     )]
     private ?string $description = null;
 
+    /**
+     * Chemin relatif de l'image stockée dans public/uploads/equipements/.
+     * Format variable en base selon l'historique : "equipements/fichier.jpg"
+     * ou "uploads/equipements/fichier.jpg". Les templates utilisent |split('/')|last
+     * pour extraire uniquement le nom de fichier, indépendamment du format.
+     */
     #[ORM\Column(type: Types::STRING, length: 500, nullable: true)]
     private ?string $imageUrl = null;
 
+    /** Identifiant de l'exploitation agricole (clé étrangère non mappée en ORM). */
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $exploitationId = null;
 
+    /**
+     * Identifiant de l'utilisateur propriétaire de l'équipement.
+     * Utilisé pour filtrer les équipements par agriculteur et
+     * vérifier les droits d'accès dans denyAccessUnlessOwner().
+     */
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $userlog = null;
 
+    /** Date de création — remplie automatiquement par le lifecycle callback onPrePersist(). */
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $dateCreation = null;
 
+    /** Date de dernière modification — remplie par onPreUpdate(). */
     #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $dateModification = null;
 
-    // ── Champs véhicule : Assert\When → actifs UNIQUEMENT si Véhicule Motorisé ──
+    // ════════════════════════════════════════════════════════
+    // Champs spécifiques véhicule — actifs UNIQUEMENT si catégorie = "Véhicule Motorisé"
+    // (Assert\When évite leur validation pour les autres catégories)
+    // ════════════════════════════════════════════════════════
 
+    /**
+     * Kilométrage actuel du véhicule.
+     * Comparé au seuil pour détecter si une maintenance kilométrique est due.
+     * Obligatoire pour les véhicules (Assert\When).
+     */
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     #[Assert\When(
         expression: "this.getCategorie() === 'Véhicule Motorisé'",
@@ -137,6 +209,10 @@ class Equipement
     )]
     private ?int $kilometrageActuel = null;
 
+    /**
+     * Kilométrage enregistré lors de la dernière maintenance.
+     * Permet de calculer les km parcourus depuis la dernière intervention.
+     */
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     #[Assert\When(
         expression: "this.getCategorie() === 'Véhicule Motorisé'",
@@ -146,6 +222,10 @@ class Equipement
     )]
     private ?int $kilometrageDerniereMaintenance = null;
 
+    /**
+     * Seuil kilométrique déclenchant une alerte de maintenance (défaut : 10 000 km).
+     * Si kilometrageActuel >= seuilKmMaintenance, une alerte est générée dans le diagnostic IA.
+     */
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     #[Assert\When(
         expression: "this.getCategorie() === 'Véhicule Motorisé'",
@@ -156,6 +236,10 @@ class Equipement
     )]
     private ?int $seuilKmMaintenance = null;
 
+    /**
+     * Heures d'utilisation cumulées du moteur.
+     * Indicateur clé pour les tracteurs et engins dont la maintenance dépend du temps moteur.
+     */
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     #[Assert\When(
         expression: "this.getCategorie() === 'Véhicule Motorisé'",
@@ -165,6 +249,7 @@ class Equipement
     )]
     private ?int $heuresUtilisation = null;
 
+    /** Heures moteur enregistrées lors de la dernière maintenance. */
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     #[Assert\When(
         expression: "this.getCategorie() === 'Véhicule Motorisé'",
@@ -174,6 +259,10 @@ class Equipement
     )]
     private ?int $heuresDerniereMaintenance = null;
 
+    /**
+     * Seuil en heures déclenchant une alerte de maintenance (défaut : 200 h).
+     * Si heuresUtilisation >= seuilHeuresMaintenance, alerte dans le diagnostic IA.
+     */
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     #[Assert\When(
         expression: "this.getCategorie() === 'Véhicule Motorisé'",
@@ -184,46 +273,73 @@ class Equipement
     )]
     private ?int $seuilHeuresMaintenance = null;
 
+    /**
+     * Seuil en jours entre deux maintenances périodiques (défaut : 365 j).
+     * Applicable à tous les types d'équipements (pas uniquement les véhicules).
+     */
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     #[Assert\Positive(message: 'Le seuil en jours doit être supérieur à 0.')]
     private ?int $seuilJoursMaintenance = null;
 
+    /**
+     * Date de la dernière maintenance effectuée sur cet équipement.
+     * Utilisée avec seuilJoursMaintenance pour calculer le retard potentiel.
+     */
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     #[Assert\LessThanOrEqual(
         value: 'today',
         message: 'La date de dernière maintenance ne peut pas être dans le futur.'
     )]
     private ?\DateTimeInterface $dateDerniereMaintenance = null;
-    
-// AJOUT : variable pour qr code 
+
+    /**
+     * Code passeport unique au format EQ-YYYY-XXXX.
+     * Généré une seule fois lors de la première consultation du passeport ou du QR.
+     * Encodé dans le QR code SVG généré par PasseportController::qr().
+     */
     #[ORM\Column(type: Types::STRING, length: 20, nullable: true, unique: true)]
     private ?string $codePasseport = null;
-// AJOUT : variable  latitude et longitude 
 
+    /**
+     * Latitude GPS de l'emplacement de l'équipement.
+     * Remplie par le formulaire via Leaflet.js (clic sur la carte ou géolocalisation navigateur).
+     * Contrainte : entre -90 et 90 degrés.
+     */
     #[ORM\Column(type: Types::FLOAT, nullable: true)]
-#[Assert\Range(
-    min: -90, max: 90,
-    notInRangeMessage: 'Latitude invalide (entre -90 et 90).'
-)]
-private ?float $latitude = null;
+    #[Assert\Range(
+        min: -90, max: 90,
+        notInRangeMessage: 'Latitude invalide (entre -90 et 90).'
+    )]
+    private ?float $latitude = null;
 
-#[ORM\Column(type: Types::FLOAT, nullable: true)]
-#[Assert\Range(
-    min: -180, max: 180,
-    notInRangeMessage: 'Longitude invalide (entre -180 et 180).'
-)]
-private ?float $longitude = null;
+    /**
+     * Longitude GPS de l'emplacement de l'équipement.
+     * Contrainte : entre -180 et 180 degrés.
+     */
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    #[Assert\Range(
+        min: -180, max: 180,
+        notInRangeMessage: 'Longitude invalide (entre -180 et 180).'
+    )]
+    private ?float $longitude = null;
 
     // ════════════════════════════════════════════════════════
-    // AJOUT : Lifecycle callbacks (dates automatiques)
+    // Lifecycle callbacks — dates automatiques
     // ════════════════════════════════════════════════════════
 
+    /**
+     * Rempli dateCreation automatiquement avant toute insertion en base.
+     * L'annotation #[HasLifecycleCallbacks] sur la classe est requise.
+     */
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
         $this->dateCreation = new \DateTime();
     }
 
+    /**
+     * Met à jour dateModification automatiquement avant toute modification en base.
+     */
     #[ORM\PreUpdate]
     public function onPreUpdate(): void
     {
@@ -231,16 +347,24 @@ private ?float $longitude = null;
     }
 
     // ════════════════════════════════════════════════════════
-    // AJOUT : Helper métier
+    // Helpers métier
     // ════════════════════════════════════════════════════════
 
+    /**
+     * Indique si l'équipement est un véhicule motorisé.
+     * Logique métier : utilisé dans le formulaire pour afficher/masquer les champs
+     * kilométrage/heures, et dans le controller pour nullifier ces champs si la
+     * catégorie est changée vers "Autre Équipement".
+     *
+     * @return bool true si la catégorie est "Véhicule Motorisé"
+     */
     public function isVehicule(): bool
     {
         return $this->categorie === 'Véhicule Motorisé';
     }
 
     // ════════════════════════════════════════════════════════
-    // Getters / Setters existants — INCHANGÉS
+    // Getters / Setters
     // ════════════════════════════════════════════════════════
 
     public function getId(): int
@@ -270,11 +394,10 @@ private ?float $longitude = null;
         return $this;
     }
 
-    // APRÈS
-public function getCategorie(): ?string
-{
-    return $this->categorie;
-}
+    public function getCategorie(): ?string
+    {
+        return $this->categorie;
+    }
 
     public function setCategorie(?string $categorie): static
     {
@@ -481,22 +604,28 @@ public function getCategorie(): ?string
     }
 
     public function getCodePasseport(): ?string { return $this->codePasseport; }
-public function setCodePasseport(?string $codePasseport): static
-{
-    $this->codePasseport = $codePasseport;
-    return $this;
-}
 
-// Helper — génère un code unique style EQ-2024-0042
-public function genererCodePasseport(): string
-{
-    return 'EQ-' . date('Y') . '-' . str_pad($this->id, 4, '0', STR_PAD_LEFT);
-}
+    public function setCodePasseport(?string $codePasseport): static
+    {
+        $this->codePasseport = $codePasseport;
+        return $this;
+    }
 
-// pour maps 
-public function getLatitude(): ?float { return $this->latitude; }
-public function setLatitude(?float $latitude): static { $this->latitude = $latitude; return $this; }
+    /**
+     * Génère un code passeport unique basé sur l'id et l'année courante.
+     * Format : EQ-2024-0042. Appelé une seule fois dans PasseportController
+     * quand codePasseport est null (première consultation du passeport ou du QR).
+     *
+     * @return string Le code généré (non persisté automatiquement — il faut appeler em->flush())
+     */
+    public function genererCodePasseport(): string
+    {
+        return 'EQ-' . date('Y') . '-' . str_pad($this->id, 4, '0', STR_PAD_LEFT);
+    }
 
-public function getLongitude(): ?float { return $this->longitude; }
-public function setLongitude(?float $longitude): static { $this->longitude = $longitude; return $this; }
+    public function getLatitude(): ?float { return $this->latitude; }
+    public function setLatitude(?float $latitude): static { $this->latitude = $latitude; return $this; }
+
+    public function getLongitude(): ?float { return $this->longitude; }
+    public function setLongitude(?float $longitude): static { $this->longitude = $longitude; return $this; }
 }

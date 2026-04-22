@@ -8,22 +8,52 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 /**
  * GeminiVisionService
  * ─────────────────────────────────────────────────────────────────────────────
- * Analyse visuelle d'un équipement agricole via Groq (LLaMA 4 Scout multimodal).
+ * Analyse visuelle d'un équipement agricole via l'API Groq multimodale.
+ *
+ * Malgré son nom (héritage historique du projet), ce service utilise
+ * Groq (LLaMA 4 Scout 17B multimodal) et NON Gemini de Google.
+ * Il est nommé "GeminiVision" par convention dans le projet.
  *
  * Fonctionnement :
  *  1. Reçoit une image encodée en base64 + son mimeType + l'entité Equipement
- *  2. Construit une requête multimodale OpenAI-compatible (image_url + texte)
- *  3. Envoie la requête HTTP POST vers l'API Groq
- *  4. Parse et retourne le JSON structuré de l'analyse visuelle
+ *  2. Construit une requête multimodale OpenAI-compatible :
+ *     - Message système : cadre l'analyse sur le diagnostic visuel agricole
+ *     - Message utilisateur : image (data URI base64) + prompt textuel enrichi
+ *       des données de l'équipement (nom, type, marque, statut déclaré)
+ *  3. Envoie la requête HTTP POST vers l'API Groq avec timeout 30s
+ *  4. Nettoie les éventuels backticks markdown du LLM
+ *  5. Parse et normalise la réponse JSON structurée
+ *
+ * Format de réponse normalisé :
+ * {
+ *   "etat_visuel"               : "Bon|Usure normale|Dégradation|Critique",
+ *   "score_visuel"              : 0-100,
+ *   "anomalies_detectees"       : ["...", "..."],
+ *   "zones_problematiques"      : ["...", "..."],
+ *   "recommandations_visuelles" : ["...", "..."],
+ *   "conclusion"                : "..."
+ * }
+ *
+ * Paramétrage :
+ *  - GROQ_API_KEY : clé API (env var, injectée via services.yaml)
+ *  - Modèle       : meta-llama/llama-4-scout-17b-16e-instruct (hardcodé)
+ *  - temperature=0.3 : réponses précises et reproductibles
  * ─────────────────────────────────────────────────────────────────────────────
  */
 class GeminiVisionService
 {
+    /** URL de l'API Groq (format OpenAI Chat Completions). */
     private const GROQ_URL   = 'https://api.groq.com/openai/v1/chat/completions';
+
+    /**
+     * Modèle multimodal LLaMA 4 Scout — supporte images + texte.
+     * Hardcodé car c'est le seul modèle Groq supportant les images actuellement.
+     */
     private const GROQ_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
 
     /**
-     * Prompt système : interdit toute réponse hors diagnostic visuel agricole.
+     * Prompt système : limite le LLM au diagnostic visuel agricole.
+     * Exige une réponse JSON pur (sans markdown, sans texte autour).
      */
     private const SYSTEM_PROMPT = 'Tu es un expert en diagnostic visuel d\'équipements agricoles. '
         . 'Analyse UNIQUEMENT les signes visuels de dégradation, usure, corrosion, dommages mécaniques '
@@ -31,6 +61,10 @@ class GeminiVisionService
         . 'Ne réponds à rien d\'autre qu\'un diagnostic visuel d\'équipement agricole. '
         . 'Réponds UNIQUEMENT en JSON valide, sans texte avant ni après, sans balises markdown.';
 
+    /**
+     * @param HttpClientInterface $httpClient  Client HTTP Symfony pour appeler l'API Groq
+     * @param string              $groqApiKey  Clé API Groq (depuis paramètre Symfony groq_api_key)
+     */
     public function __construct(
         private readonly HttpClientInterface $httpClient,
         private readonly string $groqApiKey
@@ -39,16 +73,34 @@ class GeminiVisionService
     /**
      * Analyse visuellement une photo d'équipement agricole.
      *
-     * @param string      $base64Image  Image encodée en base64 (sans préfixe data URI)
-     * @param string      $mimeType     Type MIME de l'image (image/jpeg, image/png, image/webp)
-     * @param Equipement  $equipement   Entité équipement pour enrichir le prompt
+     * L'image est transmise au LLM en base64 via une data URI (data:image/jpeg;base64,...).
+     * Le prompt textuel inclut les données de l'équipement pour permettre au LLM
+     * de contextualiser son analyse (ex: "tracteur John Deere, statut En panne"
+     * orientera l'analyse vers les signes typiques de panne de tracteur).
      *
-     * @return array  Résultat structuré : etat_visuel, score_visuel, anomalies_detectees, etc.
-     * @throws \RuntimeException  En cas d'erreur HTTP ou de réponse non-JSON
+     * Normalisation de la réponse :
+     * Si le LLM omet des champs, des valeurs par défaut sont appliquées :
+     *  - etat_visuel : "Inconnu"
+     *  - score_visuel : 50
+     *  - anomalies_detectees : []
+     *  - zones_problematiques : []
+     *  - recommandations_visuelles : []
+     *  - conclusion : ""
+     *
+     * @param string     $base64Image  Image encodée en base64 (sans préfixe data URI)
+     * @param string     $mimeType     Type MIME : image/jpeg, image/png ou image/webp
+     * @param Equipement $equipement   Entité pour enrichir le prompt (nom, type, marque, statut)
+     *
+     * @return array  Résultat normalisé avec etat_visuel, score_visuel, anomalies, zones,
+     *                recommandations et conclusion
+     *
+     * @throws \RuntimeException  Si l'API retourne une erreur HTTP, une réponse vide ou un JSON invalide
      */
     public function analyserPhoto(string $base64Image, string $mimeType, Equipement $equipement): array
     {
-        // ── Prompt utilisateur enrichi des données de l'équipement ────────────
+        // ── Prompt utilisateur enrichi des métadonnées de l'équipement ────────
+        // Les données de l'équipement donnent du contexte au LLM pour orienter
+        // l'analyse vers les anomalies spécifiques à ce type de matériel
         $userPrompt = sprintf(
             "Analyse cette photo de l'équipement agricole :\n"
             . "Nom: %s, Type: %s, Catégorie: %s, Marque: %s, Statut déclaré: %s.\n"
@@ -64,7 +116,7 @@ class GeminiVisionService
             $equipement->getStatut()    ?? 'Non renseigné'
         );
 
-        // ── Corps de la requête Groq (format OpenAI — multimodal image_url) ───
+        // ── Corps de la requête Groq (format OpenAI multimodal image_url) ────
         $requestBody = [
             'model'       => self::GROQ_MODEL,
             'messages'    => [
@@ -73,13 +125,14 @@ class GeminiVisionService
                     'role'    => 'system',
                     'content' => self::SYSTEM_PROMPT,
                 ],
-                // Message utilisateur : image + texte
+                // Message utilisateur : image en data URI + texte descriptif
                 [
                     'role'    => 'user',
                     'content' => [
                         [
                             'type'      => 'image_url',
                             'image_url' => [
+                                // Format data URI : data:image/jpeg;base64,{base64}
                                 'url' => 'data:' . $mimeType . ';base64,' . $base64Image,
                             ],
                         ],
@@ -91,10 +144,10 @@ class GeminiVisionService
                 ],
             ],
             'max_tokens'  => 1024,
-            'temperature' => 0.3,
+            'temperature' => 0.3, // réponses précises et stables
         ];
 
-        // ── Appel HTTP ────────────────────────────────────────────────────────
+        // ── Appel HTTP vers l'API Groq ────────────────────────────────────────
         try {
             $response = $this->httpClient->request('POST', self::GROQ_URL, [
                 'headers' => [
@@ -106,7 +159,7 @@ class GeminiVisionService
             ]);
 
             $statusCode = $response->getStatusCode();
-            $rawContent = $response->getContent(false);
+            $rawContent = $response->getContent(false); // false = ne pas lever d'exception sur 4xx
 
             if ($statusCode !== 200) {
                 $errData = json_decode($rawContent, true);
@@ -117,8 +170,10 @@ class GeminiVisionService
             $data = json_decode($rawContent, true);
 
         } catch (\RuntimeException $e) {
+            // Propager les erreurs Groq explicites vers le contrôleur
             throw $e;
         } catch (\Throwable $e) {
+            // Erreur réseau / transport Symfony HttpClient
             throw new \RuntimeException('Erreur réseau vers l\'API Groq Vision : ' . $e->getMessage());
         }
 
@@ -129,7 +184,8 @@ class GeminiVisionService
             throw new \RuntimeException('Réponse inattendue de l\'API Groq Vision (pas de contenu).');
         }
 
-        // ── Nettoyer les éventuels backticks markdown du LLM ──────────────────
+        // ── Nettoyer les éventuels backticks markdown du LLM ─────────────────
+        // Malgré la consigne, le LLM peut parfois entourer le JSON de ```json ... ```
         $content = preg_replace('/^```json\s*/i', '', trim($content));
         $content = preg_replace('/```\s*$/', '', $content);
         $content = trim($content);
@@ -140,7 +196,9 @@ class GeminiVisionService
             throw new \RuntimeException('La réponse Groq Vision n\'est pas un JSON valide : ' . $content);
         }
 
-        // ── Normaliser les champs attendus avec des valeurs par défaut ─────────
+        // ── Normaliser les champs avec des valeurs par défaut ─────────────────
+        // Garantit que le tableau retourné a toujours tous les champs attendus,
+        // même si le LLM en omet un (robustesse côté template Twig)
         return [
             'etat_visuel'               => $analyse['etat_visuel']               ?? 'Inconnu',
             'score_visuel'              => (int) ($analyse['score_visuel']        ?? 50),
