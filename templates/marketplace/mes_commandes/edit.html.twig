@@ -1,6 +1,6 @@
 {% extends 'layouts/dashboard_layout.html.twig' %}
 
-{% block title %}Modifier la commande {% if mes_commandes_mode == 'vendeur' or mes_commandes_mode == 'admin' or app.user.isAgriPlus %}#CMD{{ "%03d"|format(commande.id) }}{% else %}#{{ commande.numCommande }}{% endif %} — AgriLink{% endblock %}
+{% block title %}Modifier la commande {% if mes_commandes_mode == 'vendeur' or mes_commandes_mode == 'admin' or is_granted('ROLE_AGRIPLUS') %}#CMD{{ "%03d"|format(commande.id) }}{% else %}#{{ commande.numCommande }}{% endif %} — AgriLink{% endblock %}
 {% block page_title %}{% if mes_commandes_mode == 'vendeur' %}Modifier la livraison (client){% elseif mes_commandes_mode == 'admin' %}Modifier la livraison (admin){% else %}Modifier la livraison{% endif %}{% endblock %}
 
 {% block stylesheets %}
@@ -14,7 +14,7 @@
     <a href="{{ path('mes_commandes_show', { id: commande.id }) }}" class="mc-link d-inline-flex align-items-center gap-1 mb-3 small"><i class="bi bi-arrow-left" aria-hidden="true"></i> Retour au détail</a>
 
     <div class="mc-detail-card p-4 mb-4">
-        <h2 class="mc-orders-title h5 mb-1">Commande <span class="mc-num">{% if mes_commandes_mode == 'vendeur' or mes_commandes_mode == 'admin' or app.user.isAgriPlus %}#CMD{{ "%03d"|format(commande.id) }}{% else %}#{{ commande.numCommande }}{% endif %}</span></h2>
+        <h2 class="mc-orders-title h5 mb-1">Commande <span class="mc-num">{% if mes_commandes_mode == 'vendeur' or mes_commandes_mode == 'admin' or is_granted('ROLE_AGRIPLUS') %}#CMD{{ "%03d"|format(commande.id) }}{% else %}#{{ commande.numCommande }}{% endif %}</span></h2>
         <p class="mc-orders-sub small mb-4">Mettez à jour l’adresse et les coordonnées de contact pour cette livraison.</p>
 
         {{ form_start(form, { attr: { novalidate: 'novalidate' } }) }}

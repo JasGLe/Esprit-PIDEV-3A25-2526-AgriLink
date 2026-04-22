@@ -1,13 +1,18 @@
 {% extends 'base.html.twig' %}
 
+{% block stylesheets %}
+{{ parent() }}
+<link rel="stylesheet" href="{{ asset('css/dashboard-modern.css') }}">
+{% endblock %}
+
 {% block body %}
-<div class="min-vh-100 bg-light">
+<div class="min-vh-100" style="background:#f6f8fa;">
     {# Mobile sidebar toggle #}
-    <div class="d-lg-none position-fixed top-0 start-0 end-0 bg-white border-bottom border-secondary" style="z-index: 1050;">
+    <div class="d-lg-none position-fixed top-0 start-0 end-0" style="z-index:1050;background:rgba(255,255,255,.97);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid #e5e7eb;box-shadow:0 1px 0 rgba(0,0,0,.04);">
         <div class="d-flex align-items-center justify-content-between px-4" style="height: 4rem;">
             <a href="{{ path('app_dashboard') }}" class="d-flex align-items-center gap-2 text-decoration-none">
                 <img src="{{ asset('logo_without_text.png') }}" alt="AgriLink" class="logo logo-nav">
-                <span class="fs-4 fw-bold text-success">AgriLink</span>
+                <span class="fs-5 fw-bold" style="color:#16a34a;">AgriLink</span>
             </a>
             <button type="button" onclick="document.getElementById('mobile-sidebar').classList.toggle('d-none')" class="btn btn-link text-secondary p-0">
                 <svg style="width: 1.5rem; height: 1.5rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,14 +229,14 @@
         <aside id="desktop-sidebar" class="d-none d-lg-flex flex-shrink-0 position-fixed top-0 bottom-0" style="z-index: 1040; width: 16rem; transition: width 0.25s ease; overflow: hidden;">
             <div class="d-flex flex-column h-100 bg-white border-end border-secondary" style="width: 100%; min-width: 0;">
                     {# Logo #}
-                    <div class="d-flex align-items-center justify-content-between px-3 border-bottom border-secondary flex-shrink-0" style="height: 4rem;">
+                    <div class="sidebar-logo-area d-flex align-items-center justify-content-between px-3 flex-shrink-0" style="height:4rem;background:linear-gradient(135deg,#166534 0%,#16a34a 100%);">
                         <a href="{{ path('app_dashboard') }}" class="d-flex align-items-center gap-2 text-decoration-none sidebar-logo-link">
-                            <img src="{{ asset('logo_without_text.png') }}" alt="AgriLink" class="logo logo-nav flex-shrink-0">
-                            <span class="fs-4 fw-bold text-success sidebar-hide">AgriLink</span>
+                            <img src="{{ asset('logo_without_text.png') }}" alt="AgriLink" class="logo logo-nav flex-shrink-0" style="filter:brightness(0) invert(1);">
+                            <span class="fs-5 fw-bold sidebar-hide" style="color:#fff;letter-spacing:-0.01em;">AgriLink</span>
                         </a>
-                        <button type="button" id="sidebar-toggle" class="btn btn-link text-secondary p-1 flex-shrink-0" title="Réduire/Agrandir">
-                            <svg id="sidebar-toggle-icon" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+                        <button type="button" id="sidebar-toggle" class="btn btn-link p-1 flex-shrink-0" title="Réduire/Agrandir" style="color:rgba(255,255,255,.7);">
+                            <svg id="sidebar-toggle-icon" style="width:1.1rem;height:1.1rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                             </svg>
                         </button>
                     </div>
@@ -482,7 +487,7 @@
             </style>
             <div class="dashboard-main-content">
                 {# Top header #}
-                <header class="d-none d-lg-flex align-items-center justify-content-between bg-white border-bottom border-secondary px-4" style="height: 4rem;">
+                <header class="d-none d-lg-flex align-items-center justify-content-between px-4 position-sticky top-0" style="height:4rem;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid #e5e7eb;box-shadow:0 1px 0 rgba(0,0,0,.04);z-index:100;">
                     <div>
                         <h1 class="fs-5 fw-semibold text-dark mb-0">{% block page_title %}Tableau de bord{% endblock %}</h1>
                     </div>

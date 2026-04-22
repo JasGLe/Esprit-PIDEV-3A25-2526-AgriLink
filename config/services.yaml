@@ -52,6 +52,11 @@ services:
             $facebookAppSecret: '%env(FACEBOOK_APP_SECRET)%'
             $facebookRedirectUri: '%env(FACEBOOK_REDIRECT_URI)%'
 
+    App\Service\LibreTranslateService:
+        arguments:
+            $libreTranslateBaseUrl: '%env(LIBRETRANSLATE_BASE_URL)%'
+            $libreTranslateApiKey: '%env(LIBRETRANSLATE_API_KEY)%'
+
     # Login event listeners
     App\EventListener\LoginSuccessListener:
         tags:

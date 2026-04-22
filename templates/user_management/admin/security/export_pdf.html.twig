@@ -13,15 +13,16 @@
             color: #1f2937;
             margin: 0;
             padding: 0;
-            line-height: 1.5;
+            line-height: 1.6;
+            background: #fafbfc;
         }
 
         .header {
             background: linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%);
             color: white;
-            padding: 16px 20px;
-            border-bottom: 5px solid #ef4444;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px 24px;
+            border-bottom: 6px solid #ef4444;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .header-table {
@@ -32,81 +33,97 @@
         .header-table td {
             border: none;
             padding: 0;
+            vertical-align: middle;
         }
 
         .header-main {
-            padding-right: 12px;
+            padding-right: 16px;
         }
 
         .title {
-            font-size: 18px;
-            font-weight: bold;
-            margin: 0 0 4px 0;
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 6px 0;
             color: #ef4444;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
         }
 
         .header-subtitle {
-            font-size: 8px;
+            font-size: 9px;
             color: #fecaca;
             margin: 0;
-            line-height: 1.3;
+            line-height: 1.4;
+            font-weight: 500;
         }
 
         .header-right {
             text-align: right;
-            padding-left: 12px;
+            padding-left: 16px;
         }
 
         .header-label {
             font-size: 8px;
             color: #ef4444;
-            font-weight: bold;
-            margin-bottom: 2px;
+            font-weight: 700;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .header-date {
-            font-size: 8px;
+            font-size: 9px;
             color: #fecaca;
+            font-weight: 500;
         }
 
-        .stats-container {
-            background: #fef2f2;
-            margin: 16px 20px;
-            padding: 12px;
-            border-radius: 6px;
-            border-left: 4px solid #ef4444;
+        .kpi-container {
+            background: white;
+            margin: 20px 24px;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
-        .stats {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
             margin: 0;
             padding: 0;
         }
 
-        .stat {
-            display: inline-block;
-            background: white;
-            border: 1.5px solid #d1d5db;
-            padding: 6px 10px;
-            border-radius: 5px;
-            font-size: 8px;
-            color: #991b1b;
-            font-weight: 600;
-            flex: 1;
-            min-width: 110px;
+        .kpi-card {
+            background: linear-gradient(135deg, #fef2f2 0%, #fafbfc 100%);
+            border: 1.5px solid #fecaca;
+            padding: 12px;
+            border-radius: 6px;
             text-align: center;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 4px rgba(239, 68, 68, 0.1);
         }
 
-        .stat:hover {
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        .kpi-label {
+            font-size: 7px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .kpi-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: #ef4444;
+            margin: 0;
+        }
+
+        .kpi-icon {
+            font-size: 14px;
+            margin-bottom: 3px;
         }
 
         .content {
-            padding: 0 20px 20px 20px;
+            padding: 0 24px 24px 24px;
         }
 
         table {
@@ -114,7 +131,10 @@
             border-collapse: collapse;
             margin-top: 10px;
             font-size: 8px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            background: white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            border-radius: 6px;
+            overflow: hidden;
         }
 
         thead {
@@ -123,47 +143,55 @@
         }
 
         th {
-            padding: 8px 10px;
+            padding: 10px 12px;
             font-size: 8px;
-            font-weight: bold;
+            font-weight: 700;
             text-align: left;
             border: none;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
         }
 
         td {
-            padding: 7px 10px;
+            padding: 8px 12px;
             border-bottom: 1px solid #e5e7eb;
             font-size: 8px;
-            height: 22px;
+            height: auto;
         }
 
         tbody tr {
             background: white;
-            transition: background-color 0.1s ease;
         }
 
         tbody tr:nth-child(even) {
             background: #fef2f2;
         }
 
-        tbody tr:hover {
-            background: #ffe4e4;
+        tbody tr:last-child td {
+            border-bottom: none;
         }
 
         .badge {
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 8px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 7px;
             background: #fee2e2;
             color: #991b1b;
-            font-weight: 600;
-            border: 0.5px solid #fecaca;
+            font-weight: 700;
+            border: 1px solid #fecaca;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .badge.success {
+            background: #dcfce7;
+            color: #166534;
+            border-color: #bbf7d0;
         }
 
         .section {
-            margin-top: 16px;
+            margin-top: 18px;
             padding: 0;
             page-break-inside: avoid;
         }
@@ -175,16 +203,17 @@
         .section-title {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
-            padding: 10px 12px;
-            font-size: 9px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            border-radius: 5px;
-            letter-spacing: 0.4px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 12px 14px;
+            font-size: 10px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 3px 8px rgba(239, 68, 68, 0.2);
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            text-transform: uppercase;
         }
 
         .align-center {
@@ -196,29 +225,33 @@
         }
 
         .value-numeric {
-            font-weight: 600;
+            font-weight: 700;
             color: #ef4444;
+            font-size: 9px;
         }
 
         .small {
             font-size: 8px;
             color: #6b7280;
+            font-weight: 500;
         }
 
         .footer {
-            margin-top: 20px;
-            padding-top: 10px;
+            margin-top: 24px;
+            padding-top: 12px;
             border-top: 2px solid #e5e7eb;
             text-align: center;
-            font-size: 7px;
+            font-size: 8px;
             color: #9ca3af;
             page-break-inside: avoid;
+            font-weight: 500;
         }
 
         @media print {
-            body { margin: 0; padding: 0; }
+            body { margin: 0; padding: 0; background: white; }
             .section { page-break-inside: avoid; }
             .header { page-break-after: avoid; }
+            .kpi-container { page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -229,22 +262,38 @@
         <tr>
             <td class="header-main" width="70%">
                 <p class="title">🔒 Rapport Sécurité</p>
-                <p class="header-subtitle">Centre de sécurité · AgriLink</p>
+                <p class="header-subtitle">Centre de Sécurité · Gestion Utilisateurs · AgriLink</p>
             </td>
             <td class="header-right" width="30%">
-                <div class="header-label">RAPPORT GÉNÉRÉ</div>
+                <div class="header-label">Rapport Généré</div>
                 <div class="header-date">{{ date|date('d/m/Y H:i') }}</div>
             </td>
         </tr>
     </table>
 </div>
 
-<div class="stats-container">
-    <div class="stats">
-        <div class="stat">🔐 Réussies<br/><strong>{{ stats30d.loginSuccess ?? 0 }}</strong></div>
-        <div class="stat">⚠️ Échouées<br/><strong>{{ stats30d.loginFailed ?? 0 }}</strong></div>
-        <div class="stat">🔒 2FA<br/><strong>{{ stats30d.twoFaSuccess ?? 0 }}</strong></div>
-        <div class="stat">🚫 Verrouillés<br/><strong>{{ stats30d.accountLocked ?? 0 }}</strong></div>
+<div class="kpi-container">
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon">✅</div>
+            <div class="kpi-label">Connexions Réussies</div>
+            <p class="kpi-value">{{ stats30d.loginSuccess ?? 0 }}</p>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">❌</div>
+            <div class="kpi-label">Connexions Échouées</div>
+            <p class="kpi-value">{{ stats30d.loginFailed ?? 0 }}</p>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">🔐</div>
+            <div class="kpi-label">2FA Réussi</div>
+            <p class="kpi-value">{{ stats30d.twoFaSuccess ?? 0 }}</p>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">🚫</div>
+            <div class="kpi-label">Comptes Verrouillés</div>
+            <p class="kpi-value">{{ stats30d.accountLocked ?? 0 }}</p>
+        </div>
     </div>
 </div>
 
@@ -252,35 +301,55 @@
 
 <!-- 30 Days Statistics -->
 <div class="section">
-    <div class="section-title">📊 STATISTIQUES 30 DERNIERS JOURS</div>
+    <div class="section-title">📊 Statistiques 30 Derniers Jours</div>
     
     <table>
         <thead>
             <tr>
-                <th>Événement</th>
+                <th>Événement Sécurité</th>
                 <th class="align-center">Nombre</th>
+                <th class="align-right">Statut</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td>Connexions réussies</td>
+                <td><strong>Connexions Réussies</strong></td>
                 <td class="align-center value-numeric">{{ stats30d.loginSuccess ?? 0 }}</td>
+                <td class="align-right"><span class="badge success">✓ Normal</span></td>
             </tr>
             <tr>
-                <td>Connexions échouées</td>
+                <td><strong>Connexions Échouées</strong></td>
                 <td class="align-center value-numeric">{{ stats30d.loginFailed ?? 0 }}</td>
+                <td class="align-right">
+                    {% if (stats30d.loginFailed ?? 0) > 20 %}
+                        <span class="badge">⚠️ Élevé</span>
+                    {% elseif (stats30d.loginFailed ?? 0) > 10 %}
+                        <span class="badge">⚠️ Modéré</span>
+                    {% else %}
+                        <span class="badge success">✓ Bas</span>
+                    {% endif %}
+                </td>
             </tr>
             <tr>
-                <td>2FA réussi</td>
+                <td><strong>2FA Réussi</strong></td>
                 <td class="align-center value-numeric">{{ stats30d.twoFaSuccess ?? 0 }}</td>
+                <td class="align-right"><span class="badge success">✓ Excellent</span></td>
             </tr>
             <tr>
-                <td>Comptes verrouillés</td>
+                <td><strong>Comptes Verrouillés</strong></td>
                 <td class="align-center value-numeric">{{ stats30d.accountLocked ?? 0 }}</td>
+                <td class="align-right">
+                    {% if (stats30d.accountLocked ?? 0) > 5 %}
+                        <span class="badge">⚠️ Vigilance</span>
+                    {% else %}
+                        <span class="badge success">✓ Normal</span>
+                    {% endif %}
+                </td>
             </tr>
             <tr>
-                <td>Mots de passe changés</td>
+                <td><strong>Mots de Passe Changés</strong></td>
                 <td class="align-center value-numeric">{{ stats30d.passwordChanged ?? 0 }}</td>
+                <td class="align-right"><span class="badge success">✓ Sain</span></td>
             </tr>
         </tbody>
     </table>
@@ -288,23 +357,32 @@
 
 <!-- 24 Hours Statistics -->
 <div class="section">
-    <div class="section-title">⏱️ STATISTIQUES 24 HEURES</div>
+    <div class="section-title">⏱️ Statistiques 24 Heures</div>
     
     <table>
         <thead>
             <tr>
-                <th>Événement</th>
+                <th>Événement Sécurité</th>
                 <th class="align-center">Nombre</th>
+                <th class="align-right">Tendance</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td>Connexions réussies</td>
+                <td><strong>Connexions Réussies</strong></td>
                 <td class="align-center value-numeric">{{ stats24h.loginSuccess ?? 0 }}</td>
+                <td class="align-right"><span class="badge success">✓ Normal</span></td>
             </tr>
             <tr>
-                <td>Connexions échouées</td>
+                <td><strong>Connexions Échouées</strong></td>
                 <td class="align-center value-numeric">{{ stats24h.loginFailed ?? 0 }}</td>
+                <td class="align-right">
+                    {% if (stats24h.loginFailed ?? 0) > 5 %}
+                        <span class="badge">⚠️ Élevé</span>
+                    {% else %}
+                        <span class="badge success">✓ Bas</span>
+                    {% endif %}
+                </td>
             </tr>
         </tbody>
     </table>
@@ -312,35 +390,53 @@
 
 <!-- Account Overview -->
 <div class="section">
-    <div class="section-title">👥 APERÇU COMPTES</div>
+    <div class="section-title">👥 Aperçu Comptes</div>
     
     <table>
         <thead>
             <tr>
                 <th>Statistique</th>
                 <th class="align-center">Nombre</th>
+                <th class="align-right">Analyse</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td>Total comptes</td>
+                <td><strong>Total Comptes</strong></td>
                 <td class="align-center value-numeric">{{ accountStats.total ?? 0 }}</td>
+                <td class="align-right"><span class="badge success">👥 Utilisateurs</span></td>
             </tr>
             <tr>
-                <td>Comptes actifs</td>
+                <td><strong>Comptes Actifs</strong></td>
                 <td class="align-center value-numeric">{{ accountStats.active ?? 0 }}</td>
+                <td class="align-right"><span class="badge success">✓ Actif</span></td>
             </tr>
             <tr>
-                <td>Emails vérifiés</td>
+                <td><strong>Emails Vérifiés</strong></td>
                 <td class="align-center value-numeric">{{ accountStats.verified ?? 0 }}</td>
+                <td class="align-right">
+                    {% if accountStats.total > 0 and (accountStats.verified ?? 0) / accountStats.total > 0.9 %}
+                        <span class="badge success">✓ Excellent</span>
+                    {% else %}
+                        <span class="badge">⚠️ À Améliorer</span>
+                    {% endif %}
+                </td>
             </tr>
             <tr>
-                <td>2FA activé</td>
+                <td><strong>2FA Activé</strong></td>
                 <td class="align-center value-numeric">{{ accountStats.twoFactorEnabled ?? 0 }}</td>
+                <td class="align-right"><span class="badge success">🔒 Sécurisé</span></td>
             </tr>
             <tr>
-                <td>Comptes verrouillés actuellement</td>
+                <td><strong>Comptes Verrouillés Actuellement</strong></td>
                 <td class="align-center value-numeric">{{ accountStats.lockedNow ?? 0 }}</td>
+                <td class="align-right">
+                    {% if (accountStats.lockedNow ?? 0) > 0 %}
+                        <span class="badge">⚠️ Vigilance</span>
+                    {% else %}
+                        <span class="badge success">✓ Aucun</span>
+                    {% endif %}
+                </td>
             </tr>
         </tbody>
     </table>
@@ -349,7 +445,7 @@
 </div>
 
 <div class="footer">
-    <strong>AgriLink</strong> · Rapport de sécurité · {{ date|date('d/m/Y \\à H:i') }}
+    <strong>AgriLink</strong> · Rapport de Sécurité Administrateur · {{ date|date('d/m/Y \\à H:i') }} · Centre de Sécurité
 </div>
 
 </body>

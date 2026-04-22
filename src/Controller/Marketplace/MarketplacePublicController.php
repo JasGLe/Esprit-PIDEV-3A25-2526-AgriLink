@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
 use App\Repository\UserManagement\UserRepository;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Component\Form\FormError;
 use Symfony\Component\Form\FormInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -30,6 +31,7 @@ class MarketplacePublicController extends AbstractController
         private readonly UserRepository $userRepository,
         private readonly PanierRepository $panierRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly PaginatorInterface $paginator,
     ) {
     }
 
@@ -37,9 +39,7 @@ class MarketplacePublicController extends AbstractController
     public function index(Request $request): Response
     {
         [$cat, $region, $q, $sort, $sellerIdsForRegion] = $this->readFilters($request);
-        $produits = $sellerIdsForRegion === []
-            ? []
-            : $this->produitsRepository->findPublicMarketplaceCatalog($q !== '' ? $q : null, $cat, $sellerIdsForRegion, $sort);
+        $produits = $this->paginateProducts($request, $q, $cat, $sellerIdsForRegion, $sort);
 
         $rentalRequest = new RentalRequest();
         $this->prefillRentalRequestFromUser($rentalRequest);
@@ -55,9 +55,7 @@ class MarketplacePublicController extends AbstractController
         /** @var User $user */
         $user = $this->getUser();
         [$cat, $region, $q, $sort, $sellerIdsForRegion] = $this->readFilters($request);
-        $produits = $sellerIdsForRegion === []
-            ? []
-            : $this->produitsRepository->findPublicMarketplaceCatalog($q !== '' ? $q : null, $cat, $sellerIdsForRegion, $sort);
+        $produits = $this->paginateProducts($request, $q, $cat, $sellerIdsForRegion, $sort);
 
         $rentalRequest = new RentalRequest();
         $this->prefillRentalRequestFromUser($rentalRequest);
@@ -169,22 +167,28 @@ class MarketplacePublicController extends AbstractController
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * @param Produits[] $produits
      */
     private function renderResponse(
         Request $request,
         string $cat,
         string $region,
         string $sort,
-        array $produits,
+        mixed $produits,
         ?FormInterface $rentalForm = null,
         bool $openRentalRequestModal = false,
         ?int $rentalTargetProductId = null,
     ): Response {
-        $ids = array_values(array_unique(array_filter(array_map(
-            static fn (Produits $p) => $p->getIdFournisseur(),
-            $produits
-        ))));
+        $ids = [];
+        foreach ($produits as $p) {
+            if (!$p instanceof Produits) {
+                continue;
+            }
+            $sellerId = $p->getIdFournisseur();
+            if ($sellerId !== null) {
+                $ids[] = (int) $sellerId;
+            }
+        }
+        $ids = array_values(array_unique($ids));
 
         $vendeurs = [];
         if ($ids !== []) {
@@ -258,6 +262,21 @@ class MarketplacePublicController extends AbstractController
             'rental_target_product_name' => $rentalTargetProductName,
             'rental_target_product_price' => $rentalTargetProductPrice,
         ]);
+    }
+
+    private function paginateProducts(Request $request, string $q, string $cat, ?array $sellerIdsForRegion, string $sort): mixed
+    {
+        $queryBuilder = $this->produitsRepository->buildPublicMarketplaceCatalogQueryBuilder(
+            $q !== '' ? $q : null,
+            $cat,
+            $sellerIdsForRegion,
+            $sort
+        );
+
+        $page = max(1, (int) $request->query->get('page', 1));
+        $itemsPerPage = 12;
+
+        return $this->paginator->paginate($queryBuilder, $page, $itemsPerPage);
     }
 
     /**
