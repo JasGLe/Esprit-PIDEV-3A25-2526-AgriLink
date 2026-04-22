@@ -152,6 +152,10 @@ class MaintenanceController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Normaliser cout null → '0.00' pour éviter une violation NOT NULL en base
+            if ($maintenance->getCout() === null) {
+                $maintenance->setCout('0.00');
+            }
             $maintenance->setUserlog($this->getUser()->getId());
             $em->persist($maintenance);
             $em->flush();
@@ -235,9 +239,13 @@ class MaintenanceController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            // Normaliser cout null → '0.00' pour éviter une violation NOT NULL en base
+            if ($maintenance->getCout() === null) {
+                $maintenance->setCout('0.00');
+            }
             $em->flush();
             $this->addFlash('success', 'Maintenance modifiée avec succès !');
-            return $this->redirectToRoute('maintenance_show', ['id' => $maintenance->getId()]);
+            return $this->redirectToRoute('maintenance_index');
         }
 
         return $this->render('equipment/maintenance/edit.html.twig', [
