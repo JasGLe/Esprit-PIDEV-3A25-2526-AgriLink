@@ -216,7 +216,8 @@
     <div class="passeport-media">
         {# Photo équipement #}
         {% if equipement.imageUrl %}
-            <img src="{{ absolute_url(asset(equipement.imageUrl)) }}"
+            {# uploads_base_url = /uploads (symfony serve) — |split('/')|last extrait le nom de fichier quel que soit le format stocké en DB #}
+            <img src="{{ uploads_base_url }}/equipements/{{ equipement.imageUrl|split('/')|last }}"
                  alt="{{ equipement.nom }}"
                  class="passeport-photo">
         {% else %}
