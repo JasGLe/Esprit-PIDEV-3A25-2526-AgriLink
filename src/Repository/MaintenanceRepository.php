@@ -334,4 +334,36 @@ class MaintenanceRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
     }
+
+    /**
+     * Retourne les prochaines maintenances planifiées pour les équipements d'un utilisateur.
+     *
+     * Critères :
+     *  - datePlanifiee >= aujourd'hui (maintenances futures ou du jour)
+     *  - statut IN ('Planifiée', 'En cours') — maintenances encore actives
+     *  - triées par datePlanifiee ASC — les plus proches en premier
+     *
+     * Utilisée par le dashboard agriculteur pour l'encart "Prochaines maintenances".
+     *
+     * @param int[] $ids    IDs des équipements de l'utilisateur
+     * @param int   $limit  Nombre maximum de résultats (défaut : 3)
+     *
+     * @return Maintenance[]  Les $limit prochaines maintenances, ou [] si $ids est vide
+     */
+    public function findProchainesForUser(array $ids, int $limit = 3): array
+    {
+        if (empty($ids)) return [];
+
+        return $this->createQueryBuilder('m')
+            ->where('m.equipementId IN (:ids)')
+            ->andWhere('m.datePlanifiee >= :today')
+            ->andWhere('m.statut IN (:statuts)')
+            ->setParameter('ids', $ids)
+            ->setParameter('today', new \DateTime('today'))
+            ->setParameter('statuts', ['Planifiée', 'En cours'])
+            ->orderBy('m.datePlanifiee', 'ASC')
+            ->setMaxResults($limit)
+            ->getQuery()
+            ->getResult();
+    }
 }
