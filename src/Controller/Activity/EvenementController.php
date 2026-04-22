@@ -733,4 +733,50 @@ class EvenementController extends AbstractController
             ], Response::HTTP_BAD_GATEWAY);
         }
     }
+
+    #[Route('/{id}/generate-linkedin-post', name: 'evenement_generate_linkedin_post', requirements: ['id' => '\\d+'], methods: ['POST'])]
+    public function generateLinkedInPost(Evenement $evenement): Response
+    {
+        $this->assertModuleAccess();
+
+        if (!$this->canManageEvenement($evenement)) {
+            return $this->json([
+                'success' => false,
+                'message' => 'Accès refusé.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $fallback = $this->posterGeneratorService->buildLinkedInFallback($evenement);
+
+        try {
+            $url = $this->posterGeneratorService->getTextGenerationUrl($evenement);
+            $response = $this->httpClient->request('GET', $url, [
+                'timeout' => 25,
+                'max_duration' => 25,
+                'headers' => [
+                    'Accept' => 'text/plain, application/json;q=0.9',
+                    'User-Agent' => 'Symfony EventPoster/1.0',
+                ],
+            ]);
+
+            $content = $this->posterGeneratorService->sanitizeLinkedInPostText(
+                (string) $response->getContent(),
+                $evenement
+            );
+            if (trim($content) === '') {
+                $content = $fallback;
+            }
+
+            return $this->json([
+                'success' => true,
+                'post_text' => $content,
+            ]);
+        } catch (\Throwable) {
+            return $this->json([
+                'success' => true,
+                'post_text' => $fallback,
+                'fallback' => true,
+            ]);
+        }
+    }
 }

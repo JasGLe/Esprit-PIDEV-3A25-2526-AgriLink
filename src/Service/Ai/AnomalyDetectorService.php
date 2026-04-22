@@ -4,8 +4,7 @@ namespace App\Service\Ai;
 
 use App\Entity\Activity\Activite;
 use App\Repository\Activity\ActiviteRepository;
-use App\Service\GeminiService;
-use Symfony\Contracts\HttpClient\HttpClientInterface;
+use App\Service\Activity\GeminiActivityService;
 
 class AnomalyDetectorService
 {
@@ -29,7 +28,7 @@ class AnomalyDetectorService
 
     public function __construct(
         private readonly ActiviteRepository $activiteRepository,
-        private readonly GeminiService $geminiService,
+        private readonly GeminiActivityService $geminiService,
     ) {
     }
 
