@@ -1,0 +1,404 @@
+{# Notification Toast Component - Displays contextual user notifications #}
+
+<div class="user-notifications-container" data-notifications-count="{{ notifications|length }}">
+    {% if notifications is not empty %}
+        <div class="notifications-toast-wrapper">
+            {% set high_priority = notifications|filter(n => n.priority == 'high') %}
+            {% set medium_priority = notifications|filter(n => n.priority == 'medium') %}
+            {% set low_priority = notifications|filter(n => n.priority == 'low') %}
+            {% set info_priority = notifications|filter(n => n.priority == 'info') %}
+
+            {# Display welcome message first #}
+            {% for notif in info_priority %}
+                <div class="notification-toast notification-{{ notif.type }} notification-priority-{{ notif.priority }}"
+                     data-notification-id="{{ notif.id }}"
+                     role="alert">
+                    <div class="notification-header">
+                        <span class="notification-icon">{{ notif.icon }}</span>
+                        <h4 class="notification-title">{{ notif.title }}</h4>
+                        <button class="notification-close" 
+                                type="button"
+                                aria-label="Dismiss notification"
+                                data-action="live#action"
+                                data-action-name="dismissNotification"
+                                data-notification-id="{{ notif.id }}">
+                            ✕
+                        </button>
+                    </div>
+                    <p class="notification-body">{{ notif.body }}</p>
+                    {% if notif.actionUrl %}
+                        <div class="notification-action">
+                            <a href="{{ notif.actionUrl }}" class="btn btn-sm btn-primary notification-action-btn">
+                                {{ notif.actionLabel }}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            {# High priority notifications #}
+            {% for notif in high_priority %}
+                <div class="notification-toast notification-{{ notif.type }} notification-priority-{{ notif.priority }}"
+                     data-notification-id="{{ notif.id }}"
+                     role="alert">
+                    <div class="notification-header">
+                        <span class="notification-icon">{{ notif.icon }}</span>
+                        <div class="notification-title-wrapper">
+                            <h4 class="notification-title">{{ notif.title }}</h4>
+                            <span class="notification-badge notification-badge-recommended">⭐ Recommandé</span>
+                        </div>
+                        <button class="notification-close" 
+                                type="button"
+                                aria-label="Dismiss notification"
+                                data-action="live#action"
+                                data-action-name="dismissNotification"
+                                data-notification-id="{{ notif.id }}">
+                            ✕
+                        </button>
+                    </div>
+                    <p class="notification-body">{{ notif.body }}</p>
+                    {% if notif.actionUrl %}
+                        <div class="notification-action">
+                            <a href="{{ notif.actionUrl }}" class="btn btn-sm btn-danger notification-action-btn">
+                                {{ notif.actionLabel }}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            {# Medium priority notifications #}
+            {% for notif in medium_priority %}
+                <div class="notification-toast notification-{{ notif.type }} notification-priority-{{ notif.priority }}"
+                     data-notification-id="{{ notif.id }}"
+                     role="alert">
+                    <div class="notification-header">
+                        <span class="notification-icon">{{ notif.icon }}</span>
+                        <h4 class="notification-title">{{ notif.title }}</h4>
+                        <button class="notification-close" 
+                                type="button"
+                                aria-label="Dismiss notification"
+                                data-action="live#action"
+                                data-action-name="dismissNotification"
+                                data-notification-id="{{ notif.id }}">
+                            ✕
+                        </button>
+                    </div>
+                    <p class="notification-body">{{ notif.body }}</p>
+                    {% if notif.actionUrl %}
+                        <div class="notification-action">
+                            <a href="{{ notif.actionUrl }}" class="btn btn-sm btn-warning notification-action-btn">
+                                {{ notif.actionLabel }}
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            {# Low priority notifications #}
+            {% if low_priority|length > 0 %}
+                <details class="notification-low-priority-group">
+                    <summary class="notification-summary">
+                        <span class="notification-icon">📝</span>
+                        <span>{{ low_priority|length }} suggestions de profil</span>
+                        <span class="notification-summary-expand">▾</span>
+                    </summary>
+                    <div class="notification-low-priority-list">
+                        {% for notif in low_priority %}
+                            <div class="notification-toast notification-{{ notif.type }} notification-priority-{{ notif.priority }}"
+                                 data-notification-id="{{ notif.id }}">
+                                <div class="notification-header">
+                                    <span class="notification-icon">{{ notif.icon }}</span>
+                                    <h4 class="notification-title">{{ notif.title }}</h4>
+                                    <button class="notification-close" 
+                                            type="button"
+                                            aria-label="Dismiss notification"
+                                            data-action="live#action"
+                                            data-action-name="dismissNotification"
+                                            data-notification-id="{{ notif.id }}">
+                                        ✕
+                                    </button>
+                                </div>
+                                <p class="notification-body">{{ notif.body }}</p>
+                                {% if notif.actionUrl %}
+                                    <div class="notification-action">
+                                        <a href="{{ notif.actionUrl }}" class="btn btn-sm btn-secondary notification-action-btn">
+                                            {{ notif.actionLabel }}
+                                        </a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </details>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.user-notifications-container {
+    --notif-high: #dc2626;
+    --notif-medium: #f59e0b;
+    --notif-low: #6366f1;
+    --notif-info: #22c55e;
+    --notif-bg-high: rgba(220, 38, 38, 0.05);
+    --notif-bg-medium: rgba(245, 158, 11, 0.05);
+    --notif-bg-low: rgba(99, 102, 241, 0.05);
+    --notif-bg-info: rgba(34, 197, 94, 0.05);
+}
+
+.notifications-toast-wrapper {
+    position: fixed;
+    top: 80px;
+    right: 20px;
+    z-index: 1050;
+    max-width: 420px;
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 8px;
+}
+
+.notification-toast {
+    background: white;
+    border: 2px solid;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    animation: slideInRight 0.3s ease-out;
+    backdrop-filter: blur(10px);
+}
+
+.notification-toast.notification-priority-high {
+    border-color: var(--notif-high);
+    background: linear-gradient(135deg, white 0%, var(--notif-bg-high) 100%);
+    border-left: 4px solid var(--notif-high);
+}
+
+.notification-toast.notification-priority-medium {
+    border-color: var(--notif-medium);
+    background: linear-gradient(135deg, white 0%, var(--notif-bg-medium) 100%);
+    border-left: 4px solid var(--notif-medium);
+}
+
+.notification-toast.notification-priority-low {
+    border-color: var(--notif-low);
+    background: linear-gradient(135deg, white 0%, var(--notif-bg-low) 100%);
+    border-left: 4px solid var(--notif-low);
+}
+
+.notification-toast.notification-priority-info {
+    border-color: var(--notif-info);
+    background: linear-gradient(135deg, white 0%, var(--notif-bg-info) 100%);
+    border-left: 4px solid var(--notif-info);
+}
+
+.notification-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.notification-icon {
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.notification-title-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.notification-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.notification-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    background: #fbbf24;
+    color: #78350f;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.notification-close {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.notification-close:hover {
+    background: rgba(0, 0, 0, 0.05);
+    color: #1f2937;
+}
+
+.notification-body {
+    margin: 8px 0 0 36px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #4b5563;
+}
+
+.notification-action {
+    margin-top: 12px;
+    margin-left: 36px;
+}
+
+.notification-action-btn {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.notification-toast.notification-priority-high .notification-action-btn {
+    background: var(--notif-high);
+    color: white;
+}
+
+.notification-toast.notification-priority-high .notification-action-btn:hover {
+    background: #991b1b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.notification-low-priority-group {
+    background: white;
+    border: 2px solid var(--notif-low);
+    border-radius: 12px;
+    padding: 0;
+    cursor: pointer;
+}
+
+.notification-summary {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    color: var(--notif-low);
+    list-style: none;
+    user-select: none;
+}
+
+.notification-summary::marker {
+    content: '';
+}
+
+.notification-summary::-webkit-details-marker {
+    display: none;
+}
+
+.notification-summary-expand {
+    margin-left: auto;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.notification-low-priority-group[open] .notification-summary-expand {
+    transform: rotate(180deg);
+}
+
+.notification-low-priority-list {
+    border-top: 2px solid var(--notif-low);
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notification-low-priority-list .notification-toast {
+    border: 1px solid var(--notif-low);
+    box-shadow: none;
+    padding: 12px;
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(400px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .notifications-toast-wrapper {
+        max-width: calc(100vw - 20px);
+        right: 10px;
+        left: 10px;
+        top: 70px;
+    }
+
+    .notification-toast {
+        padding: 12px;
+    }
+
+    .notification-body {
+        margin-left: 32px;
+        font-size: 13px;
+    }
+
+    .notification-action {
+        margin-left: 32px;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const closeButtons = document.querySelectorAll('.notification-close');
+    
+    closeButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const notification = this.closest('.notification-toast');
+            notification.style.animation = 'slideOutRight 0.3s ease-in forwards';
+            setTimeout(() => {
+                notification.remove();
+            }, 300);
+        });
+    });
+});
+
+@keyframes slideOutRight {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(400px);
+    }
+}
+</script>

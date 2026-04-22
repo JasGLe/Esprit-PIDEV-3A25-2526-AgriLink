@@ -1,0 +1,163 @@
+{# Profile Completion Widget - Shows progress and motivational message #}
+
+{% set data = this.getCompletionData() %}
+
+<div class="profile-completion-widget" data-completion-score="{{ data.score }}">
+    <div class="completion-header">
+        <h3 class="completion-title">📊 Profil</h3>
+        <span class="completion-percentage">{{ data.score }}%</span>
+    </div>
+
+    <div class="completion-progress-bar">
+        <div class="progress-bar-fill" style="width: {{ data.score }}%; background-color: {{ data.color }};"></div>
+    </div>
+
+    <div class="completion-status">
+        <span class="status-label status-{{ data.statusClass }}">{{ data.status }}</span>
+    </div>
+
+    <p class="completion-message">{{ data.motivationalMessage }}</p>
+
+    {% if data.score < 100 %}
+        <a href="{{ path('app_profile_edit') }}" class="btn btn-sm btn-primary completion-action">
+            Compléter votre profil →
+        </a>
+    {% else %}
+        <div class="completion-badge">
+            <span class="badge-icon">⭐</span>
+            <span class="badge-text">Félicitations!</span>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.profile-completion-widget {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 16px 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.completion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.completion-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.completion-percentage {
+    font-size: 24px;
+    font-weight: 700;
+    color: #22c55e;
+}
+
+.completion-progress-bar {
+    width: 100%;
+    height: 10px;
+    background: #e5e7eb;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.4s ease, background-color 0.3s ease;
+    box-shadow: 0 0 10px currentColor;
+}
+
+.completion-status {
+    margin-bottom: 12px;
+}
+
+.status-label {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.status-complete {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-excellent {
+    background: #cffafe;
+    color: #164e63;
+}
+
+.status-good {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-fair {
+    background: #fee2e2;
+    color: #7f1d1d;
+}
+
+.status-incomplete {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.completion-message {
+    margin: 0 0 16px 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #4b5563;
+}
+
+.completion-action {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.completion-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(34, 197, 94, 0.3);
+}
+
+.completion-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    border-radius: 8px;
+    color: #78350f;
+}
+
+.badge-icon {
+    font-size: 18px;
+}
+
+.badge-text {
+    font-weight: 600;
+}
+</style>

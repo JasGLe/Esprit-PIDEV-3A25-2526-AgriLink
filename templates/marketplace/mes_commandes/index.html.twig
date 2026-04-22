@@ -27,9 +27,14 @@
                 <p class="mc-orders-sub mb-0 small">Vos achats marketplace (liés à l’email de votre compte : {{ app.user.email }})</p>
             {% endif %}
         </div>
-        <a href="{{ path('mes_commandes_index') }}" class="btn mc-btn-refresh d-inline-flex align-items-center gap-2 flex-shrink-0">
-            <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Actualiser
-        </a>
+        <div class="mc-head-actions d-flex flex-column align-items-end gap-2 flex-shrink-0">
+            <a href="{{ path('mes_commandes_index') }}" class="btn mc-btn-refresh d-inline-flex align-items-center gap-2">
+                <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Actualiser
+            </a>
+            <div class="mc-pagination mc-pagination--top">
+                {{ knp_pagination_render(commandes, 'marketplace/mes_commandes/_pagination.html.twig') }}
+            </div>
+        </div>
     </div>
 
     <div class="row g-3 mb-4">
@@ -216,7 +221,7 @@
                     {% else %}
                         {% for c in commandes %}
                             <tr>
-                                <td><span class="mc-num">{% if app.user.isAgriPlus %}#CMD{{ "%03d"|format(c.id) }}{% else %}#{{ c.numCommande }}{% endif %}</span></td>
+                                <td><span class="mc-num">{% if is_granted('ROLE_AGRIPLUS') %}#CMD{{ "%03d"|format(c.id) }}{% else %}#{{ c.numCommande }}{% endif %}</span></td>
                                 <td class="mc-date mc-date--nowrap">{{ c.dateCommande|date('Y-m-d') }}</td>
                                 <td><span class="mc-amount">{{ c.prixTotal|number_format(3, ',', ' ') }} DT</span></td>
                                 <td class="mc-status-cell">{% include 'marketplace/mes_commandes/_status.html.twig' with { mes_commandes_mode: mes_commandes_mode, status: c.status, commande_id: c.id, dropdown_choices: statut_choices_by_commande[c.id]|default({}), statut_redirect: 'index', cancellation_request_pending: pending_cancellation_map[c.id]|default(false), show_buyer_cancel_request: buyer_cancel_eligible_map[c.id]|default(false), buyer_cancel_order_ref: '#CMD' ~ ('%03d'|format(c.id)) } %}</td>

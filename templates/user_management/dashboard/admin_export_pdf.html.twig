@@ -3,141 +3,254 @@
 <head>
     <meta charset="utf-8">
     <style>
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'DejaVu Sans', sans-serif;
             font-size: 10px;
             color: #1f2937;
             margin: 0;
             padding: 0;
+            line-height: 1.6;
+            background: #fafbfc;
         }
 
         .header {
-            background: #0f172a;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
             color: white;
-            padding: 14px 18px;
-            border-bottom: 4px solid #22c55e;
+            padding: 20px 24px;
+            border-bottom: 6px solid #22c55e;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .header-table {
             width: 100%;
+            border-spacing: 0;
         }
 
-        .logo {
-            width: 50px;
+        .header-table td {
+            border: none;
+            padding: 0;
+            vertical-align: middle;
+        }
+
+        .header-main {
+            padding-right: 16px;
         }
 
         .title {
-            font-size: 16px;
-            font-weight: bold;
-            margin: 0;
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 6px 0;
             color: #22c55e;
+            letter-spacing: 0.8px;
         }
 
-        .subtitle {
+        .header-subtitle {
             font-size: 9px;
             color: #cbd5e1;
-            margin: 2px 0 0 0;
-        }
-
-        .stats {
-            margin: 12px 18px;
-            padding: 0;
-        }
-
-        .stat {
-            display: inline-block;
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            padding: 5px 8px;
-            margin-right: 6px;
-            margin-bottom: 4px;
-            border-radius: 4px;
-            font-size: 8px;
-            color: #166534;
+            margin: 0;
+            line-height: 1.4;
             font-weight: 500;
         }
 
+        .header-right {
+            text-align: right;
+            padding-left: 16px;
+        }
+
+        .header-label {
+            font-size: 8px;
+            color: #22c55e;
+            font-weight: 700;
+            margin-bottom: 3px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .header-date {
+            font-size: 9px;
+            color: #cbd5e1;
+            font-weight: 500;
+        }
+
+        .kpi-container {
+            background: white;
+            margin: 20px 24px;
+            padding: 16px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, #f0fdf4 0%, #f9fafb 100%);
+            border: 1.5px solid #d1fae5;
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+            box-shadow: 0 1px 4px rgba(34, 197, 94, 0.1);
+        }
+
+        .kpi-label {
+            font-size: 7px;
+            color: #6b7280;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .kpi-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: #22c55e;
+            margin: 0;
+        }
+
+        .kpi-icon {
+            font-size: 14px;
+            margin-bottom: 3px;
+        }
+
         .content {
-            padding: 0 18px 18px 18px;
+            padding: 0 24px 24px 24px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8px;
+            margin-top: 10px;
             font-size: 8px;
+            background: white;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+            border-radius: 6px;
+            overflow: hidden;
         }
 
         thead {
-            background: #374151;
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
             color: white;
         }
 
         th {
-            padding: 6px 8px;
+            padding: 10px 12px;
             font-size: 8px;
-            font-weight: bold;
+            font-weight: 700;
             text-align: left;
-            border: 1px solid #d1d5db;
+            border: none;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
         }
 
         td {
-            padding: 6px 8px;
-            border: 1px solid #e5e7eb;
+            padding: 8px 12px;
+            border-bottom: 1px solid #e5e7eb;
             font-size: 8px;
+            height: auto;
         }
 
-        tr.even {
+        tbody tr {
+            background: white;
+        }
+
+        tbody tr:nth-child(even) {
             background: #f9fafb;
         }
 
-        tr.odd {
-            background: #ffffff;
+        tbody tr:last-child td {
+            border-bottom: none;
         }
 
         .badge {
             display: inline-block;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-size: 8px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 7px;
             background: #dcfce7;
             color: #166534;
-            font-weight: 500;
+            font-weight: 700;
+            border: 1px solid #bbf7d0;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         .section {
-            margin-top: 12px;
-            padding-top: 8px;
-            border-top: 1px solid #e5e7eb;
+            margin-top: 18px;
+            padding: 0;
+            page-break-inside: avoid;
+        }
+
+        .section:first-of-type {
+            margin-top: 0;
         }
 
         .section-title {
             background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
             color: white;
-            padding: 8px 10px;
+            padding: 12px 14px;
             font-size: 10px;
-            font-weight: bold;
-            margin-bottom: 8px;
-            border-radius: 4px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 3px 8px rgba(34, 197, 94, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+        }
+
+        .align-center {
+            text-align: center;
+        }
+
+        .align-right {
+            text-align: right;
+        }
+
+        .value-numeric {
+            font-weight: 700;
+            color: #22c55e;
+            font-size: 9px;
         }
 
         .small {
             font-size: 8px;
             color: #6b7280;
+            font-weight: 500;
+        }
+
+        .percentage-cell {
+            font-weight: 600;
+            color: #059669;
         }
 
         .footer {
-            margin-top: 14px;
-            padding-top: 8px;
-            border-top: 1px solid #e5e7eb;
+            margin-top: 24px;
+            padding-top: 12px;
+            border-top: 2px solid #e5e7eb;
             text-align: center;
-            font-size: 7px;
+            font-size: 8px;
             color: #9ca3af;
+            page-break-inside: avoid;
+            font-weight: 500;
         }
 
         @media print {
-            body { margin: 0; padding: 0; }
-            .page { page-break-after: always; }
+            body { margin: 0; padding: 0; background: white; }
+            .section { page-break-inside: avoid; }
+            .header { page-break-after: avoid; }
+            .kpi-container { page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -146,120 +259,165 @@
 <div class="header">
     <table class="header-table">
         <tr>
-            <td width="60">
+            <td class="header-main" width="70%">
                 <p class="title">📊 Rapport Tableau de Bord</p>
+                <p class="header-subtitle">Statistiques Administrateur · Gestion Utilisateurs · AgriLink</p>
             </td>
-            <td>
-                <p style="color: #cbd5e1; font-size: 9px; margin: 2px 0;">Statistiques administrateur - Généré le {{ date|date('d/m/Y H:i') }}</p>
-            </td>
-            <td style="text-align: right; width: 100px;">
-                <p class="subtitle" style="margin: 0;">AgriLink Admin<br/>Dashboard</p>
+            <td class="header-right" width="30%">
+                <div class="header-label">Rapport Généré</div>
+                <div class="header-date">{{ date|date('d/m/Y H:i') }}</div>
             </td>
         </tr>
     </table>
 </div>
 
-<div class="stats">
-    <span class="stat">👥 Total: {{ stats.total ?? 0 }}</span>
-    <span class="stat">🌾 Agriculteurs: {{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</span>
-    <span class="stat">🏪 Fournisseurs: {{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</span>
-    <span class="stat">⭐ AgriPlus: {{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</span>
+<div class="kpi-container">
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-icon">👥</div>
+            <div class="kpi-label">Utilisateurs Total</div>
+            <p class="kpi-value">{{ stats.total ?? 0 }}</p>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">🌾</div>
+            <div class="kpi-label">Agriculteurs</div>
+            <p class="kpi-value">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</p>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">🏪</div>
+            <div class="kpi-label">Fournisseurs</div>
+            <p class="kpi-value">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</p>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-icon">⭐</div>
+            <div class="kpi-label">AgriPlus</div>
+            <p class="kpi-value">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</p>
+        </div>
+    </div>
 </div>
 
 <div class="content">
 
-<!-- User Statistics -->
+<!-- User Statistics Section -->
 <div class="section">
-    <div class="section-title">📊 STATISTIQUES UTILISATEURS</div>
+    <div class="section-title">📊 Statistiques Utilisateurs</div>
     
     <table>
         <thead>
             <tr>
                 <th>Catégorie</th>
-                <th>Nombre</th>
-                <th>Pourcentage</th>
+                <th class="align-center">Nombre</th>
+                <th class="align-right">Pourcentage</th>
+                <th class="align-center">Statut</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td>Agriculteurs</td>
-                <td style="text-align: center;">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</td>
-                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRICULTEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
-            </tr>
-            <tr class="even">
-                <td>Fournisseurs</td>
-                <td style="text-align: center;">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</td>
-                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_FOURNISSEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+                <td><strong>Agriculteurs</strong></td>
+                <td class="align-center value-numeric">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</td>
+                <td class="align-right percentage-cell">{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRICULTEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+                <td class="align-center"><span class="badge">Actif</span></td>
             </tr>
             <tr>
-                <td>AgriPlus</td>
-                <td style="text-align: center;">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</td>
-                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRIPLUS ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+                <td><strong>Fournisseurs</strong></td>
+                <td class="align-center value-numeric">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</td>
+                <td class="align-right percentage-cell">{{ stats.total > 0 ? ((stats.by_role.ROLE_FOURNISSEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+                <td class="align-center"><span class="badge">Actif</span></td>
             </tr>
-            <tr class="even">
-                <td>Utilisateurs standard</td>
-                <td style="text-align: center;">{{ stats.by_role.ROLE_USER ?? 0 }}</td>
-                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_USER ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+            <tr>
+                <td><strong>AgriPlus</strong></td>
+                <td class="align-center value-numeric">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</td>
+                <td class="align-right percentage-cell">{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRIPLUS ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+                <td class="align-center"><span class="badge">Premium</span></td>
+            </tr>
+            <tr>
+                <td><strong>Utilisateurs Standard</strong></td>
+                <td class="align-center value-numeric">{{ stats.by_role.ROLE_USER ?? 0 }}</td>
+                <td class="align-right percentage-cell">{{ stats.total > 0 ? ((stats.by_role.ROLE_USER ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
+                <td class="align-center"><span class="badge">Actif</span></td>
             </tr>
         </tbody>
     </table>
 </div>
 
-<!-- Security Statistics -->
+<!-- Security Statistics Section -->
 <div class="section">
-    <div class="section-title">🔒 SÉCURITÉ (30 DERNIERS JOURS)</div>
+    <div class="section-title">🔒 Sécurité (30 Derniers Jours)</div>
     
     <table>
         <thead>
             <tr>
-                <th>Événement</th>
-                <th>Nombre</th>
+                <th>Événement Sécurité</th>
+                <th class="align-center">Nombre</th>
+                <th class="align-right">Tendance</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td>Connexions réussies</td>
-                <td style="text-align: center;">{{ securityStats.loginSuccess ?? 0 }}</td>
-            </tr>
-            <tr class="even">
-                <td>Connexions échouées</td>
-                <td style="text-align: center;">{{ securityStats.loginFailed ?? 0 }}</td>
+                <td><strong>Connexions Réussies</strong></td>
+                <td class="align-center value-numeric">{{ securityStats.loginSuccess ?? 0 }}</td>
+                <td class="align-right"><span class="badge">↑ Normal</span></td>
             </tr>
             <tr>
-                <td>Comptes verrouillés</td>
-                <td style="text-align: center;">{{ securityStats.accountLocked ?? 0 }}</td>
-            </tr>
-            <tr class="even">
-                <td>Changements de mot de passe</td>
-                <td style="text-align: center;">{{ securityStats.passwordChanged ?? 0 }}</td>
+                <td><strong>Connexions Échouées</strong></td>
+                <td class="align-center value-numeric">{{ securityStats.loginFailed ?? 0 }}</td>
+                <td class="align-right">
+                    {% if (securityStats.loginFailed ?? 0) > 5 %}
+                        <span class="badge" style="background: #fee2e2; color: #991b1b; border-color: #fecaca;">⚠️ Élevé</span>
+                    {% else %}
+                        <span class="badge">✓ Bas</span>
+                    {% endif %}
+                </td>
             </tr>
             <tr>
-                <td>2FA réussi</td>
-                <td style="text-align: center;">{{ securityStats.twoFaSuccess ?? 0 }}</td>
+                <td><strong>Comptes Verrouillés</strong></td>
+                <td class="align-center value-numeric">{{ securityStats.accountLocked ?? 0 }}</td>
+                <td class="align-right"><span class="badge">⚠️ Vigilance</span></td>
+            </tr>
+            <tr>
+                <td><strong>Changements de Mot de Passe</strong></td>
+                <td class="align-center value-numeric">{{ securityStats.passwordChanged ?? 0 }}</td>
+                <td class="align-right"><span class="badge">✓ Sain</span></td>
+            </tr>
+            <tr>
+                <td><strong>2FA Réussi</strong></td>
+                <td class="align-center value-numeric">{{ securityStats.twoFaSuccess ?? 0 }}</td>
+                <td class="align-right"><span class="badge">✓ Excellent</span></td>
             </tr>
         </tbody>
     </table>
 </div>
 
-<!-- Growth -->
+<!-- Growth Section -->
 <div class="section">
-    <div class="section-title">📈 CROISSANCE</div>
+    <div class="section-title">📈 Croissance & Engagement</div>
     
     <table>
         <thead>
             <tr>
                 <th>Métrique</th>
-                <th>Valeur</th>
+                <th class="align-center">Valeur</th>
+                <th class="align-right">Analyse</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td>Taux croissance (30j)</td>
-                <td style="text-align: center; font-weight: bold; color: #22c55e;">{{ growthRate|round(1) }}%</td>
+                <td><strong>Taux de Croissance (30j)</strong></td>
+                <td class="align-center value-numeric">{{ growthRate|round(1) }}%</td>
+                <td class="align-right">
+                    {% if growthRate > 10 %}
+                        <span class="badge">📈 En Hausse</span>
+                    {% elseif growthRate > 0 %}
+                        <span class="badge">↑ Positif</span>
+                    {% else %}
+                        <span class="badge">→ Stable</span>
+                    {% endif %}
+                </td>
             </tr>
-            <tr class="even">
-                <td>Inscriptions (7j)</td>
-                <td style="text-align: center;">{{ recentUsers|length }}</td>
+            <tr>
+                <td><strong>Nouvelles Inscriptions (7j)</strong></td>
+                <td class="align-center value-numeric">{{ recentUsers|length }}</td>
+                <td class="align-right"><span class="badge">👥 Récent</span></td>
             </tr>
         </tbody>
     </table>
@@ -268,141 +426,8 @@
 </div>
 
 <div class="footer">
-    AgriLink - Rapport de tableau de bord administrateur · Généré le {{ date|date('d/m/Y \\à H:i') }}
+    <strong>AgriLink</strong> · Rapport de Tableau de Bord Administrateur · {{ date|date('d/m/Y \\à H:i') }} · Gestion Utilisateurs
 </div>
 
 </body>
-</html>
-<body>
-
-<div class="header">
-    <table class="header-table">
-        <tr>
-            <td width="60">
-                <p class="title">📊 Rapport Tableau de Bord</p>
-            </td>
-            <td>
-                <p style="color: #cbd5e1; font-size: 9px; margin: 2px 0;">Statistiques administrateur - Généré le {{ date|date('d/m/Y H:i') }}</p>
-            </td>
-            <td style="text-align: right; width: 100px;">
-                <p class="subtitle" style="margin: 0;">AgriLink Admin<br/>Dashboard</p>
-            </td>
-        </tr>
-    </table>
-</div>
-
-<div class="stats">
-    <span class="stat">👥 Total: {{ stats.total ?? 0 }}</span>
-    <span class="stat">🌾 Agriculteurs: {{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</span>
-    <span class="stat">🏪 Fournisseurs: {{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</span>
-    <span class="stat">⭐ AgriPlus: {{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</span>
-</div>
-
-<div class="content">
-
-<!-- User Statistics -->
-<div class="section">
-    <div class="section-title">📊 STATISTIQUES UTILISATEURS</div>
-    
-    <table>
-        <thead>
-            <tr>
-                <th>Catégorie</th>
-                <th>Nombre</th>
-                <th>Pourcentage</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Agriculteurs</td>
-                <td style="text-align: center;">{{ stats.by_role.ROLE_AGRICULTEUR ?? 0 }}</td>
-                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRICULTEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
-            </tr>
-            <tr class="even">
-                <td>Fournisseurs</td>
-                <td style="text-align: center;">{{ stats.by_role.ROLE_FOURNISSEUR ?? 0 }}</td>
-                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_FOURNISSEUR ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
-            </tr>
-            <tr>
-                <td>AgriPlus</td>
-                <td style="text-align: center;">{{ stats.by_role.ROLE_AGRIPLUS ?? 0 }}</td>
-                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_AGRIPLUS ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
-            </tr>
-            <tr class="even">
-                <td>Utilisateurs standard</td>
-                <td style="text-align: center;">{{ stats.by_role.ROLE_USER ?? 0 }}</td>
-                <td style="text-align: right;">{{ stats.total > 0 ? ((stats.by_role.ROLE_USER ?? 0) / stats.total * 100)|round(1) : 0 }}%</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-<!-- Security Statistics -->
-<div class="section">
-    <div class="section-title">🔒 SÉCURITÉ (30 DERNIERS JOURS)</div>
-    
-    <table>
-        <thead>
-            <tr>
-                <th>Événement</th>
-                <th>Nombre</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Connexions réussies</td>
-                <td style="text-align: center;">{{ securityStats.loginSuccess ?? 0 }}</td>
-            </tr>
-            <tr class="even">
-                <td>Connexions échouées</td>
-                <td style="text-align: center;">{{ securityStats.loginFailed ?? 0 }}</td>
-            </tr>
-            <tr>
-                <td>Comptes verrouillés</td>
-                <td style="text-align: center;">{{ securityStats.accountLocked ?? 0 }}</td>
-            </tr>
-            <tr class="even">
-                <td>Changements de mot de passe</td>
-                <td style="text-align: center;">{{ securityStats.passwordChanged ?? 0 }}</td>
-            </tr>
-            <tr>
-                <td>2FA réussi</td>
-                <td style="text-align: center;">{{ securityStats.twoFaSuccess ?? 0 }}</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-<!-- Growth -->
-<div class="section">
-    <div class="section-title">📈 CROISSANCE</div>
-    
-    <table>
-        <thead>
-            <tr>
-                <th>Métrique</th>
-                <th>Valeur</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>Taux croissance (30j)</td>
-                <td style="text-align: center; font-weight: bold; color: #22c55e;">{{ growthRate|round(1) }}%</td>
-            </tr>
-            <tr class="even">
-                <td>Inscriptions (7j)</td>
-                <td style="text-align: center;">{{ recentUsers|length }}</td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-
-</div>
-
-<div class="footer">
-    AgriLink - Rapport de tableau de bord administrateur · Généré le {{ date|date('d/m/Y \\à H:i') }}
-</div>
-
-</body>
-</html>
 </html>

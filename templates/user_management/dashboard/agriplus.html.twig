@@ -3,15 +3,6 @@
 {% block title %}Tableau de bord AgriPlus - AgriLink{% endblock %}
 {% block page_title %}Espace AgriPlus{% endblock %}
 
-{% block role_badge %}
-    <span class="badge rounded-pill bg-warning-subtle text-warning d-inline-flex align-items-center px-3 py-1">
-        ⭐ AgriPlus
-        {% if app.user.agriplusAbonnement %}
-            - {{ app.user.agriplusAbonnement }}
-        {% endif %}
-    </span>
-{% endblock %}
-
 {% block role_specific_navigation %}
     <hr class="my-3 border-secondary">
     <div class="px-3 py-2 small fw-semibold text-muted text-uppercase">
@@ -71,155 +62,112 @@
 {% endblock %}
 
 {% block dashboard_content %}
-    {# Welcome section #}
-    <div class="mb-4">
-        <h2 class="fs-3 fw-bold text-dark">Bienvenue, {{ app.user.displayName }} ! ⭐</h2>
-        <p class="mt-1 small text-muted">
-            Profitez de toutes les fonctionnalités premium d'AgriPlus.
-        </p>
-    </div>
 
-    {# Subscription Info Banner #}
-    <div class="mb-4 rounded-3 shadow-lg overflow-hidden" style="background: linear-gradient(to right, #facc15, #f97316);">
-        <div class="px-4 py-3 px-sm-5 py-sm-4">
-            <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between">
-                <div class="d-flex align-items-center mb-3 mb-sm-0">
-                    <div class="d-flex align-items-center justify-content-center rounded-circle" style="width: 64px; height: 64px; background-color: rgba(255, 255, 255, 0.2); margin-right: 1rem;">
-                        <span class="fs-1">⭐</span>
-                    </div>
-                    <div class="text-white">
-                        <h3 class="mb-0 fw-bold">
-                            Abonnement {{ app.user.agriplusAbonnement|default('Premium') }}
-                        </h3>
-                        {% if app.user.agriplusDateExpiration %}
-                            <p class="mb-0 small" style="color: #fef08a;">
-                                Expire le {{ app.user.agriplusDateExpiration|date('d/m/Y') }}
-                            </p>
-                        {% else %}
-                            <p class="mb-0 small" style="color: #fef08a;">Abonnement actif</p>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="d-flex gap-2">
-                    <a href="#" class="btn btn-sm text-white" style="border-color: rgba(255, 255, 255, 0.3); border: 1px solid rgba(255, 255, 255, 0.3); background-color: transparent;">
-                        Gérer
-                    </a>
-                    {% if app.user.agriplusAbonnement != 'ENTERPRISE' %}
-                        <a href="#" class="btn btn-light btn-sm fw-medium">
-                            Upgrader
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
+{# ── Welcome Banner ── #}
+<div class="ag-welcome-banner ag-animate-fade-up mb-4" style="background:linear-gradient(135deg,#78350f 0%,#d97706 55%,#f97316 100%);">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <p class="mb-1" style="color:rgba(255,255,255,.6);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Espace Premium</p>
+            <h2 class="h4 fw-bold mb-1" style="color:#fff;">Bienvenue, {{ app.user.displayName }} ! ⭐</h2>
+            <p class="mb-0" style="color:rgba(255,255,255,.75);font-size:0.85rem;">Profitez de toutes les fonctionnalités premium d'AgriPlus.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="#" class="btn btn-sm fw-medium" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;">Gérer</a>
+            {% if app.user.agriplusAbonnement != 'ENTERPRISE' %}
+                <a href="#" class="btn btn-sm fw-semibold" style="background:#fff;color:#d97706;border-radius:8px;">Upgrader</a>
+            {% endif %}
         </div>
     </div>
+</div>
 
-    {# Quick Stats #}
-    <div class="row g-4 mb-4">
-        {# AI Recommendations #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm border-start border-warning">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #fef08a;">
-                                <svg class="w-6 h-6 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Recommandations IA</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">--</dd>
-                            </dl>
-                        </div>
-                    </div>
+{# ── Subscription Badge ── #}
+<div class="ag-card ag-animate-fade-up ag-delay-1 mb-4">
+    <div class="ag-card-body d-flex align-items-center gap-4">
+        <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(249,115,22,.12));display:flex;align-items:center;justify-content:center;font-size:1.75rem;flex-shrink:0;">⭐</div>
+        <div class="flex-fill">
+            <p class="fw-bold text-dark mb-0">Abonnement {{ app.user.agriplusAbonnement|default('Premium') }}</p>
+            {% if app.user.agriplusDateExpiration %}
+                <p class="small text-muted mb-0">Expire le {{ app.user.agriplusDateExpiration|date('d/m/Y') }}</p>
+            {% else %}
+                <p class="small mb-0" style="color:#16a34a;font-weight:600;">✓ Abonnement actif</p>
+            {% endif %}
+        </div>
+        <span class="ag-badge" style="background:rgba(245,158,11,.1);color:#d97706;border-color:rgba(245,158,11,.2);">Premium</span>
+    </div>
+</div>
+
+{# ── Profile Completion Widget ── #}
+<div class="mb-4 ag-animate-fade-up ag-delay-2">
+    {% include 'components/profile_completion_simple.html.twig' %}
+</div>
+
+{# ── Quick Stats ── #}
+<div class="row g-3 mb-4">
+    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-1">
+        <div class="ag-stat-card">
+            <div class="ag-stat-body d-flex align-items-start gap-3">
+                <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(252,211,77,.09));">
+                    <svg width="22" height="22" fill="none" stroke="#d97706" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
                 </div>
-                <div class="card-footer bg-light p-3">
-                    <a href="#" class="small fw-medium text-warning text-decoration-none">Voir →</a>
+                <div>
+                    <p class="text-muted small fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">Recommandations IA</p>
+                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#111827;">--</p>
                 </div>
             </div>
-        </div>
-
-        {# Weather Alerts #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm border-start border-primary">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #dbeafe;">
-                                <svg class="w-6 h-6 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Alertes météo</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">--</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light p-3">
-                    <span class="small text-muted">Cette semaine</span>
-                </div>
-            </div>
-        </div>
-
-        {# Market Trends #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm border-start border-success">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #dcfce7;">
-                                <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Tendances marché</dt>
-                                <dd class="fs-5 fw-semibold text-success mb-0">+12%</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light p-3">
-                    <a href="#" class="small fw-medium text-success text-decoration-none">Analyser →</a>
-                </div>
-            </div>
-        </div>
-
-        {# Support Tickets #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm border-start" style="border-color: #7c3aed !important;">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #e9d5ff;">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #7c3aed;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Support prioritaire</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">Actif</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light p-3">
-                    <a href="#" class="small fw-medium" style="color: #7c3aed; text-decoration: none;">Contacter →</a>
-                </div>
+            <div class="ag-stat-footer">
+                <a href="#" class="small fw-semibold text-decoration-none" style="color:#d97706;">Voir →</a>
             </div>
         </div>
     </div>
+    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-2">
+        <div class="ag-weather-card">
+            <div class="ag-stat-body d-flex align-items-start gap-3">
+                <div class="ag-stat-icon" style="background:rgba(255,255,255,.18);">
+                    <svg width="22" height="22" fill="none" stroke="rgba(255,255,255,.9)" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
+                </div>
+                <div>
+                    <p class="fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;color:rgba(255,255,255,.7);">Alertes météo</p>
+                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#fff;">--</p>
+                </div>
+            </div>
+            <div class="ag-stat-footer">
+                <span class="small" style="color:rgba(255,255,255,.8);">Cette semaine</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-3">
+        <div class="ag-stat-card">
+            <div class="ag-stat-body d-flex align-items-start gap-3">
+                <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(22,163,74,.14),rgba(34,197,94,.07));">
+                    <svg width="22" height="22" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                </div>
+                <div>
+                    <p class="text-muted small fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">Tendances marché</p>
+                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#16a34a;">+12%</p>
+                </div>
+            </div>
+            <div class="ag-stat-footer">
+                <a href="#" class="small fw-semibold text-decoration-none" style="color:#16a34a;">Analyser →</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-4">
+        <div class="ag-stat-card">
+            <div class="ag-stat-body d-flex align-items-start gap-3">
+                <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(139,92,246,.14),rgba(167,139,250,.07));">
+                    <svg width="22" height="22" fill="none" stroke="#8b5cf6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </div>
+                <div>
+                    <p class="text-muted small fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">Support prioritaire</p>
+                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#111827;">Actif</p>
+                </div>
+            </div>
+            <div class="ag-stat-footer">
+                <a href="#" class="small fw-semibold text-decoration-none" style="color:#8b5cf6;">Contacter →</a>
+            </div>
+        </div>
+    </div>
+</div>
 
     {# Main content grid #}
     <div class="row g-4">

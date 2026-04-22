@@ -78,4 +78,110 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/6.1.10/index.global.min.js"></script>
     <script src="/js/calendar-pro.js"></script>
+    
+    <script>
+    /**
+     * ========================================
+     * CALENDAR MODAL STATE MANAGEMENT
+     * ========================================
+     * 
+     * Purpose: Ensure modals are closed when returning to the calendar page.
+     * This prevents the "stuck modal" bug where navigating back leaves the modal open.
+     * 
+     * How it works:
+     * 1. On page load, close all open modals (prevents flicker)
+     * 2. On navigation back (history event), also close all modals
+     * 3. SessionStorage tracks modal state to prevent re-opening
+     */
+    
+    (function() {
+        'use strict';
+        
+        // ========== CONFIGURATION ==========
+        const MODAL_STATE_KEY = 'calendar_modal_state';
+        const MODAL_SELECTORS = {
+            quickAdd: '#quickAddModal',
+            dayEvents: '#dayEventsModal'
+        };
+        
+        // ========== UTILITY FUNCTIONS ==========
+        
+        /**
+         * Close all Bootstrap modals on the page
+         * Prevents flicker by hiding immediately without animation
+         */
+        function closeAllModals() {
+            // Get all modal elements
+            const modals = document.querySelectorAll('.modal');
+            
+            modals.forEach(modalElement => {
+                // Check if Bootstrap Modal is initialized
+                const bsModal = bootstrap.Modal.getOrCreateInstance(modalElement);
+                if (bsModal) {
+                    // Hide without animation to prevent flicker
+                    bsModal.hide();
+                    // Also remove the backdrop manually to ensure it's gone
+                    modalElement.classList.remove('show');
+                }
+                // Remove modal backdrop if it exists
+                const backdrop = document.querySelector('.modal-backdrop');
+                if (backdrop) {
+                    backdrop.remove();
+                }
+            });
+            
+            // Reset body classes that Bootstrap adds
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';
+        }
+        
+        /**
+         * Clear modal state from sessionStorage
+         * Prevents the modal from re-opening after page navigation
+         */
+        function clearModalState() {
+            sessionStorage.removeItem(MODAL_STATE_KEY);
+        }
+        
+        /**
+         * Initialize modal state management
+         * Called when the page loads
+         */
+        function initializeModalStateManagement() {
+            // Close any open modals immediately on load
+            // Use requestAnimationFrame to ensure DOM is ready
+            requestAnimationFrame(() => {
+                closeAllModals();
+                clearModalState();
+            });
+            
+            // Also handle the case where page is shown after being hidden
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') {
+                    closeAllModals();
+                }
+            });
+        }
+        
+        // ========== INITIALIZATION ==========
+        
+        // Wait for DOM to be fully ready before closing modals
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeModalStateManagement);
+        } else {
+            // DOM already loaded (e.g., with turbo navigation)
+            initializeModalStateManagement();
+        }
+        
+        // Handle browser history navigation (back button)
+        window.addEventListener('popstate', function() {
+            closeAllModals();
+            clearModalState();
+        });
+        
+        // Optional: Log for debugging (remove in production)
+        console.log('✓ Calendar modal state management initialized');
+    })();
+    </script>
 {% endblock %}

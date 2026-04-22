@@ -11,8 +11,7 @@
             <div class="modal-body boutique-confirm__body mc-cancel-request-modal__body">
                 <p class="mb-2">Commande <strong class="js-mc-cancel-order-ref">—</strong>.</p>
                 <p class="mb-2">Votre demande d’annulation sera envoyée pour traitement.</p>
-                <p class="mb-2 text-secondary small">Traitée par : <strong>Admin</strong>, <strong>Fournisseur</strong> ou <strong>Agriculteur</strong>.</p>
-                <p class="mb-0 text-secondary small">Disponible dans les 48 h suivant la commande.</p>
+                <p class="mb-2 text-secondary small">Traitée par : <strong>Admin</strong> ou <strong>Responsable de la commande</strong>.</p>                <p class="mb-0 text-secondary small">Disponible dans les 48 h suivant la commande.</p>
             </div>
             <div class="modal-footer boutique-confirm__footer mc-cancel-request-modal__footer border-0">
                 <button type="button" class="btn btn-sm btn-outline-secondary boutique-confirm__btn-cancel" data-bs-dismiss="modal">Retour</button>
@@ -34,12 +33,13 @@
     var confirmBtn = modalEl.querySelector('.js-mc-cancel-confirm');
     var pendingForm = null;
 
-    document.addEventListener('submit', function (event) {
-        var form = event.target;
-        if (!(form instanceof HTMLFormElement)) {
+    document.addEventListener('click', function (event) {
+        var btn = event.target && event.target.closest && event.target.closest('.js-mc-cancel-open');
+        if (!btn) {
             return;
         }
-        if (!form.classList.contains('js-mc-cancel-request-form')) {
+        var form = btn.closest('form.js-mc-cancel-request-form');
+        if (!form) {
             return;
         }
         event.preventDefault();

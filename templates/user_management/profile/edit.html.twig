@@ -50,6 +50,7 @@
     .form-control.is-invalid:focus {
         box-shadow: 0 0 0 3px rgba(220,53,69,.12);
     }
+    @keyframes spin { to { transform: rotate(360deg); } }
     .avatar-upload-zone {
         border: 2px dashed #dee2e6;
         border-radius: 12px;
@@ -57,8 +58,6 @@
         text-align: center;
         cursor: pointer;
         transition: all .2s ease;
-        position: relative;
-        z-index: 10;
         user-select: none;
         display: block;
     }
@@ -149,16 +148,14 @@
                 <span class="fw-semibold" style="font-size:.9rem;">Photo de profil</span>
             </div>
             <div class="card-body-section">
-                <form method="post" action="{{ path('app_profile_edit') }}" enctype="multipart/form-data">
-                    <input type="hidden" name="_token" value="{{ csrf_token('profile_photo_upload') }}">
-
-                    {# Current avatar preview #}
-                    <div class="text-center mb-3">
-                        <div id="avatarPreviewWrap" class="d-inline-block">
-                            {{ include('components/_avatar.html.twig', {user: app.user, size: 'large'}) }}
-                        </div>
-                        <div class="mt-2">
-                            <span class="fw-semibold d-block" style="font-size:.875rem;">{{ app.user.displayName }}</span>
+                {# Current avatar preview #}
+                <div class="text-center mb-3">
+                    <div id="avatarPreviewWrap" class="d-inline-block">
+                        {{ include('components/_avatar.html.twig', {user: app.user, size: 'large'}) }}
+                    </div>
+                    <div class="mt-2">
+                        <span class="fw-semibold d-block" style="font-size:.875rem;">{{ app.user.displayName }}</span>
+                        <span id="photoStatusBadge">
                             {% if app.user.photoProfil %}
                                 <span class="badge bg-success-subtle text-success mt-1" style="font-size:.7rem;">
                                     <svg fill="currentColor" viewBox="0 0 20 20" width="10" height="10">
@@ -169,46 +166,71 @@
                             {% else %}
                                 <span class="badge bg-secondary-subtle text-secondary mt-1" style="font-size:.7rem;">Aucune photo</span>
                             {% endif %}
-                        </div>
+                        </span>
                     </div>
+                </div>
 
-                    {# Upload zone #}
-                    <label for="profilePhotoInput" class="avatar-upload-zone d-block mb-3" id="uploadZone" style="cursor: pointer;">
-                        <svg fill="none" stroke="#6c757d" viewBox="0 0 24 24" width="28" height="28" class="mb-2">
+                {# Photo upload form #}
+                <form method="post" action="{{ path('app_profile_edit') }}" enctype="multipart/form-data" id="photoUploadForm" style="display: contents;">
+                    <input type="hidden" name="_token" value="{{ csrf_token('profile_photo_upload') }}">
+                    <input type="hidden" name="photo_only" value="1">
+
+                    {# File input - completely hidden but still accessible #}
+                    <input type="file" name="profile_edit_form[profilePhoto]" id="profilePhotoInput" style="display: none;" accept="image/jpeg,image/png,image/webp">
+
+                    {# Upload zone - simple button that triggers file input #}
+                    <button type="button" id="uploadZone" class="avatar-upload-zone mb-2 w-100" style="border: none; background: none; padding: 1.5rem; text-align: center; cursor: pointer; transition: all .2s ease; user-select: none;">
+                        <svg fill="none" stroke="#6c757d" viewBox="0 0 24 24" width="28" height="28" class="mb-2" id="uploadIcon" style="pointer-events: none;">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                   d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
                         </svg>
-                        <p class="mb-0 fw-medium" style="font-size:.8125rem; color:#495057;">
-                            <span style="text-decoration: underline;">Cliquez ici</span> pour choisir une photo
+                        <p class="mb-0 fw-medium" id="uploadZoneText" style="font-size:.8125rem; color:#495057; pointer-events: none;">
+                            <span style="text-decoration:underline;">Cliquez ici</span> pour choisir une photo
                         </p>
-                        <p class="mb-0 text-muted" style="font-size:.75rem;">PNG, JPG, WEBP · Max 5 Mo</p>
-                    </label>
+                        <p class="mb-0 text-muted" style="font-size:.75rem; pointer-events: none;">PNG, JPG, WEBP · Max 2 Mo</p>
+                    </button>
 
-                    <input type="file" name="profile_edit_form[profilePhoto]" id="profilePhotoInput" class="d-none" accept="image/*">
+                    {# Preview section (hidden until file chosen) #}
+                    <div id="previewSection" class="d-none mt-3 p-3 bg-light rounded-2" style="text-align:center;">
+                        <p class="text-muted small mb-2">Aperçu de votre nouvelle photo</p>
+                        <img id="imagePreview" src="" alt="Aperçu" class="avatar-large mb-2" style="border:3px solid #198754; max-width:100%;">
+                        <p id="previewFileName" class="text-muted small mb-0"></p>
+                    </div>
 
-                    <div class="d-grid gap-2">
-                        <button type="submit" name="photo_only" value="1" class="btn btn-success btn-sm">
+                    {# Cancel selection (hidden until file chosen) #}
+                    <div id="cancelSelectionWrap" class="d-none mb-2 text-center">
+                        <button type="button" id="cancelSelectionBtn" class="btn btn-link btn-sm text-secondary p-0" style="font-size:.75rem;">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="12" height="12" class="me-1">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                            Annuler la sélection
+                        </button>
+                    </div>
+
+                    <div id="saveButtonWrap" class="d-none d-grid gap-2">
+                        <button type="submit" id="savePhotoBtn" class="btn btn-success btn-sm">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" class="me-1">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                             </svg>
                             Enregistrer la photo
                         </button>
-                        {% if app.user.photoProfil %}
-                            <form method="POST" action="{{ path('app_profile_delete_photo') }}" style="display: inline;">
-                                <input type="hidden" name="_token" value="{{ csrf_token('profile_photo_delete') }}">
-                                <button type="submit" 
-                                   class="btn btn-outline-danger btn-sm w-100"
-                                   onclick="return confirm('Êtes-vous sûr de vouloir supprimer votre photo de profil ?')">
-                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" class="me-1">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                    Supprimer la photo
-                                </button>
-                            </form>
-                        {% endif %}
                     </div>
                 </form>
+
+                {# Delete photo form — separate, outside the upload form #}
+                {% if app.user.photoProfil %}
+                <form method="POST" action="{{ path('app_profile_delete_photo') }}" id="deletePhotoForm" class="mt-2">
+                    <input type="hidden" name="_token" value="{{ csrf_token('profile_photo_delete') }}">
+                    <button type="submit" id="deletePhotoBtn"
+                            class="btn btn-outline-danger btn-sm w-100">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="14" height="14" class="me-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                        Supprimer la photo
+                    </button>
+                </form>
+                {% endif %}
             </div>
         </div>
 
@@ -582,63 +604,218 @@
     </div>
 </div>
 
+<script src="{{ asset('js/face-api.min.js') }}"></script>
+<script src="{{ asset('js/face-recognition.js') }}"></script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // Live avatar preview when file is selected
-    const photoInput = document.getElementById('profilePhotoInput');
-    const uploadZone = document.getElementById('uploadZone');
+    const photoInput         = document.getElementById('profilePhotoInput');
+    const uploadZone         = document.getElementById('uploadZone');
+    const savePhotoBtn       = document.getElementById('savePhotoBtn');
+    const cancelSelectionBtn = document.getElementById('cancelSelectionBtn');
+    const previewSection     = document.getElementById('previewSection');
+    const cancelSelectionWrap = document.getElementById('cancelSelectionWrap');
+    const saveButtonWrap     = document.getElementById('saveButtonWrap');
+    const uploadZoneText     = document.getElementById('uploadZoneText');
+    const imagePreview       = document.getElementById('imagePreview');
+    const previewFileName    = document.getElementById('previewFileName');
+    const photoUploadForm    = document.getElementById('photoUploadForm');
 
-    if (photoInput && uploadZone) {
-        // Explicit click handler for the upload zone
-        uploadZone.addEventListener('click', function (e) {
-            console.log('Upload zone clicked');
+    if (!photoInput || !uploadZone) return;
+
+    // Click handler: open file picker when upload zone is clicked
+    uploadZone.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        photoInput.click();
+    });
+
+    // Keyboard support: allow Enter/Space to trigger file picker
+    uploadZone.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { 
             e.preventDefault();
             e.stopPropagation();
-            photoInput.click();
-        });
+            photoInput.click(); 
+        }
+    });
 
-        photoInput.addEventListener('change', function () {
-            console.log('File selected:', this.files[0]);
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function (e) {
-                    const wrap = document.getElementById('avatarPreviewWrap');
-                    if (wrap) {
-                        wrap.innerHTML = '<img src="' + e.target.result + '" class="avatar-large" alt="Aperçu">';
-                    }
-                };
-                reader.readAsDataURL(this.files[0]);
-                // Update upload zone label
-                const labelText = uploadZone.querySelector('p.fw-medium');
-                if (labelText) {
-                    labelText.textContent = photoInput.files[0].name;
-                }
-                uploadZone.style.borderColor = '#198754';
-                uploadZone.style.background = '#f0fff4';
+    function applyFileSelection(file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            if (imagePreview) {
+                imagePreview.src = e.target.result;
             }
-        });
+            if (previewFileName) {
+                previewFileName.textContent = file.name.replace(/</g, '&lt;');
+            }
+        };
+        reader.readAsDataURL(file);
 
-        // Drag-and-drop
-        uploadZone.addEventListener('dragover', function (e) {
-            e.preventDefault();
-            this.style.borderColor = '#198754';
-            this.style.background = '#f0fff4';
-        });
-        uploadZone.addEventListener('dragleave', function () {
-            this.style.borderColor = '';
-            this.style.background = '';
-        });
-        uploadZone.addEventListener('drop', function (e) {
-            e.preventDefault();
-            const dt = e.dataTransfer;
-            if (dt.files && dt.files[0]) {
-                photoInput.files = dt.files;
-                photoInput.dispatchEvent(new Event('change'));
-            }
-        });
-    } else {
-        console.error('Upload elements not found:', {photoInput, uploadZone});
+        // Update upload zone text
+        if (uploadZoneText) {
+            uploadZoneText.innerHTML = '<strong style="color:#198754;">' +
+                file.name.replace(/</g, '&lt;') + '</strong>';
+        }
+        uploadZone.style.borderColor = '#198754';
+        uploadZone.style.background  = '#f0fff4';
+
+        // Show preview and buttons
+        if (previewSection) previewSection.classList.remove('d-none');
+        if (cancelSelectionWrap) cancelSelectionWrap.classList.remove('d-none');
+        if (saveButtonWrap) saveButtonWrap.classList.remove('d-none');
     }
+
+    function resetSelection() {
+        photoInput.value = '';
+        if (imagePreview) imagePreview.src = '';
+        if (previewFileName) previewFileName.textContent = '';
+        if (uploadZoneText) {
+            uploadZoneText.innerHTML = '<span style="text-decoration:underline;">Cliquez ici</span> pour choisir une photo';
+        }
+        uploadZone.style.borderColor = '';
+        uploadZone.style.background  = '';
+        
+        // Hide preview and buttons
+        if (previewSection) previewSection.classList.add('d-none');
+        if (cancelSelectionWrap) cancelSelectionWrap.classList.add('d-none');
+        if (saveButtonWrap) saveButtonWrap.classList.add('d-none');
+    }
+
+    // File selection change handler
+    photoInput.addEventListener('change', function () {
+        if (this.files && this.files[0]) {
+            applyFileSelection(this.files[0]);
+        } else {
+            resetSelection();
+        }
+    });
+
+    // Cancel button
+    if (cancelSelectionBtn) {
+        cancelSelectionBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            resetSelection();
+        });
+    }
+
+    // Form submission handler
+    if (photoUploadForm && savePhotoBtn) {
+        photoUploadForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (!photoInput.files[0]) {
+                alert('Veuillez sélectionner une photo.');
+                return;
+            }
+
+            savePhotoBtn.disabled = true;
+            const originalHTML = savePhotoBtn.innerHTML;
+            savePhotoBtn.innerHTML = '<svg class="me-1" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Enregistrement...';
+
+            const formData = new FormData(photoUploadForm);
+            
+            fetch(photoUploadForm.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => {
+                // Handle both successful submissions and redirects
+                if (r.ok || r.status === 302 || r.status === 301) {
+                    window.location.reload();
+                    return;
+                }
+                
+                // Handle errors
+                savePhotoBtn.disabled = false;
+                savePhotoBtn.innerHTML = originalHTML;
+                return r.text().then(text => {
+                    console.error('Upload error:', text);
+                    alert('Erreur lors de l\'enregistrement de la photo.');
+                });
+            })
+            .catch(error => {
+                console.error('Upload failed:', error);
+                savePhotoBtn.disabled = false;
+                savePhotoBtn.innerHTML = originalHTML;
+                alert('Erreur lors de l\'enregistrement de la photo.');
+            });
+        });
+    }
+
+    // Delete photo via AJAX
+    const deletePhotoBtn = document.getElementById('deletePhotoBtn');
+    const deletePhotoForm = document.getElementById('deletePhotoForm');
+    if (deletePhotoBtn && deletePhotoForm) {
+        deletePhotoBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            if (!confirm('Êtes-vous sûr de vouloir supprimer votre photo de profil ?')) return;
+
+            deletePhotoBtn.disabled = true;
+            const origHTML = deletePhotoBtn.innerHTML;
+            deletePhotoBtn.innerHTML = '<svg class="me-1" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="display:inline;vertical-align:middle;animation:spin 1s linear infinite;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg> Suppression...';
+
+            fetch(deletePhotoForm.action, {
+                method: 'POST',
+                body: new FormData(deletePhotoForm)
+            })
+            .then(r => {
+                if (r.ok || r.status === 302 || r.status === 301) {
+                    window.location.reload();
+                    return;
+                }
+                
+                deletePhotoBtn.disabled = false;
+                deletePhotoBtn.innerHTML = origHTML;
+                return r.text().then(text => {
+                    console.error('Delete error:', text);
+                    alert('Erreur lors de la suppression de la photo.');
+                });
+            })
+            .catch(error => {
+                console.error('Delete failed:', error);
+                deletePhotoBtn.disabled = false;
+                deletePhotoBtn.innerHTML = origHTML;
+                alert('Erreur lors de la suppression de la photo.');
+            });
+        });
+    }
+
+    // Drag-and-drop
+    uploadZone.addEventListener('dragover', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        this.style.borderColor = '#198754';
+        this.style.background  = '#f0fff4';
+    });
+
+    uploadZone.addEventListener('dragleave', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (!photoInput.files || !photoInput.files[0]) {
+            this.style.borderColor = '';
+            this.style.background  = '';
+        }
+    });
+
+    uploadZone.addEventListener('drop', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        const dt = e.dataTransfer;
+        if (dt.files && dt.files[0]) {
+            // Manually set files and trigger change event
+            try {
+                const dT = new DataTransfer();
+                dT.items.add(dt.files[0]);
+                photoInput.files = dT.files;
+            } catch (_) {
+                // Fallback if DataTransfer is not supported
+            }
+            photoInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    });
 });
+</script>
 </script>
 {% endblock %}

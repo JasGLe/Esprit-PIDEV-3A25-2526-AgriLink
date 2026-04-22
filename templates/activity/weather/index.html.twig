@@ -157,9 +157,17 @@
                     </div>
                 </aside>
             </div>
-        {% elseif weatherError %}
-            <div class="alert alert-danger border-0 shadow-sm" role="alert">
-                {{ weatherError }}
+        {% elseif isOffline %}
+            <div class="alert alert-warning border-0 shadow-sm d-flex align-items-center gap-3" role="alert">
+                <div style="font-size: 28px;">📡</div>
+                <div>
+                    <h5 class="alert-heading mb-1">Vous êtes hors ligne</h5>
+                    <p class="mb-0">La connexion internet n'est pas disponible. Les données météorologiques ne peuvent pas être chargées. Veuillez vérifier votre connexion et réessayer.</p>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert alert-info border-0 shadow-sm" role="alert">
+                Aucune donnée météorologique disponible. Veuillez réessayer.
             </div>
         {% endif %}
     </section>

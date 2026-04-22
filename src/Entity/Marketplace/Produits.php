@@ -65,6 +65,15 @@ class Produits
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $promoEndAt = null;
 
+    #[ORM\Column(type: Types::BOOLEAN)]
+    private bool $isRental = false;
+
+    #[ORM\Column(type: Types::FLOAT, nullable: true)]
+    private ?float $rentalPricePerDay = null;
+
+    #[ORM\Column(type: Types::STRING, length: 800, nullable: true)]
+    private ?string $rentalDescription = null;
+
     public function getId(): int
     {
         return $this->id;
@@ -297,6 +306,42 @@ class Produits
     public function setPromoEndAt(?\DateTimeInterface $promoEndAt): static
     {
         $this->promoEndAt = $promoEndAt;
+
+        return $this;
+    }
+
+    public function isRental(): bool
+    {
+        return $this->isRental;
+    }
+
+    public function setIsRental(bool $isRental): static
+    {
+        $this->isRental = $isRental;
+
+        return $this;
+    }
+
+    public function getRentalPricePerDay(): ?float
+    {
+        return $this->rentalPricePerDay;
+    }
+
+    public function setRentalPricePerDay(?float $rentalPricePerDay): static
+    {
+        $this->rentalPricePerDay = $rentalPricePerDay;
+
+        return $this;
+    }
+
+    public function getRentalDescription(): ?string
+    {
+        return $this->rentalDescription;
+    }
+
+    public function setRentalDescription(?string $rentalDescription): static
+    {
+        $this->rentalDescription = $rentalDescription;
 
         return $this;
     }

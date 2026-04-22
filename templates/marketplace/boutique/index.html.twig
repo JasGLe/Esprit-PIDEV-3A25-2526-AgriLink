@@ -430,6 +430,8 @@
                 <div class="col-12 col-sm-6 col-xl-3">
                     <div class="card boutique-card h-100 overflow-hidden boutique-item"
                          data-produit-id="{{ p.id }}"
+                         data-is-equipement="{{ p.equipementId is not null ? '1' : '0' }}"
+                         data-produit-nom="{{ p.nom|e('html_attr') }}"
                          data-promo-code="{{ p.promoCode|default('')|e('html_attr') }}"
                          data-promo-discount="{{ p.promoDiscountPercent is not null ? p.promoDiscountPercent : '' }}"
                          data-promo-start="{{ p.promoStartAt ? p.promoStartAt|date('Y-m-d') : '' }}"
@@ -478,6 +480,13 @@
                                     
                                 </p>
                             {% endif %}
+                            {% if p.isRental %}
+                                <p class="small mb-2">
+                                    <span class="badge rounded-pill text-bg-info">
+                                        Location · {{ p.rentalPricePerDay|default(0)|number_format(3, ',', ' ') }} DT / jour
+                                    </span>
+                                </p>
+                            {% endif %}
                             {% if p.description %}
                                 <p class="small text-muted flex-grow-1 mb-3">{{ p.description|length > 120 ? p.description|slice(0, 117) ~ '…' : p.description }}</p>
                             {% endif %}
@@ -502,6 +511,17 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                     </svg>
                                 </button>
+                                {% if p.equipementId is not null %}
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-success boutique-rental-open"
+                                            title="{{ p.isRental ? 'Modifier location' : 'Mettre en location' }}"
+                                            data-produit-id="{{ p.id }}"
+                                            data-produit-nom="{{ p.nom|e('html_attr') }}"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalConfirmRental">
+                                        {{ p.isRental ? 'Modifier location' : 'Louer' }}
+                                    </button>
+                                {% endif %}
                                 <form action="{{ path('boutique_produit_supprimer', {id: p.id}) }}" method="post" class="d-inline js-boutique-delete-form" data-boutique-product="{{ p.nom|e('html_attr') }}">
                                     <input type="hidden" name="_token" value="{{ csrf_token('boutique_supprimer' ~ p.id) }}">
                                     <button type="submit" class="btn btn-sm btn-outline-danger" title="Supprimer">
@@ -575,6 +595,66 @@
                         <button type="submit" class="btn btn-sm promo-modal__btn-save">Enregistrer</button>
                     </div>
                     {{ form_end(promo_form) }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalConfirmRental" tabindex="-1" aria-labelledby="modalConfirmRentalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title h6 mb-0" id="modalConfirmRentalLabel">Confirmer la mise en location</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-0">Voulez-vous mettre <strong id="rentalConfirmProductName">cet équipement</strong> en location ?</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="button" class="btn btn-sm btn-success" id="rentalConfirmContinueBtn">Continuer</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalRentalForm" tabindex="-1" aria-labelledby="modalRentalFormLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content promo-modal__content">
+                <div class="modal-header promo-modal__header">
+                    <div>
+                        <h2 class="modal-title mb-0 promo-modal__title" id="modalRentalFormLabel">
+                            <span class="promo-modal__badge" aria-hidden="true">🛠️</span>
+                            Mettre en location
+                        </h2>
+                        <p class="promo-modal__sub">Renseignez les détails de location pour l’équipement sélectionné.</p>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body promo-modal__body">
+                    {{ form_start(rental_form, { action: path('boutique_equipement_location_activer'), attr: { novalidate: 'novalidate', id: 'boutiqueRentalForm', 'data-server-errors': (open_rental_modal|default(false)) ? '1' : '0' } }) }}
+                    <div class="promo-modal__hint">
+                        <span aria-hidden="true">✓</span>
+                        <span id="rentalFormProductName">Équipement</span>
+                    </div>
+                    {{ form_errors(rental_form) }}
+                    {{ form_widget(rental_form.product_id, { attr: { id: 'rentalProductIdInput' } }) }}
+                    <div class="promo-modal__field">
+                        {{ form_label(rental_form.rental_price_per_day, null, { label_attr: { class: 'promo-modal__label' } }) }}
+                        {{ form_widget(rental_form.rental_price_per_day, { attr: { class: 'form-control promo-modal__input' } }) }}
+                        {{ form_errors(rental_form.rental_price_per_day) }}
+                    </div>
+                    <div class="promo-modal__field">
+                        {{ form_label(rental_form.rental_description, null, { label_attr: { class: 'promo-modal__label' } }) }}
+                        {{ form_widget(rental_form.rental_description, { attr: { class: 'form-control promo-modal__input' } }) }}
+                        {{ form_errors(rental_form.rental_description) }}
+                    </div>
+                    {{ form_errors(rental_form.product_id) }}
+                    <div class="promo-modal__actions">
+                        <button type="button" class="btn btn-sm promo-modal__btn-cancel" data-bs-dismiss="modal">Annuler</button>
+                        <button type="submit" class="btn btn-sm promo-modal__btn-save">Valider location</button>
+                    </div>
+                    {{ form_end(rental_form) }}
                 </div>
             </div>
         </div>
@@ -744,6 +824,78 @@
             bootstrap.Modal.getOrCreateInstance(modalEl).show();
         }
         {% endif %}
+    })();
+    </script>
+
+    <script>
+    (function () {
+        const confirmEl = document.getElementById('modalConfirmRental');
+        const rentalEl = document.getElementById('modalRentalForm');
+        const rentalForm = document.getElementById('boutiqueRentalForm');
+        const confirmName = document.getElementById('rentalConfirmProductName');
+        const formName = document.getElementById('rentalFormProductName');
+        const continueBtn = document.getElementById('rentalConfirmContinueBtn');
+        if (!confirmEl || !rentalEl || !continueBtn || typeof bootstrap === 'undefined') return;
+
+        function resolveHiddenPidInput() {
+            return document.getElementById('rentalProductIdInput')
+                || (rentalForm ? rentalForm.querySelector('input[name$="[product_id]"]') : null);
+        }
+
+        const confirmModal = bootstrap.Modal.getOrCreateInstance(confirmEl);
+        const rentalModal = bootstrap.Modal.getOrCreateInstance(rentalEl);
+        let pending = { id: null, name: 'cet équipement' };
+        let shouldOpenRentalAfterConfirm = false;
+
+        function setPendingFromButton(btn) {
+            if (!btn) return;
+            const id = parseInt(btn.getAttribute('data-produit-id') || '0', 10);
+            const name = btn.getAttribute('data-produit-nom') || 'cet équipement';
+            if (!id || id < 1) return;
+            pending = { id: id, name: name };
+            confirmEl.setAttribute('data-rental-product-id', String(id));
+            confirmEl.setAttribute('data-rental-product-name', name);
+            if (confirmName) confirmName.textContent = pending.name;
+        }
+
+        document.addEventListener('click', function (event) {
+            const btn = event.target.closest('.boutique-rental-open');
+            if (!btn) return;
+            setPendingFromButton(btn);
+        });
+
+        confirmEl.addEventListener('show.bs.modal', function (event) {
+            const trigger = event.relatedTarget;
+            setPendingFromButton(trigger);
+        });
+
+        continueBtn.addEventListener('click', function () {
+            const modalPid = parseInt(confirmEl.getAttribute('data-rental-product-id') || '0', 10);
+            const modalPname = confirmEl.getAttribute('data-rental-product-name') || pending.name || 'cet équipement';
+            const finalPid = (modalPid && modalPid > 0) ? modalPid : pending.id;
+            const finalName = modalPname || pending.name || 'cet équipement';
+            if (!finalPid || finalPid < 1) return;
+            const hiddenPidInput = resolveHiddenPidInput();
+            if (!hiddenPidInput) return;
+            hiddenPidInput.value = String(finalPid);
+            if (formName) formName.textContent = finalName;
+            shouldOpenRentalAfterConfirm = true;
+            confirmModal.hide();
+        });
+
+        confirmEl.addEventListener('hidden.bs.modal', function () {
+            if (!shouldOpenRentalAfterConfirm) return;
+            shouldOpenRentalAfterConfirm = false;
+            rentalModal.show();
+        });
+
+        const serverHiddenPidInput = resolveHiddenPidInput();
+        if (rentalForm && rentalForm.getAttribute('data-server-errors') === '1' && serverHiddenPidInput && serverHiddenPidInput.value) {
+            const card = document.querySelector('.boutique-item[data-produit-id="' + serverHiddenPidInput.value + '"]');
+            const name = card ? (card.getAttribute('data-produit-nom') || 'cet équipement') : 'cet équipement';
+            if (formName) formName.textContent = name;
+            rentalModal.show();
+        }
     })();
     </script>
 

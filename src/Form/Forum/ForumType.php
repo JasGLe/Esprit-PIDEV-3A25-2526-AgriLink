@@ -4,21 +4,21 @@ namespace App\Form\Forum;
 
 use App\Entity\Forum\Forum;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\FormEvent;
-use Symfony\Component\Form\FormEvents;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class ForumType extends AbstractType
 {
     private const CATEGORY_CHOICES = [
-        'Agriculture generale' => 'Agriculture générale',
-        'Elevage' => 'Élevage',
+        'Agriculture generale' => 'Agriculture generale',
+        'Elevage' => 'Elevage',
         'Cultures' => 'Cultures',
-        'Equipements' => 'Équipements',
-        'Meteo' => 'Météo',
+        'Equipements' => 'Equipements',
+        'Meteo' => 'Meteo',
         'Autre' => 'Autre',
     ];
 
@@ -28,13 +28,20 @@ class ForumType extends AbstractType
             ->add('titre', TextType::class, [
                 'label' => 'Titre',
                 'trim' => true,
-                'empty_data' => '',
+                'empty_data' => null,
+                'required' => true,
+                'attr' => [
+                    'minlength' => 2,
+                    'maxlength' => 150,
+                    'placeholder' => 'Titre du sujet',
+                ],
             ])
             ->add('categorie', ChoiceType::class, [
                 'label' => 'Categorie',
                 'choices' => self::CATEGORY_CHOICES,
                 'placeholder' => 'Choisir une categorie',
-                'empty_data' => '',
+                'empty_data' => null,
+                'required' => true,
             ]);
 
         $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event): void {
@@ -56,7 +63,8 @@ class ForumType extends AbstractType
                 'label' => 'Categorie',
                 'choices' => $choices,
                 'placeholder' => 'Choisir une categorie',
-                'empty_data' => '',
+                'empty_data' => null,
+                'required' => true,
             ]);
         });
     }

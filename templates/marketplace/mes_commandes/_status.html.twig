@@ -8,10 +8,11 @@
     <p class="small text-warning mb-1"><i class="bi bi-hourglass-split me-1" aria-hidden="true"></i>Demande d’annulation en attente</p>
 {% endif %}
 
-{% if not force_statut_edit and s matches '/annul|cancel/' %}
+{# Terminal statuses should be displayed clearly even in admin "force edit" mode #}
+{% if s matches '/annul|cancel/' %}
     <span class="mc-badge mc-badge--danger"><i class="bi bi-x-circle me-1" aria-hidden="true"></i>Annulée</span>
 
-{% elseif not force_statut_edit and s matches '/livree|livrée|livré|termine|reception|reçue|recue/' %}
+{% elseif s matches '/livree|livrée|livré|termine|reception|reçue|recue/' %}
     <span class="mc-badge mc-badge--success"><i class="bi bi-check2-circle me-1" aria-hidden="true"></i>Livrée</span>
 
 {% elseif dropdown_choices is defined and dropdown_choices|length > 0 and commande_id is defined %}
@@ -59,7 +60,7 @@
         </div>
     </details>
 
-{% elseif show_buyer_cancel_request|default(false) and mes_cmd_mode == 'acheteur' and not app.user.isAgriPlus %}
+{% elseif show_buyer_cancel_request|default(false) and mes_cmd_mode == 'acheteur' and not is_granted('ROLE_AGRIPLUS') %}
     {% if s matches '/exped/' %}
         <span class="mc-badge mc-badge--info"><i class="bi bi-truck me-1" aria-hidden="true"></i>Expédiée</span>
     {% elseif s matches '/prepar/' %}
