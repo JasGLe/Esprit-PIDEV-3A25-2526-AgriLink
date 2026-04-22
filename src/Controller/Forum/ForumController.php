@@ -15,6 +15,8 @@ use App\Repository\Forum\MessageRepository;
 use App\Service\ForumMessageTranslationException;
 use App\Service\ForumMessageTranslationService;
 use App\Service\ForumVoiceTranscriptionService;
+use App\Service\ForumAiAssistantException;
+use App\Service\ForumAiAssistantService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormFactoryInterface;
@@ -344,6 +346,42 @@ class ForumController extends AbstractController
         return $this->json([
             'success' => true,
             'transcript' => $transcript,
+        ]);
+    }
+
+    #[Route('/ai-assistant', name: 'forum_ai_assistant', methods: ['POST'])]
+    public function aiAssistant(Request $request, ForumAiAssistantService $assistantService): JsonResponse
+    {
+        $payload = json_decode($request->getContent(), true);
+        if (!is_array($payload)) {
+            return $this->json([
+                'success' => false,
+                'error' => 'Requete invalide.',
+            ], Response::HTTP_BAD_REQUEST);
+        }
+
+        $token = (string) ($payload['_token'] ?? $request->headers->get('X-CSRF-TOKEN', ''));
+        if (!$this->isCsrfTokenValid('forum_ai_assistant', $token)) {
+            return $this->json([
+                'success' => false,
+                'error' => 'Action invalide.',
+            ], Response::HTTP_FORBIDDEN);
+        }
+
+        $question = trim((string) ($payload['message'] ?? ''));
+
+        try {
+            $answer = $assistantService->ask($question);
+        } catch (ForumAiAssistantException $exception) {
+            return $this->json([
+                'success' => false,
+                'error' => $exception->getMessage(),
+            ], $exception->getStatusCode());
+        }
+
+        return $this->json([
+            'success' => true,
+            'answer' => $answer,
         ]);
     }
 
