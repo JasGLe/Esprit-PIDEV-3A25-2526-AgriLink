@@ -168,6 +168,136 @@
             box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
         }
 
+        .forum-message-bubble.has-audio {
+            min-width: min(22rem, 72vw);
+        }
+
+        .forum-message-text + .forum-message-audio {
+            margin-top: 0.75rem;
+        }
+
+        .forum-message-audio audio {
+            width: 100%;
+            max-width: 22rem;
+            display: block;
+        }
+
+        .forum-message-tools {
+            margin-top: 0.6rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+            align-items: flex-start;
+        }
+
+        .forum-message-row.is-own .forum-message-tools {
+            align-items: flex-end;
+        }
+
+        .forum-translate-trigger {
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            color: #111827;
+            border-radius: 999px;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .forum-translate-menu {
+            display: none;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+        }
+
+        .forum-translate-menu.is-visible {
+            display: flex;
+        }
+
+        .forum-translate-option {
+            border: 1px solid #d1d5db;
+            background: #f8fafc;
+            color: #0f172a;
+            border-radius: 999px;
+            padding: 0.4rem 0.7rem;
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+
+        .forum-translation-box {
+            display: none;
+            width: 100%;
+            border: 1px solid #dbeafe;
+            background: #eff6ff;
+            color: #1e3a8a;
+            border-radius: 1rem;
+            padding: 0.75rem 0.9rem;
+        }
+
+        .forum-translation-box.is-visible {
+            display: block;
+        }
+
+        .forum-translation-label {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.35rem;
+        }
+
+        .forum-translation-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
+        .forum-transcribe-trigger {
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            color: #111827;
+            border-radius: 999px;
+            padding: 0.45rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .forum-transcript-box {
+            display: none;
+            width: 100%;
+            border: 1px solid #e5e7eb;
+            background: #f8fafc;
+            color: #0f172a;
+            border-radius: 1rem;
+            padding: 0.75rem 0.9rem;
+        }
+
+        .forum-transcript-box.is-visible {
+            display: block;
+        }
+
+        .forum-transcript-label {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.35rem;
+        }
+
+        .forum-transcript-text {
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-size: 0.92rem;
+            line-height: 1.5;
+        }
+
         .forum-message-row.is-other .forum-message-bubble {
             background: #ffffff;
             color: #111827;
@@ -232,6 +362,241 @@
             border-radius: 999px;
         }
 
+        .forum-chat-tools {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.75rem;
+            margin-top: 0.9rem;
+        }
+
+        .forum-chat-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+        }
+
+        .forum-chat-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.75rem 1rem;
+            border-radius: 999px;
+            border: 1px solid #d1d5db;
+            background: #ffffff;
+            color: #111827;
+            font-weight: 600;
+            line-height: 1;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+        }
+
+        .forum-chat-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+        }
+
+        .forum-chat-action:focus-visible {
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(34, 197, 94, 0.18);
+        }
+
+        .forum-chat-action-icon {
+            width: 2rem;
+            height: 2rem;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        .forum-chat-action-label {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.15rem;
+        }
+
+        .forum-chat-action-label small {
+            font-size: 0.72rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .forum-chat-action.is-record {
+            border-color: rgba(220, 38, 38, 0.18);
+        }
+
+        .forum-chat-action.is-record .forum-chat-action-icon {
+            background: rgba(220, 38, 38, 0.12);
+            color: #b91c1c;
+        }
+
+        .forum-chat-action.is-recording {
+            background: linear-gradient(180deg, #fee2e2 0%, #fecaca 100%);
+            border-color: rgba(220, 38, 38, 0.35);
+            color: #7f1d1d;
+            box-shadow: 0 14px 26px rgba(220, 38, 38, 0.16);
+        }
+
+        .forum-chat-action.is-recording .forum-chat-action-icon {
+            background: #ffffff;
+            color: #dc2626;
+        }
+
+        .forum-chat-action.is-attach .forum-chat-action-icon,
+        .forum-chat-action.is-emoji .forum-chat-action-icon,
+        .forum-chat-action.is-clear .forum-chat-action-icon {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .forum-chat-action.is-clear {
+            border-style: dashed;
+        }
+
+        .forum-voice-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            padding: 0.7rem 0.9rem;
+            border-radius: 1rem;
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            font-size: 0.875rem;
+            color: #475569;
+        }
+
+        .forum-voice-status.is-recording {
+            color: #991b1b;
+            background: #fef2f2;
+            border-color: rgba(220, 38, 38, 0.2);
+            font-weight: 700;
+        }
+
+        .forum-voice-status-dot {
+            width: 0.65rem;
+            height: 0.65rem;
+            border-radius: 999px;
+            background: #94a3b8;
+            flex-shrink: 0;
+        }
+
+        .forum-voice-status.is-recording .forum-voice-status-dot {
+            background: #dc2626;
+            box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.45);
+            animation: forum-record-pulse 1.2s infinite;
+        }
+
+        .forum-voice-preview {
+            display: none;
+            margin-top: 0.85rem;
+            padding: 0.85rem 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+            background: #f8fafc;
+        }
+
+        .forum-voice-preview.is-visible {
+            display: block;
+        }
+
+        .forum-voice-preview audio {
+            width: 100%;
+        }
+
+        .forum-emoji-picker {
+            display: none;
+            margin-top: 0.85rem;
+            padding: 0.9rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 1rem;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            box-shadow: 0 14px 34px rgba(15, 23, 42, 0.08);
+        }
+
+        .forum-emoji-picker.is-visible {
+            display: block;
+        }
+
+        .forum-emoji-picker-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .forum-emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(2.6rem, 1fr));
+            gap: 0.55rem;
+        }
+
+        .forum-emoji-item {
+            width: 100%;
+            min-height: 2.7rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.9rem;
+            background: #ffffff;
+            font-size: 1.35rem;
+            line-height: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+        }
+
+        .forum-emoji-item:hover {
+            transform: translateY(-1px) scale(1.03);
+            border-color: #86efac;
+            box-shadow: 0 8px 20px rgba(34, 197, 94, 0.12);
+        }
+
+        .forum-voice-preview-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .forum-voice-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem 0.6rem;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #166534;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .forum-chat-submit {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            border-radius: 999px;
+            padding-inline: 1.2rem;
+        }
+
+        @keyframes forum-record-pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.45);
+            }
+
+            70% {
+                box-shadow: 0 0 0 0.5rem rgba(220, 38, 38, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+            }
+        }
+
         @media (max-width: 991.98px) {
             .forum-chat-thread {
                 min-height: 28rem;
@@ -249,6 +614,20 @@
                 padding-left: 1rem;
                 padding-right: 1rem;
             }
+
+            .forum-chat-tools {
+                align-items: stretch;
+            }
+
+            .forum-chat-actions,
+            .forum-chat-action,
+            .forum-voice-status {
+                width: 100%;
+            }
+
+            .forum-chat-action {
+                justify-content: flex-start;
+            }
         }
     </style>
 {% endblock %}
@@ -260,6 +639,9 @@
             <p class="text-muted mb-0">Suivez la discussion et répondez depuis l’espace dashboard.</p>
         </div>
         <div class="d-flex flex-wrap gap-2">
+            <a href="{{ path('forum_export_pdf', {id: forum.id}) }}" class="btn btn-outline-danger" data-turbo="false">
+                Telecharger PDF
+            </a>
             <a href="{{ path('forum_edit', {id: forum.id}) }}" class="btn btn-outline-secondary">Modifier</a>
             <a href="{{ path('forum_index') }}" class="btn btn-outline-primary">Retour au forum</a>
         </div>
@@ -312,9 +694,57 @@
                                     <span class="forum-message-author">{{ message.authorName }}</span>
                                     <span>{{ message.sentAt|date('d/m/Y H:i') }}</span>
                                 </div>
-                                <div class="forum-message-bubble">
-                                    {{ message.content|nl2br }}
+                                <div class="forum-message-bubble {{ message.audioPath ? 'has-audio' : '' }}">
+                                    {% if message.content is not empty %}
+                                        <div class="forum-message-text">{{ message.content|nl2br }}</div>
+                                    {% endif %}
+                                    {% if message.audioPath %}
+                                        <div class="forum-message-audio">
+                                            <audio controls preload="metadata">
+                                                <source src="{{ message.audioUrl }}">
+                                                Votre navigateur ne supporte pas la lecture audio.
+                                            </audio>
+                                        </div>
+                                    {% endif %}
                                 </div>
+                                {% if message.content is not empty %}
+                                    <div class="forum-message-tools">
+                                        <button
+                                            type="button"
+                                            class="forum-translate-trigger"
+                                            data-translate-toggle
+                                        >
+                                            <i class="bi bi-translate"></i>
+                                            Traduire
+                                        </button>
+                                        <div class="forum-translate-menu" data-translate-menu>
+                                            <button type="button" class="forum-translate-option" data-translate-request data-target-language="fr" data-translate-url="{{ message.translateUrl }}">Francais</button>
+                                            <button type="button" class="forum-translate-option" data-translate-request data-target-language="en" data-translate-url="{{ message.translateUrl }}">Anglais</button>
+                                            <button type="button" class="forum-translate-option" data-translate-request data-target-language="ar" data-translate-url="{{ message.translateUrl }}">Arabe</button>
+                                        </div>
+                                        <div class="forum-translation-box" data-translation-box>
+                                            <div class="forum-translation-label" data-translation-label></div>
+                                            <div class="forum-translation-text" data-translation-text></div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                {% if message.audioPath %}
+                                    <div class="forum-message-tools">
+                                        <button
+                                            type="button"
+                                            class="forum-transcribe-trigger"
+                                            data-transcribe-request
+                                            data-transcribe-url="{{ message.transcribeUrl }}"
+                                        >
+                                            <i class="bi bi-card-text"></i>
+                                            Ecriture du vocal
+                                        </button>
+                                        <div class="forum-transcript-box" data-transcript-box>
+                                            <div class="forum-transcript-label">Transcription</div>
+                                            <div class="forum-transcript-text" data-transcript-text></div>
+                                        </div>
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                     {% else %}
@@ -328,7 +758,7 @@
             </div>
 
             <div class="forum-chat-composer">
-                <form method="post" action="{{ path('forum_message_create', {id: forum.id}) }}" class="forum-chat-form">
+                <form method="post" action="{{ path('forum_message_create', {id: forum.id}) }}" class="forum-chat-form" enctype="multipart/form-data" id="forum-chat-form">
                     <input type="hidden" name="_token" value="{{ csrf_token('forum_message_' ~ forum.id) }}">
                     <label for="forum-message-content" class="form-label fw-semibold small text-dark mb-2">Votre message</label>
                     <textarea
@@ -336,14 +766,74 @@
                         name="contenu"
                         rows="3"
                         class="form-control forum-chat-textarea"
-                        minlength="2"
                         maxlength="500"
-                        required
                         placeholder="Ecrivez un message dans ce salon..."
                     ></textarea>
+                    <input type="file" id="forum-audio-file" name="audio_message" accept="audio/*" class="d-none">
+                    <div class="forum-chat-tools">
+                        <div class="forum-chat-actions">
+                            <button type="button" class="forum-chat-action is-record" id="forum-voice-record">
+                                <span class="forum-chat-action-icon"><i class="bi bi-mic-fill"></i></span>
+                                <span class="forum-chat-action-label">
+                                    <span>Enregistrer</span>
+                                    <small>Dictez directement</small>
+                                </span>
+                            </button>
+                            <button type="button" class="forum-chat-action is-record d-none" id="forum-voice-stop">
+                                <span class="forum-chat-action-icon"><i class="bi bi-stop-fill"></i></span>
+                                <span class="forum-chat-action-label">
+                                    <span>Arreter</span>
+                                    <small>Terminer le vocal</small>
+                                </span>
+                            </button>
+                            <button type="button" class="forum-chat-action is-attach" id="forum-voice-pick">
+                                <span class="forum-chat-action-icon"><i class="bi bi-paperclip"></i></span>
+                                <span class="forum-chat-action-label">
+                                    <span>Joindre un audio</span>
+                                    <small>Importer un fichier</small>
+                                </span>
+                            </button>
+                            <button type="button" class="forum-chat-action is-emoji" id="forum-emoji-toggle">
+                                <span class="forum-chat-action-icon"><i class="bi bi-emoji-smile"></i></span>
+                                <span class="forum-chat-action-label">
+                                    <span>Emojis</span>
+                                    <small>Comme messenger</small>
+                                </span>
+                            </button>
+                            <button type="button" class="forum-chat-action is-clear d-none" id="forum-voice-clear">
+                                <span class="forum-chat-action-icon"><i class="bi bi-x-lg"></i></span>
+                                <span class="forum-chat-action-label">
+                                    <span>Retirer</span>
+                                    <small>Supprimer le vocal</small>
+                                </span>
+                            </button>
+                        </div>
+                        <span class="forum-voice-status" id="forum-voice-status">
+                            <span class="forum-voice-status-dot"></span>
+                            <span id="forum-voice-status-text">Aucun vocal joint.</span>
+                        </span>
+                    </div>
+                    <div class="forum-voice-preview" id="forum-voice-preview">
+                        <div class="forum-voice-preview-head">
+                            <div class="small fw-semibold text-dark mb-0">Apercu du message vocal</div>
+                            <span class="forum-voice-chip"><i class="bi bi-soundwave"></i> Pret a envoyer</span>
+                        </div>
+                        <audio controls id="forum-voice-player"></audio>
+                    </div>
+                    <div class="forum-emoji-picker" id="forum-emoji-picker">
+                        <div class="forum-emoji-picker-head">
+                            <div class="small fw-semibold text-dark mb-0">Choisissez un emoji</div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="forum-emoji-close">Fermer</button>
+                        </div>
+                        <div class="forum-emoji-grid">
+                            {% for emoji in ['😀', '😁', '😂', '😊', '😍', '😎', '🤝', '👏', '🙏', '👍', '🔥', '💡', '🌱', '🌾', '🍅', '🥕', '🚜', '🐄', '💧', '☀️', '🌧️', '⚠️', '🎉', '❤️'] %}
+                                <button type="button" class="forum-emoji-item" data-forum-emoji="{{ emoji }}">{{ emoji }}</button>
+                            {% endfor %}
+                        </div>
+                    </div>
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mt-3">
-                        <span class="text-muted small">Les messages de ce forum sont rattaches a ce sujet et stockes en base.</span>
-                        <button type="submit" class="btn btn-success px-4">Envoyer</button>
+                        <span class="text-muted small">Vous pouvez envoyer un texte, un vocal, ou les deux.</span>
+                        <button type="submit" class="btn btn-success forum-chat-submit"><i class="bi bi-send-fill"></i>Envoyer</button>
                     </div>
                 </form>
             </div>
@@ -351,9 +841,334 @@
     </div>
 
     <script>
-        const forumThread = document.getElementById('forum-chat-thread');
-        if (forumThread) {
-            forumThread.scrollTop = forumThread.scrollHeight;
+        function initForumChatPage() {
+            const page = document.getElementById('forum-chat-form');
+            if (!page || page.dataset.forumChatReady === '1') {
+                return;
+            }
+
+            page.dataset.forumChatReady = '1';
+
+            const forumThread = document.getElementById('forum-chat-thread');
+            if (forumThread) {
+                forumThread.scrollTop = forumThread.scrollHeight;
+            }
+
+            const form = document.getElementById('forum-chat-form');
+            const audioInput = document.getElementById('forum-audio-file');
+            const recordButton = document.getElementById('forum-voice-record');
+            const stopButton = document.getElementById('forum-voice-stop');
+            const pickButton = document.getElementById('forum-voice-pick');
+            const clearButton = document.getElementById('forum-voice-clear');
+            const emojiToggle = document.getElementById('forum-emoji-toggle');
+            const emojiClose = document.getElementById('forum-emoji-close');
+            const emojiPicker = document.getElementById('forum-emoji-picker');
+            const status = document.getElementById('forum-voice-status');
+            const statusText = document.getElementById('forum-voice-status-text');
+            const preview = document.getElementById('forum-voice-preview');
+            const player = document.getElementById('forum-voice-player');
+            const textarea = document.getElementById('forum-message-content');
+
+            let mediaRecorder = null;
+            let recordedChunks = [];
+            let previewUrl = null;
+
+            function toggleEmojiPicker(forceState) {
+                if (!emojiPicker) {
+                    return;
+                }
+
+                const shouldShow = typeof forceState === 'boolean'
+                    ? forceState
+                    : !emojiPicker.classList.contains('is-visible');
+
+                emojiPicker.classList.toggle('is-visible', shouldShow);
+                emojiToggle?.classList.toggle('is-recording', shouldShow);
+            }
+
+            function insertEmoji(emoji) {
+                if (!textarea) {
+                    return;
+                }
+
+                const start = textarea.selectionStart ?? textarea.value.length;
+                const end = textarea.selectionEnd ?? textarea.value.length;
+                const value = textarea.value;
+                textarea.value = value.slice(0, start) + emoji + value.slice(end);
+                textarea.focus();
+                const nextPosition = start + emoji.length;
+                textarea.setSelectionRange(nextPosition, nextPosition);
+            }
+
+            function setVoiceState(message, isRecording) {
+                if (statusText) {
+                    statusText.textContent = message;
+                }
+
+                status?.classList.toggle('is-recording', Boolean(isRecording));
+                recordButton?.classList.toggle('d-none', Boolean(isRecording));
+                stopButton?.classList.toggle('d-none', !isRecording);
+                recordButton?.classList.toggle('is-recording', Boolean(isRecording));
+                stopButton?.classList.toggle('is-recording', Boolean(isRecording));
+            }
+
+            function clearVoiceSelection() {
+                if (audioInput) {
+                    audioInput.value = '';
+                }
+
+                if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                    previewUrl = null;
+                }
+
+                player?.removeAttribute('src');
+                player?.load();
+                preview?.classList.remove('is-visible');
+                clearButton?.classList.add('d-none');
+                setVoiceState('Aucun vocal joint.', false);
+            }
+
+            function setAudioFile(file) {
+                if (!audioInput) {
+                    return;
+                }
+
+                const transfer = new DataTransfer();
+                transfer.items.add(file);
+                audioInput.files = transfer.files;
+
+                if (previewUrl) {
+                    URL.revokeObjectURL(previewUrl);
+                }
+
+                previewUrl = URL.createObjectURL(file);
+                if (player) {
+                    player.src = previewUrl;
+                }
+                preview?.classList.add('is-visible');
+                clearButton?.classList.remove('d-none');
+                setVoiceState('Vocal pret a etre envoye.', false);
+            }
+
+            async function parseJsonResponse(response) {
+                const contentType = response.headers.get('content-type') || '';
+                if (!contentType.includes('application/json')) {
+                    const text = await response.text();
+                    throw new Error(text && text.trim() !== '' ? text.trim() : 'Reponse serveur invalide.');
+                }
+
+                return response.json();
+            }
+
+            async function requestJson(url) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        credentials: 'same-origin',
+                        cache: 'no-store',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    });
+
+                    const payload = await parseJsonResponse(response);
+
+                    if (!response.ok || !payload.success) {
+                        throw new Error(payload.error || 'Requete impossible.');
+                    }
+
+                    return payload;
+                } catch (error) {
+                    if (error instanceof TypeError) {
+                        throw new Error('Connexion au serveur impossible. Rechargez la page puis reessayez.');
+                    }
+
+                    throw error;
+                }
+            }
+
+            if (pickButton && audioInput) {
+                pickButton.addEventListener('click', function () {
+                    audioInput.click();
+                });
+
+                audioInput.addEventListener('change', function () {
+                    const file = audioInput.files && audioInput.files[0];
+                    if (!file) {
+                        clearVoiceSelection();
+                        return;
+                    }
+
+                    setAudioFile(file);
+                });
+            }
+
+            clearButton?.addEventListener('click', function () {
+                clearVoiceSelection();
+            });
+
+            if (emojiToggle && emojiPicker) {
+                emojiToggle.addEventListener('click', function () {
+                    toggleEmojiPicker();
+                });
+
+                emojiClose?.addEventListener('click', function () {
+                    toggleEmojiPicker(false);
+                });
+
+                emojiPicker.querySelectorAll('[data-forum-emoji]').forEach(function (button) {
+                    button.addEventListener('click', function () {
+                        insertEmoji(button.getAttribute('data-forum-emoji') || '');
+                    });
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!emojiPicker.classList.contains('is-visible')) {
+                        return;
+                    }
+
+                    const target = event.target;
+                    if (target instanceof Node && !emojiPicker.contains(target) && !emojiToggle.contains(target)) {
+                        toggleEmojiPicker(false);
+                    }
+                });
+            }
+
+            if (recordButton && stopButton && navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                recordButton.addEventListener('click', async function () {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        recordedChunks = [];
+                        mediaRecorder = new MediaRecorder(stream);
+
+                        mediaRecorder.addEventListener('dataavailable', function (event) {
+                            if (event.data && event.data.size > 0) {
+                                recordedChunks.push(event.data);
+                            }
+                        });
+
+                        mediaRecorder.addEventListener('stop', function () {
+                            const mimeType = mediaRecorder.mimeType || 'audio/webm';
+                            const extension = mimeType.indexOf('ogg') !== -1 ? 'ogg' : 'webm';
+                            const blob = new Blob(recordedChunks, { type: mimeType });
+                            const file = new File([blob], 'message-vocal.' + extension, { type: mimeType });
+                            setAudioFile(file);
+                            stream.getTracks().forEach(function (track) {
+                                track.stop();
+                            });
+                        });
+
+                        mediaRecorder.start();
+                        setVoiceState('Enregistrement en cours...', true);
+                    } catch (error) {
+                        setVoiceState('Impossible d acceder au microphone.', false);
+                    }
+                });
+
+                stopButton.addEventListener('click', function () {
+                    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                        mediaRecorder.stop();
+                    }
+                });
+            } else if (recordButton && stopButton) {
+                recordButton.classList.add('d-none');
+                stopButton.classList.add('d-none');
+            }
+
+            form?.addEventListener('submit', function (event) {
+                const hasText = textarea && textarea.value.trim() !== '';
+                const hasAudio = audioInput && audioInput.files && audioInput.files.length > 0;
+
+                if (!hasText && !hasAudio) {
+                    event.preventDefault();
+                    setVoiceState('Ajoutez un texte ou un message vocal.', false);
+                }
+            });
+
+            document.addEventListener('click', async function (event) {
+                const target = event.target;
+                if (!(target instanceof Element)) {
+                    return;
+                }
+
+                const translateToggle = target.closest('[data-translate-toggle]');
+                if (translateToggle) {
+                    const tools = translateToggle.closest('.forum-message-tools');
+                    const menu = tools ? tools.querySelector('[data-translate-menu]') : null;
+
+                    if (menu) {
+                        menu.classList.toggle('is-visible');
+                    }
+
+                    return;
+                }
+
+                const translateButton = target.closest('[data-translate-request]');
+                if (translateButton instanceof HTMLButtonElement) {
+                    const translateUrl = translateButton.getAttribute('data-translate-url');
+                    const targetLanguage = translateButton.getAttribute('data-target-language');
+                    const tools = translateButton.closest('.forum-message-tools');
+                    const box = tools ? tools.querySelector('[data-translation-box]') : null;
+                    const label = tools ? tools.querySelector('[data-translation-label]') : null;
+                    const text = tools ? tools.querySelector('[data-translation-text]') : null;
+
+                    if (!translateUrl || !targetLanguage || !box || !label || !text) {
+                        return;
+                    }
+
+                    translateButton.disabled = true;
+                    box.classList.add('is-visible');
+                    label.textContent = 'Traduction en cours';
+                    text.textContent = 'Chargement...';
+
+                    try {
+                        const url = new URL(translateUrl, window.location.origin);
+                        url.searchParams.set('target', targetLanguage);
+                        const payload = await requestJson(url.toString());
+
+                        label.textContent = 'Traduction ' + payload.targetLabel;
+                        text.textContent = payload.translation;
+                    } catch (error) {
+                        label.textContent = 'Traduction indisponible';
+                        text.textContent = error instanceof Error ? error.message : 'Une erreur est survenue.';
+                    } finally {
+                        translateButton.disabled = false;
+                    }
+
+                    return;
+                }
+
+                const transcribeButton = target.closest('[data-transcribe-request]');
+                if (transcribeButton instanceof HTMLButtonElement) {
+                    const transcribeUrl = transcribeButton.getAttribute('data-transcribe-url');
+                    const tools = transcribeButton.closest('.forum-message-tools');
+                    const box = tools ? tools.querySelector('[data-transcript-box]') : null;
+                    const text = tools ? tools.querySelector('[data-transcript-text]') : null;
+
+                    if (!transcribeUrl || !box || !text) {
+                        return;
+                    }
+
+                    transcribeButton.disabled = true;
+                    box.classList.add('is-visible');
+                    text.textContent = 'Transcription en cours...';
+
+                    try {
+                        const url = new URL(transcribeUrl, window.location.origin);
+                        const payload = await requestJson(url.toString());
+                        text.textContent = payload.transcript;
+                    } catch (error) {
+                        text.textContent = error instanceof Error ? error.message : 'Une erreur est survenue.';
+                    } finally {
+                        transcribeButton.disabled = false;
+                    }
+                }
+            });
         }
+
+        document.addEventListener('DOMContentLoaded', initForumChatPage);
+        document.addEventListener('turbo:load', initForumChatPage);
     </script>
 {% endblock %}

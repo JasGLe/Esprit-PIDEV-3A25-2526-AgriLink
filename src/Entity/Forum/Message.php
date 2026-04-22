@@ -25,14 +25,14 @@ class Message
     private User $user;
 
     #[ORM\Column(type: Types::TEXT)]
-    #[Assert\NotBlank(message: 'Le contenu du message est obligatoire.')]
     #[Assert\Length(
-        min: 2,
         max: 500,
-        minMessage: 'Le message doit contenir au moins {{ limit }} caracteres.',
         maxMessage: 'Le message ne doit pas depasser {{ limit }} caracteres.'
     )]
     private string $contenu;
+
+    #[ORM\Column(name: 'audio_path', type: Types::STRING, length: 255, nullable: true)]
+    private ?string $audioPath = null;
 
     #[ORM\Column(name: 'date_envoi', type: Types::DATETIME_MUTABLE)]
     private \DateTimeInterface $dateEnvoi;
@@ -77,6 +77,17 @@ class Message
     public function setContenu(?string $contenu): static
     {
         $this->contenu = $contenu ?? '';
+        return $this;
+    }
+
+    public function getAudioPath(): ?string
+    {
+        return $this->audioPath;
+    }
+
+    public function setAudioPath(?string $audioPath): static
+    {
+        $this->audioPath = $audioPath;
         return $this;
     }
 

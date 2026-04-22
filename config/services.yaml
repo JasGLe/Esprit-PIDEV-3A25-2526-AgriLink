@@ -28,6 +28,12 @@ services:
             string $adminContactEmail: '%env(ADMIN_CONTACT_EMAIL)%'
             string $openWeatherApiKey: '%env(OPENWEATHER_API_KEY)%'
             string $openWeatherBaseUrl: '%env(OPENWEATHER_BASE_URL)%'
+            string $geminiApiKey: '%env(GEMINI_API_KEY)%'
+            string $geminiApiBaseUrl: '%env(GEMINI_API_BASE_URL)%'
+            string $geminiModel: '%env(GEMINI_MODEL)%'
+            string $groqApiKey: '%env(GROQ_API_KEY)%'
+            string $groqApiBaseUrl: '%env(GROQ_API_BASE_URL)%'
+            string $groqModel: '%env(GROQ_MODEL)%'
             string $recaptchaSiteKey: '%env(RECAPTCHA_SITE_KEY)%'
             string $recaptchaSecretKey: '%env(RECAPTCHA_SECRET_KEY)%'
             string $geminiApiKey:         '%env(GEMINI_API_KEY)%'
@@ -95,6 +101,5 @@ services:
     App\EventListener\LoginFailureListener:
         tags:
             - { name: kernel.event_listener, event: Symfony\Component\Security\Http\Event\LoginFailureEvent }
-
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones
