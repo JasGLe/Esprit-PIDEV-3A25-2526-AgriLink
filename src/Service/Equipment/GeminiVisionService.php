@@ -26,6 +26,13 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
  *
  * Format de réponse normalisé :
  * {
+ *   "conformite" : {
+ *     "statut"               : "conforme|non_conforme_agricole|non_agricole",
+ *     "equipement_detecte"   : "description de ce qui est visible",
+ *     "equipement_attendu"   : "nom - type - categorie (pré-rempli depuis l'entité)",
+ *     "message_conformite"   : "explication courte",
+ *     "continuer_diagnostic" : true|false
+ *   },
  *   "etat_visuel"               : "Bon|Usure normale|Dégradation|Critique",
  *   "score_visuel"              : 0-100,
  *   "anomalies_detectees"       : ["...", "..."],
@@ -91,30 +98,51 @@ class GeminiVisionService
      * @param string     $mimeType     Type MIME : image/jpeg, image/png ou image/webp
      * @param Equipement $equipement   Entité pour enrichir le prompt (nom, type, marque, statut)
      *
-     * @return array  Résultat normalisé avec etat_visuel, score_visuel, anomalies, zones,
-     *                recommandations et conclusion
+     * @return array  Résultat normalisé avec conformite (statut, equipement_detecte,
+     *                equipement_attendu, message_conformite, continuer_diagnostic),
+     *                etat_visuel, score_visuel, anomalies, zones, recommandations et conclusion
      *
      * @throws \RuntimeException  Si l'API retourne une erreur HTTP, une réponse vide ou un JSON invalide
      */
     public function analyserPhoto(string $base64Image, string $mimeType, Equipement $equipement): array
     {
-        // ── Prompt utilisateur enrichi des métadonnées de l'équipement ────────
-        // Les données de l'équipement donnent du contexte au LLM pour orienter
-        // l'analyse vers les anomalies spécifiques à ce type de matériel
-        $userPrompt = sprintf(
-            "Analyse cette photo de l'équipement agricole :\n"
-            . "Nom: %s, Type: %s, Catégorie: %s, Marque: %s, Statut déclaré: %s.\n"
-            . "Détecte tous les signes visuels de problèmes et réponds en JSON.\n\n"
-            . "Réponds UNIQUEMENT avec ce JSON valide (sans markdown, sans texte autour) :\n"
-            . '{"etat_visuel":"Bon|Usure normale|Dégradation|Critique","score_visuel":0,'
+        // ── Prompt utilisateur : conformité + diagnostic visuel ──────────────
+        // Étape 1 : vérifier si l'image correspond à l'équipement attendu.
+        // Étape 2 : effectuer le diagnostic visuel complet quelle que soit l'image.
+        $nomStr     = $equipement->getNom()       ?? 'Non renseigné';
+        $typeStr    = $equipement->getType()      ?? 'Non renseigné';
+        $catStr     = $equipement->getCategorie() ?? 'Non renseigné';
+        $marqueStr  = $equipement->getMarque()    ?? 'Non renseigné';
+        $statutStr  = $equipement->getStatut()    ?? 'Non renseigné';
+        $attenduStr = $nomStr . ' - ' . $typeStr . ' - ' . $catStr;
+
+        $userPrompt = "Analyse cette image dans le contexte suivant :\n"
+            . "Équipement attendu : {$nomStr} (Type: {$typeStr}, Catégorie: {$catStr}, "
+            . "Marque: {$marqueStr}, Statut déclaré: {$statutStr}).\n\n"
+            . "ÉTAPE 1 — VÉRIFICATION DE CONFORMITÉ :\n"
+            . "Identifie ce que tu vois sur l'image.\n"
+            . "Détermine si l'image correspond à cet équipement spécifique.\n"
+            . "Classe en 3 cas :\n"
+            . "- 'conforme' : l'image correspond exactement à cet équipement\n"
+            . "- 'non_conforme_agricole' : l'image montre un autre équipement agricole "
+            . "(pas celui attendu mais reste dans le domaine agricole)\n"
+            . "- 'non_agricole' : l'image ne montre pas un équipement agricole\n\n"
+            . "ÉTAPE 2 — DIAGNOSTIC VISUEL :\n"
+            . "Effectue le diagnostic visuel complet de ce qui est visible sur l'image "
+            . "(anomalies, zones problématiques, recommandations) même si l'image n'est pas l'équipement attendu.\n\n"
+            . "Règle pour continuer_diagnostic :\n"
+            . "- conforme → continuer_diagnostic: true\n"
+            . "- non_conforme_agricole → continuer_diagnostic: false\n"
+            . "- non_agricole → continuer_diagnostic: false\n\n"
+            . "Réponds UNIQUEMENT en JSON valide sans markdown :\n"
+            . '{"conformite":{"statut":"conforme|non_conforme_agricole|non_agricole",'
+            . '"equipement_detecte":"description de ce que tu vois",'
+            . '"equipement_attendu":"' . $attenduStr . '",'
+            . '"message_conformite":"explication courte","continuer_diagnostic":true},'
+            . '"etat_visuel":"Bon|Usure normale|Dégradation|Critique","score_visuel":0,'
             . '"anomalies_detectees":[],"zones_problematiques":[],'
-            . '"recommandations_visuelles":[],"conclusion":""}',
-            $equipement->getNom()       ?? 'Non renseigné',
-            $equipement->getType()      ?? 'Non renseigné',
-            $equipement->getCategorie() ?? 'Non renseigné',
-            $equipement->getMarque()    ?? 'Non renseigné',
-            $equipement->getStatut()    ?? 'Non renseigné'
-        );
+            . '"recommandations_visuelles":[],"conclusion":""}';
+
 
         // ── Corps de la requête Groq (format OpenAI multimodal image_url) ────
         $requestBody = [
@@ -143,7 +171,7 @@ class GeminiVisionService
                     ],
                 ],
             ],
-            'max_tokens'  => 1024,
+            'max_tokens'  => 1500,
             'temperature' => 0.3, // réponses précises et stables
         ];
 
@@ -198,8 +226,17 @@ class GeminiVisionService
 
         // ── Normaliser les champs avec des valeurs par défaut ─────────────────
         // Garantit que le tableau retourné a toujours tous les champs attendus,
-        // même si le LLM en omet un (robustesse côté template Twig)
+        // même si le LLM en omet un (robustesse côté template Twig / JS)
+        $conformiteRaw = is_array($analyse['conformite'] ?? null) ? $analyse['conformite'] : [];
+
         return [
+            'conformite' => [
+                'statut'               => $conformiteRaw['statut']               ?? 'conforme',
+                'equipement_detecte'   => $conformiteRaw['equipement_detecte']   ?? '',
+                'equipement_attendu'   => $conformiteRaw['equipement_attendu']   ?? '',
+                'message_conformite'   => $conformiteRaw['message_conformite']   ?? '',
+                'continuer_diagnostic' => $conformiteRaw['continuer_diagnostic'] ?? true,
+            ],
             'etat_visuel'               => $analyse['etat_visuel']               ?? 'Inconnu',
             'score_visuel'              => (int) ($analyse['score_visuel']        ?? 50),
             'anomalies_detectees'       => (array) ($analyse['anomalies_detectees']       ?? []),

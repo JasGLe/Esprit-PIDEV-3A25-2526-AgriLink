@@ -529,6 +529,37 @@
             {# ── Erreur analyse photo ── #}
             <div id="photo-error" class="alert alert-danger mt-3" style="display:none" role="alert"></div>
 
+            {# ── Alerte conformité — autre équipement agricole (confirmation requise) ── #}
+            <div id="photo-conformite-warning" class="mt-3" style="display:none" role="alert" aria-live="polite">
+                <div style="background:#fff7ed; border:1.5px solid #fb923c; border-radius:12px; padding:1.25rem 1.5rem;">
+                    <div class="d-flex align-items-start gap-3">
+                        <span style="font-size:1.8rem; line-height:1;">⚠️</span>
+                        <div class="flex-fill">
+                            <div class="fw-bold mb-1" style="color:#c2410c; font-size:1rem;">Image non conforme détectée</div>
+                            <div id="photo-conformite-warning-text" class="small mb-3" style="color:#7c2d12; line-height:1.6;"></div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" id="btn-confirmer-analyse" class="btn btn-sm btn-success px-3">✅ Continuer quand même</button>
+                                <button type="button" id="btn-annuler-conformite" class="btn btn-sm btn-outline-secondary px-3">❌ Annuler</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Alerte conformité — image non agricole ── #}
+            <div id="photo-conformite-erreur" class="mt-3" style="display:none" role="alert" aria-live="polite">
+                <div style="background:#fef2f2; border:1.5px solid #f87171; border-radius:12px; padding:1.25rem 1.5rem;">
+                    <div class="d-flex align-items-start gap-3">
+                        <span style="font-size:1.8rem; line-height:1;">🚫</span>
+                        <div class="flex-fill">
+                            <div class="fw-bold mb-1" style="color:#b91c1c; font-size:1rem;">Image non agricole</div>
+                            <div id="photo-conformite-erreur-text" class="small mb-3" style="color:#7f1d1d; line-height:1.6;"></div>
+                            <button type="button" id="btn-reessayer-photo" class="btn btn-sm btn-outline-danger px-3">Réessayer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {# ── Panel résultat vision ── #}
             <div id="vision-panel" class="mt-4">
                 <hr style="border-color:#e3f2fd; border-width:2px; margin-bottom:1.25rem;">
@@ -551,6 +582,19 @@
                         <div class="text-muted small mb-1" style="font-size:.72rem; text-transform:uppercase; letter-spacing:.05em;">État visuel détecté</div>
                         <span id="vision-etat-badge" class="badge py-2 px-3" style="font-size:.92rem; border-radius:20px; background:#6c757d; color:#fff;">—</span>
                         <div class="text-muted small mt-2">Score visuel : <strong id="vision-score-text">—</strong> / 100</div>
+                    </div>
+                </div>
+
+                {# ── Vérification de conformité (affichée si non vide) ── #}
+                <div id="vision-conformite-section" style="display:none" class="mb-3">
+                    <div class="fw-semibold mb-2 text-uppercase" style="font-size:.73rem;letter-spacing:.07em;color:#6b7280">🔍 Vérification de conformité</div>
+                    <div id="vision-conformite-box" style="border-radius:10px; padding:.85rem 1rem;">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span id="vision-conformite-badge" class="badge py-1 px-2" style="font-size:.8rem; border-radius:12px;"></span>
+                        </div>
+                        <div class="small"><strong>Équipement détecté :</strong> <span id="vision-conformite-detecte"></span></div>
+                        <div class="small mt-1"><strong>Équipement attendu :</strong> <span id="vision-conformite-attendu"></span></div>
+                        <div class="small mt-1 fst-italic text-muted" id="vision-conformite-msg"></div>
                     </div>
                 </div>
 
@@ -914,9 +958,12 @@
     var btnAnalyser   = document.getElementById('btn-analyser-photo');
     var photoSpinner  = document.getElementById('photo-spinner');
     var photoError    = document.getElementById('photo-error');
-    var visionPanel   = document.getElementById('vision-panel');
+    var visionPanel            = document.getElementById('vision-panel');
+    var photoConformiteWarning = document.getElementById('photo-conformite-warning');
+    var photoConformiteErreur  = document.getElementById('photo-conformite-erreur');
 
-    var selectedFile = null;
+    var selectedFile  = null;
+    var pendingAnalyse = null;
 
     dropZone.addEventListener('dragover', function (e) {
         e.preventDefault(); dropZone.classList.add('drag-over');
@@ -937,6 +984,20 @@
     btnClearPhoto.addEventListener('click', clearFile);
     btnAnalyser.addEventListener('click', lancerAnalysePhoto);
 
+    document.getElementById('btn-confirmer-analyse').addEventListener('click', function () {
+        photoConformiteWarning.style.display = 'none';
+        if (pendingAnalyse) { renderVisionResult(pendingAnalyse); pendingAnalyse = null; }
+    });
+    document.getElementById('btn-annuler-conformite').addEventListener('click', function () {
+        photoConformiteWarning.style.display = 'none';
+        pendingAnalyse = null;
+    });
+    document.getElementById('btn-reessayer-photo').addEventListener('click', function () {
+        photoConformiteErreur.style.display = 'none';
+        pendingAnalyse = null;
+        clearFile();
+    });
+
     function setFile(file) {
         if (!['image/jpeg','image/png','image/webp'].includes(file.type)) {
             showPhotoError('Format non supporté. Utilisez JPG, PNG ou WEBP.');
@@ -946,8 +1007,11 @@
             showPhotoError('La photo dépasse 5 MB. Veuillez choisir une image plus petite.');
             return;
         }
-        photoError.style.display = 'none';
-        selectedFile = file;
+        photoError.style.display              = 'none';
+        photoConformiteWarning.style.display   = 'none';
+        photoConformiteErreur.style.display    = 'none';
+        pendingAnalyse = null;
+        selectedFile   = file;
 
         var reader = new FileReader();
         reader.onload = function (e) {
@@ -963,12 +1027,15 @@
     }
 
     function clearFile() {
-        selectedFile = null;
+        selectedFile   = null;
+        pendingAnalyse = null;
         fileInput.value = '';
         previewImg.src  = '';
-        previewWrap.style.display  = 'none';
-        visionPanel.style.display  = 'none';
-        photoError.style.display   = 'none';
+        previewWrap.style.display             = 'none';
+        visionPanel.style.display             = 'none';
+        photoError.style.display              = 'none';
+        photoConformiteWarning.style.display  = 'none';
+        photoConformiteErreur.style.display   = 'none';
         dropZone.classList.remove('has-file');
         btnAnalyser.disabled = true;
     }
@@ -993,7 +1060,35 @@
             btnAnalyser.innerHTML = '🔍 Analyser la photo';
 
             if (!data.success) { showPhotoError(data.error || 'Erreur inconnue.'); return; }
-            renderVisionResult(data.analyse);
+
+            var conformite = data.analyse && data.analyse.conformite ? data.analyse.conformite : null;
+            var statut     = conformite ? (conformite.statut || 'conforme') : 'conforme';
+
+            if (statut === 'non_conforme_agricole') {
+                pendingAnalyse = data.analyse;
+                var wtxt = 'L\'image uploadée semble montrer : <strong>'
+                    + escapeHtml(conformite.equipement_detecte || '') + '</strong>'
+                    + '<br>alors que l\'équipement attendu est : <strong>'
+                    + escapeHtml(conformite.equipement_attendu || '') + '</strong>'
+                    + (conformite.message_conformite ? '<br>' + escapeHtml(conformite.message_conformite) : '')
+                    + '<br><br>L\'image montre bien un équipement agricole.<br>'
+                    + 'Voulez-vous continuer le diagnostic sur cette image ?';
+                document.getElementById('photo-conformite-warning-text').innerHTML = wtxt;
+                photoConformiteWarning.style.display = 'block';
+                photoConformiteWarning.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            } else if (statut === 'non_agricole') {
+                pendingAnalyse = null;
+                var etxt = 'L\'image uploadée ne semble pas montrer un équipement agricole'
+                    + (conformite.equipement_detecte ? ' (' + escapeHtml(conformite.equipement_detecte) + ')' : '')
+                    + '.<br>Veuillez uploader une photo de votre équipement.';
+                document.getElementById('photo-conformite-erreur-text').innerHTML = etxt;
+                photoConformiteErreur.style.display = 'block';
+                photoConformiteErreur.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            } else {
+                renderVisionResult(data.analyse);
+            }
         })
         .catch(function () {
             photoSpinner.style.display = 'none';
@@ -1004,6 +1099,34 @@
     }
 
     function renderVisionResult(a) {
+        // ── Section vérification de conformité ─────────────────────────────
+        var conformiteSection = document.getElementById('vision-conformite-section');
+        var conformiteBox     = document.getElementById('vision-conformite-box');
+        var c = a.conformite || null;
+        if (c) {
+            var cStatut = c.statut || 'conforme';
+            var cBadge  = document.getElementById('vision-conformite-badge');
+            document.getElementById('vision-conformite-detecte').textContent = c.equipement_detecte || '—';
+            document.getElementById('vision-conformite-attendu').textContent = c.equipement_attendu || '—';
+            document.getElementById('vision-conformite-msg').textContent     = c.message_conformite || '';
+            if (cStatut === 'conforme') {
+                conformiteBox.style.background = '#f0fdf4';
+                conformiteBox.style.border     = '1.5px solid #86efac';
+                cBadge.textContent      = '✅ Conforme';
+                cBadge.style.background = '#16a34a';
+                cBadge.style.color      = '#fff';
+            } else {
+                conformiteBox.style.background = '#fff7ed';
+                conformiteBox.style.border     = '1.5px solid #fb923c';
+                cBadge.textContent      = '⚠️ Autre équipement agricole';
+                cBadge.style.background = '#ea580c';
+                cBadge.style.color      = '#fff';
+            }
+            conformiteSection.style.display = 'block';
+        } else {
+            conformiteSection.style.display = 'none';
+        }
+
         var etat  = a.etat_visuel  || 'Inconnu';
         var score = typeof a.score_visuel === 'number' ? a.score_visuel : parseInt(a.score_visuel) || 0;
         var color = VISION_COLORS[etat] || '#6c757d';
@@ -1069,6 +1192,14 @@
     function showPhotoError(msg) {
         photoError.textContent   = msg;
         photoError.style.display = 'block';
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
     }
 
 })();
