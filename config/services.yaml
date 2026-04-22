@@ -24,7 +24,8 @@ services:
             string $openWeatherBaseUrl: '%env(OPENWEATHER_BASE_URL)%'
             string $recaptchaSiteKey: '%env(RECAPTCHA_SITE_KEY)%'
             string $recaptchaSecretKey: '%env(RECAPTCHA_SECRET_KEY)%'
-            string $geminiApiKey:         '%env(GEMINI_API_KEY)%'  
+            string $geminiApiKey:         '%env(GEMINI_API_KEY)%'
+            string $pollinations_api_key: '%env(POLLINATIONS_API_KEY)%'
             string $mapboxToken: '%env(MAPBOX_TOKEN)%'
             string $apiKey:               '%env(PERENUAL_API_KEY)%'
     # makes classes in src/ available to be used as services
@@ -35,6 +36,12 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # AvatarService — uses Pollinations.ai free API (no key needed)
+    App\Service\AvatarService:
+        arguments:
+            $appUrl: '%env(APP_URL)%'
+            $uploadsBaseUrl: '%env(UPLOADS_BASE_URL)%'
 
     # FileUploader service with explicit parameters
     App\Service\FileUploader:

@@ -524,6 +524,22 @@ body {
 /* =========================================================
    RESPONSIVE
    ========================================================= */
+
+/* Sidebar button styling (matches links) */
+#sidebar-nav button {
+  position: relative;
+  border-radius: var(--ag-radius-sm) !important;
+  transition: background 0.18s, color 0.18s, transform 0.18s !important;
+  font-size: 0.8125rem !important;
+  overflow: hidden;
+}
+
+#sidebar-nav button:hover:not(.text-success):not(.text-danger) {
+  background: var(--ag-gray-50) !important;
+  color: var(--ag-gray-900) !important;
+  transform: translateX(2px);
+}
+
 @media (max-width: 991.98px) {
   .ag-welcome-banner,
   .ag-welcome-admin {
