@@ -45,8 +45,9 @@
     {{ form_start(form, {
         action: path('boutique_produit_modifier', {id: produit.id}),
         attr: {
-            class: cancel_is_modal|default(false) ? 'boutique-edit-form d-flex flex-column flex-grow-1 min-vh-0 overflow-hidden' : 'boutique-produit-edit-form',
-            novalidate: 'novalidate'
+            class: (cancel_is_modal|default(false) ? 'boutique-edit-form d-flex flex-column flex-grow-1 min-vh-0 overflow-hidden' : 'boutique-produit-edit-form') ~ ' js-price-optimizer-form',
+            novalidate: 'novalidate',
+            'data-price-optimizer-url': path('boutique_price_optimizer_suggest')
         }
     }) }}
     {% if cancel_is_modal|default(false) %}
@@ -108,6 +109,13 @@
                                   style="background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:0.7rem;">DT</span>
                         </div>
                         {{ form_errors(form.prixUnitaire) }}
+                        {% if not is_equipement|default(false) %}
+                        <div class="small rounded-3 p-2 border bg-light d-none mt-2 js-ai-price-box">
+                            <div class="fw-semibold text-success mb-1">Suggestion prix</div>
+                            <div class="text-muted js-ai-price-text"></div>
+                            <button type="button" class="btn btn-sm btn-outline-success mt-2 d-none js-ai-price-apply">Appliquer ce prix</button>
+                        </div>
+                        {% endif %}
                     </div>
                     <div class="col-12 {{ is_equipement|default(false) ? 'col-md-6' : 'col-md-4' }}">
                         <label class="form-label mb-0 pb-1" style="font-size:0.75rem;font-weight:600;color:#374151;" for="{{ form.quantite.vars.id }}">Quantité</label>

@@ -83,11 +83,6 @@
         {% block body %}{% endblock %}
 
         {% if app.user and onesignal_enabled and onesignal_app_id is not empty %}
-            <button type="button"
-                    onclick="agriLinkRequestPushPermission()"
-                    style="position:fixed;bottom:14px;right:14px;z-index:9999;border:none;border-radius:8px;padding:10px 12px;background:#0f766e;color:#fff;font-size:12px;box-shadow:0 6px 18px rgba(0,0,0,.15);">
-                Allow Notifications
-            </button>
             <script>
             document.querySelectorAll('a[href*="{{ path("app_logout") }}"]').forEach(function (el) {
                 el.addEventListener('click', function () {

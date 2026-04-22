@@ -7,6 +7,7 @@ use App\Entity\Marketplace\Produits;
 use App\Entity\UserManagement\User;
 use App\Form\Marketplace\EquipmentRentalRequestType;
 use App\Marketplace\TunisiaRegionList;
+use App\Service\MarketplaceProductRecommendationService;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
@@ -25,11 +26,18 @@ class MarketplacePublicController extends AbstractController
 {
     private const SELLER_TRANSPORT_FEE_DT = 10.0;
     private const EXTRA_HOUR_FEE_DT = 10.0;
+    private const RECOMMENDATION_MODES = [
+        MarketplaceProductRecommendationService::MODE_TOP_SELLING,
+        MarketplaceProductRecommendationService::MODE_HISTORY,
+        MarketplaceProductRecommendationService::MODE_CATEGORY,
+        MarketplaceProductRecommendationService::MODE_HYBRID,
+    ];
 
     public function __construct(
         private readonly ProduitsRepository $produitsRepository,
         private readonly UserRepository $userRepository,
         private readonly PanierRepository $panierRepository,
+        private readonly MarketplaceProductRecommendationService $recommendationService,
         private readonly EntityManagerInterface $entityManager,
         private readonly PaginatorInterface $paginator,
     ) {
@@ -205,6 +213,13 @@ class MarketplacePublicController extends AbstractController
         if ($user instanceof User && $user->getId() !== null) {
             $panierCount = $this->panierRepository->countLignesProduitsPourUtilisateur((int) $user->getId());
         }
+        $recommendationMode = strtolower(trim($request->query->getString('rec_mode', '')));
+        if (!\in_array($recommendationMode, self::RECOMMENDATION_MODES, true)) {
+            $recommendationMode = '';
+        }
+        $recommendedProducts = $recommendationMode !== ''
+            ? $this->recommendationService->recommendFor($user instanceof User ? $user : null, $recommendationMode, 6)
+            : [];
 
         $queryParams = $request->query->all();
         if (isset($queryParams['q']) && trim((string) $queryParams['q']) === '') {
@@ -261,6 +276,8 @@ class MarketplacePublicController extends AbstractController
             'rental_target_product_id'  => $rentalTargetProductId,
             'rental_target_product_name' => $rentalTargetProductName,
             'rental_target_product_price' => $rentalTargetProductPrice,
+            'recommended_products'      => $recommendedProducts,
+            'recommendation_mode'       => $recommendationMode,
         ]);
     }
 

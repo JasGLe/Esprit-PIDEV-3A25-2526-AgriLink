@@ -62,6 +62,10 @@ class UserNotificationsComponent extends AbstractController
     private function getIconForType(string $type): string
     {
         return match ($type) {
+            'order_cancellation_requested_admin' => '⚠️',
+            'order_created_admin' => '📦',
+            'order_status_changed' => '🔄',
+            'marketplace_product_submitted' => '🛍️',
             'email_verification_pending' => '📧',
             'phone_verification_pending' => '📱',
             '2fa_setup_pending' => '🔐',
@@ -74,6 +78,8 @@ class UserNotificationsComponent extends AbstractController
     private function getPriorityForType(string $type): string
     {
         return match ($type) {
+            'order_cancellation_requested_admin' => 'high',
+            'order_created_admin', 'order_status_changed', 'marketplace_product_submitted' => 'medium',
             'email_verification_pending', '2fa_setup_pending' => 'high',
             'phone_verification_pending' => 'medium',
             'profile_completion_pending' => 'low',
@@ -85,6 +91,8 @@ class UserNotificationsComponent extends AbstractController
     private function getActionUrlForType(string $type): ?string
     {
         return match ($type) {
+            'order_cancellation_requested_admin', 'order_created_admin', 'order_status_changed' => '/mes-commandes',
+            'marketplace_product_submitted' => '/admin/moderation/boutique',
             'email_verification_pending' => '/verify-email',
             'phone_verification_pending' => '/verify-phone',
             '2fa_setup_pending' => '/2fa/setup',
@@ -96,6 +104,9 @@ class UserNotificationsComponent extends AbstractController
     private function getActionLabelForType(string $type): string
     {
         return match ($type) {
+            'order_cancellation_requested_admin' => 'Voir la demande',
+            'order_created_admin', 'order_status_changed' => 'Voir les commandes',
+            'marketplace_product_submitted' => 'Ouvrir modération',
             'email_verification_pending' => 'Vérifier maintenant',
             'phone_verification_pending' => 'Ajouter téléphone',
             '2fa_setup_pending' => 'Activer 2FA',

@@ -11,7 +11,6 @@
         "doctrine/doctrine-migrations-bundle": "^3.7",
         "doctrine/orm": "^2.20.10",
         "dompdf/dompdf": "^3.1.5",
-        "endroid/qr-code": "^4.8.5",
         "hwi/oauth-bundle": "2.4",
         "knplabs/knp-paginator-bundle": "^6.10",
         "knplabs/knp-snappy-bundle": "^1.10.6",

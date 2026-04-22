@@ -490,6 +490,7 @@
         min-height: 260px;
     }
 }
+
     </style>
 {% endblock %}
 
@@ -674,6 +675,9 @@ body.marketplace-tropical .tropical-footer {
                     {% if filter_q != '' %}
                         <input type="hidden" name="q" value="{{ filter_q }}">
                     {% endif %}
+                    {% if recommendation_mode is defined and recommendation_mode != '' %}
+                        <input type="hidden" name="rec_mode" value="{{ recommendation_mode }}">
+                    {% endif %}
                     <div class="tropical-filter-field">
                         <label class="tropical-filter-label tropical-filter-label--inline" for="marketplace-region-select">Région</label>
                         <select name="region"
@@ -704,12 +708,69 @@ body.marketplace-tropical .tropical-footer {
                 </div>
             </div>
         </div>
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mt-2">
+            <form method="get" action="{{ path('marketplace_index') }}" class="d-flex flex-wrap align-items-center gap-2">
+                <input type="hidden" name="cat" value="{{ filter_cat }}">
+                <input type="hidden" name="region" value="{{ filter_region }}">
+                <input type="hidden" name="sort" value="{{ filter_sort }}">
+                {% if filter_q != '' %}
+                    <input type="hidden" name="q" value="{{ filter_q }}">
+                {% endif %}
+                <label for="recModeSelect" class="small tropical-muted mb-0">Recommandation</label>
+                <select id="recModeSelect" name="rec_mode" class="form-select form-select-sm tropical-select" style="min-width:220px;">
+                    <option value="">Choisir un mode…</option>
+                    <option value="top_selling" {{ recommendation_mode == 'top_selling' ? 'selected' : '' }}>Top ventes globales</option>
+                    <option value="history" {{ recommendation_mode == 'history' ? 'selected' : '' }}>Selon mon historique d'achat</option>
+                    <option value="category" {{ recommendation_mode == 'category' ? 'selected' : '' }}>Selon mes catégories préférées</option>
+                    <option value="hybrid" {{ recommendation_mode == 'hybrid' ? 'selected' : '' }}>Hybride (global + historique + catégorie)</option>
+                </select>
+                <button type="submit" class="btn btn-sm tropical-btn-register">Afficher recommandations</button>
+            </form>
+            {% if recommendation_mode != '' %}
+                <a href="{{ path('marketplace_index', qp|merge({rec_mode: null})) }}" class="small text-decoration-none tropical-link-reset tropical-link-reset--orange">Masquer recommandations</a>
+            {% endif %}
+        </div>
         <p class="small tropical-muted mb-0 tropical-toolbar-meta text-start">
             <i class="bi bi-box-seam me-1 tropical-lime"></i>
             <strong class="text-white" id="marketplaceLiveCount">{{ total_products }}</strong> produit{{ total_products > 1 ? 's' : '' }} disponible{{ total_products > 1 ? 's' : '' }}
         </p>
     </div>
 </section>
+
+{% if recommendation_mode != '' %}
+<section id="recommandes" class="tropical-products-section pt-1 pb-3">
+    <div class="container-fluid px-2 px-md-3 tropical-page-gutter">
+        <h2 class="tropical-section-title text-start mb-1">Recommandé pour vous</h2>
+        <p class="tropical-muted mb-3 small">
+            {% if recommendation_mode == 'top_selling' %}
+                Classement par produits les plus vendus globalement.
+            {% elseif recommendation_mode == 'history' %}
+                Basé uniquement sur votre historique d'achat.
+            {% elseif recommendation_mode == 'category' %}
+                Basé sur les catégories que vous achetez le plus.
+            {% else %}
+                Basé sur les ventes globales, votre historique d'achat et vos catégories les plus achetées.
+            {% endif %}
+        </p>
+        {% if recommended_products|default([])|length > 0 %}
+            <div class="tropical-products-wrap">
+                {% for p in recommended_products %}
+                    <div class="tropical-card-shell"
+                         data-product-id="{{ p.id }}"
+                         data-product-name="{{ (p.nom|default(''))|lower|e('html_attr') }}"
+                         data-product-search="{{ ((p.nom|default('')) ~ ' #' ~ p.id ~ ' ' ~ p.id)|lower|e('html_attr') }}">
+                        {% include 'marketplace/public/_product_card_tropical.html.twig' with { p: p, vendeurs: vendeurs } %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="tropical-empty text-center py-4 rounded-4">
+                <p class="tropical-muted mb-0">Aucune recommandation disponible pour ce mode pour le moment.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
 
 {# ── Products (horizontal scroll mobile / grid desktop) — data: même requête contrôleur ── #}
 <section id="produits" class="tropical-products-section py-3 py-md-4">

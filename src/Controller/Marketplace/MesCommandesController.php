@@ -10,7 +10,7 @@ use App\Repository\CancellationRequestsRepository;
 use App\Repository\Marketplace\CommandesRepository;
 use App\Repository\Marketplace\LigneCommandeRepository;
 use App\Repository\UserManagement\UserRepository;
-use App\Service\DeliveryConfirmationService;
+use App\Service\OrderNotificationService;
 use Knp\Component\Pager\PaginatorInterface;
 use Knp\Snappy\Pdf;
 use Doctrine\ORM\EntityManagerInterface;
@@ -48,10 +48,10 @@ class MesCommandesController extends AbstractController
         private readonly LigneCommandeRepository $ligneCommandeRepository,
         private readonly UserRepository $userRepository,
         private readonly CancellationRequestsRepository $cancellationRequestsRepository,
+        private readonly OrderNotificationService $orderNotificationService,
         private readonly PaginatorInterface $paginator,
         private readonly Pdf $snappyPdf,
         private readonly EntityManagerInterface $entityManager,
-        private readonly DeliveryConfirmationService $deliveryConfirmationService,
     ) {
     }
 
@@ -325,6 +325,11 @@ class MesCommandesController extends AbstractController
         $req->setRequestedAt(new \DateTimeImmutable());
         $req->setStatus(CancellationRequestsRepository::STATUS_PENDING);
         $this->cancellationRequestsRepository->save($req, true);
+        try {
+            $this->orderNotificationService->notifyCancellationRequestedToAdmins($commande, $user);
+        } catch (\Throwable) {
+            // Silent: cancellation request flow must not fail due to notification.
+        }
         $this->addFlash('success', 'Votre demande d’annulation a été envoyée. Un administrateur ou le vendeur pourra l’accepter ou la refuser.');
 
         return $this->redirectToRoute('mes_commandes_index');
@@ -348,7 +353,13 @@ class MesCommandesController extends AbstractController
             return $this->redirectToRoute('mes_commandes_index');
         }
 
+        $oldStatus = (string) $commande->getStatus();
         $this->applyCancellationApproval($commande, $cr, $user);
+        try {
+            $this->orderNotificationService->notifyOrderStatusChanged($commande, $oldStatus, 'ANNULEE', $user);
+        } catch (\Throwable) {
+            // Silent: cancellation approval must not fail due to notification.
+        }
         $this->addFlash('success', 'La commande a été annulée (statut : Annulée).');
 
         return $this->redirectToRoute('mes_commandes_index');
@@ -439,14 +450,17 @@ class MesCommandesController extends AbstractController
             return $this->redirectAfterMesCommandesStatut($request, $id);
         }
 
+        $oldStatus = (string) $commande->getStatus();
         $commande->setStatus($new);
-        if ($new === 'EXPEDIEE') {
-            $this->deliveryConfirmationService->ensureDeliveryConfirmationToken($commande);
-        }
         if ($new === 'ANNULEE') {
             $this->closePendingCancellationAsApproved($commande, $user);
         }
         $this->commandesRepository->save($commande, true);
+        try {
+            $this->orderNotificationService->notifyOrderStatusChanged($commande, $oldStatus, $new, $user);
+        } catch (\Throwable) {
+            // Silent: status update must not fail due to notification.
+        }
         $this->addFlash('success', 'Statut de la commande mis à jour.');
 
         return $this->redirectAfterMesCommandesStatut($request, $id);
@@ -517,53 +531,6 @@ class MesCommandesController extends AbstractController
         }
         $html = $this->renderView('marketplace/mes_commandes/pdf_invoice.html.twig', $pdfVars);
         $filename = 'facture_commande_'.$id.'.pdf';
-        $output = $this->snappyPdf->getOutputFromHtml($html, [
-            'encoding' => 'utf-8',
-            'margin-top' => 12,
-            'margin-right' => 10,
-            'margin-bottom' => 12,
-            'margin-left' => 10,
-            'enable-local-file-access' => true,
-        ]);
-
-        return new Response($output, Response::HTTP_OK, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
-        ]);
-    }
-
-    #[Route('/{id}/bon-livraison', name: 'delivery_slip', requirements: ['id' => '\\d+'], methods: ['GET'])]
-    public function deliverySlip(int $id): Response
-    {
-        /** @var User $user */
-        $user = $this->getUser();
-
-        if ($this->isGranted('ROLE_ADMIN')) {
-            $this->findCommandeAdmin($id);
-        } elseif ($this->isMarcheAcheteur()) {
-            $this->findOwnedCommandeAcheteur($id, $user);
-        } elseif ($this->isMesCommandesVendeurContext()) {
-            $this->findAccessibleCommandeVendeur($id, (int) $user->getId());
-        } else {
-            $this->findOwnedCommandeAcheteur($id, $user);
-        }
-
-        $vars = $this->buildOrderDetailVars($id, $user);
-        $commande = $vars['commande'];
-        if (!\in_array($commande->getStatus(), ['EXPEDIEE', 'LIVREE'], true)) {
-            throw $this->createNotFoundException();
-        }
-
-        $this->deliveryConfirmationService->ensureDeliveryConfirmationToken($commande);
-        $this->commandesRepository->save($commande, true);
-
-        $confirmUrl = $this->deliveryConfirmationService->getPublicConfirmationUrl($commande);
-        $vars['delivery_qr_data_uri'] = $confirmUrl !== null && $confirmUrl !== ''
-            ? $this->deliveryConfirmationService->buildQrDataUri($confirmUrl)
-            : '';
-
-        $html = $this->renderView('marketplace/mes_commandes/pdf_delivery_slip.html.twig', $vars);
-        $filename = 'bon_livraison_CMD'.$id.'.pdf';
         $output = $this->snappyPdf->getOutputFromHtml($html, [
             'encoding' => 'utf-8',
             'margin-top' => 12,

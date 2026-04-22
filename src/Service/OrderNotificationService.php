@@ -135,6 +135,120 @@ class OrderNotificationService
         $this->entityManager->flush();
     }
 
+    public function notifyOrderStatusChanged(Commandes $commande, string $oldStatus, string $newStatus, User $actor): void
+    {
+        $buyerEmail = strtolower(trim((string) $commande->getEmail()));
+        if ($buyerEmail === '') {
+            return;
+        }
+
+        /** @var User|null $buyer */
+        $buyer = $this->userRepository->findOneBy(['email' => $buyerEmail]);
+        if (!$buyer instanceof User) {
+            return;
+        }
+
+        $buyerId = (int) ($buyer->getId() ?? 0);
+        if ($buyerId <= 0) {
+            return;
+        }
+
+        $orderRef = $this->formatOrderRef($commande);
+        $actorLabel = trim((string) ($actor->getDisplayName() ?: $actor->getEmail()));
+        $oldLabel = $this->humanizeStatus($oldStatus);
+        $newLabel = $this->humanizeStatus($newStatus);
+
+        $notif = new Notifications();
+        $notif->setUserId($buyerId);
+        $notif->setType('order_status_changed');
+        $notif->setTitle('Mise à jour de votre commande');
+        $notif->setBody(sprintf(
+            'Commande %s: statut changé de "%s" vers "%s" par %s.',
+            $orderRef,
+            $oldLabel,
+            $newLabel,
+            $actorLabel !== '' ? $actorLabel : 'le vendeur'
+        ));
+        $notif->setCommandeId($commande->getId());
+        $notif->setCreatedAt(new \DateTimeImmutable());
+        $this->notificationsRepository->save($notif, flush: false);
+
+        $result = $this->oneSignalPushService->sendToUserIds(
+            [$buyerId],
+            'Commande mise à jour',
+            sprintf('%s: %s → %s', $orderRef, $oldLabel, $newLabel),
+            [
+                'type' => 'order_status_changed',
+                'orderRef' => $orderRef,
+                'commandeId' => (string) ($commande->getId() ?? 0),
+                'oldStatus' => $oldStatus,
+                'newStatus' => $newStatus,
+            ]
+        );
+        if (($result['ok'] ?? false) !== true) {
+            $this->logger->warning('Buyer OneSignal status-change push failed', [
+                'commandeId' => $commande->getId(),
+                'orderRef' => $orderRef,
+                'result' => $result,
+            ]);
+        }
+
+        $this->entityManager->flush();
+    }
+
+    public function notifyCancellationRequestedToAdmins(Commandes $commande, User $buyer): void
+    {
+        $admins = $this->userRepository->findByRole('ADMIN');
+        if ($admins === []) {
+            return;
+        }
+
+        $orderRef = $this->formatOrderRef($commande);
+        $buyerLabel = trim((string) ($buyer->getDisplayName() ?: $buyer->getEmail()));
+        if ($buyerLabel === '') {
+            $buyerLabel = 'Client';
+        }
+
+        foreach ($admins as $admin) {
+            $notif = new Notifications();
+            $notif->setUserId((int) $admin->getId());
+            $notif->setType('order_cancellation_requested_admin');
+            $notif->setTitle('Demande d’annulation commande');
+            $notif->setBody(sprintf(
+                '%s a demandé l’annulation de la commande %s.',
+                $buyerLabel,
+                $orderRef
+            ));
+            $notif->setCommandeId($commande->getId());
+            $notif->setCreatedAt(new \DateTimeImmutable());
+            $this->notificationsRepository->save($notif, flush: false);
+        }
+
+        $adminIds = array_values(array_filter(array_map(static fn (User $u): int => (int) ($u->getId() ?? 0), $admins)));
+        if ($adminIds !== []) {
+            $result = $this->oneSignalPushService->sendToUserIds(
+                $adminIds,
+                'Demande d’annulation',
+                sprintf('%s: demande d’annulation envoyée par %s.', $orderRef, $buyerLabel),
+                [
+                    'type' => 'order_cancellation_requested_admin',
+                    'orderRef' => $orderRef,
+                    'commandeId' => (string) ($commande->getId() ?? 0),
+                    'targetRole' => 'admin',
+                ]
+            );
+            if (($result['ok'] ?? false) !== true) {
+                $this->logger->warning('Admin OneSignal cancellation-request push failed', [
+                    'commandeId' => $commande->getId(),
+                    'orderRef' => $orderRef,
+                    'result' => $result,
+                ]);
+            }
+        }
+
+        $this->entityManager->flush();
+    }
+
     private function formatOrderRef(Commandes $commande): string
     {
         $id = $commande->getId();
@@ -143,5 +257,17 @@ class OrderNotificationService
         }
 
         return (string) $commande->getNumCommande();
+    }
+
+    private function humanizeStatus(string $status): string
+    {
+        $raw = trim($status);
+        if ($raw === '') {
+            return '-';
+        }
+
+        $normalized = str_replace('_', ' ', strtolower($raw));
+
+        return ucfirst($normalized);
     }
 }

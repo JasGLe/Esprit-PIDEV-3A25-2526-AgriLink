@@ -26,7 +26,7 @@
                 </div>
             </div>
 
-            {{ form_start(form, { attr: { class: 'boutique-culture-vente-form', novalidate: 'novalidate' } }) }}
+            {{ form_start(form, { attr: { class: 'boutique-culture-vente-form js-price-optimizer-form', novalidate: 'novalidate', 'data-price-optimizer-url': path('boutique_price_optimizer_suggest') } }) }}
             <div class="row g-3">
                 <div class="col-md-6">
                     {{ form_row(form.nom) }}
@@ -39,6 +39,11 @@
                 </div>
                 <div class="col-md-4">
                     {{ form_row(form.prixUnitaire) }}
+                    <div id="aiPriceSuggestBox" class="small rounded-3 p-2 border bg-light d-none js-ai-price-box">
+                        <div class="fw-semibold text-success mb-1">Suggestion prix</div>
+                        <div id="aiPriceSuggestText" class="text-muted js-ai-price-text"></div>
+                        <button type="button" id="applyAiPriceBtn" class="btn btn-sm btn-outline-success mt-2 d-none js-ai-price-apply">Appliquer ce prix</button>
+                    </div>
                 </div>
                 <div class="col-md-4">
                     {{ form_row(form.quantite) }}
@@ -59,4 +64,72 @@
             {{ form_end(form) }}
         </div>
     </div>
+
+    <script>
+    (function () {
+        const nomInput = document.getElementById('{{ form.nom.vars.id }}');
+        const catInput = document.getElementById('{{ form.category.vars.id }}');
+        const unitInput = document.getElementById('{{ form.uniteVente.vars.id }}');
+        const qtyInput = document.getElementById('{{ form.quantite.vars.id }}');
+        const priceInput = document.getElementById('{{ form.prixUnitaire.vars.id }}');
+        const form = document.querySelector('.js-price-optimizer-form');
+        const url = form ? (form.getAttribute('data-price-optimizer-url') || '') : '';
+        const box = document.getElementById('aiPriceSuggestBox');
+        const txt = document.getElementById('aiPriceSuggestText');
+        const applyBtn = document.getElementById('applyAiPriceBtn');
+        if (!nomInput || !catInput || !unitInput || !qtyInput || !priceInput || !box || !txt || !applyBtn || !url) return;
+
+        let lastSuggested = null;
+        let timer = null;
+
+        async function askSuggestion() {
+            const payload = {
+                nom: nomInput.value || '',
+                category: catInput.value || '',
+                uniteVente: unitInput.value || '',
+                quantite: parseInt(qtyInput.value || '0', 10)
+            };
+            if (!payload.category || payload.quantite <= 0) {
+                box.classList.add('d-none');
+                return;
+            }
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (!data || data.ok !== true) {
+                    box.classList.add('d-none');
+                    return;
+                }
+                lastSuggested = data.suggestedPrice;
+                txt.textContent = 'Prix suggere: ' + data.suggestedPrice.toFixed(3) + ' DT (moyenne marche: ' + data.marketAverage.toFixed(3) + ' DT, confiance: ' + data.confidence + '%)';
+                applyBtn.classList.remove('d-none');
+                box.classList.remove('d-none');
+            } catch (e) {
+                box.classList.add('d-none');
+            }
+        }
+
+        function scheduleSuggest() {
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(askSuggestion, 450);
+        }
+
+        [nomInput, catInput, unitInput, qtyInput].forEach((el) => {
+            el.addEventListener('input', scheduleSuggest);
+            el.addEventListener('change', scheduleSuggest);
+        });
+
+        applyBtn.addEventListener('click', function () {
+            if (lastSuggested !== null) {
+                priceInput.value = Number(lastSuggested).toFixed(3);
+            }
+        });
+
+        askSuggestion();
+    })();
+    </script>
 {% endblock %}
