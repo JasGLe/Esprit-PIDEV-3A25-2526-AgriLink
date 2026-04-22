@@ -3,9 +3,15 @@
 {% block page_title %}Ajouter un équipement{% endblock %}
 
 {% block stylesheets %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
     .section-vehicule { border-left: 4px solid #ffc107; }
     .form-label       { font-weight: 500; }
+    #map-new { height: 350px; border-radius: 10px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); }
+    #geocode-results { position: absolute; z-index: 1000; background: #fff; border: 1px solid #dee2e6; border-radius: 6px; width: 100%; max-height: 220px; overflow-y: auto; }
+    #geocode-results .geocode-item { padding: 8px 12px; cursor: pointer; font-size: .9rem; }
+    #geocode-results .geocode-item:hover { background: #f0f9f4; }
+    .map-address-display { font-size: .85rem; color: #198754; min-height: 1.4em; }
 </style>
 {% endblock %}
 
@@ -34,7 +40,7 @@
 
     {% if allErrors|length > 0 %}
     <div class="alert alert-danger border-0 shadow-sm mb-4">
-        <div class="fw-semibold mb-2">Veuillez corriger les erreurs suivantes :</div>
+        <div class="fw-semibold mb-2">Veuillez verifier les erreurs de saisi :</div>
         <ul class="mb-0">
             {% for msg in allErrors %}
                 <li>{{ msg }}</li>
@@ -102,6 +108,13 @@
                     {{ form_widget(form.imageFile) }}
                     {{ form_errors(form.imageFile) }}
                     <small class="text-muted">JPG, PNG, WEBP — max 2 Mo</small>
+                    <div id="new-img-preview" class="mt-2 d-none">
+                        <img id="new-img-preview-img"
+                             src=""
+                             alt="Aperçu"
+                             style="height:80px; border-radius:6px; object-fit:cover; border:1px solid #dee2e6">
+                        <div id="new-img-preview-name" class="text-muted small mt-1"></div>
+                    </div>
                 </div>
 
             </div>
@@ -174,6 +187,26 @@
             </div>
         </div>
 
+        {# ── Section : Localisation ── #}
+        <div class="card shadow-sm mb-4">
+            <div class="card-header fw-semibold bg-white">📍 Localisation de l'équipement</div>
+            <div class="card-body">
+                <p class="text-muted small mb-3">Recherchez une adresse ou cliquez/glissez le marqueur sur la carte pour positionner votre équipement.</p>
+
+                <div class="position-relative mb-3">
+                    <input type="text" id="geocode-input" class="form-control" placeholder="Tapez une adresse, ville ou région..." autocomplete="off">
+                    <div id="geocode-results" class="d-none"></div>
+                </div>
+
+                <div id="map-new" class="mb-2"></div>
+                <div id="map-address-display" class="map-address-display mt-1"></div>
+
+                {# Champs cachés latitude/longitude — remplis par JS #}
+                {{ form_widget(form.latitude) }}
+                {{ form_widget(form.longitude) }}
+            </div>
+        </div>
+
         {# ── Boutons ── #}
         <div class="d-flex gap-2">
             <button type="submit" class="btn btn-success px-4">
@@ -186,46 +219,190 @@
 
     {{ form_end(form) }}
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-const categorieSelect = document.getElementById('equipement_categorie');
-const typeSelect      = document.getElementById('equipement_type');
-const sectionVehicule = document.getElementById('section-vehicule');
+// ── Carte Leaflet — new.html.twig ──────────────────────────────────────
+(function () {
+    var OPENCAGE_KEY = {{ opencageApiKey|json_encode|raw }};
+    var latInput  = document.getElementById('equipement_latitude');
+    var lngInput  = document.getElementById('equipement_longitude');
+    var addrEl    = document.getElementById('map-address-display');
+    var gcInput   = document.getElementById('geocode-input');
+    var gcResults = document.getElementById('geocode-results');
 
-// Valeur du type soumis (pour restaurer après erreur de validation)
-const submittedType = {{ form.type.vars.value is not empty ? ('"' ~ form.type.vars.value|e('js') ~ '"') : 'null' }};
-
-function updateTypeChoices(resetType) {
-    const cat = categorieSelect.value;
-    if (!cat) {
-        typeSelect.innerHTML = '<option value="">-- Choisir un type --</option>';
-        return;
-    }
-    const isVehicule = cat === 'Véhicule Motorisé';
-    sectionVehicule.style.display = isVehicule ? 'block' : 'none';
-
-    fetch(`/equipement/api/types?categorie=${encodeURIComponent(cat)}`)
-        .then(r => r.json())
-        .then(types => {
-            typeSelect.innerHTML = '<option value="">-- Choisir un type --</option>';
-            types.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t;
-                opt.textContent = t;
-                if (!resetType && submittedType === t) opt.selected = true;
-                typeSelect.appendChild(opt);
-            });
+    // SVG marker vert
+    function makeIcon(color) {
+        color = color || '#198754';
+        var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38"><path d="M14 0C6.27 0 0 6.27 0 14c0 9.6 14 24 14 24s14-14.4 14-24C28 6.27 21.73 0 14 0z" fill="' + color + '"/><circle cx="14" cy="14" r="6" fill="#fff" opacity=".9"/></svg>';
+        return L.divIcon({
+            html: svg,
+            className: '',
+            iconSize: [28, 38],
+            iconAnchor: [14, 38],
+            popupAnchor: [0, -38]
         });
-}
+    }
 
-categorieSelect.addEventListener('change', () => {
-    sectionVehicule.style.display = categorieSelect.value === 'Véhicule Motorisé' ? 'block' : 'none';
-    updateTypeChoices(true);
-});
+    var map = L.map('map-new').setView([34.0, 9.0], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19
+    }).addTo(map);
 
-// Init : si catégorie déjà sélectionnée (retour après erreur), repeupler le type
-if (categorieSelect.value) {
-    sectionVehicule.style.display = categorieSelect.value === 'Véhicule Motorisé' ? 'block' : 'none';
-    updateTypeChoices(false);
-}
+    var marker = null;
+
+    function placeMarker(lat, lng, label) {
+        if (marker) { map.removeLayer(marker); }
+        marker = L.marker([lat, lng], { icon: makeIcon('#198754'), draggable: true }).addTo(map);
+        latInput.value = lat;
+        lngInput.value = lng;
+        if (label) { addrEl.textContent = '📍 ' + label; }
+        marker.on('dragend', function (e) {
+            var pos = e.target.getLatLng();
+            latInput.value = pos.lat;
+            lngInput.value = pos.lng;
+            reverseGeocode(pos.lat, pos.lng);
+        });
+    }
+
+    map.on('click', function (e) {
+        placeMarker(e.latlng.lat, e.latlng.lng, null);
+        reverseGeocode(e.latlng.lat, e.latlng.lng);
+    });
+
+    function reverseGeocode(lat, lng) {
+        fetch('https://api.opencagedata.com/geocode/v1/json?q=' + lat + '+' + lng + '&key=' + OPENCAGE_KEY + '&language=fr&limit=1&no_annotations=1')
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.results && data.results.length > 0) {
+                    addrEl.textContent = '📍 ' + data.results[0].formatted;
+                }
+            })
+            .catch(function () {});
+    }
+
+    var gcTimer = null;
+    gcInput.addEventListener('input', function () {
+        clearTimeout(gcTimer);
+        var q = gcInput.value.trim();
+        if (q.length < 3) { gcResults.classList.add('d-none'); gcResults.innerHTML = ''; return; }
+        gcTimer = setTimeout(function () {
+            fetch('https://api.opencagedata.com/geocode/v1/json?q=' + encodeURIComponent(q) + '&key=' + OPENCAGE_KEY + '&language=fr&limit=5&no_annotations=1&countrycode=tn,dz,ma,ly,eg,fr')
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    gcResults.innerHTML = '';
+                    if (!data.results || data.results.length === 0) {
+                        gcResults.classList.add('d-none');
+                        return;
+                    }
+                    data.results.forEach(function (res) {
+                        var item = document.createElement('div');
+                        item.className = 'geocode-item';
+                        item.textContent = res.formatted;
+                        item.addEventListener('click', function () {
+                            var lat = res.geometry.lat;
+                            var lng = res.geometry.lng;
+                            map.setView([lat, lng], 14);
+                            placeMarker(lat, lng, res.formatted);
+                            gcInput.value = res.formatted;
+                            gcResults.classList.add('d-none');
+                            gcResults.innerHTML = '';
+                        });
+                        gcResults.appendChild(item);
+                    });
+                    gcResults.classList.remove('d-none');
+                })
+                .catch(function () {});
+        }, 500);
+    });
+
+    document.addEventListener('click', function (e) {
+        if (!gcResults.contains(e.target) && e.target !== gcInput) {
+            gcResults.classList.add('d-none');
+        }
+    });
+})();
+</script>
+<script>
+(function () {
+    var categorieSelect = document.getElementById('equipement_categorie');
+    var typeSelect      = document.getElementById('equipement_type');
+    var sectionVehicule = document.getElementById('section-vehicule');
+
+    // Type soumis par le formulaire — restauré après retour d'erreur de validation
+    var submittedType = {{ form.type.vars.value is not empty ? ('"' ~ form.type.vars.value|e('js') ~ '"') : 'null' }};
+
+    /**
+     * Affiche ou masque le bloc champs véhicule selon la catégorie.
+     * Appelée au chargement ET à chaque changement de catégorie.
+     */
+    function updateChampsVehicule(categorie) {
+        sectionVehicule.style.display = (categorie === 'Véhicule Motorisé') ? 'block' : 'none';
+    }
+
+    /**
+     * Recharge les options du select "type" via l'API selon la catégorie.
+     * @param {string}      categorie      Valeur du select catégorie
+     * @param {string|null} typeASelectionner  Type à pré-sélectionner (null = reset)
+     */
+    function updateType(categorie, typeASelectionner) {
+        if (!categorie) {
+            typeSelect.innerHTML = '<option value="">-- Choisir un type --</option>';
+            return;
+        }
+        fetch('/equipement/api/types?categorie=' + encodeURIComponent(categorie))
+            .then(function (r) { return r.json(); })
+            .then(function (types) {
+                typeSelect.innerHTML = '<option value="">-- Choisir un type --</option>';
+                types.forEach(function (t) {
+                    var opt = document.createElement('option');
+                    opt.value       = t;
+                    opt.textContent = t;
+                    if (typeASelectionner && typeASelectionner === t) {
+                        opt.selected = true;
+                    }
+                    typeSelect.appendChild(opt);
+                });
+            })
+            .catch(function () {});
+    }
+
+    // ── Au chargement : initialiser sans condition (couvre le retour après erreur)
+    var categorieActuelle = categorieSelect.value;
+    updateChampsVehicule(categorieActuelle);
+    updateType(categorieActuelle, submittedType);
+
+    // ── À chaque changement de catégorie : mettre à jour type ET section véhicule
+    categorieSelect.addEventListener('change', function () {
+        updateChampsVehicule(this.value);
+        updateType(this.value, null); // reset type : l'agriculteur doit rechoisir
+    });
+})();
+</script>
+<script>
+// ── Aperçu image avant upload ─────────────────────────────────────────────
+(function () {
+    var input   = document.getElementById('equipement_imageFile');
+    var wrap    = document.getElementById('new-img-preview');
+    var preview = document.getElementById('new-img-preview-img');
+    var nameEl  = document.getElementById('new-img-preview-name');
+    if (!input || !wrap || !preview) return;
+
+    input.addEventListener('change', function () {
+        var file = input.files && input.files[0];
+        if (!file) {
+            wrap.classList.add('d-none');
+            preview.src = '';
+            return;
+        }
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            preview.src = e.target.result;
+            if (nameEl) nameEl.textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' Ko)';
+            wrap.classList.remove('d-none');
+        };
+        reader.readAsDataURL(file);
+    });
+})();
 </script>
 {% endblock %}

@@ -3,10 +3,196 @@
 {% block page_title %}{{ equipement.nom }}{% endblock %}
 
 {% block stylesheets %}
+{% if equipement.latitude is not null and equipement.longitude is not null %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+{% endif %}
 <style>
     .info-label { font-size: .8rem; color: #6c757d; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
     .info-value { font-size: 1rem; font-weight: 500; }
     .badge-vehicule { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
+    #map-show { height: 380px; border-radius: 8px; }
+
+    /* ═══════════════════════════════════════════════════
+       CARDS IA — style commun
+    ═══════════════════════════════════════════════════ */
+    .ia-card {
+        border-radius: 16px !important;
+        border: none !important;
+        box-shadow: 0 4px 20px rgba(0,0,0,.08) !important;
+        overflow: hidden;
+        transition: box-shadow .3s;
+    }
+    .ia-card:hover { box-shadow: 0 8px 32px rgba(0,0,0,.12) !important; }
+
+    .ia-card-header-diag {
+        background: linear-gradient(135deg, #1a5c2e 0%, #198754 100%);
+        padding: 1.1rem 1.4rem;
+    }
+    .ia-card-header-photo {
+        background: linear-gradient(135deg, #0f4c75 0%, #1a7fc1 100%);
+        padding: 1.1rem 1.4rem;
+    }
+    .ia-header-badge {
+        font-size: .7rem; font-weight: 600; letter-spacing: .04em;
+        background: rgba(255,255,255,.18); color: #fff;
+        padding: .25rem .65rem; border-radius: 20px;
+        border: 1px solid rgba(255,255,255,.3);
+    }
+
+    /* ═══════════════════════════════════════════════════
+       JAUGE CIRCULAIRE SVG
+    ═══════════════════════════════════════════════════ */
+    .score-gauge-wrap {
+        position: relative; display: inline-flex;
+        align-items: center; justify-content: center;
+        flex-shrink: 0;
+    }
+    .score-gauge-wrap svg { display: block; }
+    .score-gauge-text {
+        position: absolute; font-size: 1.3rem; font-weight: 900;
+        color: #1a2a1a; line-height: 1;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SECTION 1 — Diagnostic IA
+    ═══════════════════════════════════════════════════ */
+    #btn-diagnostic-ia {
+        background: #198754; color: #fff; border: none;
+        border-radius: 10px; padding: .5rem 1.1rem;
+        font-weight: 600; transition: background .25s, transform .15s;
+    }
+    #btn-diagnostic-ia:hover:not(:disabled) { background: #146c43; transform: translateY(-1px); }
+    #btn-diagnostic-ia:disabled { background: #adb5bd; cursor: not-allowed; }
+
+    #diag-spinner { display: none; }
+    #diag-panel   { display: none; }
+
+    .diag-resume-block {
+        background: #f0fdf4; border-left: 4px solid #198754;
+        border-radius: 0 .6rem .6rem 0;
+        padding: .7rem 1rem; font-size: .9rem; color: #14532d; margin-bottom: 1rem;
+    }
+    .diag-critere-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; }
+    @media (max-width: 576px) { .diag-critere-grid { grid-template-columns: 1fr; } }
+    .diag-critere-card {
+        background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 10px;
+        padding: .65rem .85rem; transition: box-shadow .2s;
+    }
+    .diag-critere-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,.08); }
+    .diag-critere-icon { font-size: 1.1rem; margin-right: .4rem; }
+    .diag-critere-label { font-size: .72rem; color: #6c757d; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+    .diag-critere-val   { font-size: .88rem; color: #1a2a1a; margin-top: .15rem; }
+
+    .diag-alerte {
+        background: #fff8e1; border: 1px solid #ffe082;
+        border-radius: .6rem; padding: .5rem .85rem;
+        margin-bottom: .4rem; color: #6d4c00; font-size: .875rem;
+    }
+    .diag-reco {
+        display: flex; align-items: flex-start; gap: .5rem;
+        padding: .45rem 0; border-bottom: 1px solid #e9ecef; font-size: .88rem;
+    }
+    .diag-reco:last-child { border-bottom: none; }
+    .diag-reco-num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 22px; height: 22px; border-radius: 50%;
+        background: #198754; color: #fff; font-size: .72rem; font-weight: 700;
+        flex-shrink: 0; margin-top: .05rem;
+    }
+    .diag-prochaine-badge {
+        display: inline-flex; align-items: center; gap: .4rem;
+        background: #e8f5e9; border: 1px solid #a5d6a7;
+        border-radius: 20px; padding: .4rem .9rem;
+        color: #2e7d32; font-weight: 600; font-size: .9rem;
+    }
+    .diag-disclaimer {
+        background: #f8f9fa; border-radius: .6rem;
+        padding: .65rem 1rem; font-size: .8rem; color: #6c757d;
+        font-style: italic; margin-top: 1rem;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SECTION 2 — Analyse Photo IA
+    ═══════════════════════════════════════════════════ */
+    #photo-drop-zone {
+        border: 2.5px dashed #198754; border-radius: 12px;
+        padding: 2.2rem 1.5rem; text-align: center; cursor: pointer;
+        transition: border-color .25s, background .25s, transform .15s;
+        background: #f0fdf4;
+    }
+    #photo-drop-zone:hover, #photo-drop-zone.drag-over {
+        border-color: #146c43; background: #dcfce7; transform: scale(1.01);
+    }
+    #photo-drop-zone.has-file { border-color: #0f4c75; background: #e8f4fd; }
+
+    .photo-drop-icon {
+        font-size: 2.5rem; display: block;
+        animation: iconPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes iconPulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50%       { transform: scale(1.12); opacity: .8; }
+    }
+
+    #photo-preview-wrap { display: none; margin-top: 1rem; text-align: center; }
+    #photo-preview-wrap img {
+        max-height: 220px; max-width: 100%; border-radius: 10px;
+        border: 2px solid #1a7fc1; box-shadow: 0 4px 16px rgba(15,76,117,.15);
+    }
+    #photo-spinner { display: none; }
+    #vision-panel  { display: none; }
+
+    #btn-analyser-photo {
+        background: linear-gradient(135deg, #0f4c75, #1a7fc1);
+        color: #fff; border: none; border-radius: 10px;
+        padding: .55rem 1.3rem; font-weight: 600;
+        transition: opacity .25s, transform .15s;
+    }
+    #btn-analyser-photo:hover:not(:disabled) { opacity: .9; transform: translateY(-1px); }
+    #btn-analyser-photo:disabled { background: #adb5bd; cursor: not-allowed; }
+
+    .vision-anomalie {
+        background: #fff5f5; border: 1px solid #f5c6cb; border-radius: .6rem;
+        padding: .5rem .85rem; margin-bottom: .4rem; color: #842029; font-size: .875rem;
+    }
+    .vision-zone {
+        background: #fff8e1; border: 1px solid #ffe082; border-radius: .6rem;
+        padding: .5rem .85rem; margin-bottom: .4rem; color: #6d4c00; font-size: .875rem;
+    }
+    .vision-reco {
+        display: flex; align-items: flex-start; gap: .5rem;
+        padding: .45rem 0; border-bottom: 1px solid #e9ecef; font-size: .88rem;
+    }
+    .vision-reco:last-child { border-bottom: none; }
+    .vision-reco-num {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 22px; height: 22px; border-radius: 50%;
+        background: #1a7fc1; color: #fff; font-size: .72rem; font-weight: 700;
+        flex-shrink: 0; margin-top: .05rem;
+    }
+    .vision-conclusion-block {
+        background: #f8f9fa; border-left: 4px solid #1a7fc1;
+        border-radius: 0 .6rem .6rem 0;
+        padding: .7rem 1rem; font-size: .88rem; color: #1a2a1a;
+        font-style: italic; margin-bottom: .75rem;
+    }
+    .vision-disclaimer {
+        background: #e8f4fd; border: 1px solid #90caf9; border-radius: .6rem;
+        padding: .65rem 1rem; font-size: .8rem; color: #0d47a1;
+        margin-top: 1rem;
+    }
+
+    /* ═══════════════════════════════════════════════════
+       SÉPARATEUR IA
+    ═══════════════════════════════════════════════════ */
+    .ia-divider {
+        display: flex; align-items: center; gap: 1rem;
+        margin: 2rem 0; color: #adb5bd; font-size: .8rem;
+        font-weight: 600; text-transform: uppercase; letter-spacing: .06em;
+    }
+    .ia-divider::before, .ia-divider::after {
+        content: ''; flex: 1; height: 1px; background: #dee2e6;
+    }
 </style>
 {% endblock %}
 
@@ -26,8 +212,17 @@
             <span class="badge bg-secondary me-1">{{ equipement.type }}</span>
             <span class="badge bg-light text-dark border">{{ equipement.categorie }}</span>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
             <a href="{{ path('equipement_edit', {id: equipement.id}) }}" class="btn btn-outline-primary">✏️ Modifier</a>
+            {% if equipement.latitude is not null and equipement.longitude is not null %}
+            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalCarteEquipement">
+                📍 Voir sur la carte
+            </button>
+            {% endif %}
+            {# ── Bouton Diagnostic IA — déclenche l'appel AJAX vers Groq ── #}
+            <button type="button" id="btn-diagnostic-ia">
+                🧠 Lancer le diagnostic IA
+            </button>
             <form method="post" action="{{ path('equipement_delete', {id: equipement.id}) }}"
                   onsubmit="return confirm('Supprimer définitivement cet équipement ?')">
                 <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ equipement.id) }}">
@@ -41,7 +236,7 @@
         {# ── Image ── #}
         {% if equipement.imageUrl %}
         <div class="col-md-4">
-            <img src="{{ uploads_base_url }}/{{ equipement.imageUrl }}"
+            <img src="{{ uploads_base_url }}/equipements/{{ equipement.imageUrl|split('/')|last }}"
                  alt="{{ equipement.nom }}"
                  class="img-fluid rounded shadow-sm w-100"
                  style="max-height:280px; object-fit:cover">
@@ -94,6 +289,7 @@
                         <div class="info-value">{{ equipement.description }}</div>
                     </div>
                     {% endif %}
+
 
                 </div>
             </div>
@@ -187,6 +383,21 @@
             </div>
         </div>
     </div>
+
+   {# ── Passeport Numérique ── #}
+<div class="card shadow-sm mb-4">
+    <div class="card-header fw-semibold bg-white">📱 Passeport Numérique</div>
+    <div class="card-body text-center">
+        <img src="{{ path('passeport_qr', {id: equipement.id}) }}"
+             alt="QR Code"
+             style="width:180px; height:180px; border-radius:12px; border:3px solid #198754"
+             onload="this.nextElementSibling.style.display='none'"
+             onerror="this.style.display='none'">
+        <p class="text-muted small mt-2 mb-0">
+            Scannez pour accéder au passeport numérique
+        </p>
+    </div>
+</div>
     {# ── Maintenances de cet équipement ── #}
 {% set maintenances = equipement.id ? app.request.attributes.get('maintenances', []) : [] %}
 
@@ -200,10 +411,798 @@
         {# On passe les maintenances depuis le controller show de l'équipement #}
         <p class="text-muted p-3 mb-0">
             <a href="{{ path('maintenance_index') }}">Voir toutes les maintenances →</a>
+
         </p>
     </div>
 </div>
+    
+    {# ── Modal carte équipement ── #}
+    {% if equipement.latitude is not null and equipement.longitude is not null %}
+    {% set couleurStatutMap = {
+        'Actif':          '#198754',
+        'En maintenance': '#ffc107',
+        'En panne':       '#dc3545',
+        'Hors service':   '#6f42c1'
+    } %}
+    {% set markerColor = couleurStatutMap[equipement.statut] ?? '#6c757d' %}
+    <div class="modal fade" id="modalCarteEquipement" tabindex="-1" aria-labelledby="modalCarteEquipementLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalCarteEquipementLabel">📍 {{ equipement.nom }} — Position</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+                </div>
+                <div class="modal-body p-2">
+                    <div id="map-show"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+    (function () {
+        var lat    = {{ equipement.latitude }};
+        var lng    = {{ equipement.longitude }};
+        var color  = {{ markerColor|json_encode|raw }};
+        var nom    = {{ equipement.nom|json_encode|raw }};
+        var statut = {{ (equipement.statut ?? '')|json_encode|raw }};
+        var mapInit = false;
+
+        var modalEl = document.getElementById('modalCarteEquipement');
+        modalEl.addEventListener('shown.bs.modal', function () {
+            if (mapInit) return;
+            mapInit = true;
+
+            var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38"><path d="M14 0C6.27 0 0 6.27 0 14c0 9.6 14 24 14 24s14-14.4 14-24C28 6.27 21.73 0 14 0z" fill="' + color + '"/><circle cx="14" cy="14" r="6" fill="#fff" opacity=".9"/></svg>';
+            var icon = L.divIcon({ html: svg, className: '', iconSize: [28, 38], iconAnchor: [14, 38], popupAnchor: [0, -38] });
+
+            var map = L.map('map-show').setView([lat, lng], 14);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom: 19
+            }).addTo(map);
+
+            L.marker([lat, lng], { icon: icon })
+                .addTo(map)
+                .bindPopup('<strong>' + nom + '</strong><br><span class="badge" style="background:' + color + ';color:#fff">' + statut + '</span>')
+                .openPopup();
+        });
+    })();
+    </script>
+    {% endif %}
+
+    {# ══════════════════════════════════════════════════════════════════════
+       ── Analyse Photo IA (Groq Vision)                               ──
+       ══════════════════════════════════════════════════════════════════════ #}
+    <div class="ia-card mb-4" id="photo-ia-card">
+
+        {# Header dégradé bleu-vert #}
+        <div class="ia-card-header-photo d-flex align-items-center gap-3">
+            <span style="font-size:1.6rem; filter:drop-shadow(0 1px 3px rgba(0,0,0,.3))">📸</span>
+            <div class="flex-fill">
+                <div class="fw-bold text-white" style="font-size:1.05rem;">Analyse Photo IA</div>
+                <div style="font-size:.75rem; color:rgba(255,255,255,.75);">Détection visuelle d'anomalies</div>
+            </div>
+            <span class="ia-header-badge">Groq Vision • Llama 4 Scout</span>
+        </div>
+
+        <div class="card-body p-4">
+
+            {# ── Zone d'upload (drag & drop + bouton) ── #}
+            <div id="photo-drop-zone" role="button" tabindex="0"
+                 aria-label="Zone de dépôt de photo. Cliquez ou glissez une image.">
+                <span class="photo-drop-icon">📷</span>
+                <div class="fw-semibold mt-2" style="color:#146c43; font-size:.95rem;">Glissez une photo de votre équipement ici</div>
+                <div class="text-muted small mt-1">ou</div>
+                <label class="btn btn-sm mt-2" style="cursor:pointer; background:#198754; color:#fff; border-radius:8px; padding:.4rem .9rem; font-weight:600;">
+                    Choisir une photo
+                    <input type="file" id="photo-file-input" accept="image/jpeg,image/png,image/webp"
+                           style="display:none" aria-label="Sélectionner une photo">
+                </label>
+                <div class="text-muted small mt-2">JPG, PNG, WEBP — max 5 MB</div>
+            </div>
+
+            {# ── Aperçu de l'image sélectionnée ── #}
+            <div id="photo-preview-wrap">
+                <img id="photo-preview-img" src="" alt="Aperçu de la photo sélectionnée">
+                <div class="mt-2">
+                    <span id="photo-file-name" class="text-muted small"></span>
+                    <button type="button" id="btn-clear-photo" class="btn btn-sm btn-link text-danger ms-2 p-0"
+                            style="font-size:.82rem">✕ Supprimer</button>
+                </div>
+            </div>
+
+            {# ── Bouton d'analyse ── #}
+            <div class="mt-3">
+                <button type="button" id="btn-analyser-photo" disabled>
+                    🔍 Analyser la photo
+                </button>
+            </div>
+
+            {# ── Spinner pendant l'analyse ── #}
+            <div id="photo-spinner" class="text-center py-4">
+                <div class="spinner-border mb-2" role="status" aria-label="Analyse en cours"
+                     style="color:#1a7fc1; width:2rem; height:2rem;"></div>
+                <div class="small fw-semibold" style="color:#1a7fc1;">Analyse visuelle en cours…</div>
+            </div>
+
+            {# ── Erreur analyse photo ── #}
+            <div id="photo-error" class="alert alert-danger mt-3" style="display:none" role="alert"></div>
+
+            {# ── Alerte conformité — autre équipement agricole (confirmation requise) ── #}
+            <div id="photo-conformite-warning" class="mt-3" style="display:none" role="alert" aria-live="polite">
+                <div style="background:#fff7ed; border:1.5px solid #fb923c; border-radius:12px; padding:1.25rem 1.5rem;">
+                    <div class="d-flex align-items-start gap-3">
+                        <span style="font-size:1.8rem; line-height:1;">⚠️</span>
+                        <div class="flex-fill">
+                            <div class="fw-bold mb-1" style="color:#c2410c; font-size:1rem;">Image non conforme détectée</div>
+                            <div id="photo-conformite-warning-text" class="small mb-3" style="color:#7c2d12; line-height:1.6;"></div>
+                            <div class="d-flex gap-2 flex-wrap">
+                                <button type="button" id="btn-confirmer-analyse" class="btn btn-sm btn-success px-3">✅ Continuer quand même</button>
+                                <button type="button" id="btn-annuler-conformite" class="btn btn-sm btn-outline-secondary px-3">❌ Annuler</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Alerte conformité — image non agricole ── #}
+            <div id="photo-conformite-erreur" class="mt-3" style="display:none" role="alert" aria-live="polite">
+                <div style="background:#fef2f2; border:1.5px solid #f87171; border-radius:12px; padding:1.25rem 1.5rem;">
+                    <div class="d-flex align-items-start gap-3">
+                        <span style="font-size:1.8rem; line-height:1;">🚫</span>
+                        <div class="flex-fill">
+                            <div class="fw-bold mb-1" style="color:#b91c1c; font-size:1rem;">Image non agricole</div>
+                            <div id="photo-conformite-erreur-text" class="small mb-3" style="color:#7f1d1d; line-height:1.6;"></div>
+                            <button type="button" id="btn-reessayer-photo" class="btn btn-sm btn-outline-danger px-3">Réessayer</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {# ── Panel résultat vision ── #}
+            <div id="vision-panel" class="mt-4">
+                <hr style="border-color:#e3f2fd; border-width:2px; margin-bottom:1.25rem;">
+
+                {# Score + état #}
+                <div class="d-flex align-items-center gap-4 mb-3 flex-wrap">
+                    <div class="score-gauge-wrap" id="vision-gauge-wrap">
+                        <svg viewBox="0 0 80 80" width="90" height="90">
+                            <circle cx="40" cy="40" r="32" fill="none" stroke="#e9ecef" stroke-width="7"/>
+                            <circle id="vision-gauge-arc" cx="40" cy="40" r="32" fill="none"
+                                    stroke="#6c757d" stroke-width="7"
+                                    stroke-dasharray="201.1" stroke-dashoffset="201.1"
+                                    stroke-linecap="round"
+                                    transform="rotate(-90 40 40)"
+                                    style="transition: stroke-dashoffset .8s ease, stroke .4s;"/>
+                        </svg>
+                        <div class="score-gauge-text" id="vision-gauge-num">—</div>
+                    </div>
+                    <div>
+                        <div class="text-muted small mb-1" style="font-size:.72rem; text-transform:uppercase; letter-spacing:.05em;">État visuel détecté</div>
+                        <span id="vision-etat-badge" class="badge py-2 px-3" style="font-size:.92rem; border-radius:20px; background:#6c757d; color:#fff;">—</span>
+                        <div class="text-muted small mt-2">Score visuel : <strong id="vision-score-text">—</strong> / 100</div>
+                    </div>
+                </div>
+
+                {# ── Vérification de conformité (affichée si non vide) ── #}
+                <div id="vision-conformite-section" style="display:none" class="mb-3">
+                    <div class="fw-semibold mb-2 text-uppercase" style="font-size:.73rem;letter-spacing:.07em;color:#6b7280">🔍 Vérification de conformité</div>
+                    <div id="vision-conformite-box" style="border-radius:10px; padding:.85rem 1rem;">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span id="vision-conformite-badge" class="badge py-1 px-2" style="font-size:.8rem; border-radius:12px;"></span>
+                        </div>
+                        <div class="small"><strong>Équipement détecté :</strong> <span id="vision-conformite-detecte"></span></div>
+                        <div class="small mt-1"><strong>Équipement attendu :</strong> <span id="vision-conformite-attendu"></span></div>
+                        <div class="small mt-1 fst-italic text-muted" id="vision-conformite-msg"></div>
+                    </div>
+                </div>
+
+                <div id="vision-anomalies-section" style="display:none" class="mb-3">
+                    <div class="fw-semibold mb-2 text-uppercase" style="font-size:.73rem;letter-spacing:.07em;color:#dc3545">🔴 Anomalies détectées</div>
+                    <div id="vision-anomalies"></div>
+                </div>
+
+                <div id="vision-zones-section" style="display:none" class="mb-3">
+                    <div class="fw-semibold mb-2 text-uppercase" style="font-size:.73rem;letter-spacing:.07em;color:#856404">📍 Zones problématiques</div>
+                    <div id="vision-zones"></div>
+                </div>
+
+                <div id="vision-recos-section" style="display:none" class="mb-3">
+                    <div class="fw-semibold mb-2 text-uppercase" style="font-size:.73rem;letter-spacing:.07em;color:#198754">✅ Recommandations visuelles</div>
+                    <div id="vision-recos"></div>
+                </div>
+
+                <div id="vision-conclusion-section" style="display:none" class="mb-2">
+                    <div class="fw-semibold mb-1 text-uppercase" style="font-size:.73rem;letter-spacing:.07em;color:#1a7fc1">📝 Conclusion</div>
+                    <div id="vision-conclusion" class="vision-conclusion-block"></div>
+                </div>
+
+                <div class="vision-disclaimer">
+                    🔬 Analyse visuelle IA (Groq Vision) — confirmer avec un technicien agréé avant toute intervention.
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {# ── Fin Analyse Photo IA ── #}
+
+    {# ── Séparateur visuel entre les deux sections IA ── #}
+    <div class="ia-divider">Intelligence Artificielle</div>
+
+    {# ── Spinner visible pendant l'appel IA ── #}
+    <div id="diag-spinner" class="ia-card mb-4">
+        <div class="card-body text-center py-5">
+            <div class="spinner-border mb-3" role="status"
+                 style="color:#198754; width:2.5rem; height:2.5rem;"></div>
+            <div class="fw-semibold" style="color:#1a5c2e;">Analyse IA en cours…</div>
+            <div class="text-muted small mt-1">Groq • Llama 4 Scout analyse votre équipement</div>
+        </div>
+    </div>
+
+    {# ── Panel résultat diagnostic IA ── #}
+    <div id="diag-panel" class="ia-card mb-4">
+
+        {# Header dégradé vert AgriLink — rempli par JS #}
+        <div class="ia-card-header-diag d-flex align-items-center gap-3">
+            <span style="font-size:1.6rem; filter:drop-shadow(0 1px 3px rgba(0,0,0,.3))">🧠</span>
+            <div class="flex-fill">
+                <div class="fw-bold text-white" style="font-size:1.05rem;">Diagnostic IA</div>
+                <div id="diag-resume" style="font-size:.8rem; color:rgba(255,255,255,.8); margin-top:.1rem;"></div>
+            </div>
+            <span id="diag-indice-badge" class="ia-header-badge" style="font-size:.78rem;">—</span>
+        </div>
+
+        <div class="card-body p-4">
+
+            {# ── Score + indice ── #}
+            <div class="d-flex align-items-center gap-4 mb-4 flex-wrap">
+                <div class="score-gauge-wrap">
+                    <svg viewBox="0 0 80 80" width="96" height="96">
+                        <circle cx="40" cy="40" r="32" fill="none" stroke="#e9ecef" stroke-width="7"/>
+                        <circle id="diag-gauge-arc" cx="40" cy="40" r="32" fill="none"
+                                stroke="#198754" stroke-width="7"
+                                stroke-dasharray="201.1" stroke-dashoffset="201.1"
+                                stroke-linecap="round"
+                                transform="rotate(-90 40 40)"
+                                style="transition: stroke-dashoffset .9s ease, stroke .4s;"/>
+                    </svg>
+                    <div class="score-gauge-text" id="diag-gauge-num" style="font-size:1.4rem;">—</div>
+                </div>
+                <div>
+                    <div class="text-muted small mb-1" style="font-size:.72rem; text-transform:uppercase; letter-spacing:.05em;">Indice de santé</div>
+                    <span id="diag-indice-pill" class="badge py-2 px-3"
+                          style="font-size:.95rem; border-radius:20px; background:#198754; color:#fff;">—</span>
+                    <div class="text-muted small mt-2">Score global : <strong id="diag-score-num">—</strong> / 100</div>
+                </div>
+            </div>
+
+            {# ── Analyse par critère — grille 2 colonnes ── #}
+            <div class="mb-4">
+                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.72rem;letter-spacing:.07em;color:#6c757d">📊 Analyse par critère</div>
+                <div id="diag-criteres" class="diag-critere-grid"></div>
+            </div>
+
+            {# ── Alertes ── #}
+            <div id="diag-alertes-section" style="display:none" class="mb-4">
+                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.72rem;letter-spacing:.07em;color:#856404">⚠️ Alertes</div>
+                <div id="diag-alertes"></div>
+            </div>
+
+            {# ── Recommandations ── #}
+            <div class="mb-4">
+                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.72rem;letter-spacing:.07em;color:#198754">✅ Recommandations</div>
+                <div id="diag-recommandations"></div>
+            </div>
+
+            {# ── Prochaine maintenance ── #}
+            <div class="mb-3">
+                <div class="fw-semibold mb-2 text-uppercase" style="font-size:.72rem;letter-spacing:.07em;color:#6c757d">🔧 Prochaine maintenance estimée</div>
+                <div id="diag-prochaine">
+                    <span class="diag-prochaine-badge">🔧 <span id="diag-prochaine-val">—</span></span>
+                </div>
+            </div>
+
+            {# ── Disclaimer ── #}
+            <div class="diag-disclaimer">
+                ℹ️ Rapport généré par IA à titre indicatif. Consultez un technicien agréé pour toute décision d'intervention.
+            </div>
+        </div>
+    </div>
+
+    {# ── Zone d'erreur si l'appel IA échoue ── #}
+    <div id="diag-error" class="alert alert-danger mb-4" style="display:none"></div>
 
     <a href="{{ path('equipement_index') }}" class="btn btn-outline-secondary">← Retour à la liste</a>
+    <a href="{{ path('passeport_show_by_id', {id: equipement.id}) }}"
+   class="btn btn-outline-success"
+   target="_blank">
+    📱 Voir Qr info
+</a>
+
+{# ══════════════════════════════════════════════════════════════════════════
+   ── JS : Diagnostic IA (Groq) + Analyse Photo IA (Groq Vision)        ──
+   ══════════════════════════════════════════════════════════════════════════ #}
+<script>
+(function () {
+
+    /* ───────────────────────────────────────────────────────────────────────
+       CONSTANTES & CONFIG
+       ─────────────────────────────────────────────────────────────────────── */
+
+    // Rayon = 32, circonférence = 2 * π * 32 ≈ 201.06
+    var GAUGE_CIRCUMFERENCE = 201.1;
+
+    var SANTE_COLORS = {
+        'Excellent': '#198754',
+        'Bon':       '#0d6efd',
+        'Attention': '#fd7e14',
+        'Critique':  '#dc3545'
+    };
+    var SANTE_ICONS = {
+        'Excellent': '🟢', 'Bon': '🔵', 'Attention': '🟠', 'Critique': '🔴'
+    };
+
+    var VISION_COLORS = {
+        'Bon':           '#198754',
+        'Usure normale': '#0d6efd',
+        'Dégradation':   '#fd7e14',
+        'Critique':      '#dc3545'
+    };
+
+    var CRITERE_ICONS = {
+        'statut':      '📋',
+        'description': '📝',
+        'kilometrage': '🛣️',
+        'heures':      '⏱️',
+        'maintenance': '🔧'
+    };
+    var CRITERE_LABELS = {
+        'statut':      'Statut actuel',
+        'description': 'Description',
+        'kilometrage': 'Kilométrage',
+        'heures':      'Heures d\'utilisation',
+        'maintenance': 'Historique maintenance'
+    };
+
+    /* ───────────────────────────────────────────────────────────────────────
+       UTILITAIRES COMMUNS
+       ─────────────────────────────────────────────────────────────────────── */
+
+    /**
+     * BUG FIX [object Object] :
+     * Convertit n'importe quelle valeur (string, objet, number) en texte lisible.
+     * Gère les objets retournés par le LLM à la place de strings simples.
+     */
+    function itemToString(item) {
+        if (item === null || item === undefined) return '';
+        if (typeof item === 'string') return item;
+        if (typeof item === 'number' || typeof item === 'boolean') return String(item);
+        if (typeof item === 'object') {
+            // Essayer les propriétés textuelles courantes des LLMs
+            return item.texte        || item.action       || item.description
+                || item.recommandation || item.text        || item.message
+                || item.content      || item.titre        || item.valeur
+                || item.analyse      || item.commentaire  || item.details
+                || JSON.stringify(item);
+        }
+        return String(item);
+    }
+
+    function escHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+    /** Anime la jauge circulaire SVG vers le score donné (0–100). */
+    function animateGauge(arcId, score, color) {
+        var arc = document.getElementById(arcId);
+        if (!arc) return;
+        var offset = GAUGE_CIRCUMFERENCE * (1 - Math.min(Math.max(score, 0), 100) / 100);
+        arc.style.stroke = color;
+        // Forcer le reflow pour que la transition CSS s'anime depuis 0
+        arc.style.strokeDashoffset = GAUGE_CIRCUMFERENCE;
+        requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+                arc.style.strokeDashoffset = offset;
+            });
+        });
+    }
+
+    /* ───────────────────────────────────────────────────────────────────────
+       SECTION 1 — Diagnostic IA Groq
+       ─────────────────────────────────────────────────────────────────────── */
+
+    var btn      = document.getElementById('btn-diagnostic-ia');
+    var spinner  = document.getElementById('diag-spinner');
+    var panel    = document.getElementById('diag-panel');
+    var errorDiv = document.getElementById('diag-error');
+
+    var csrfToken = {{ csrf_token('diagnostic_ia_' ~ equipement.id)|json_encode|raw }};
+    var diagUrl   = {{ path('equipement_diagnostic_ia', {id: equipement.id})|json_encode|raw }};
+
+    btn.addEventListener('click', function () {
+        panel.style.display    = 'none';
+        errorDiv.style.display = 'none';
+        spinner.style.display  = 'block';
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Analyse…';
+
+        fetch(diagUrl, {
+            method: 'POST',
+            headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json' }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            spinner.style.display = 'none';
+            btn.disabled  = false;
+            btn.innerHTML = '🧠 Lancer le diagnostic IA';
+
+            if (!data.success) {
+                errorDiv.textContent   = data.error || 'Erreur inconnue.';
+                errorDiv.style.display = 'block';
+                return;
+            }
+            renderDiagnostic(data.diagnostic);
+        })
+        .catch(function () {
+            spinner.style.display = 'none';
+            btn.disabled  = false;
+            btn.innerHTML = '🧠 Lancer le diagnostic IA';
+            errorDiv.textContent   = 'Erreur réseau : impossible de contacter le service IA.';
+            errorDiv.style.display = 'block';
+        });
+    });
+
+    function renderDiagnostic(d) {
+        var indice = d.indice_sante || 'Bon';
+        var score  = typeof d.score === 'number' ? d.score : parseInt(d.score) || 0;
+        var color  = SANTE_COLORS[indice] || '#6c757d';
+        var icon   = SANTE_ICONS[indice]  || '';
+
+        // ── Jauge SVG animée ────────────────────────────────────────────────
+        animateGauge('diag-gauge-arc', score, color);
+        document.getElementById('diag-gauge-num').textContent  = score;
+        document.getElementById('diag-score-num').textContent  = score;
+
+        // ── Badge indice en header ──────────────────────────────────────────
+        var headerBadge = document.getElementById('diag-indice-badge');
+        headerBadge.textContent = icon + ' ' + indice;
+
+        // ── Badge pill indice de santé ──────────────────────────────────────
+        var pill = document.getElementById('diag-indice-pill');
+        pill.textContent      = icon + ' ' + indice;
+        pill.style.background = color;
+
+        // ── Résumé dans le header ───────────────────────────────────────────
+        document.getElementById('diag-resume').textContent = d.resume || '';
+
+        // ── Analyse par critère — grille cards (BUG FIX: itemToString) ─────
+        var criteresEl = document.getElementById('diag-criteres');
+        criteresEl.innerHTML = '';
+        var criteres = d.analyse_par_critere || {};
+        Object.keys(criteres).forEach(function (key) {
+            var val = criteres[key];
+            if (val === null || val === undefined || val === 'null' || val === '') return;
+            // BUG FIX : itemToString gère les objets ET les strings
+            var valStr = itemToString(val);
+            if (!valStr || valStr === 'null') return;
+            var card = document.createElement('div');
+            card.className = 'diag-critere-card';
+            card.innerHTML =
+                '<div class="diag-critere-label">'
+                + '<span class="diag-critere-icon">' + (CRITERE_ICONS[key] || '•') + '</span>'
+                + escHtml(CRITERE_LABELS[key] || key)
+                + '</div>'
+                + '<div class="diag-critere-val">' + escHtml(valStr) + '</div>';
+            criteresEl.appendChild(card);
+        });
+
+        // ── Alertes ─────────────────────────────────────────────────────────
+        var alertes = Array.isArray(d.alertes) ? d.alertes : [];
+        var alertesSection = document.getElementById('diag-alertes-section');
+        var alertesEl      = document.getElementById('diag-alertes');
+        alertesEl.innerHTML = '';
+        if (alertes.length > 0) {
+            alertesSection.style.display = 'block';
+            alertes.forEach(function (a) {
+                var div = document.createElement('div');
+                div.className   = 'diag-alerte';
+                div.textContent = '⚠️ ' + itemToString(a);
+                alertesEl.appendChild(div);
+            });
+        } else {
+            alertesSection.style.display = 'none';
+        }
+
+        // ── Recommandations numérotées ───────────────────────────────────────
+        var recos = Array.isArray(d.recommandations) ? d.recommandations : [];
+        var recosEl = document.getElementById('diag-recommandations');
+        recosEl.innerHTML = '';
+        recos.forEach(function (r, i) {
+            var row = document.createElement('div');
+            row.className = 'diag-reco';
+            var num = document.createElement('span');
+            num.className   = 'diag-reco-num';
+            num.textContent = i + 1;
+            var txt = document.createElement('span');
+            txt.textContent = itemToString(r);
+            row.appendChild(num);
+            row.appendChild(txt);
+            recosEl.appendChild(row);
+        });
+
+        // ── Prochaine maintenance ────────────────────────────────────────────
+        document.getElementById('diag-prochaine-val').textContent =
+            itemToString(d.prochaine_maintenance_estimee) || 'Non estimée';
+
+        panel.style.display = 'block';
+        panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    /* ───────────────────────────────────────────────────────────────────────
+       SECTION 2 — Analyse Photo IA (Groq Vision)
+       ─────────────────────────────────────────────────────────────────────── */
+
+    var photoUrl = {{ path('equipement_analyse_photo', {id: equipement.id})|json_encode|raw }};
+
+    var dropZone      = document.getElementById('photo-drop-zone');
+    var fileInput     = document.getElementById('photo-file-input');
+    var previewWrap   = document.getElementById('photo-preview-wrap');
+    var previewImg    = document.getElementById('photo-preview-img');
+    var fileNameEl    = document.getElementById('photo-file-name');
+    var btnClearPhoto = document.getElementById('btn-clear-photo');
+    var btnAnalyser   = document.getElementById('btn-analyser-photo');
+    var photoSpinner  = document.getElementById('photo-spinner');
+    var photoError    = document.getElementById('photo-error');
+    var visionPanel            = document.getElementById('vision-panel');
+    var photoConformiteWarning = document.getElementById('photo-conformite-warning');
+    var photoConformiteErreur  = document.getElementById('photo-conformite-erreur');
+
+    var selectedFile  = null;
+    var pendingAnalyse = null;
+
+    dropZone.addEventListener('dragover', function (e) {
+        e.preventDefault(); dropZone.classList.add('drag-over');
+    });
+    dropZone.addEventListener('dragleave', function () {
+        dropZone.classList.remove('drag-over');
+    });
+    dropZone.addEventListener('drop', function (e) {
+        e.preventDefault(); dropZone.classList.remove('drag-over');
+        if (e.dataTransfer.files.length > 0) setFile(e.dataTransfer.files[0]);
+    });
+    dropZone.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') fileInput.click();
+    });
+    fileInput.addEventListener('change', function () {
+        if (fileInput.files.length > 0) setFile(fileInput.files[0]);
+    });
+    btnClearPhoto.addEventListener('click', clearFile);
+    btnAnalyser.addEventListener('click', lancerAnalysePhoto);
+
+    document.getElementById('btn-confirmer-analyse').addEventListener('click', function () {
+        photoConformiteWarning.style.display = 'none';
+        if (pendingAnalyse) { renderVisionResult(pendingAnalyse); pendingAnalyse = null; }
+    });
+    document.getElementById('btn-annuler-conformite').addEventListener('click', function () {
+        photoConformiteWarning.style.display = 'none';
+        pendingAnalyse = null;
+    });
+    document.getElementById('btn-reessayer-photo').addEventListener('click', function () {
+        photoConformiteErreur.style.display = 'none';
+        pendingAnalyse = null;
+        clearFile();
+    });
+
+    function setFile(file) {
+        if (!['image/jpeg','image/png','image/webp'].includes(file.type)) {
+            showPhotoError('Format non supporté. Utilisez JPG, PNG ou WEBP.');
+            return;
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            showPhotoError('La photo dépasse 5 MB. Veuillez choisir une image plus petite.');
+            return;
+        }
+        photoError.style.display              = 'none';
+        photoConformiteWarning.style.display   = 'none';
+        photoConformiteErreur.style.display    = 'none';
+        pendingAnalyse = null;
+        selectedFile   = file;
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            previewImg.src = e.target.result;
+            previewWrap.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+
+        fileNameEl.textContent = file.name + ' (' + (file.size / 1024).toFixed(0) + ' KB)';
+        dropZone.classList.add('has-file');
+        btnAnalyser.disabled     = false;
+        visionPanel.style.display = 'none';
+    }
+
+    function clearFile() {
+        selectedFile   = null;
+        pendingAnalyse = null;
+        fileInput.value = '';
+        previewImg.src  = '';
+        previewWrap.style.display             = 'none';
+        visionPanel.style.display             = 'none';
+        photoError.style.display              = 'none';
+        photoConformiteWarning.style.display  = 'none';
+        photoConformiteErreur.style.display   = 'none';
+        dropZone.classList.remove('has-file');
+        btnAnalyser.disabled = true;
+    }
+
+    function lancerAnalysePhoto() {
+        if (!selectedFile) return;
+
+        photoError.style.display   = 'none';
+        visionPanel.style.display  = 'none';
+        photoSpinner.style.display = 'block';
+        btnAnalyser.disabled  = true;
+        btnAnalyser.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span>Analyse…';
+
+        var formData = new FormData();
+        formData.append('photo', selectedFile);
+
+        fetch(photoUrl, { method: 'POST', body: formData })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            photoSpinner.style.display = 'none';
+            btnAnalyser.disabled  = false;
+            btnAnalyser.innerHTML = '🔍 Analyser la photo';
+
+            if (!data.success) { showPhotoError(data.error || 'Erreur inconnue.'); return; }
+
+            var conformite = data.analyse && data.analyse.conformite ? data.analyse.conformite : null;
+            var statut     = conformite ? (conformite.statut || 'conforme') : 'conforme';
+
+            if (statut === 'non_conforme_agricole') {
+                pendingAnalyse = data.analyse;
+                var wtxt = 'L\'image uploadée semble montrer : <strong>'
+                    + escapeHtml(conformite.equipement_detecte || '') + '</strong>'
+                    + '<br>alors que l\'équipement attendu est : <strong>'
+                    + escapeHtml(conformite.equipement_attendu || '') + '</strong>'
+                    + (conformite.message_conformite ? '<br>' + escapeHtml(conformite.message_conformite) : '')
+                    + '<br><br>L\'image montre bien un équipement agricole.<br>'
+                    + 'Voulez-vous continuer le diagnostic sur cette image ?';
+                document.getElementById('photo-conformite-warning-text').innerHTML = wtxt;
+                photoConformiteWarning.style.display = 'block';
+                photoConformiteWarning.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            } else if (statut === 'non_agricole') {
+                pendingAnalyse = null;
+                var etxt = 'L\'image uploadée ne semble pas montrer un équipement agricole'
+                    + (conformite.equipement_detecte ? ' (' + escapeHtml(conformite.equipement_detecte) + ')' : '')
+                    + '.<br>Veuillez uploader une photo de votre équipement.';
+                document.getElementById('photo-conformite-erreur-text').innerHTML = etxt;
+                photoConformiteErreur.style.display = 'block';
+                photoConformiteErreur.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+            } else {
+                renderVisionResult(data.analyse);
+            }
+        })
+        .catch(function () {
+            photoSpinner.style.display = 'none';
+            btnAnalyser.disabled  = false;
+            btnAnalyser.innerHTML = '🔍 Analyser la photo';
+            showPhotoError('Erreur réseau : impossible de contacter le service IA.');
+        });
+    }
+
+    function renderVisionResult(a) {
+        // ── Section vérification de conformité ─────────────────────────────
+        var conformiteSection = document.getElementById('vision-conformite-section');
+        var conformiteBox     = document.getElementById('vision-conformite-box');
+        var c = a.conformite || null;
+        if (c) {
+            var cStatut = c.statut || 'conforme';
+            var cBadge  = document.getElementById('vision-conformite-badge');
+            document.getElementById('vision-conformite-detecte').textContent = c.equipement_detecte || '—';
+            document.getElementById('vision-conformite-attendu').textContent = c.equipement_attendu || '—';
+            document.getElementById('vision-conformite-msg').textContent     = c.message_conformite || '';
+            if (cStatut === 'conforme') {
+                conformiteBox.style.background = '#f0fdf4';
+                conformiteBox.style.border     = '1.5px solid #86efac';
+                cBadge.textContent      = '✅ Conforme';
+                cBadge.style.background = '#16a34a';
+                cBadge.style.color      = '#fff';
+            } else {
+                conformiteBox.style.background = '#fff7ed';
+                conformiteBox.style.border     = '1.5px solid #fb923c';
+                cBadge.textContent      = '⚠️ Autre équipement agricole';
+                cBadge.style.background = '#ea580c';
+                cBadge.style.color      = '#fff';
+            }
+            conformiteSection.style.display = 'block';
+        } else {
+            conformiteSection.style.display = 'none';
+        }
+
+        var etat  = a.etat_visuel  || 'Inconnu';
+        var score = typeof a.score_visuel === 'number' ? a.score_visuel : parseInt(a.score_visuel) || 0;
+        var color = VISION_COLORS[etat] || '#6c757d';
+
+        // ── Jauge SVG animée ────────────────────────────────────────────────
+        animateGauge('vision-gauge-arc', score, color);
+        document.getElementById('vision-gauge-num').textContent  = score;
+        document.getElementById('vision-score-text').textContent = score;
+
+        // ── Badge état visuel ───────────────────────────────────────────────
+        var badge = document.getElementById('vision-etat-badge');
+        badge.textContent      = etat;
+        badge.style.background = color;
+
+        // ── Listes résultats ────────────────────────────────────────────────
+        renderVisionList('vision-anomalies-section', 'vision-anomalies',
+            a.anomalies_detectees, 'vision-anomalie', '🔴 ', false);
+        renderVisionList('vision-zones-section', 'vision-zones',
+            a.zones_problematiques, 'vision-zone', '📍 ', false);
+        renderVisionList('vision-recos-section', 'vision-recos',
+            a.recommandations_visuelles, 'vision-reco', '', true);
+
+        // ── Conclusion ──────────────────────────────────────────────────────
+        var conclusionSection = document.getElementById('vision-conclusion-section');
+        var conclusionEl      = document.getElementById('vision-conclusion');
+        if (a.conclusion) {
+            conclusionEl.textContent        = a.conclusion;
+            conclusionSection.style.display = 'block';
+        } else {
+            conclusionSection.style.display = 'none';
+        }
+
+        visionPanel.style.display = 'block';
+        visionPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function renderVisionList(sectionId, listId, items, itemClass, prefix, numbered) {
+        var section = document.getElementById(sectionId);
+        var listEl  = document.getElementById(listId);
+        listEl.innerHTML = '';
+        var arr = Array.isArray(items) ? items : [];
+        if (arr.length === 0) { section.style.display = 'none'; return; }
+        section.style.display = 'block';
+        arr.forEach(function (item, i) {
+            var row = document.createElement('div');
+            if (numbered) {
+                row.className = itemClass;
+                var num = document.createElement('span');
+                num.className   = 'vision-reco-num';
+                num.textContent = i + 1;
+                var txt = document.createElement('span');
+                txt.textContent = itemToString(item);
+                row.appendChild(num);
+                row.appendChild(txt);
+            } else {
+                row.className   = itemClass;
+                row.textContent = prefix + itemToString(item);
+            }
+            listEl.appendChild(row);
+        });
+    }
+
+    function showPhotoError(msg) {
+        photoError.textContent   = msg;
+        photoError.style.display = 'block';
+    }
+
+    function escapeHtml(str) {
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;');
+    }
+
+})();
+</script>
 
 {% endblock %}

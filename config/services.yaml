@@ -10,6 +10,7 @@ parameters:
     uploads_base_dir: '%kernel.project_dir%/public/uploads'
     uploads_base_url: '/uploads'
     equipements_directory: '%env(UPLOADS_BASE_DIR)%/equipements'
+    opencage_api_key: '%env(OPENCAGE_API_KEY)%'
     mapbox_token: '%env(MAPBOX_TOKEN)%'
 
 services:
@@ -101,5 +102,28 @@ services:
     App\EventListener\LoginFailureListener:
         tags:
             - { name: kernel.event_listener, event: Symfony\Component\Security\Http\Event\LoginFailureEvent }
+
+    # GroqDiagnosticService — diagnostic IA équipements
+    App\Service\Equipment\GroqDiagnosticService:
+        arguments:
+            $groqApiKey: '%env(GROQ_API_KEY)%'
+            $groqModel:  '%env(GROQ_MODEL)%'
+
+    # GeminiVisionService — analyse visuelle photo équipements (via Groq LLaMA 4 Scout)
+    App\Service\Equipment\GeminiVisionService:
+        arguments:
+            $groqApiKey: '%env(GROQ_API_KEY)%'
+
+    # AssistantIAController — chatbot AgriBot équipements & maintenances
+    App\Controller\Equipment\AssistantIAController:
+        arguments:
+            $groqApiKey: '%env(GROQ_API_KEY)%'
+        tags: ['controller.service_arguments']
+
+    # ExchangeRateService — conversion de devises TND → USD/EUR/AED/SAR/GBP/KWD
+    App\Service\Equipment\ExchangeRateService:
+        arguments:
+            $exchangeRateApiKey: '%env(EXCHANGERATE_API_KEY)%'
+
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

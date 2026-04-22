@@ -215,7 +215,227 @@
         </div>
     </div>
 
-</div>
+    {# ── Section Équipements & Maintenances ── #}
+    <h5 class="fw-bold mt-4 mb-3">⚙️ Mes Équipements & Maintenances</h5>
+
+    {# KPI Cards — 4 cards #}
+    <div class="row g-3 mb-4">
+
+        {# Card 1 — Total Équipements #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <span style="font-size:2.2rem">🚜</span>
+                        <div>
+                            <div class="fw-bold text-success lh-1" style="font-size:2rem">{{ totalEquipements|default(0) }}</div>
+                            <div class="small text-muted mt-1">équipements enregistrés</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer bg-light p-3">
+                    <a href="{{ path('equipement_index') }}" class="small fw-medium text-success text-decoration-none">Gérer →</a>
+                </div>
+            </div>
+        </div>
+
+        {# Card 2 — Statuts équipements #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden">
+                <div class="card-body p-4">
+                    <div class="small fw-semibold text-muted mb-3 text-uppercase" style="letter-spacing:.06em;font-size:.68rem">Statuts équipements</div>
+                    <div class="d-flex flex-column gap-2">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="d-flex align-items-center gap-2" style="font-size:.82rem">
+                                <span style="width:9px;height:9px;border-radius:50%;background:#198754;display:inline-block;flex-shrink:0"></span>
+                                Actif
+                            </span>
+                            <span class="fw-bold text-success">{{ equipementsParStatut['Actif']|default(0) }}</span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="d-flex align-items-center gap-2" style="font-size:.82rem">
+                                <span style="width:9px;height:9px;border-radius:50%;background:#ffc107;display:inline-block;flex-shrink:0"></span>
+                                En maintenance
+                            </span>
+                            <span class="fw-bold" style="color:#b45309">{{ equipementsParStatut['En maintenance']|default(0) }}</span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="d-flex align-items-center gap-2" style="font-size:.82rem">
+                                <span style="width:9px;height:9px;border-radius:50%;background:#dc3545;display:inline-block;flex-shrink:0"></span>
+                                En panne
+                            </span>
+                            <span class="fw-bold text-danger">{{ equipementsParStatut['En panne']|default(0) }}</span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="d-flex align-items-center gap-2" style="font-size:.82rem">
+                                <span style="width:9px;height:9px;border-radius:50%;background:#6c757d;display:inline-block;flex-shrink:0"></span>
+                                Hors service
+                            </span>
+                            <span class="fw-bold text-secondary">{{ equipementsParStatut['Hors service']|default(0) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Card 3 — Maintenances #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <span style="font-size:2.2rem">🔧</span>
+                        <div>
+                            <div class="fw-bold text-dark lh-1" style="font-size:2rem">{{ totalMaintenances|default(0) }}</div>
+                            <div class="small text-muted mt-1">maintenances</div>
+                        </div>
+                    </div>
+                    <div>
+                        {% if maintenancesEnRetard|default(0) > 0 %}
+                            <span class="badge rounded-pill bg-danger" style="font-size:.73rem">⚠ {{ maintenancesEnRetard }} en retard</span>
+                        {% else %}
+                            <span class="badge rounded-pill bg-success-subtle text-success" style="font-size:.73rem">✓ À jour</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-light p-3">
+                    <a href="{{ path('maintenance_index') }}" class="small fw-medium text-success text-decoration-none">Voir →</a>
+                </div>
+            </div>
+        </div>
+
+        {# Card 4 — Coût total maintenances #}
+        <div class="col-12 col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden">
+                <div class="card-body p-4">
+                    <div class="small fw-semibold text-muted mb-2 text-uppercase" style="letter-spacing:.06em;font-size:.68rem">Coût total maintenances</div>
+                    {% if coutTotalMaintenances|default(0) > 0 %}
+                        <div class="fw-bold text-success mt-1" style="font-size:1.25rem;line-height:1.2">
+                            {{ coutTotalMaintenances|number_format(2, ',', ' ') }}
+                            <span style="font-size:.75rem;background:#d1fae5;color:#065f46;padding:.15rem .4rem;border-radius:4px;vertical-align:middle">TND</span>
+                        </div>
+                        <div class="small text-muted mt-1">coût total des maintenances</div>
+                    {% else %}
+                        <div class="text-muted small mt-3">Aucun coût enregistré</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Row 2 — Carte Leaflet + Prochaines maintenances #}
+    <div class="row g-4 mb-4">
+
+        {# Carte Leaflet — col-lg-7 #}
+        <div class="col-12 col-lg-7">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden">
+                <div class="card-body p-4">
+                    <h6 class="fw-semibold mb-3 text-dark">📍 Localisation de mes équipements</h6>
+                    {% if equipementsGeo|default([])|length > 0 %}
+                        <div id="dashEquipMap" style="height:280px;border-radius:12px;border:1px solid #e5e7eb;z-index:0"></div>
+                        <div class="d-flex flex-wrap gap-2 mt-2">
+                            <span class="badge rounded-pill" style="background:#19875422;color:#198754;font-size:.7rem">● Actif</span>
+                            <span class="badge rounded-pill" style="background:#ffc10722;color:#b45309;font-size:.7rem">● En maintenance</span>
+                            <span class="badge rounded-pill" style="background:#dc354522;color:#dc3545;font-size:.7rem">● En panne</span>
+                            <span class="badge rounded-pill" style="background:#6f42c122;color:#6f42c1;font-size:.7rem">● Hors service</span>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div style="font-size:2.5rem;opacity:.3">📍</div>
+                            <div class="small text-muted mt-2">Aucun équipement localisé</div>
+                            <div class="small text-muted">Ajoutez une position depuis la fiche équipement</div>
+                            <a href="{{ path('equipement_index') }}" class="btn btn-outline-success btn-sm mt-3">Gérer mes équipements</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {# Prochaines maintenances — col-lg-5 #}
+        <div class="col-12 col-lg-5">
+            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden">
+                <div class="card-body p-4">
+                    <h6 class="fw-semibold mb-3 text-dark">🔧 Prochaines maintenances planifiées</h6>
+                    {% set prochaines = prochainesMaintenances|default([]) %}
+                    {% if prochaines|length > 0 %}
+                        {% for m in prochaines %}
+                            {% set equip = equipMap[m.equipementId]|default(null) %}
+                            {% set jours = ((m.datePlanifiee|date('U') - "now"|date('U')) / 86400)|round(0, 'ceil') %}
+                            <div class="{% if not loop.last %}pb-3 mb-3 border-bottom{% endif %}">
+                                <div class="d-flex align-items-start justify-content-between gap-2">
+                                    <div class="flex-fill" style="min-width:0">
+                                        {% if equip %}
+                                            <a href="{{ path('equipement_show', {'id': equip.id}) }}"
+                                               class="fw-semibold text-success text-decoration-none small d-block text-truncate">
+                                                {{ equip.nom }}
+                                            </a>
+                                        {% else %}
+                                            <span class="fw-semibold small text-muted">Équipement #{{ m.equipementId }}</span>
+                                        {% endif %}
+                                        <div class="small text-muted mt-1">
+                                            📅 {{ m.datePlanifiee ? m.datePlanifiee|date('d/m/Y') : '—' }}
+                                        </div>
+                                    </div>
+                                    <div class="d-flex flex-column align-items-end gap-1 flex-shrink-0">
+                                        <span class="badge rounded-pill"
+                                              style="font-size:.65rem;background:{{ m.type == 'Préventive' ? '#dbeafe' : '#fce7f3' }};color:{{ m.type == 'Préventive' ? '#1e40af' : '#9d174d' }}">
+                                            {{ m.type }}
+                                        </span>
+                                        {% if jours <= 2 %}
+                                            <span class="badge bg-danger rounded-pill" style="font-size:.65rem">Urgent — {{ jours }}j</span>
+                                        {% elseif jours <= 7 %}
+                                            <span class="badge rounded-pill" style="font-size:.65rem;background:#fed7aa;color:#9a3412">Dans {{ jours }}j</span>
+                                        {% else %}
+                                            <span class="badge bg-success-subtle text-success rounded-pill" style="font-size:.65rem">Dans {{ jours }}j</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div style="font-size:2rem;opacity:.3">✓</div>
+                            <div class="small text-muted mt-2">Aucune maintenance prévue prochainement</div>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer bg-light p-3">
+                    <a href="{{ path('maintenance_index') }}" class="small fw-medium text-success text-decoration-none">Voir toutes →</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Main content grid #}
+    <div class="row g-4">
+        {# Quick Actions #}
+        <div class="col-12 col-lg-6">
+        {% embed 'components/_card.html.twig' %}
+            {% block card_title %}Actions rapides{% endblock %}
+            {% block card_content %}
+                <div class="d-flex flex-column gap-2">
+                    <a href="#" class="d-flex align-items-center p-3 rounded border border-light-subtle text-decoration-none">
+                        <div class="d-flex align-items-center justify-content-center rounded" style="width: 40px; height: 40px; background-color: #dcfce7; margin-right: 1rem;">
+                            <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="small fw-medium text-dark mb-0">Ajouter une parcelle</p>
+                            <p class="small text-muted mb-0">Enregistrez une nouvelle zone de culture</p>
+                        </div>
+                    </a>
+
+                    <a href="#" class="d-flex align-items-center p-3 rounded border border-light-subtle text-decoration-none">
+                        <div class="d-flex align-items-center justify-content-center rounded" style="width: 40px; height: 40px; background-color: #dbeafe; margin-right: 1rem;">
+                            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <p class="small fw-medium text-dark mb-0">Commander des fournitures</p>
+                            <p class="small text-muted mb-0">Parcourir le catalogue fournisseurs</p>
+                        </div>
+                    </a>
 
 {# ── Main Grid ── #}
 <div class="row g-3 mb-4">
@@ -370,6 +590,66 @@
 .mes-evenements-arrow.is-open { transform: rotate(180deg); }
 </style>
 
+            modal.addEventListener('hidden.bs.modal', function () {
+                arrow.classList.remove('is-open');
+            });
+        });
+    </script>
+
+    {% if equipementsGeo|default([])|length > 0 %}
+    {# Leaflet chargé uniquement si des équipements géolocalisés existent #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+    (function () {
+        var geoData = {{ equipementsGeo|json_encode|raw }};
+
+        var map = L.map('dashEquipMap');
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        var statusColors = {
+            'Actif'          : '#198754',
+            'En maintenance' : '#ffc107',
+            'En panne'       : '#dc3545',
+            'Hors service'   : '#6f42c1'
+        };
+
+        var bounds = [];
+
+        geoData.forEach(function (eq) {
+            var color = statusColors[eq.statut] || '#6c757d';
+            var marker = L.circleMarker([eq.lat, eq.lng], {
+                radius       : 9,
+                fillColor    : color,
+                color        : '#fff',
+                weight       : 2,
+                opacity      : 1,
+                fillOpacity  : 0.9
+            }).addTo(map);
+
+            marker.bindPopup(
+                '<div style="min-width:140px">'
+                + '<strong style="color:#1a1a2e">' + eq.nom + '</strong>'
+                + '<div style="font-size:.8rem;color:#6c757d;margin:.2rem 0">' + (eq.type || '') + '</div>'
+                + '<span style="background:' + color + '22;color:' + color + ';font-size:.7rem;padding:.1rem .4rem;border-radius:4px">' + eq.statut + '</span>'
+                + '<div style="margin-top:.5rem"><a href="' + eq.url + '" style="color:#198754;font-size:.8rem;font-weight:600">Voir la fiche →</a></div>'
+                + '</div>'
+            );
+
+            bounds.push([eq.lat, eq.lng]);
+        });
+
+        if (bounds.length === 1) {
+            map.setView(bounds[0], 13);
+        } else if (bounds.length > 1) {
+            map.fitBounds(bounds, { padding: [20, 20] });
+        }
+    })();
+    </script>
+    {% endif %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('mesEvenementsModal');

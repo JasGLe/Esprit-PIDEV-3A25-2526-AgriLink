@@ -180,10 +180,13 @@
                     </svg>
                     <span class="small fw-medium">Maintenances</span>
                 </a>
-
-                
-                
-                
+                {# ── Assistant IA AgriBot ── #}
+                <a href="{{ path('equipement_assistant_ia') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') == 'equipement_assistant_ia' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                    <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1 1 .03 2.711-1.442 2.711H4.24c-1.47 0-2.44-1.71-1.442-2.71L4.2 15.3" />
+                    </svg>
+                    <span class="small fw-medium">🤖 Assistant IA</span>
+                </a>
                 <a href="{{ path('equipement_stats_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'equipement_stats_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                     <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -451,6 +454,14 @@
                             </svg>
                             <span class="small fw-medium sidebar-hide">Maintenances</span>
                         </a>
+                        {# ── Assistant IA AgriBot ── #}
+                        <a href="{{ path('equipement_assistant_ia') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') == 'equipement_assistant_ia' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
+                            <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1 1 .03 2.711-1.442 2.711H4.24c-1.47 0-2.44-1.71-1.442-2.71L4.2 15.3" />
+                            </svg>
+                            <span class="small fw-medium">🤖 Assistant IA</span>
+                        </a>
+                        <a href="{{ path('equipement_stats_index') }}" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'equipement_stats_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                         <a href="{{ path('equipement_stats_index') }}" title="Statistiques" class="d-flex align-items-center px-3 py-2 text-decoration-none rounded mb-1 {{ app.request.attributes.get('_route') starts with 'equipement_stats_' ? 'bg-success bg-opacity-10 text-success fw-medium' : 'text-dark' }}">
                             <svg class="me-3" style="width: 1.25rem; height: 1.25rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
