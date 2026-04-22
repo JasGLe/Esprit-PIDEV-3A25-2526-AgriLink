@@ -125,15 +125,95 @@
 
 .profile-avatar-wrapper {
     position: relative;
+    display: inline-block;
+    cursor: pointer;
+    flex-shrink: 0;
+    border-radius: 50%;
+    line-height: 0;
 }
 
-.profile-avatar {
-    width: 120px;
-    height: 120px;
+.profile-avatar-wrapper:hover .avatar {
+    filter: brightness(0.7);
+}
+
+.profile-avatar-overlay {
+    position: absolute;
+    inset: 10px;
     border-radius: 50%;
-    border: 4px solid var(--profile-primary);
+    background: rgba(0, 0, 0, 0.52);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    opacity: 0;
+    transition: var(--profile-transition);
+    cursor: pointer;
+    z-index: 2;
+}
+
+.profile-avatar-wrapper:hover .profile-avatar-overlay {
+    opacity: 1;
+}
+
+.profile-avatar-overlay svg {
+    width: 2rem;
+    height: 2rem;
+    color: white;
+    stroke-width: 1.5px;
+    flex-shrink: 0;
+}
+
+.profile-avatar-overlay span {
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* Loading state */
+.profile-avatar-wrapper.avatar-loading {
+    pointer-events: none;
+}
+
+.profile-avatar-wrapper.avatar-loading::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.5);
+    border: 3px solid rgba(255, 255, 255, 0.25);
+    border-top-color: #ffffff;
+    animation: avatar-spin 0.75s linear infinite;
+    z-index: 3;
+    box-sizing: border-box;
+}
+
+@keyframes avatar-spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Avatar size classes */
+.avatar {
+    border-radius: 50%;
     object-fit: cover;
-    box-shadow: var(--profile-shadow-md);
+    transition: filter 0.3s ease;
+}
+
+.avatar-sm {
+    width: 2.5rem;
+    height: 2.5rem;
+}
+
+.avatar-md {
+    width: 4rem;
+    height: 4rem;
+}
+
+.avatar-lg {
+    width: 190px;
+    height: 190px;
 }
 
 .profile-user-name {

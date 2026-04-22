@@ -3,6 +3,8 @@ twig:
 
     globals:
         uploads_base_url: '%env(UPLOADS_BASE_URL)%'
+        onesignal_enabled: '%env(bool:ONESIGNAL_ENABLED)%'
+        onesignal_app_id: '%env(ONESIGNAL_APP_ID)%'
 
     form_themes:
         - 'form_theme_custom.html.twig'

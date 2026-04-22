@@ -3,423 +3,380 @@
 {% block title %}Tableau de bord Agriculteur - AgriLink{% endblock %}
 {% block page_title %}Mon exploitation{% endblock %}
 
-{% block role_badge %}
-    <span class="badge rounded-pill bg-success-subtle text-success d-inline-flex align-items-center px-3 py-1">
-        🌱 Agriculteur
-    </span>
-{% endblock %}
-
 {% block role_specific_navigation %}
     <hr class="my-3 border-secondary">
-    <div class="px-3 py-2 small fw-semibold text-muted text-uppercase">
+    <div class="px-3 py-2 small fw-semibold text-muted text-uppercase" style="font-size:0.65rem;letter-spacing:0.07em;">
         Mon exploitation
     </div>
-    
-    <a href="#" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark">
-        <svg class="me-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+    <a href="#" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark text-decoration-none mb-1">
+        <svg class="me-3" style="width:1.15rem;height:1.15rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         Mes parcelles
     </a>
-
-    <a href="{{ path('activite_list') }}" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark">
-        <svg class="me-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <a href="{{ path('activite_list') }}" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark text-decoration-none mb-1">
+        <svg class="me-3" style="width:1.15rem;height:1.15rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
         </svg>
         Activités
     </a>
-
-    <a href="#" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark">
-        <svg class="me-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-        Mes commandes
-    </a>
-
-    <a href="{{ path('evenement_list') }}" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark">
-        <svg class="me-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <a href="{{ path('evenement_list') }}" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark text-decoration-none mb-1">
+        <svg class="me-3" style="width:1.15rem;height:1.15rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
         Événements
     </a>
-
     <hr class="my-3 border-secondary">
-    <div class="px-3 py-2 small fw-semibold text-muted text-uppercase">
+    <div class="px-3 py-2 small fw-semibold text-muted text-uppercase" style="font-size:0.65rem;letter-spacing:0.07em;">
         Marketplace
     </div>
-
-    <a href="#" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark">
-        <svg class="me-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+    <a href="{{ path('marketplace_index') }}" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark text-decoration-none mb-1">
+        <svg class="me-3" style="width:1.15rem;height:1.15rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
         </svg>
         Produits disponibles
     </a>
-
-    <a href="#" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark">
-        <svg class="me-3 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+    <a href="{{ path('mes_commandes_index') }}" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark text-decoration-none mb-1">
+        <svg class="me-3" style="width:1.15rem;height:1.15rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
         </svg>
-        Fournisseurs
+        Mes commandes
+    </a>
+    <a href="{{ path('sales_stats_index') }}" class="d-flex align-items-center px-3 py-2 small fw-medium rounded text-dark text-decoration-none mb-1">
+        <svg class="me-3" style="width:1.15rem;height:1.15rem;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3v18h18M7 14l3-3 3 2 5-6" />
+        </svg>
+        Statistiques ventes
     </a>
 {% endblock %}
 
-{% block mobile_sidebar %}
-    {{ block('sidebar_navigation') }}
-{% endblock %}
-
 {% block dashboard_content %}
-    {# Welcome section #}
-    <div class="mb-4">
-        <h2 class="fs-3 fw-bold text-dark">Bienvenue, {{ app.user.displayName }} ! 🌾</h2>
-        <p class="mt-1 small text-muted">
-            Gérez votre exploitation et découvrez les meilleures offres pour vos cultures.
-            {% if app.user.agriculteurExpAnnee %}
-                <span class="text-success fw-medium">{{ app.user.agriculteurExpAnnee }} ans d'expérience</span>
-            {% endif %}
-        </p>
-    </div>
 
-    <div class="row g-3 mb-4">
-        <div class="col-12 col-md-6">
-            <a href="{{ path('activite_list') }}" class="card border-0 shadow-sm text-decoration-none h-100">
-                <div class="card-body p-4 d-flex align-items-center gap-3">
-                    <div class="d-flex align-items-center justify-content-center rounded-3" style="width: 56px; height: 56px; background-color: rgba(34, 197, 94, 0.12);">
-                        <span class="fs-4">🌾</span>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-bold text-dark">Activite</div>
-                        <div class="text-muted small">Accéder aux activités agricoles</div>
-                    </div>
-                    <span class="text-success fw-semibold">→</span>
-                </div>
-            </a>
+{# ── Welcome Banner ── #}
+<div class="ag-welcome-banner ag-animate-fade-up mb-4" style="background:linear-gradient(135deg,#166534 0%,#16a34a 60%,#0d9488 100%);">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <p class="mb-1" style="color:rgba(255,255,255,.6);font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Bonjour</p>
+            <h2 class="h4 fw-bold mb-1" style="color:#fff;">{{ app.user.displayName }} 🌾</h2>
+            <p class="mb-0" style="color:rgba(255,255,255,.7);font-size:0.85rem;">
+                Gérez votre exploitation et découvrez les meilleures offres.
+                {% if app.user.agriculteurExpAnnee %}
+                    &middot; <span style="color:rgba(255,255,255,.9);font-weight:600;">{{ app.user.agriculteurExpAnnee }} ans d'expérience</span>
+                {% endif %}
+            </p>
         </div>
-        <div class="col-12 col-md-6">
-            <a href="{{ path('evenement_list') }}" class="card border-0 shadow-sm text-decoration-none h-100">
-                <div class="card-body p-4 d-flex align-items-center gap-3">
-                    <div class="d-flex align-items-center justify-content-center rounded-3" style="width: 56px; height: 56px; background-color: rgba(59, 130, 246, 0.12);">
-                        <span class="fs-4">📅</span>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-bold text-dark">Evenement</div>
-                        <div class="text-muted small">Accéder aux événements agricoles</div>
-                    </div>
-                    <span class="text-primary fw-semibold">→</span>
-                </div>
+        <div class="d-flex gap-2">
+            <a href="{{ path('activite_list') }}" class="btn btn-sm fw-medium" style="background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:8px;">
+                Mes activités
+            </a>
+            <a href="{{ path('calendar_index') }}" class="btn btn-sm fw-semibold" style="background:#fff;color:#16a34a;border-radius:8px;">
+                Calendrier
             </a>
         </div>
     </div>
+</div>
 
-    {# Quick Stats #}
-    <div class="row g-4 mb-4">
-        {# Parcelles #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #dcfce7;">
-                                <svg class="w-6 h-6 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Mes parcelles</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">--</dd>
-                            </dl>
-                        </div>
-                    </div>
+{# ── Level & Badges ── #}
+<div class="mb-3 ag-animate-fade-up ag-delay-1">
+    {% include 'components/user_level_widget.html.twig' %}
+</div>
+
+{# ── Profile Completion ── #}
+<div class="mb-4 ag-animate-fade-up ag-delay-1">
+    {% include 'components/profile_completion_simple.html.twig' %}
+</div>
+
+{# ── Quick Navigation Cards ── #}
+<div class="row g-3 mb-4 ag-animate-fade-up ag-delay-2">
+    <div class="col-12 col-md-6">
+        <a href="{{ path('activite_list') }}" class="ag-action-item text-decoration-none h-100" style="padding:1.1rem 1.25rem;">
+            <div class="ag-action-icon" style="background:rgba(34,197,94,.12);width:52px;height:52px;font-size:1.4rem;">🌾</div>
+            <div class="flex-fill">
+                <p class="fw-bold text-dark mb-0">Activités agricoles</p>
+                <p class="text-muted small mb-0">Gérer et planifier vos activités</p>
+            </div>
+            <svg class="ag-action-chevron" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+    </div>
+    <div class="col-12 col-md-6">
+        <a href="{{ path('evenement_list') }}" class="ag-action-item text-decoration-none h-100" style="padding:1.1rem 1.25rem;">
+            <div class="ag-action-icon" style="background:rgba(59,130,246,.12);width:52px;height:52px;font-size:1.4rem;">📅</div>
+            <div class="flex-fill">
+                <p class="fw-bold text-dark mb-0">Événements</p>
+                <p class="text-muted small mb-0">Découvrir les événements agricoles</p>
+            </div>
+            <svg class="ag-action-chevron" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+    </div>
+</div>
+
+{# ── Stat Cards ── #}
+<div class="row g-3 mb-4">
+
+    {# Parcelles #}
+    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-1">
+        <div class="ag-stat-card">
+            <div class="ag-stat-body d-flex align-items-start gap-3">
+                <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(22,163,74,.14),rgba(34,197,94,.07));">
+                    <svg width="22" height="22" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
                 </div>
-                <div class="card-footer bg-light p-3">
-                    <a href="#" class="small fw-medium text-success text-decoration-none">Gérer →</a>
+                <div>
+                    <p class="text-muted small fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">Mes parcelles</p>
+                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#111827;">--</p>
                 </div>
             </div>
-        </div>
-
-        {# Mes événements #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #fef08a;">
-                                <span class="fs-5">📅</span>
-                            </div>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Mes événements</dt>
-                                <dd class="fs-5 fw-semibold text-dark mb-0">{{ myEvenementsCount|default(0) }}</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light p-3">
-                    <button
-                        id="mes-evenements-btn"
-                        class="btn btn-link p-0 small fw-medium text-decoration-none text-warning d-inline-flex align-items-center gap-1 mes-evenements-trigger"
-                        type="button"
-                        data-bs-toggle="modal"
-                        data-bs-target="#mesEvenementsModal"
-                        aria-label="Ouvrir la liste de mes événements"
-                    >
-                        <span>Voir mes événements</span>
-                        <span id="mes-evenements-arrow" class="mes-evenements-arrow" aria-hidden="true">↓</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        {# Ma boutique #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm h-100">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background: linear-gradient(135deg, rgba(245,158,11,0.20), rgba(249,115,22,0.16));">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color:#c2410c;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18l-1.5 9a2 2 0 01-2 1.7H6.5a2 2 0 01-2-1.7L3 7zm4-3h10l1 3H6l1-3zM9 11v4m6-4v4" />
-                                </svg>
-                            </div>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Ma boutique</dt>
-                                <dd class="fs-5 fw-semibold mb-0" style="color:#ea580c;">Produits</dd>
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light p-3">
-                    <a href="{{ path('boutique_index') }}" class="small fw-medium text-decoration-none" style="color:#c2410c;">Ouvrir ma boutique →</a>
-                </div>
-            </div>
-        </div>
-
-        {# Météo #}
-        <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card shadow-sm">
-                <div class="card-body p-4">
-                    <div class="d-flex align-items-center">
-                        <div class="flex-shrink-0">
-                            <div class="d-flex align-items-center justify-content-center rounded" style="width: 48px; height: 48px; background-color: #e0f2fe;">
-                                <span class="fs-5">☀️</span>
-                            </div>
-                        </div>
-                        <div class="ms-3 flex-grow-1">
-                            <dl>
-                                <dt class="small fw-medium text-muted text-truncate">Météo</dt>
-                                {% set weatherEmoji = '🌤️' %}
-                                {% if weatherIcon is defined and weatherIcon %}
-                                    {% if weatherIcon starts with '01' %}
-                                        {% set weatherEmoji = '☀️' %}
-                                    {% elseif weatherIcon starts with '02' %}
-                                        {% set weatherEmoji = '⛅' %}
-                                    {% elseif weatherIcon starts with '03' or weatherIcon starts with '04' %}
-                                        {% set weatherEmoji = '☁️' %}
-                                    {% elseif weatherIcon starts with '09' or weatherIcon starts with '10' %}
-                                        {% set weatherEmoji = '🌧️' %}
-                                    {% elseif weatherIcon starts with '11' %}
-                                        {% set weatherEmoji = '⛈️' %}
-                                    {% elseif weatherIcon starts with '13' %}
-                                        {% set weatherEmoji = '❄️' %}
-                                    {% endif %}
-                                {% endif %}
-                                <dd class="fs-5 fw-semibold text-dark mb-0">
-                                    {% if temperature is defined and temperature is not null %}
-                                        {{ weatherEmoji }} {{ temperature|round }}°C
-                                    {% else %}
-                                        --°C
-                                    {% endif %}
-                                </dd>
-                                {% if weatherDescription is defined and weatherDescription %}
-                                    <dd class="small text-muted mb-0">{{ weatherDescription }}</dd>
-                                {% endif %}
-                            </dl>
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer bg-light p-3">
-                    <span class="small text-muted">{{ userCity|default('Non défini') }}</span>
-                </div>
+            <div class="ag-stat-footer">
+                <a href="#" class="small fw-semibold text-decoration-none" style="color:#16a34a;">Gérer →</a>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="mesEvenementsModal" tabindex="-1" aria-labelledby="mesEvenementsModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-scrollable">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="mesEvenementsModalLabel">Mes événements ({{ myEvenementsCount|default(0) }})</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+    {# Événements #}
+    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-2">
+        <div class="ag-stat-card">
+            <div class="ag-stat-body d-flex align-items-start gap-3">
+                <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(245,158,11,.14),rgba(252,211,77,.07));">
+                    <span style="font-size:1.3rem;">📅</span>
                 </div>
-                <div class="modal-body">
-                    {% if myEvenements is defined and myEvenements|length > 0 %}
-                        <div class="row g-3">
-                            {% for evenement in myEvenements %}
-                                <div class="col-12 col-md-6">
-                                    <a href="{{ path('evenement_show', {'id': evenement.id}) }}" class="card border-0 shadow-sm text-decoration-none h-100">
-                                        <div class="card-body">
-                                            <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
-                                                <h6 class="mb-0 text-dark fw-semibold">{{ evenement.titre }}</h6>
-                                                <span class="badge bg-success-subtle text-success">{{ evenement.typeEvenement }}</span>
-                                            </div>
-                                            <p class="small text-muted mb-1">📍 {{ evenement.lieu }}</p>
-                                            <p class="small text-muted mb-0">🕒 {{ evenement.dateEvenement|date('d/m/Y H:i') }}</p>
-                                        </div>
-                                    </a>
+                <div>
+                    <p class="text-muted small fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">Mes événements</p>
+                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#111827;">{{ myEvenementsCount|default(0) }}</p>
+                </div>
+            </div>
+            <div class="ag-stat-footer">
+                <button
+                    class="btn btn-link p-0 small fw-semibold text-decoration-none mes-evenements-trigger"
+                    style="color:#d97706;"
+                    type="button"
+                    data-bs-toggle="modal"
+                    data-bs-target="#mesEvenementsModal"
+                >
+                    Voir mes événements <span id="mes-evenements-arrow" class="mes-evenements-arrow">↓</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {# Boutique #}
+    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-3">
+        <div class="ag-stat-card">
+            <div class="ag-stat-body d-flex align-items-start gap-3">
+                <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(249,115,22,.14),rgba(245,158,11,.07));">
+                    <svg width="22" height="22" fill="none" stroke="#ea580c" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7h18l-1.5 9a2 2 0 01-2 1.7H6.5a2 2 0 01-2-1.7L3 7zm4-3h10l1 3H6l1-3zM9 11v4m6-4v4"/></svg>
+                </div>
+                <div>
+                    <p class="text-muted small fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">Ma boutique</p>
+                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#111827;">Produits</p>
+                </div>
+            </div>
+            <div class="ag-stat-footer">
+                <a href="{{ path('boutique_index') }}" class="small fw-semibold text-decoration-none" style="color:#ea580c;">Ouvrir →</a>
+            </div>
+        </div>
+    </div>
+
+    {# Météo #}
+    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-4">
+        <div class="ag-weather-card">
+            <div class="ag-stat-body d-flex align-items-start gap-3">
+                <div class="ag-stat-icon" style="background:rgba(255,255,255,.18);">
+                    {% set weatherEmoji = '🌤️' %}
+                    {% if weatherIcon is defined and weatherIcon %}
+                        {% if weatherIcon starts with '01' %}{% set weatherEmoji = '☀️' %}
+                        {% elseif weatherIcon starts with '02' %}{% set weatherEmoji = '⛅' %}
+                        {% elseif weatherIcon starts with '03' or weatherIcon starts with '04' %}{% set weatherEmoji = '☁️' %}
+                        {% elseif weatherIcon starts with '09' or weatherIcon starts with '10' %}{% set weatherEmoji = '🌧️' %}
+                        {% elseif weatherIcon starts with '11' %}{% set weatherEmoji = '⛈️' %}
+                        {% elseif weatherIcon starts with '13' %}{% set weatherEmoji = '❄️' %}
+                        {% endif %}
+                    {% endif %}
+                    <span style="font-size:1.4rem;">{{ weatherEmoji }}</span>
+                </div>
+                <div>
+                    <p class="fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;color:rgba(255,255,255,.7);">Météo</p>
+                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#fff;">
+                        {% if temperature is defined and temperature is not null %}
+                            {{ temperature|round }}°C
+                        {% else %}
+                            --°C
+                        {% endif %}
+                    </p>
+                    {% if weatherDescription is defined and weatherDescription %}
+                        <p class="mb-0" style="font-size:0.75rem;color:rgba(255,255,255,.75);">{{ weatherDescription }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="ag-stat-footer">
+                <a href="{{ path('weather_index') }}" class="small fw-semibold text-decoration-none" style="color:rgba(255,255,255,.9);">
+                    {{ userCity|default('Non défini') }} →
+                </a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{# ── Main Grid ── #}
+<div class="row g-3 mb-4">
+
+    {# Quick Actions #}
+    <div class="col-12 col-lg-6 ag-animate-fade-up ag-delay-2">
+        <div class="ag-card h-100">
+            <div class="ag-card-header">
+                <p class="ag-card-title">⚡ Actions rapides</p>
+            </div>
+            <div class="ag-card-body d-flex flex-column gap-2">
+                <a href="{{ path('exploitation_index') }}" class="ag-action-item text-decoration-none">
+                    <div class="ag-action-icon" style="background:rgba(22,163,74,.1);">
+                        <svg width="18" height="18" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    </div>
+                    <div>
+                        <p class="small fw-semibold text-dark mb-0">Gérer l'exploitation</p>
+                        <p class="text-muted mb-0" style="font-size:0.775rem;">Parcelles, cultures et suivi</p>
+                    </div>
+                    <svg class="ag-action-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="{{ path('marketplace_index') }}" class="ag-action-item text-decoration-none">
+                    <div class="ag-action-icon" style="background:rgba(37,99,235,.1);">
+                        <svg width="18" height="18" fill="none" stroke="#2563eb" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="small fw-semibold text-dark mb-0">Commander des fournitures</p>
+                        <p class="text-muted mb-0" style="font-size:0.775rem;">Parcourir le catalogue fournisseurs</p>
+                    </div>
+                    <svg class="ag-action-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="{{ path('calendar_index') }}" class="ag-action-item text-decoration-none">
+                    <div class="ag-action-icon" style="background:rgba(139,92,246,.1);">
+                        <svg width="18" height="18" fill="none" stroke="#8b5cf6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div>
+                        <p class="small fw-semibold text-dark mb-0">Planifier une tâche</p>
+                        <p class="text-muted mb-0" style="font-size:0.775rem;">Ajouter au calendrier agricole</p>
+                    </div>
+                    <svg class="ag-action-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <a href="{{ path('ia_anomalie_page') }}" class="ag-action-item text-decoration-none">
+                    <div class="ag-action-icon" style="background:rgba(245,158,11,.1);">
+                        <svg width="18" height="18" fill="none" stroke="#d97706" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86l-7.39 12.8A1 1 0 003.76 18h16.48a1 1 0 00.86-1.34l-7.39-12.8a1 1 0 00-1.72 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="small fw-semibold text-dark mb-0">Détection d'anomalies IA</p>
+                        <p class="text-muted mb-0" style="font-size:0.775rem;">Analyser vos cultures avec l'IA</p>
+                    </div>
+                    <svg class="ag-action-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {# Calendar Preview #}
+    <div class="col-12 col-lg-6 ag-animate-fade-up ag-delay-3">
+        <div class="ag-card h-100">
+            <div class="ag-card-header">
+                <div>
+                    <p class="ag-card-title">📆 Calendrier agricole</p>
+                    <p class="ag-card-subtitle">Tâches et événements du moment</p>
+                </div>
+                <a href="{{ path('calendar_index') }}" class="btn btn-sm" style="background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;border-radius:8px;font-size:0.8rem;font-weight:600;">
+                    Voir tout
+                </a>
+            </div>
+            <div class="ag-card-body">
+                {% if events is defined and events|length > 0 %}
+                    <ul class="list-unstyled mb-0 d-flex flex-column gap-2">
+                        {% for event in events %}
+                            <li class="d-flex align-items-center justify-content-between p-3 rounded-3" style="background:#f9fafb;border:1px solid #f3f4f6;">
+                                <div>
+                                    <p class="small fw-semibold text-dark mb-0">{{ event.title }}</p>
+                                    <p class="small text-muted mb-0">{{ event.typeLabel }}</p>
                                 </div>
-                            {% endfor %}
-                        </div>
-                    {% else %}
-                        <p class="small text-muted mb-0">Aucun événement trouvé pour le moment.</p>
-                    {% endif %}
-                </div>
-                <div class="modal-footer">
-                    <a href="{{ path('evenement_list') }}" class="btn btn-outline-success btn-sm">Voir toute la liste</a>
-                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    {# Main content grid #}
-    <div class="row g-4">
-        {# Quick Actions #}
-        <div class="col-12 col-lg-6">
-        {% embed 'components/_card.html.twig' %}
-            {% block card_title %}Actions rapides{% endblock %}
-            {% block card_content %}
-                <div class="d-flex flex-column gap-2">
-                    <a href="#" class="d-flex align-items-center p-3 rounded border border-light-subtle text-decoration-none">
-                        <div class="d-flex align-items-center justify-content-center rounded" style="width: 40px; height: 40px; background-color: #dcfce7; margin-right: 1rem;">
-                            <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="small fw-medium text-dark mb-0">Ajouter une parcelle</p>
-                            <p class="small text-muted mb-0">Enregistrez une nouvelle zone de culture</p>
-                        </div>
-                    </a>
-
-                    <a href="#" class="d-flex align-items-center p-3 rounded border border-light-subtle text-decoration-none">
-                        <div class="d-flex align-items-center justify-content-center rounded" style="width: 40px; height: 40px; background-color: #dbeafe; margin-right: 1rem;">
-                            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="small fw-medium text-dark mb-0">Commander des fournitures</p>
-                            <p class="small text-muted mb-0">Parcourir le catalogue fournisseurs</p>
-                        </div>
-                    </a>
-
-                    <a href="#" class="d-flex align-items-center p-3 rounded border border-light-subtle text-decoration-none">
-                        <div class="d-flex align-items-center justify-content-center rounded" style="width: 40px; height: 40px; background-color: #e9d5ff; margin-right: 1rem;">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #7c3aed;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="small fw-medium text-dark mb-0">Planifier une tâche</p>
-                            <p class="small text-muted mb-0">Ajouter au calendrier agricole</p>
-                        </div>
-                    </a>
-                </div>
-            {% endblock %}
-        {% endembed %}
-        </div>
-
-        {# Calendar Preview #}
-        <div class="col-12 col-lg-6">
-        {% embed 'components/_card.html.twig' %}
-            {% block card_title %}Calendrier agricole{% endblock %}
-            {% block card_content %}
-                <div class="text-center py-3">
-                    {% if events is defined and events|length > 0 %}
-                        <div class="text-start">
-                            <p class="small fw-medium text-dark mb-2">Tâches / événements du jour</p>
-                            <ul class="list-unstyled mb-0">
-                                {% for event in events %}
-                                    <li class="d-flex justify-content-between align-items-center py-2 border-bottom border-light-subtle">
-                                        <div>
-                                            <p class="small fw-medium text-dark mb-0">{{ event.title }}</p>
-                                            <p class="small text-muted mb-0">{{ event.typeLabel }}</p>
-                                        </div>
-                                        <span class="small text-muted">{{ event.time ?? '--:--' }}</span>
-                                    </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    {% endif %}
-                    <a href="{{ path('calendar_index') }}" class="btn btn-success btn-sm">Voir le calendrier</a>
-                </div>
-            {% endblock %}
-        {% endembed %}
-        </div>
-    </div>
-
-    {# AgriPlus Promo #}
-    <div class="mt-4">
-        <div class="rounded-3 shadow-lg overflow-hidden" style="background: linear-gradient(to right, #16a34a, #15803d);">
-            <div class="px-4 px-sm-5 py-5">
-                <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between">
-                    <div class="text-center text-sm-start mb-3 mb-sm-0">
-                        <h3 class="h5 fw-bold text-white mb-1">Passez à AgriPlus ! 🌟</h3>
-                        <p class="mb-0" style="color: #dcfce7;">Accédez à des fonctionnalités avancées et des conseils personnalisés pour votre exploitation.</p>
+                                <span class="small text-muted fw-medium">{{ event.time ?? '--:--' }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <div class="d-flex flex-column align-items-center justify-content-center py-4 text-muted">
+                        <span style="font-size:2rem;margin-bottom:0.5rem;">📭</span>
+                        <p class="small fw-medium mb-1">Aucune tâche prévue</p>
+                        <p style="font-size:0.75rem;" class="mb-3">Planifiez vos activités agricoles</p>
+                        <a href="{{ path('calendar_index') }}" class="btn btn-sm btn-success">Ouvrir le calendrier</a>
                     </div>
-                    <a href="#" class="btn btn-light text-success fw-medium text-decoration-none">Découvrir AgriPlus</a>
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <style>
-        .mes-evenements-trigger {
-            transition: color 0.2s ease-in-out, transform 0.2s ease-in-out, opacity 0.2s ease-in-out;
-        }
+</div>
 
-        .mes-evenements-trigger:hover {
-            color: #b45309 !important;
-            transform: translateX(2px);
-            opacity: 0.95;
-        }
+{# ── AgriPlus Promo ── #}
+<div class="ag-promo-banner ag-animate-fade-up ag-delay-4 p-4 p-sm-5">
+    <div class="d-flex flex-column flex-sm-row align-items-center justify-content-between gap-3" style="position:relative;z-index:1;">
+        <div class="text-center text-sm-start">
+            <h3 class="h5 fw-bold mb-1" style="color:#fff;">Passez à AgriPlus ! 🌟</h3>
+            <p class="mb-0" style="color:rgba(255,255,255,.75);font-size:0.875rem;">Accédez à des fonctionnalités avancées et des conseils personnalisés pour votre exploitation.</p>
+        </div>
+        <a href="#" class="btn fw-semibold flex-shrink-0" style="background:#fff;color:#16a34a;border-radius:10px;padding:0.6rem 1.5rem;">
+            Découvrir AgriPlus →
+        </a>
+    </div>
+</div>
 
-        .mes-evenements-trigger:focus-visible {
-            outline: 2px solid rgba(180, 83, 9, 0.35);
-            outline-offset: 3px;
-            border-radius: 0.25rem;
-        }
+{# ── Events Modal ── #}
+<div class="modal fade" id="mesEvenementsModal" tabindex="-1" aria-labelledby="mesEvenementsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg" style="border-radius:1rem;overflow:hidden;">
+            <div class="modal-header border-0 px-4 pt-4 pb-2">
+                <h5 class="modal-title fw-bold" id="mesEvenementsModalLabel">Mes événements ({{ myEvenementsCount|default(0) }})</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body px-4">
+                {% if myEvenements is defined and myEvenements|length > 0 %}
+                    <div class="row g-3">
+                        {% for evenement in myEvenements %}
+                            <div class="col-12 col-md-6">
+                                <a href="{{ path('evenement_show', {'id': evenement.id}) }}" class="ag-card text-decoration-none d-block h-100">
+                                    <div class="ag-card-body">
+                                        <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                                            <h6 class="mb-0 text-dark fw-semibold">{{ evenement.titre }}</h6>
+                                            <span class="ag-badge" style="background:rgba(22,163,74,.1);color:#16a34a;border-color:rgba(22,163,74,.2);font-size:0.65rem;">{{ evenement.typeEvenement }}</span>
+                                        </div>
+                                        <p class="small text-muted mb-1">📍 {{ evenement.lieu }}</p>
+                                        <p class="small text-muted mb-0">🕒 {{ evenement.dateEvenement|date('d/m/Y H:i') }}</p>
+                                    </div>
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="py-4 text-center text-muted">
+                        <p class="mb-0 small">Aucun événement trouvé pour le moment.</p>
+                    </div>
+                {% endif %}
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4">
+                <a href="{{ path('evenement_list') }}" class="btn btn-outline-success btn-sm">Voir toute la liste</a>
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Fermer</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-        .mes-evenements-arrow {
-            display: inline-block;
-            transition: transform 0.2s ease-in-out;
-        }
+<style>
+.mes-evenements-trigger { transition: color 0.2s, transform 0.2s; }
+.mes-evenements-trigger:hover { color: #b45309 !important; transform: translateX(2px); }
+.mes-evenements-arrow { display: inline-block; transition: transform 0.2s; }
+.mes-evenements-arrow.is-open { transform: rotate(180deg); }
+</style>
 
-        .mes-evenements-arrow.is-open {
-            transform: rotate(180deg);
-        }
-    </style>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const modal = document.getElementById('mesEvenementsModal');
-            const arrow = document.getElementById('mes-evenements-arrow');
-
-            if (!modal || !arrow) {
-                return;
-            }
-
-            modal.addEventListener('show.bs.modal', function () {
-                arrow.classList.add('is-open');
-            });
-
-            modal.addEventListener('hidden.bs.modal', function () {
-                arrow.classList.remove('is-open');
-            });
-        });
-    </script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('mesEvenementsModal');
+    const arrow = document.getElementById('mes-evenements-arrow');
+    if (!modal || !arrow) return;
+    modal.addEventListener('show.bs.modal',   () => arrow.classList.add('is-open'));
+    modal.addEventListener('hidden.bs.modal', () => arrow.classList.remove('is-open'));
+});
+</script>
 {% endblock %}

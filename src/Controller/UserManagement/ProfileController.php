@@ -7,8 +7,10 @@ use App\Form\UserManagement\ChangePasswordType;
 use App\Form\UserManagement\ProfileEditFormType;
 use App\Repository\UserManagement\SecurityEventRepository;
 use App\Repository\UserManagement\UserSessionRepository;
+use App\Service\AvatarService;
 use App\Service\BackupCodeService;
 use App\Service\EmailVerificationService;
+use App\Service\FaceRecognitionService;
 use App\Service\FileUploader;
 use App\Service\SecurityEventService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -16,6 +18,7 @@ use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Mailer\MailerInterface;
@@ -210,11 +213,17 @@ class ProfileController extends AbstractController
 
         $recentEvents = $securityEventRepository->findByUser($user->getId(), 8);
         $backupCodesRemaining = $backupCodeService->getRemainingCount($user);
+        
+        // Get face recognition status
+        $faceStatus = [
+            'enrolled' => !empty($user->getFaceDescriptor()),
+        ];
 
         return $this->render('user_management/profile/security.html.twig', [
             'user'                 => $user,
             'recentEvents'         => $recentEvents,
             'backupCodesRemaining' => $backupCodesRemaining,
+            'faceStatus'           => $faceStatus,
         ]);
     }
 
@@ -366,5 +375,233 @@ class ProfileController extends AbstractController
         }
 
         return $this->redirectToRoute('app_profile_edit');
+    }
+
+    #[Route('/face/status', name: 'app_profile_face_status', methods: ['GET'])]
+    public function getFaceStatus(): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        return new JsonResponse([
+            'enrolled' => !empty($user->getFaceDescriptor()),
+            'enrolled_at' => $user->getFaceEnrolledAt()?->format('Y-m-d H:i:s'),
+        ]);
+    }
+
+    #[Route('/face/enroll', name: 'app_profile_face_enroll', methods: ['POST'])]
+    public function enrollFace(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        FaceRecognitionService $faceRecognitionService,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('face_enroll', $request->request->get('_token'))) {
+            return new JsonResponse(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
+        }
+
+        // Skip password validation for OAuth users (they don't have passwords)
+        if (!$user->getOauthProvider()) {
+            $password = $request->request->get('password');
+            if (!$password || !$passwordHasher->isPasswordValid($user, $password)) {
+                return new JsonResponse(['error' => 'Mot de passe incorrect.'], Response::HTTP_UNAUTHORIZED);
+            }
+        }
+
+        $descriptor = $request->request->get('descriptor');
+        if (!$descriptor) {
+            return new JsonResponse(['error' => 'Face descriptor manquant.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        try {
+            $descriptorArray = json_decode($descriptor, true);
+            if (!is_array($descriptorArray)) {
+                return new JsonResponse(['error' => 'Format de descriptor invalide.'], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Empty array = password-validation probe from the widget; do not store anything.
+            if (empty($descriptorArray)) {
+                return new JsonResponse(['success' => true, 'password_only' => true]);
+            }
+
+            if (\count($descriptorArray) !== 128) {
+                return new JsonResponse(['error' => 'Descriptor invalide (128 valeurs attendues).'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $storedDescriptor = $faceRecognitionService->storeFaceDescriptor($descriptorArray);
+            $user->setFaceDescriptor($storedDescriptor);
+            $user->setFaceEnrolledAt(new \DateTime());
+
+            $entityManager->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Votre visage a été enregistré avec succès.',
+                'enrolled_at' => $user->getFaceEnrolledAt()->format('Y-m-d H:i:s'),
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Erreur lors de l\'enregistrement du visage: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/face/remove', name: 'app_profile_face_remove', methods: ['POST'])]
+    public function removeFace(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('face_remove', $request->request->get('_token'))) {
+            return new JsonResponse(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
+        }
+
+        // Skip password validation for OAuth users (they don't have passwords)
+        if (!$user->getOauthProvider()) {
+            $password = $request->request->get('password');
+            if (!$password || !$passwordHasher->isPasswordValid($user, $password)) {
+                return new JsonResponse(['error' => 'Mot de passe incorrect.'], Response::HTTP_UNAUTHORIZED);
+            }
+        }
+
+        try {
+            $user->setFaceDescriptor(null);
+            $user->setFaceEnrolledAt(null);
+            $entityManager->flush();
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => 'Votre face ID a été supprimé avec succès.',
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(['error' => 'Erreur lors de la suppression: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    #[Route('/security/toggle-intrusion-capture', name: 'app_profile_toggle_intrusion_capture', methods: ['POST'])]
+    public function toggleIntrusionCapture(
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('toggle_intrusion_capture', $request->request->get('_token'))) {
+            return new JsonResponse(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
+        }
+
+        try {
+            $enabled = $request->request->getBoolean('enabled');
+            $user->setIntrusionCaptureEnabled($enabled);
+            $entityManager->flush($user);
+
+            return new JsonResponse([
+                'success' => true,
+                'message' => $enabled 
+                    ? 'Alertes de sécurité activées.' 
+                    : 'Alertes de sécurité désactivées.',
+                'enabled' => $user->isIntrusionCaptureEnabled(),
+            ]);
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                ['error' => 'Erreur lors de la mise à jour: ' . $e->getMessage()],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    }
+
+    #[Route('/generate-avatar', name: 'app_profile_generate_avatar', methods: ['POST'])]
+    public function generateAvatar(
+        Request $request,
+        AvatarService $avatarService,
+        EntityManagerInterface $entityManager,
+        FileUploader $fileUploader,
+        Security $security,
+        #[Autowire('%kernel.project_dir%')] string $projectDir
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        if (!$this->isCsrfTokenValid('generate_avatar', $request->request->get('_token'))) {
+            return new JsonResponse(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
+        }
+
+        if (!$user->getPhotoProfil()) {
+            return new JsonResponse(
+                ['error' => 'Aucune photo de profil trouvée. Veuillez d\'abord télécharger une photo.'],
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        if (!$avatarService->isConfigured()) {
+            return new JsonResponse(
+                ['error' => 'Le service d\'avatar n\'est pas configuré. ' . $avatarService->getConfigurationStatus()],
+                Response::HTTP_SERVICE_UNAVAILABLE
+            );
+        }
+
+        try {
+            // Get full path to profile photo
+            $uploadsDir = $projectDir . '/public/agrilink/uploads';
+            $imagePath = $uploadsDir . '/' . $user->getPhotoProfil();
+
+            // Generate avatar from profile photo
+            $avatarImageData = $avatarService->generateAvatar($imagePath, $user->getPhotoProfil());
+
+            // Save generated avatar as temporary file
+            $tempAvatarPath = $uploadsDir . '/temp_avatar_' . uniqid() . '.png';
+            $written = file_put_contents($tempAvatarPath, $avatarImageData);
+            
+            if ($written === false) {
+                throw new \Exception('Failed to write temporary avatar file to disk.');
+            }
+
+            try {
+                // Create UploadedFile from the generated image
+                $avatarFile = new \Symfony\Component\HttpFoundation\File\UploadedFile(
+                    $tempAvatarPath,
+                    'avatar-' . uniqid() . '.png',
+                    'image/png',
+                    \UPLOAD_ERR_OK,
+                    true
+                );
+
+                // Upload the generated avatar, replacing the original photo
+                $newPhotoPath = $fileUploader->upload(
+                    $avatarFile,
+                    'profiles',
+                    $user->getPhotoProfil()
+                );
+
+                $user->setPhotoProfil($newPhotoPath);
+                $entityManager->flush();
+
+                $entityManager->refresh($user);
+                $token = $security->getToken();
+                if ($token) {
+                    $token->setUser($user);
+                }
+
+                return new JsonResponse([
+                    'success' => true,
+                    'message' => 'Votre avatar a été généré avec succès!',
+                    'photo' => $newPhotoPath,
+                ]);
+            } finally {
+                // Clean up temporary file in finally block to ensure cleanup
+                if (file_exists($tempAvatarPath)) {
+                    @unlink($tempAvatarPath);
+                }
+            }
+        } catch (\Exception $e) {
+            return new JsonResponse(
+                ['error' => 'Erreur lors de la génération de l\'avatar: ' . $e->getMessage()],
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 }

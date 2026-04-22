@@ -1,0 +1,73 @@
+
+{% if pageCount > 1 %}
+    {% set startPage = current - 1 %}
+    {% if startPage < 1 %}{% set startPage = 1 %}{% endif %}
+    {% set endPage = current + 1 %}
+    {% if endPage > pageCount %}{% set endPage = pageCount %}{% endif %}
+    <nav aria-label="Pagination des commandes">
+        <ul class="pagination pagination-sm mb-0 mc-pagination__list">
+            {% if previous is defined %}
+                <li class="page-item mc-pagination__item">
+                    <a class="page-link mc-pagination__link mc-pagination__link--nav"
+                       rel="prev"
+                       aria-label="Page précédente"
+                       href="{{ path(route, query|merge({ (pageParameterName): previous })) }}">&lt;&lt;</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled mc-pagination__item">
+                    <span class="page-link mc-pagination__link mc-pagination__link--nav" aria-hidden="true">&lt;&lt;</span>
+                </li>
+            {% endif %}
+
+            {% if startPage > 1 %}
+                <li class="page-item mc-pagination__item">
+                    <a class="page-link mc-pagination__link"
+                       href="{{ path(route, query|merge({ (pageParameterName): 1 })) }}">1</a>
+                </li>
+                {% if startPage > 2 %}
+                    <li class="page-item disabled mc-pagination__item" aria-hidden="true">
+                        <span class="page-link mc-pagination__link">…</span>
+                    </li>
+                {% endif %}
+            {% endif %}
+
+            {% for page in startPage..endPage %}
+                {% if page == current %}
+                    <li class="page-item active mc-pagination__item" aria-current="page">
+                        <span class="page-link mc-pagination__link mc-pagination__link--active">{{ page }}</span>
+                    </li>
+                {% else %}
+                    <li class="page-item mc-pagination__item">
+                        <a class="page-link mc-pagination__link"
+                           href="{{ path(route, query|merge({ (pageParameterName): page })) }}">{{ page }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if endPage < pageCount %}
+                {% if endPage < pageCount - 1 %}
+                    <li class="page-item disabled mc-pagination__item" aria-hidden="true">
+                        <span class="page-link mc-pagination__link">…</span>
+                    </li>
+                {% endif %}
+                <li class="page-item mc-pagination__item">
+                    <a class="page-link mc-pagination__link"
+                       href="{{ path(route, query|merge({ (pageParameterName): pageCount })) }}">{{ pageCount }}</a>
+                </li>
+            {% endif %}
+
+            {% if next is defined %}
+                <li class="page-item mc-pagination__item">
+                    <a class="page-link mc-pagination__link mc-pagination__link--nav"
+                       rel="next"
+                       aria-label="Page suivante"
+                       href="{{ path(route, query|merge({ (pageParameterName): next })) }}">&gt;&gt;</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled mc-pagination__item">
+                    <span class="page-link mc-pagination__link mc-pagination__link--nav" aria-hidden="true">&gt;&gt;</span>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endif %}

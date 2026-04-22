@@ -83,6 +83,8 @@ class RegistrationController extends AbstractController
             }
 
             // Auto-login après inscription and redirect to verification choice
+            // Set session flag to skip notification creation during registration auto-login
+            $request->getSession()->set('skip_login_notifications', true);
             $security->login($user, 'App\\Security\\UserAuthenticator', 'main');
             return $this->redirectToRoute('app_verification_choice');
         }
@@ -155,6 +157,8 @@ class RegistrationController extends AbstractController
             }
 
             // Auto-login after registration and redirect to verification choice
+            // Set session flag to skip notification creation during registration auto-login
+            $request->getSession()->set('skip_login_notifications', true);
             $security->login($user, 'App\\Security\\UserAuthenticator', 'main');
             return $this->redirectToRoute('app_verification_choice');
         }
@@ -218,6 +222,8 @@ class RegistrationController extends AbstractController
             }
 
             // Auto-login after registration and redirect to verification choice
+            // Set session flag to skip notification creation during registration auto-login
+            $request->getSession()->set('skip_login_notifications', true);
             $security->login($user, 'App\\Security\\UserAuthenticator', 'main');
             return $this->redirectToRoute('app_verification_choice');
         }

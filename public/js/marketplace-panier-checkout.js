@@ -27,6 +27,8 @@
     var btnToPayment = document.getElementById('mpc-btn-to-payment');
     var btnBackInfo = document.getElementById('mpc-btn-back-info');
     var btnBackDelivery = document.getElementById('mpc-btn-back-delivery');
+    var btnPayOnline = document.getElementById('mpc-btn-pay-online');
+    var btnCommander = document.getElementById('mpc-btn-commander');
 
     var navItems = root.querySelectorAll('[data-mpc-step-nav]');
 
@@ -333,8 +335,17 @@
             if (lab) {
                 lab.classList.add('mpc-pay-option--selected');
             }
+            syncPayButtons();
         });
     });
+
+    function syncPayButtons() {
+        var checked = root.querySelector('.mpc-pay-option__input:checked');
+        var mode = checked ? String(checked.value || '') : '';
+        var isOnline = mode === 'en_ligne';
+        if (btnPayOnline) btnPayOnline.style.display = isOnline ? '' : 'none';
+        if (btnCommander) btnCommander.style.display = isOnline ? 'none' : '';
+    }
 
     (function initPaySelection() {
         var checked = root.querySelector('.mpc-pay-option__input:checked');
@@ -344,6 +355,7 @@
                 lab.classList.add('mpc-pay-option--selected');
             }
         }
+        syncPayButtons();
     })();
 
     if (btnToShipping) {

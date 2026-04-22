@@ -6,7 +6,6 @@
 #   bin/console debug:router
 
 controllers:
-    resource:
-        path: ../src/Controller/
-        namespace: App\Controller
+    resource: ../src/Controller/
     type: attribute
+    # Marketplace controllers are imported here as well (no locale prefix).

@@ -2,6 +2,43 @@
 
 {% block title %}Créer un utilisateur - Administration{% endblock %}
 
+{% block stylesheets %}
+<style>
+    .photo-uploader-card {
+        background: linear-gradient(180deg, #ffffff 0%, #f8fff9 100%);
+    }
+    .avatar-frame {
+        width: 96px;
+        height: 96px;
+        border-radius: 50%;
+        margin: 0 auto;
+        border: 3px solid #d1fae5;
+        box-shadow: 0 10px 24px rgba(34, 197, 94, 0.16);
+        overflow: hidden;
+    }
+    .avatar-upload-zone {
+        border: 2px dashed #9ca3af;
+        border-radius: 14px;
+        padding: 1rem;
+        text-align: center;
+        cursor: pointer;
+        background: #fff;
+        transition: all .2s ease;
+    }
+    .avatar-upload-zone:hover,
+    .avatar-upload-zone:focus,
+    .avatar-upload-zone.is-active {
+        border-color: #22c55e;
+        background: #f0fdf4;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, .15);
+    }
+    .photo-meta {
+        font-size: .75rem;
+        color: #6b7280;
+    }
+</style>
+{% endblock %}
+
 {% block dashboard_content %}
 <div class="py-2">
 
@@ -272,21 +309,36 @@
             </div>
 
             {# Photo de profil #}
-            <div class="card border-0 shadow-sm mb-4">
+            <div class="card border-0 shadow-sm mb-4 photo-uploader-card" id="photo-uploader-create">
                 <div class="card-header bg-white border-bottom py-3 px-4">
                     <h5 class="mb-0 fw-semibold">Photo de profil</h5>
                 </div>
                 <div class="card-body p-4 text-center">
-                    <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 bg-secondary-subtle"
-                         style="width:80px;height:80px;font-size:2rem;" id="avatar-preview-wrap">
-                        <span id="avatar-initial">?</span>
-                        <img id="avatar-preview" src="" alt="" class="rounded-circle d-none" width="80" height="80" style="object-fit:cover;">
+                    <div class="avatar-frame d-flex align-items-center justify-content-center mb-3 bg-white">
+                        <span id="avatar-initial" class="fw-bold text-white w-100 h-100 d-flex align-items-center justify-content-center"
+                              style="background:linear-gradient(135deg,#667eea,#764ba2);font-size:2rem;">?</span>
+                        <img id="avatar-preview" src="" alt="" class="w-100 h-100 d-none" style="object-fit:cover;">
                     </div>
-                    <div>
-                        {{ form_label(form.profilePhoto, null, {label_attr: {class: 'form-label fw-semibold d-block'}}) }}
-                        {{ form_widget(form.profilePhoto, {attr: {class: 'form-control form-control-sm', accept: 'image/jpeg,image/png,image/webp', id: 'profile-photo-input'}}) }}
-                        {{ form_errors(form.profilePhoto) }}
-                        <small class="text-muted d-block mt-1">JPG, PNG ou WEBP · max 2 Mo</small>
+
+                    {{ form_label(form.profilePhoto, null, {label_attr: {class: 'form-label fw-semibold d-block'}}) }}
+                    {{ form_widget(form.profilePhoto, {attr: {class: 'visually-hidden', accept: 'image/jpeg,image/png,image/webp', id: 'profile-photo-input', style: 'display: none;'}}) }}
+                    {{ form_errors(form.profilePhoto) }}
+
+                    <button type="button" class="avatar-upload-zone d-block w-100" id="uploadZoneCreate" style="border: 2px dashed #9ca3af; border-radius: 14px; padding: 1rem; text-align: center; cursor: pointer; background: #fff; transition: all .2s ease; display: block; width: 100%; margin-bottom: 0;">
+                        <svg fill="none" stroke="#6b7280" viewBox="0 0 24 24" width="28" height="28" class="mb-2" style="pointer-events: none;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                        </svg>
+                        <p class="mb-0 fw-medium" id="uploadZoneCreateText" style="pointer-events: none;">
+                            <span style="text-decoration:underline;">Cliquez ici</span> pour choisir une photo
+                        </p>
+                        <p class="photo-meta mb-0 mt-1" style="pointer-events: none;">ou glissez-deposez ici · PNG, JPG, WEBP · Max 2 Mo</p>
+                    </button>
+
+                    <div class="alert d-none mt-3 mb-0 py-2 small" id="photo-feedback-create" role="alert"></div>
+                    <small class="text-muted d-block mt-2" id="photo-file-meta-create">Aucun fichier selectionne</small>
+                    <div class="d-grid mt-2 d-none" id="photo-reset-wrap-create">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="photo-reset-btn-create">Reinitialiser</button>
                     </div>
                 </div>
             </div>
@@ -313,136 +365,183 @@
 </div>
 
 <script>
-// Toggle role-specific fields based on selected role
-function toggleRoleFields() {
-    // Find role select by name attribute (more reliable than ID)
-    const roleSelect = document.querySelector('select[name*="[role]"]');
-    if (!roleSelect) {
-        console.error('Role select element not found');
-        console.log('Available selects:', document.querySelectorAll('select'));
-        return;
-    }
-    
-    const role = roleSelect.value;
-    console.log('Selected role:', role); // Debug log
-    
-    // Hide all role-specific sections
-    const roleSections = ['admin-fields', 'agriculteur-fields', 'agriplus-fields', 'fournisseur-fields'];
-    roleSections.forEach(id => {
-        const element = document.getElementById(id);
-        if (element) {
-            element.classList.add('d-none');
-        }
-    });
-    
-    // Show the section for the selected role
-    const roleMap = {
-        'ADMIN': 'admin-fields',
-        'AGRICULTEUR': 'agriculteur-fields',
-        'AGRIPLUS': 'agriplus-fields',
-        'FOURNISSEUR': 'fournisseur-fields'
-    };
-    
-    if (roleMap[role]) {
-        const targetElement = document.getElementById(roleMap[role]);
-        if (targetElement) {
-            console.log('Showing section:', roleMap[role]); // Debug log
-            targetElement.classList.remove('d-none');
-            
-            // If fournisseur is selected, also trigger the fournisseur type toggle
-            if (role === 'FOURNISSEUR') {
-                setTimeout(() => toggleFournisseurFields(), 100); // Small delay to ensure DOM is ready
-            }
-        } else {
-            console.error('Target element not found:', roleMap[role]);
-        }
-    }
-}
-
-// Toggle fournisseur-specific fields based on type (PERSONNE or SOCIETE)
-function toggleFournisseurFields() {
-    // Find fournisseur type select by name attribute
-    const typeSelect = document.querySelector('select[name*="[fournisseurTypeFournisseur]"]');
-    if (!typeSelect) {
-        console.error('Fournisseur type select not found');
-        return;
-    }
-    
-    const type = typeSelect.value;
-    console.log('Selected fournisseur type:', type); // Debug log
-    
-    // Hide both sections
-    const personneFields = document.getElementById('fournisseur-personne-fields');
-    const societeFields = document.getElementById('fournisseur-societe-fields');
-    
-    if (personneFields) personneFields.classList.add('d-none');
-    if (societeFields) societeFields.classList.add('d-none');
-    
-    // Show the appropriate section
-    if (type === 'PERSONNE' && personneFields) {
-        console.log('Showing personne fields');
-        personneFields.classList.remove('d-none');
-    } else if (type === 'SOCIETE' && societeFields) {
-        console.log('Showing societe fields');
-        societeFields.classList.remove('d-none');
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('DOM loaded, initializing form'); // Debug log
-    
-    // Initialize on page load
-    toggleRoleFields();
-    
-    // Add event listeners using name selector (more reliable)
     const roleSelect = document.querySelector('select[name*="[role]"]');
-    if (roleSelect) {
-        console.log('Role select found, adding listener');
-        console.log('Role select name:', roleSelect.name);
-        console.log('Role select ID:', roleSelect.id);
-        roleSelect.addEventListener('change', function() {
-            console.log('Role changed to:', this.value);
-            toggleRoleFields();
-        });
-    } else {
-        console.error('Role select not found!');
-    }
-    
     const fournisseurTypeSelect = document.querySelector('select[name*="[fournisseurTypeFournisseur]"]');
-    if (fournisseurTypeSelect) {
-        console.log('Fournisseur type select found, adding listener');
-        console.log('Fournisseur type select name:', fournisseurTypeSelect.name);
-        console.log('Fournisseur type select ID:', fournisseurTypeSelect.id);
-        fournisseurTypeSelect.addEventListener('change', function() {
-            console.log('Fournisseur type changed to:', this.value);
-            toggleFournisseurFields();
+
+    function toggleRoleFields() {
+        if (!roleSelect) return;
+
+        const selectedRole = roleSelect.value;
+        const roleSections = ['admin-fields', 'agriculteur-fields', 'agriplus-fields', 'fournisseur-fields'];
+        roleSections.forEach(function(id) {
+            const section = document.getElementById(id);
+            if (section) section.classList.add('d-none');
         });
-    } else {
-        console.log('Fournisseur type select not found (may appear when role is selected)');
+
+        const roleMap = {
+            'ADMIN': 'admin-fields',
+            'AGRICULTEUR': 'agriculteur-fields',
+            'AGRIPLUS': 'agriplus-fields',
+            'FOURNISSEUR': 'fournisseur-fields'
+        };
+
+        const targetId = roleMap[selectedRole];
+        const targetElement = targetId ? document.getElementById(targetId) : null;
+        if (targetElement) {
+            targetElement.classList.remove('d-none');
+            if (selectedRole === 'FOURNISSEUR') {
+                setTimeout(toggleFournisseurFields, 100);
+            }
+        }
     }
-    
-    // Live photo preview
+
+    function toggleFournisseurFields() {
+        if (!fournisseurTypeSelect) return;
+
+        const selectedType = fournisseurTypeSelect.value;
+        const personneFields = document.getElementById('fournisseur-personne-fields');
+        const societeFields = document.getElementById('fournisseur-societe-fields');
+
+        if (personneFields) personneFields.classList.add('d-none');
+        if (societeFields) societeFields.classList.add('d-none');
+
+        if (selectedType === 'PERSONNE' && personneFields) {
+            personneFields.classList.remove('d-none');
+        } else if (selectedType === 'SOCIETE' && societeFields) {
+            societeFields.classList.remove('d-none');
+        }
+    }
+
+    if (roleSelect) roleSelect.addEventListener('change', toggleRoleFields);
+    if (fournisseurTypeSelect) fournisseurTypeSelect.addEventListener('change', toggleFournisseurFields);
+    toggleRoleFields();
+    toggleFournisseurFields();
+
     const photoInput = document.getElementById('profile-photo-input');
     const avatarInitial = document.getElementById('avatar-initial');
     const avatarPreview = document.getElementById('avatar-preview');
-    
-    if (photoInput && avatarPreview && avatarInitial) {
-        photoInput.addEventListener('change', function () {
-            const file = this.files[0];
-            if (file && file.type.match('image.*')) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    avatarPreview.src = e.target.result;
-                    avatarPreview.classList.remove('d-none');
-                    avatarInitial.classList.add('d-none');
-                };
-                reader.readAsDataURL(file);
+    const uploadZone = document.getElementById('uploadZoneCreate');
+    const uploadZoneText = document.getElementById('uploadZoneCreateText');
+    const feedback = document.getElementById('photo-feedback-create');
+    const photoFileMeta = document.getElementById('photo-file-meta-create');
+    const photoResetWrap = document.getElementById('photo-reset-wrap-create');
+    const photoResetBtn = document.getElementById('photo-reset-btn-create');
+    const nameInput = document.querySelector('input[name*="[nom]"]');
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const maxSizeBytes = 2 * 1024 * 1024;
+    const defaultUploadText = '<span style="text-decoration:underline;">Cliquez ici</span> pour choisir une photo';
+    let selectedPhotoFile = null;
+
+    function showFeedback(type, message) {
+        if (!feedback) return;
+        feedback.className = `alert alert-${type} mt-3 mb-0 py-2 small`;
+        feedback.textContent = message;
+    }
+
+    function clearFeedback() {
+        if (!feedback) return;
+        feedback.className = 'alert d-none mt-3 mb-0 py-2 small';
+        feedback.textContent = '';
+    }
+
+    function setUploadZoneActive(isActive) {
+        if (!uploadZone) return;
+        uploadZone.classList.toggle('is-active', isActive);
+    }
+
+    function formatSize(bytes) {
+        return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+    }
+
+    function resetPhotoSelection() {
+        selectedPhotoFile = null;
+        if (photoInput) photoInput.value = '';
+        if (avatarPreview) avatarPreview.classList.add('d-none');
+        if (avatarInitial) avatarInitial.classList.remove('d-none');
+        if (uploadZoneText) uploadZoneText.innerHTML = defaultUploadText;
+        if (photoFileMeta) photoFileMeta.textContent = 'Aucun fichier selectionne';
+        if (photoResetWrap) photoResetWrap.classList.add('d-none');
+        setUploadZoneActive(false);
+    }
+
+    function applyFileSelection(file) {
+        if (!file) return;
+        if (!allowedTypes.includes(file.type)) {
+            showFeedback('danger', 'Format non supporte. Utilisez JPG, PNG ou WEBP.');
+            resetPhotoSelection();
+            return;
+        }
+        if (file.size > maxSizeBytes) {
+            showFeedback('danger', `Le fichier est trop volumineux (${formatSize(file.size)}). Limite: 2 Mo.`);
+            resetPhotoSelection();
+            return;
+        }
+
+        clearFeedback();
+        selectedPhotoFile = file;
+        if (uploadZoneText) uploadZoneText.innerHTML = `<strong style="color:#198754;">${file.name.replace(/</g, '&lt;')}</strong>`;
+        if (photoFileMeta) photoFileMeta.textContent = `${file.name} · ${formatSize(file.size)}`;
+        if (photoResetWrap) photoResetWrap.classList.remove('d-none');
+        setUploadZoneActive(true);
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            if (avatarPreview && event.target) {
+                avatarPreview.src = event.target.result;
+                avatarPreview.classList.remove('d-none');
             }
+            if (avatarInitial) avatarInitial.classList.add('d-none');
+        };
+        reader.readAsDataURL(file);
+    }
+
+    if (photoInput) {
+        photoInput.addEventListener('change', function () {
+            const file = this.files && this.files[0] ? this.files[0] : null;
+            if (file) applyFileSelection(file);
         });
     }
-    
-    // Update avatar initial when name changes
-    const nameInput = document.querySelector('input[name*="[nom]"]');
+
+    if (uploadZone && photoInput) {
+        uploadZone.addEventListener('click', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            photoInput.click();
+        });
+        uploadZone.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                event.stopPropagation();
+                photoInput.click();
+            }
+        });
+        uploadZone.addEventListener('dragover', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            setUploadZoneActive(true);
+        });
+        uploadZone.addEventListener('dragleave', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            if (!selectedPhotoFile) setUploadZoneActive(false);
+        });
+        uploadZone.addEventListener('drop', function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            const droppedFile = event.dataTransfer?.files?.[0] || null;
+            if (droppedFile) applyFileSelection(droppedFile);
+        });
+    }
+
+    if (photoResetBtn) {
+        photoResetBtn.addEventListener('click', function() {
+            clearFeedback();
+            resetPhotoSelection();
+        });
+    }
+
     if (nameInput && avatarInitial) {
         nameInput.addEventListener('input', function() {
             const name = this.value.trim();
@@ -455,6 +554,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    resetPhotoSelection();
 });
 </script>
 {% endblock dashboard_content %}

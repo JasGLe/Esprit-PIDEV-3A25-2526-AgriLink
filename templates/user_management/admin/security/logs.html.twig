@@ -556,14 +556,15 @@
 {{ parent() }}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+function handleSecurityPageLoad() {
     'use strict';
-
-    // Wrap chart initialization in requestAnimationFrame to ensure layout is complete
     requestAnimationFrame(() => {
         initializeCharts();
     });
-});
+}
+
+document.addEventListener('DOMContentLoaded', handleSecurityPageLoad);
+document.addEventListener('turbo:load', handleSecurityPageLoad);
 
 function initializeCharts() {
     // ── Security Score Gauge ──────────────────────────────────────────

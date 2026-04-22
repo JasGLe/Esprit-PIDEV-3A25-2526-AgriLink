@@ -1,0 +1,357 @@
+{% extends 'layouts/dashboard_layout.html.twig' %}
+
+{% block title %}🤖 Générer une affiche – {{ evenement.titre }}{% endblock %}
+{% block page_title %}🤖 Affiche IA{% endblock %}
+
+{% block dashboard_content %}
+<div class="mb-4">
+    <a href="{{ path('evenement_list') }}" class="btn btn-outline-secondary btn-sm">
+        ← Retour aux événements
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-7">
+
+        {# ── En-tête événement ── #}
+        <div class="card border-0 shadow-sm mb-4" style="border-left: 4px solid #16a34a !important;">
+            <div class="card-body px-4 py-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="font-size: 2rem; line-height: 1;">📅</div>
+                    <div>
+                        <h2 class="h5 fw-bold text-dark mb-1">{{ evenement.titre }}</h2>
+                        <div class="d-flex flex-wrap gap-2 text-muted small">
+                            <span>📍 {{ evenement.lieu }}</span>
+                            <span>🗓 {{ evenement.dateEvenement|date('d/m/Y à H:i') }}</span>
+                            <span class="badge text-bg-light border text-dark">{{ evenement.typeEvenement }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# ── Panneau principal ── #}
+        <div class="card border-0 shadow" style="border-radius: 16px; overflow: hidden;">
+
+            {# Header dégradé #}
+            <div style="background: linear-gradient(135deg, #14532d 0%, #22c55e 100%); padding: 24px 28px;">
+                <h3 class="fw-bold text-white mb-1" style="font-size: 1.15rem;">🤖 Génération d'affiche avec l'IA</h3>
+                <p class="text-white mb-0" style="font-size: 0.85rem; opacity: 0.75;">
+                    L'IA va créer une affiche visuelle personnalisée pour cet événement.
+                </p>
+            </div>
+
+            <div class="card-body px-4 py-4">
+
+                {# ── ÉTAT 1 : Initial ── #}
+                <div id="state-initial">
+                    <div class="text-center py-3">
+                        <div style="font-size: 4rem; margin-bottom: 16px;">🖼️</div>
+                        <p class="text-muted mb-4" style="font-size: 0.9rem; max-width: 380px; margin: 0 auto 24px;">
+                            Cliquez sur le bouton pour générer une affiche professionnelle basée sur les données de votre événement.
+                        </p>
+                        <button id="btn-generate" class="btn btn-success btn-lg px-5 fw-semibold" onclick="startGeneration()">
+                            ✨ Générer l'affiche
+                        </button>
+                    </div>
+                </div>
+
+                {# ── ÉTAT 2 : Chargement ── #}
+                <div id="state-loading" style="display: none;">
+                    <div class="text-center py-2">
+
+                        {# Spinner animé #}
+                        <div style="display: flex; justify-content: center; margin-bottom: 24px;">
+                            <div id="spinner-ring" style="
+                                width: 72px; height: 72px;
+                                border: 5px solid #e2e8f0;
+                                border-top-color: #22c55e;
+                                border-radius: 50%;
+                                animation: spin 0.9s linear infinite;">
+                            </div>
+                        </div>
+
+                        <h5 class="fw-semibold text-dark mb-2">Génération en cours…</h5>
+                        <p class="text-muted mb-4" style="font-size: 0.85rem;">
+                            L'IA crée votre affiche. Prévoir jusqu’à ~75&nbsp;s. La 1<sup>re</sup> image peut sembler instantanée si le service renvoie un résultat déjà mis en cache ; une <strong>nouvelle</strong> image (régénération) est souvent recalculée entièrement, d’où un délai plus long (souvent 45–90&nbsp;s).
+                        </p>
+
+                        {# Compteur temps #}
+                        <div class="mb-3">
+                            <div style="font-size: 2.2rem; font-weight: 700; color: #16a34a; font-variant-numeric: tabular-nums;">
+                                <span id="timer-value">0</span><span style="font-size: 1rem; color: #64748b; font-weight: 500;">s</span>
+                                <span style="font-size: 1rem; color: #94a3b8; font-weight: 400;"> / ~75s</span>
+                            </div>
+                        </div>
+
+                        {# Barre de progression #}
+                        <div style="background: #e2e8f0; border-radius: 6px; height: 8px; overflow: hidden; max-width: 360px; margin: 0 auto;">
+                            <div id="progress-bar" style="
+                                height: 100%;
+                                width: 4%;
+                                background: linear-gradient(90deg, #16a34a, #4ade80);
+                                border-radius: 6px;
+                                transition: width 0.9s ease;">
+                            </div>
+                        </div>
+
+                        <p id="status-text" class="text-muted mt-3 mb-0" style="font-size: 0.8rem;">
+                            Connexion à l'IA…
+                        </p>
+                    </div>
+                </div>
+
+                {# ── ÉTAT 3 : Résultat ── #}
+                <div id="state-result" style="display: none;">
+
+                    {# Image générée #}
+                    <div class="text-center mb-4">
+                        <img id="poster-img"
+                             src=""
+                             alt="Affiche générée"
+                             style="
+                                max-width: 100%;
+                                max-height: 460px;
+                                border-radius: 12px;
+                                box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+                                border: 1px solid #e2e8f0;
+                             ">
+                    </div>
+
+                    {# Badge succès #}
+                    <div class="text-center mb-4">
+                        <span id="success-badge" class="badge rounded-pill px-3 py-2"
+                              style="background: #dcfce7; color: #166534; font-size: 0.85rem; font-weight: 600;">
+                            ✅ Affiche générée en 0s
+                        </span>
+                    </div>
+
+                    {# Actions #}
+                    <div class="d-flex justify-content-center gap-3 flex-wrap pt-3 border-top">
+                        <button type="button"
+                                class="btn btn-outline-secondary px-4"
+                                onclick="regeneratePoster()">
+                            🔄 Régénérer
+                        </button>
+                        <button type="button"
+                                id="btn-download"
+                                class="btn btn-success px-5 fw-semibold"
+                                onclick="downloadPoster()">
+                            ⬇️ Télécharger l'affiche
+                        </button>
+                    </div>
+                </div>
+
+                {# ── ÉTAT 4 : Erreur ── #}
+                <div id="state-error" style="display: none;">
+                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px;">
+                        <div class="d-flex gap-3 align-items-start">
+                            <span style="font-size: 1.5rem; flex-shrink: 0;">⚠️</span>
+                            <div>
+                                <div class="fw-semibold mb-1" style="color: #991b1b;">Erreur de génération</div>
+                                <div id="error-message" style="font-size: 0.85rem; color: #7f1d1d; line-height: 1.5;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center">
+                        <button type="button" class="btn btn-outline-success px-4" onclick="regeneratePoster()">
+                            Réessayer
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        {# ── Infos techniques ── #}
+        <div class="mt-3 px-1">
+            <p class="text-muted mb-0" style="font-size: 0.75rem; text-align: center;">
+                🔒 Génération sécurisée • Propulsé par Pollinations AI
+            </p>
+        </div>
+
+    </div>
+</div>
+
+{# ── Styles ── #}
+<style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+{# ── Script ── #}
+<script>
+(function () {
+    const EVENT_ID       = {{ evenement.id }};
+    const GENERATE_URL   = '/evenement/' + EVENT_ID + '/generate-poster';
+    const POSTER_IMG_URL = '/evenement/' + EVENT_ID + '/poster-image';
+    const ESTIMATE_SEC   = 75;
+
+    let timerInterval  = null;
+    let elapsedSeconds = 0;
+    let currentUrl     = null;
+    let downloadBlob   = null;
+    let genAbort       = null;
+
+    // ── UI helpers ──────────────────────────────────────────────────────────
+
+    function showState(name) {
+        ['initial', 'loading', 'result', 'error'].forEach(function (s) {
+            document.getElementById('state-' + s).style.display = s === name ? 'block' : 'none';
+        });
+    }
+
+    function startTimer() {
+        elapsedSeconds = 0;
+        updateTimerDisplay();
+        timerInterval = setInterval(function () {
+            elapsedSeconds += 1;
+            updateTimerDisplay();
+        }, 1000);
+    }
+
+    function stopTimer() {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+
+    function updateTimerDisplay() {
+        document.getElementById('timer-value').textContent = elapsedSeconds;
+        var pct = Math.min(Math.round((elapsedSeconds / ESTIMATE_SEC) * 90), 90);
+        document.getElementById('progress-bar').style.width = pct + '%';
+
+        var msg = elapsedSeconds < 8  ? 'Envoi de la requête à l\'IA…'
+                : elapsedSeconds < 22 ? 'L\'IA analyse les données de l\'événement…'
+                : elapsedSeconds < 45 ? 'Composition de l\'affiche en cours…'
+                : elapsedSeconds < 65 ? 'Finalisation des détails…'
+                :                         'Presque terminé, patience…';
+        document.getElementById('status-text').textContent = msg;
+    }
+
+    function fillProgress() {
+        document.getElementById('progress-bar').style.width = '100%';
+    }
+
+    function loadImageFromBlob(blob) {
+        document.getElementById('status-text').textContent = 'Téléchargement de l\'image…';
+
+        if (currentUrl && currentUrl.indexOf('blob:') === 0) {
+            URL.revokeObjectURL(currentUrl);
+        }
+        var objectUrl = URL.createObjectURL(blob);
+        currentUrl = objectUrl;
+        downloadBlob = blob;
+
+        var probe = new Image();
+        probe.onload = function () {
+            var img = document.getElementById('poster-img');
+            img.src = objectUrl;
+            stopTimer();
+            fillProgress();
+            document.getElementById('success-badge').textContent =
+                '✅ Affiche générée en ' + elapsedSeconds + 's';
+            showState('result');
+        };
+        probe.onerror = function () {
+            stopTimer();
+            URL.revokeObjectURL(objectUrl);
+            currentUrl = null;
+            downloadBlob = null;
+            showError("Impossible de charger l'image. Vérifiez votre connexion et réessayez.");
+        };
+        probe.src = objectUrl;
+    }
+
+    // ── Actions ──────────────────────────────────────────────────────────────
+
+    window.startGeneration = function () {
+        if (typeof AbortController !== 'undefined') {
+            if (genAbort) genAbort.abort();
+            genAbort = new AbortController();
+        }
+        var signal = genAbort ? genAbort.signal : undefined;
+
+        showState('loading');
+        startTimer();
+
+        fetch(GENERATE_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            signal: signal,
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (!data.success) throw new Error(data.message || 'Erreur serveur');
+            return fetch(POSTER_IMG_URL, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ image_url: data.image_url }),
+                signal: signal,
+            });
+        })
+        .then(function (proxyRes) {
+            var ct = proxyRes.headers.get('Content-Type') || '';
+            if (!proxyRes.ok) {
+                return proxyRes.json().then(function (j) {
+                    throw new Error(j.message || ('Erreur proxy (' + proxyRes.status + ')'));
+                });
+            }
+            if (ct.indexOf('image/') === -1) {
+                throw new Error('Réponse invalide du serveur (image attendue).');
+            }
+            return proxyRes.blob();
+        })
+        .then(function (blob) {
+            if (!blob.size) throw new Error('Image vide reçue du serveur.');
+            loadImageFromBlob(blob);
+        })
+        .catch(function (err) {
+            stopTimer();
+            if (err.name === 'AbortError') return;
+            showError(err.message || 'Erreur inconnue.');
+        })
+        .finally(function () {
+            genAbort = null;
+        });
+    };
+
+    window.downloadPoster = function () {
+        if (!downloadBlob || !currentUrl) return;
+        var ext = downloadBlob.type === 'image/png' ? 'png'
+            : (downloadBlob.type === 'image/webp' ? 'webp' : 'jpg');
+        var a = document.createElement('a');
+        a.href = currentUrl;
+        a.download = 'affiche-evenement-' + EVENT_ID + '.' + ext;
+        a.rel = 'noopener';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+
+    /** Nouvelle génération depuis zéro (régénérer / réessayer). */
+    window.regeneratePoster = function () {
+        if (typeof AbortController !== 'undefined' && genAbort) {
+            genAbort.abort();
+        }
+        stopTimer();
+        if (currentUrl && currentUrl.indexOf('blob:') === 0) {
+            URL.revokeObjectURL(currentUrl);
+        }
+        currentUrl = null;
+        downloadBlob = null;
+        var img = document.getElementById('poster-img');
+        if (img) img.removeAttribute('src');
+        startGeneration();
+    };
+
+    function showError(msg) {
+        document.getElementById('error-message').textContent = msg;
+        showState('error');
+    }
+})();
+</script>
+{% endblock %}

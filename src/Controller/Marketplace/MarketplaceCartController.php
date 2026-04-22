@@ -9,13 +9,16 @@ use App\Entity\Marketplace\Produits;
 use App\Entity\UserManagement\User;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
+use App\Service\OrderNotificationService;
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Stripe\StripeClient;
 
 #[Route('/marketplace/panier')]
 #[IsGranted('ROLE_USER')]
@@ -30,10 +33,14 @@ class MarketplaceCartController extends AbstractController
 
     private const MODE_PAIEMENT_LIVRAISON_CASH = 'livraison_cash';
 
+    private const STRIPE_CURRENCY_DEFAULT = 'eur';
+
     public function __construct(
         private readonly PanierRepository $panierRepository,
         private readonly ProduitsRepository $produitsRepository,
         private readonly EntityManagerInterface $entityManager,
+        private readonly OrderNotificationService $orderNotificationService,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -171,6 +178,7 @@ class MarketplaceCartController extends AbstractController
             $sousTotal = 0.0;
             $quantiteTotale = 0;
             $prepared = [];
+            $responsableUserIds = [];
 
             foreach ($lignesPanier as $lignePanier) {
                 $pid = $lignePanier->getIdProduit();
@@ -190,6 +198,10 @@ class MarketplaceCartController extends AbstractController
                 $sousTotal += $ligneTotal;
                 $quantiteTotale += $qty;
                 $prepared[] = [$lignePanier, $produit, $qty, $pu, $ligneTotal];
+                $sellerId = (int) ($produit->getIdFournisseur() ?? 0);
+                if ($sellerId > 0) {
+                    $responsableUserIds[$sellerId] = true;
+                }
             }
 
             if ($prepared === []) {
@@ -248,11 +260,33 @@ class MarketplaceCartController extends AbstractController
             $this->entityManager->flush();
             $conn->commit();
 
+            try {
+                $this->orderNotificationService->notifyOrderCreated(
+                    $commande,
+                    $user,
+                    array_keys($responsableUserIds),
+                    $nomComplet
+                );
+            } catch (\Throwable $e) {
+                // Do not block order flow if notification delivery fails.
+                $this->logger->warning('Order notifications failed after order creation', [
+                    'commandeId' => $commandeId,
+                    'message' => $e->getMessage(),
+                ]);
+            }
+
             $request->getSession()->set('marketplace_order_confirm', [
                 'numCommande' => $numCommande,
                 'commande_id' => $commandeId,
                 'paiement_en_ligne' => $mode === self::MODE_PAIEMENT_EN_LIGNE,
             ]);
+
+            if ($mode === self::MODE_PAIEMENT_EN_LIGNE) {
+                $redirect = $this->createStripeCheckoutRedirect($commande);
+                if ($redirect instanceof Response) {
+                    return $redirect;
+                }
+            }
 
             return $this->redirectToRoute('marketplace_index');
         } catch (\Throwable $e) {
@@ -275,6 +309,110 @@ class MarketplaceCartController extends AbstractController
 
             return $this->redirectToRoute('marketplace_panier_index');
         }
+    }
+
+    #[Route('/paiement/stripe/success/{id}', name: 'marketplace_panier_stripe_success', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function stripeSuccess(Request $request, int $id): Response
+    {
+        $sessionId = (string) $request->query->get('session_id', '');
+        if ($sessionId === '') {
+            $this->addFlash('error', 'Paiement Stripe: session manquante.');
+            return $this->redirectToRoute('mes_commandes_index');
+        }
+
+        $commande = $this->entityManager->getRepository(Commandes::class)->find($id);
+        if (!$commande instanceof Commandes) {
+            $this->addFlash('error', 'Commande introuvable.');
+            return $this->redirectToRoute('mes_commandes_index');
+        }
+
+        try {
+            $client = $this->stripeClient();
+            if ($client === null) {
+                $this->addFlash('error', 'Stripe n’est pas configuré.');
+                return $this->redirectToRoute('mes_commandes_index');
+            }
+
+            $session = $client->checkout->sessions->retrieve($sessionId, []);
+            if (($session->payment_status ?? null) !== 'paid') {
+                $this->addFlash('error', 'Paiement non confirmé.');
+                return $this->redirectToRoute('mes_commandes_index');
+            }
+
+            // Mark as paid → move to preparation
+            if ($commande->getStatus() === 'EN_ATTENTE_PAIEMENT_CB') {
+                $commande->setStatus('EN_PREPARATION');
+                $this->entityManager->persist($commande);
+                $this->entityManager->flush();
+            }
+
+            $this->addFlash('success', 'Paiement confirmé. Votre commande est en préparation.');
+            return $this->redirectToRoute('mes_commandes_index');
+        } catch (\Throwable $e) {
+            $this->addFlash('error', 'Erreur Stripe: '.$e->getMessage());
+            return $this->redirectToRoute('mes_commandes_index');
+        }
+    }
+
+    #[Route('/paiement/stripe/cancel/{id}', name: 'marketplace_panier_stripe_cancel', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function stripeCancel(int $id): Response
+    {
+        $this->addFlash('error', 'Paiement en ligne annulé.');
+        return $this->redirectToRoute('mes_commandes_index');
+    }
+
+    private function createStripeCheckoutRedirect(Commandes $commande): ?Response
+    {
+        $client = $this->stripeClient();
+        if ($client === null) {
+            $this->addFlash('error', 'Stripe n’est pas configuré (clé manquante ou dépendance).');
+            return $this->redirectToRoute('marketplace_panier_index');
+        }
+
+        $currency = strtolower((string) ($_ENV['STRIPE_CURRENCY'] ?? self::STRIPE_CURRENCY_DEFAULT));
+        $amountCents = (int) round(max(0.0, (float) $commande->getPrixTotal()) * 100);
+        if ($amountCents < 50) {
+            $this->addFlash('error', 'Montant trop faible pour Stripe.');
+            return $this->redirectToRoute('marketplace_panier_index');
+        }
+
+        $successUrl = $this->generateUrl('marketplace_panier_stripe_success', ['id' => $commande->getId()], 0).'?session_id={CHECKOUT_SESSION_ID}';
+        $cancelUrl  = $this->generateUrl('marketplace_panier_stripe_cancel', ['id' => $commande->getId()], 0);
+
+        $session = $client->checkout->sessions->create([
+            'mode' => 'payment',
+            'success_url' => $successUrl,
+            'cancel_url' => $cancelUrl,
+            'line_items' => [[
+                'quantity' => 1,
+                'price_data' => [
+                    'currency' => $currency,
+                    'unit_amount' => $amountCents,
+                    'product_data' => [
+                        'name' => 'Commande '.$commande->getNumCommande(),
+                    ],
+                ],
+            ]],
+            'metadata' => [
+                'commande_id' => (string) $commande->getId(),
+                'num_commande' => $commande->getNumCommande(),
+            ],
+        ]);
+
+        return $this->redirect((string) $session->url);
+    }
+
+    private function stripeClient(): ?StripeClient
+    {
+        if (!class_exists(StripeClient::class)) {
+            return null;
+        }
+        $secret = (string) ($_ENV['STRIPE_SECRET_KEY'] ?? '');
+        if (trim($secret) === '') {
+            return null;
+        }
+
+        return new StripeClient($secret);
     }
 
     /**
@@ -572,6 +710,10 @@ class MarketplaceCartController extends AbstractController
     private function isProduitAchetableMarche(Produits $p): bool
     {
         if ($p->getOrigine() !== ProduitsRepository::ORIGINE_BOUTIQUE_AGRICULTEUR) {
+            return false;
+        }
+
+        if ($p->isRental()) {
             return false;
         }
 

@@ -1,0 +1,755 @@
+{# Profile Completion Widget - Enhanced Design #}
+
+<div id="profile-completion-widget" class="profile-completion-widget skeleton-loading">
+    <div class="completion-container">
+        <div class="completion-header">
+            <div class="title-section">
+                <h3 class="completion-title">
+                    <span class="title-icon">👤</span>
+                    Complétez votre profil
+                </h3>
+                <p class="title-subtitle">Améliorez votre visibilité et votre crédibilité</p>
+            </div>
+            <div class="header-actions">
+                <button id="profile-widget-minimize" class="widget-minimize-btn" type="button" title="Minimize widget" aria-label="Minimize">
+                    <span class="minimize-icon">−</span>
+                </button>
+                <span class="completion-percentage-circle">
+                    <span class="percentage-value">--</span>
+                    <span class="percentage-unit">%</span>
+                </span>
+            </div>
+        </div>
+
+        <div id="profile-widget-content" class="profile-widget-content">
+            <div class="completion-progress-section">
+                <div class="progress-stats">
+                    <span class="progress-label">Progression</span>
+                </div>
+                <div class="completion-progress-bar">
+                    <div class="progress-bar-fill" style="width: 0%; background-color: #6b7280;"></div>
+                    <div class="progress-bar-glow" style="width: 0%; background-color: #6b7280;"></div>
+                </div>
+                <div class="progress-milestones">
+                    <span class="milestone" data-value="0">0%</span>
+                    <span class="milestone" data-value="25">25%</span>
+                    <span class="milestone" data-value="50">50%</span>
+                    <span class="milestone" data-value="75">75%</span>
+                    <span class="milestone" data-value="100">100%</span>
+                </div>
+            </div>
+
+            <div class="completion-status">
+                <span class="status-badge">Chargement...</span>
+            </div>
+
+            <p class="completion-message">Chargement de votre progression...</p>
+            
+            <div class="completion-features">
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span class="feature-text">Informations personnelles</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span class="feature-text">Photo de profil</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span class="feature-text">Coordonnées complètes</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const widget = document.getElementById('profile-completion-widget');
+    
+    const statusConfig = {
+        0: { color: '#6b7280', label: '🚀 À remplir', emoji: '🚀', message: 'Commencez à remplir votre profil pour le rendre plus attractif.' },
+        40: { color: '#ef6461', label: '⚠️ Commencé', emoji: '⚠️', message: 'Vous êtes sur la bonne voie, continuez!' },
+        60: { color: '#f59e0b', label: '📝 À moitié complet', emoji: '📝', message: 'Bon début! Continuez pour augmenter votre visibilité.' },
+        80: { color: '#06b6d4', label: '🎯 Presque là!', emoji: '🎯', message: 'Presque terminé! Quelques détails de plus pour briller.' },
+        100: { color: '#22c55e', label: '✅ Profil complet', emoji: '✅', message: 'Votre profil est maintenant complet et attrayant!' }
+    };
+
+    function getStatusConfig(score) {
+        if (score >= 100) return statusConfig[100];
+        if (score >= 80) return statusConfig[80];
+        if (score >= 60) return statusConfig[60];
+        if (score >= 40) return statusConfig[40];
+        return statusConfig[0];
+    }
+
+    async function loadProfileStatus() {
+        try {
+            const response = await fetch('{{ path('app_notifications_profile_status') }}');
+            if (!response.ok) throw new Error('Failed to fetch');
+            
+            const data = response.json();
+            return Promise.resolve(data).then(data => {
+                const score = data.completionScore || 0;
+                const config = getStatusConfig(score);
+                
+                const completeHTML = `
+                    <div class="completion-container">
+                        <div class="completion-header">
+                            <div class="title-section">
+                                <h3 class="completion-title">
+                                    <span class="title-icon">👤</span>
+                                    Complétez votre profil
+                                </h3>
+                                <p class="title-subtitle">Améliorez votre visibilité et votre crédibilité</p>
+                            </div>
+                            <span class="completion-percentage-circle" data-score="${score}">
+                                <svg class="circle-svg" viewBox="0 0 100 100">
+                                    <circle class="circle-bg" cx="50" cy="50" r="45" fill="none" stroke="#e5e7eb" stroke-width="3"/>
+                                    <circle class="circle-progress" cx="50" cy="50" r="45" fill="none" stroke="${config.color}" stroke-width="3" style="stroke-dasharray: ${score * 2.83}, 283;"/>
+                                </svg>
+                                <span class="percentage-value">${score}</span>
+
+                            </span>
+                        </div>
+
+                        <div class="completion-progress-section">
+                            <div class="progress-stats">
+                                <span class="progress-label">Progression</span>
+                                <span class="progress-completed">${score} % complétés</span>
+                            </div>
+                            <div class="completion-progress-bar">
+                                <div class="progress-bar-fill" style="width: ${score}%; background-color: ${config.color};"></div>
+                                <div class="progress-bar-glow" style="width: ${score}%; background-color: ${config.color};"></div>
+                            </div>
+                            <div class="progress-milestones">
+                                <span class="milestone ${score >= 0 ? 'active' : ''}" data-value="0">0%</span>
+                                <span class="milestone ${score >= 25 ? 'active' : ''}" data-value="25">25%</span>
+                                <span class="milestone ${score >= 50 ? 'active' : ''}" data-value="50">50%</span>
+                                <span class="milestone ${score >= 75 ? 'active' : ''}" data-value="75">75%</span>
+                                <span class="milestone ${score >= 100 ? 'active' : ''}" data-value="100">100%</span>
+                            </div>
+                        </div>
+
+                        <div class="completion-status">
+                            <span class="status-badge" data-status="${score >= 100 ? 'complete' : 'incomplete'}">${config.label}</span>
+                        </div>
+
+                        <p class="completion-message">${config.message}</p>
+                        
+                        <div class="completion-features">
+                            <div class="feature-item ${score > 0 ? 'active' : ''}">
+                                <span class="feature-icon">✓</span>
+                                <span class="feature-text">Informations personnelles</span>
+                            </div>
+                            <div class="feature-item ${score >= 50 ? 'active' : ''}">
+                                <span class="feature-icon">✓</span>
+                                <span class="feature-text">Photo de profil</span>
+                            </div>
+                            <div class="feature-item ${score >= 75 ? 'active' : ''}">
+                                <span class="feature-icon">✓</span>
+                                <span class="feature-text">Coordonnées complètes</span>
+                            </div>
+                        </div>
+
+                        ${score < 100 ? `
+                            <a href="{{ path('app_profile_edit') }}" class="completion-action btn btn-sm btn-primary">
+                                <span class="action-icon">→</span>
+                                <span class="action-text">Compléter mon profil</span>
+                                <span class="action-badge">${100 - score} points à gagner</span>
+                            </a>
+                        ` : `
+                            <div class="completion-badge-complete">
+                                <span class="badge-animation">⭐</span>
+                                <span class="badge-text">Profil complet!</span>
+                                <p class="badge-message">Bravo! Votre profil inspire confiance.</p>
+                            </div>
+                        `}
+                    </div>
+                `;
+
+                widget.innerHTML = completeHTML;
+                widget.classList.remove('skeleton-loading');
+                widget.dataset.completionScore = score;
+
+                // Trigger animations
+                setTimeout(() => {
+                    const circle = widget.querySelector('.circle-progress');
+                    const bar = widget.querySelector('.progress-bar-fill');
+                    const glow = widget.querySelector('.progress-bar-glow');
+                    
+                    if (circle) circle.style.animation = `fillCircle 1.5s ease-out forwards`;
+                    if (bar) bar.style.animation = `fillBar 1.5s ease-out forwards`;
+                    if (glow) glow.style.animation = `fillGlow 1.5s ease-out forwards`;
+                }, 100);
+            });
+        } catch (error) {
+            console.error('Error loading profile status:', error);
+            widget.innerHTML = `
+                <div class="completion-container">
+                    <div class="completion-header">
+                        <div class="title-section">
+                            <h3 class="completion-title">
+                                <span class="title-icon">👤</span>
+                                Profil
+                            </h3>
+                        </div>
+                    </div>
+                    <p class="completion-message error-message">⚠️ Erreur lors du chargement. Rechargez la page.</p>
+                </div>
+            `;
+            widget.classList.remove('skeleton-loading');
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadProfileStatus);
+    } else {
+        loadProfileStatus();
+    }
+})();
+
+// Handle minimize button
+document.addEventListener('DOMContentLoaded', function() {
+    const minimizeBtn = document.getElementById('profile-widget-minimize');
+    const contentDiv = document.getElementById('profile-widget-content');
+    const minimizeIcon = document.querySelector('.minimize-icon');
+    
+    if (minimizeBtn && contentDiv && minimizeIcon) {
+        // Restore minimized state from localStorage
+        if (localStorage.getItem('profile-widget-minimized') === 'true') {
+            contentDiv.classList.add('minimized');
+            minimizeBtn.classList.add('minimized');
+            minimizeIcon.textContent = '+';
+            minimizeBtn.title = 'Expand widget';
+        }
+        
+        minimizeBtn.addEventListener('click', function() {
+            contentDiv.classList.toggle('minimized');
+            minimizeBtn.classList.toggle('minimized');
+            
+            // Update icon and title
+            const isMinimized = contentDiv.classList.contains('minimized');
+            minimizeIcon.textContent = isMinimized ? '+' : '−';
+            minimizeBtn.title = isMinimized ? 'Expand widget' : 'Minimize widget';
+            
+            // Save state
+            localStorage.setItem('profile-widget-minimized', isMinimized);
+        });
+    }
+});
+</script>
+
+<style>
+/* ========== ANIMATIONS ========== */
+@keyframes fillCircle {
+    from { stroke-dasharray: 0, 283; }
+    to { stroke-dasharray: var(--dash-array, 283), 283; }
+}
+
+@keyframes fillBar {
+    from { width: 0%; }
+    to { width: var(--final-width, 100%); }
+}
+
+@keyframes fillGlow {
+    0% { width: 0%; opacity: 0.8; }
+    50% { opacity: 0.4; }
+    100% { width: var(--final-width, 100%); opacity: 0; }
+}
+
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
+@keyframes shimmer {
+    0% { background-position: -1000px 0; }
+    100% { background-position: 1000px 0; }
+}
+
+@keyframes starBurst {
+    0% { transform: scale(0) rotate(0deg); opacity: 1; }
+    100% { transform: scale(1) rotate(360deg); opacity: 0; }
+}
+
+/* ========== WIDGET CONTAINER ========== */
+.profile-completion-widget {
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 28px;
+    margin: 20px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06), 
+                0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: all 0.3s ease;
+    animation: slideInUp 0.5s ease-out;
+}
+
+.profile-completion-widget:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1),
+                0 2px 6px rgba(0, 0, 0, 0.04);
+    border-color: #d1d5db;
+}
+
+.profile-completion-widget.skeleton-loading {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 1000px 100%;
+    animation: shimmer 2s infinite;
+}
+
+.completion-container {
+    animation: slideInUp 0.6s ease-out;
+}
+
+/* ========== HEADER SECTION ========== */
+.completion-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 28px;
+}
+
+.title-section {
+    flex: 1;
+}
+
+.completion-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: #111827;
+    letter-spacing: -0.5px;
+}
+
+.title-icon {
+    font-size: 24px;
+    display: inline-block;
+}
+
+.title-subtitle {
+    margin: 0;
+    font-size: 14px;
+    color: #6b7280;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+/* ========== PERCENTAGE CIRCLE ========== */
+.completion-percentage-circle {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.circle-svg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
+}
+
+.circle-bg {
+    stroke: #e5e7eb;
+}
+
+.circle-progress {
+    stroke-linecap: round;
+    transition: stroke 0.3s ease;
+    filter: drop-shadow(0 0 4px rgba(0, 0, 0, 0.1));
+}
+
+.percentage-value {
+    position: absolute;
+    font-size: 32px;
+    font-weight: 800;
+    color: #1f2937;
+    line-height: 1;
+}
+
+.percentage-unit {
+    position: absolute;
+    bottom: 20px;
+    right: 12px;
+    font-size: 12px;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+/* ========== PROGRESS SECTION ========== */
+.completion-progress-section {
+    margin-bottom: 24px;
+}
+
+.progress-stats {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.progress-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #6b7280;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.progress-completed {
+    font-size: 13px;
+    font-weight: 600;
+    color: #22c55e;
+}
+
+.completion-progress-bar {
+    position: relative;
+    width: 100%;
+    height: 12px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 16px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.progress-bar-fill {
+    height: 100%;
+    border-radius: 12px;
+    transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                background-color 0.3s ease;
+    background: linear-gradient(90deg, currentColor, lighten(currentColor, 10%));
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar-glow {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    border-radius: 12px;
+    background: currentColor;
+    filter: blur(4px);
+    opacity: 0.3;
+    transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.progress-milestones {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.milestone {
+    flex: 1;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #d1d5db;
+    padding: 6px 0;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+}
+
+.milestone.active {
+    color: #22c55e;
+    background: rgba(34, 197, 94, 0.1);
+}
+
+/* ========== STATUS BADGE ========== */
+.completion-status {
+    margin-bottom: 16px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 8px 16px;
+    border-radius: 24px;
+    font-size: 13px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    color: #15803d;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    transition: all 0.3s ease;
+}
+
+.status-badge[data-status="complete"] {
+    background: linear-gradient(135deg, #fef3c7 0%, #fef08a 100%);
+    color: #92400e;
+    border: 1px solid rgba(217, 119, 6, 0.2);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* ========== MESSAGE ========== */
+.completion-message {
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #374151;
+    font-weight: 500;
+}
+
+.error-message {
+    color: #dc2626;
+}
+
+/* ========== FEATURES LIST ========== */
+.completion-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+    border-radius: 12px;
+}
+
+.feature-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0;
+    font-size: 13px;
+    color: #6b7280;
+    transition: all 0.3s ease;
+}
+
+.feature-item.active {
+    color: #22c55e;
+    font-weight: 600;
+}
+
+.feature-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    font-size: 12px;
+    background: #e5e7eb;
+    color: #9ca3af;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.feature-item.active .feature-icon {
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+/* ========== ACTION BUTTON ========== */
+.completion-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 14px 20px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.completion-action::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+}
+
+.completion-action:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(34, 197, 94, 0.4);
+}
+
+.completion-action:hover::before {
+    width: 300px;
+    height: 300px;
+}
+
+.action-icon {
+    font-size: 18px;
+}
+
+.action-text {
+    flex: 1;
+}
+
+.action-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* ========== COMPLETION BADGE ========== */
+.completion-badge-complete {
+    text-align: center;
+    padding: 24px 20px;
+    background: linear-gradient(135deg, #fef3c7 0%, #fef08a 100%);
+    border: 2px solid #fcd34d;
+    border-radius: 12px;
+    animation: slideInUp 0.6s ease-out;
+}
+
+.badge-animation {
+    display: inline-block;
+    font-size: 48px;
+    margin-bottom: 12px;
+    animation: starBurst 0.6s ease-out;
+}
+
+.badge-text {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 8px;
+}
+
+.badge-message {
+    margin: 0;
+    font-size: 13px;
+    color: #78350f;
+    font-weight: 500;
+}
+
+/* ========== MINIMIZE BUTTON ========== */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.widget-minimize-btn {
+    background: #22c55e;
+    border: 2px solid #16a34a;
+    border-radius: 8px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 0;
+    flex-shrink: 0;
+    font-weight: bold;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.widget-minimize-btn:hover {
+    border-color: #15803d;
+    background-color: #16a34a;
+    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+    transform: translateY(-2px);
+}
+
+.widget-minimize-btn:active {
+    transform: scale(0.95);
+}
+
+.minimize-icon {
+    display: inline-block;
+    line-height: 1;
+    font-weight: 900;
+}
+
+#profile-widget-content {
+    transition: all 0.3s ease;
+    max-height: 1000px;
+    overflow: hidden;
+}
+
+#profile-widget-content.minimized {
+    max-height: 0;
+    overflow: hidden;
+    display: none;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 640px) {
+    .profile-completion-widget {
+        padding: 20px;
+        margin: 16px 0;
+    }
+
+    .completion-header {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .completion-percentage-circle {
+        width: 100px;
+        height: 100px;
+        align-self: center;
+    }
+
+    .percentage-value {
+        font-size: 28px;
+    }
+
+    .completion-title {
+        font-size: 18px;
+    }
+
+    .title-subtitle {
+        font-size: 12px;
+    }
+
+    .completion-features {
+        grid-template-columns: 1fr;
+    }
+
+    .completion-action {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .action-badge {
+        align-self: center;
+    }
+}
+</style>

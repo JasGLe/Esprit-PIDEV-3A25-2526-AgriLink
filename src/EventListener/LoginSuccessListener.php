@@ -5,6 +5,7 @@ namespace App\EventListener;
 use App\Entity\UserManagement\User;
 use App\Entity\UserManagement\UserSession;
 use App\Service\SecurityEventService;
+use App\Service\UserGamificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
@@ -14,6 +15,7 @@ class LoginSuccessListener
     public function __construct(
         private EntityManagerInterface $entityManager,
         private SecurityEventService $securityEventService,
+        private UserGamificationService $gamificationService,
         private RequestStack $requestStack
     ) {
     }
@@ -34,6 +36,10 @@ class LoginSuccessListener
 
         // Set last login timestamp
         $user->setLastLogin(new \DateTime());
+
+        // Gamification: increment login counter and recompute points/badges
+        $user->incrementLoginCount();
+        $this->gamificationService->recalculate($user);
 
         // Persist changes
         $this->entityManager->persist($user);
