@@ -1,0 +1,177 @@
+<div id="voice-detection-widget" class="voice-detection-widget card mt-4">
+    <!-- Header -->
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 1c-3.3 0-6 2.7-6 6v6c0 3.3 2.7 6 6 6s6-2.7 6-6V7c0-3.3-2.7-6-6-6zm0 2c2.2 0 4 1.8 4 4v6c0 2.2-1.8 4-4 4s-4-1.8-4-4V7c0-2.2 1.8-4 4-4z"/>
+                <path d="M12 19c1.66 0 3-1.34 3-3h-6c0 1.66 1.34 3 3 3z"/>
+                <path d="M18 9v4c0 1.1.9 2 2 2s2-.9 2-2V9h-2v4h-2V9z"/>
+            </svg>
+            <h5 class="mb-0">Vérification Vocale</h5>
+        </div>
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="voice-toggle" data-action="toggle" role="switch">
+            <label class="form-check-label" for="voice-toggle"></label>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="card-body">
+        <div class="alert alert-info mb-3" role="alert">
+            <strong>Instructions:</strong>
+            <p class="mb-0 small">
+                Dites: <em>"Je sécurise mon compte"</em> (3-5 secondes)
+            </p>
+        </div>
+
+        <!-- Waveform Visualization -->
+        <div class="voice-waveform-container mb-3" style="display: none;">
+            <label class="small fw-semibold mb-2">Visualisation Audio</label>
+            <canvas data-canvas="waveform" width="400" height="60"
+                    style="width: 100%; height: 60px; border: 1px solid #ddd; border-radius: 4px;"></canvas>
+        </div>
+
+        <!-- Level Meter -->
+        <div class="voice-level-meter mb-3" style="display: none;">
+            <label class="small fw-semibold mb-2">Niveau Microphone</label>
+            <div class="progress" style="height: 20px;">
+                <div data-meter="level" class="progress-bar progress-bar-striped progress-bar-animated bg-success"
+                     role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        </div>
+
+        <!-- Status Display -->
+        <div class="text-center mb-3">
+            <small class="text-muted d-block mb-2" data-status="text">Prêt à enregistrer</small>
+            <small class="text-secondary d-block fw-semibold" data-display="timer">0s</small>
+        </div>
+
+        <!-- Record Button -->
+        <div class="d-grid gap-2 mb-3">
+            <button type="button" class="btn btn-lg btn-success" data-action="record"
+                    style="display: none;">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" class="me-2" style="vertical-align: -0.25em;">
+                    <circle cx="12" cy="12" r="8"/>
+                </svg>
+                Enregistrer
+            </button>
+        </div>
+
+        <!-- Quality Score Display -->
+        <div class="alert alert-success mb-0" role="alert" style="display: none;">
+            <small>
+                <strong>Qualité:</strong> <span data-score="quality">--</span>%
+                <br>
+                <strong>Distance:</strong> <span data-score="distance">--</span>
+            </small>
+        </div>
+
+        <!-- Error Message -->
+        <div class="alert alert-danger mb-0" role="alert" style="display: none;" data-alert="error">
+            <small data-alert-text="error"></small>
+        </div>
+
+        <!-- Retry Button -->
+        <div class="d-grid gap-2 mt-3" style="display: none;" data-action="retry-container">
+            <button type="button" class="btn btn-outline-primary" data-action="retry">
+                Réessayer
+            </button>
+            <button type="button" class="btn btn-outline-secondary" data-action="skip">
+                Ignorer (Optionnel)
+            </button>
+        </div>
+
+        <!-- Success Message -->
+        <div class="alert alert-success mb-0" role="alert" style="display: none;" data-alert="success">
+            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" class="me-2" style="vertical-align: -0.25em;">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+            <strong>Voix enregistrée avec succès!</strong>
+        </div>
+    </div>
+</div>
+
+<style>
+.voice-detection-widget {
+    border: 1px solid #dee2e6;
+}
+
+.voice-detection-widget .card-header {
+    padding: 1rem 1.25rem;
+}
+
+.voice-detection-widget .card-body {
+    padding: 1.5rem;
+}
+
+.voice-detection-widget button[data-action="record"] {
+    transition: all 0.3s ease;
+}
+
+.voice-detection-widget button[data-action="record"]:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.voice-detection-widget button[data-action="record"].recording {
+    background-color: #dc3545;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.voice-waveform-container,
+.voice-level-meter {
+    transition: all 0.3s ease;
+}
+
+.voice-waveform-container.show,
+.voice-level-meter.show {
+    display: block !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const widget = document.getElementById('voice-detection-widget');
+    if (!widget) return;
+
+    const toggleBtn = widget.querySelector('[data-action="toggle"]');
+    const recordBtn = widget.querySelector('[data-action="record"]');
+    const retryBtn = widget.querySelector('[data-action="retry"]');
+    const skipBtn = widget.querySelector('[data-action="skip"]');
+    const waveformContainer = widget.querySelector('.voice-waveform-container');
+    const levelMeterContainer = widget.querySelector('.voice-level-meter');
+
+    toggleBtn.addEventListener('change', function() {
+        if (this.checked) {
+            recordBtn.style.display = 'block';
+            waveformContainer.classList.add('show');
+            levelMeterContainer.classList.add('show');
+        } else {
+            recordBtn.style.display = 'none';
+            waveformContainer.classList.remove('show');
+            levelMeterContainer.classList.remove('show');
+        }
+    });
+
+    recordBtn.addEventListener('click', function() {
+        this.classList.toggle('recording');
+    });
+
+    retryBtn?.addEventListener('click', function() {
+        location.reload();
+    });
+
+    skipBtn?.addEventListener('click', function() {
+        widget.style.display = 'none';
+    });
+});
+</script>

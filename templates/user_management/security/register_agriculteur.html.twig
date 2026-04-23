@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
 <link rel="stylesheet" href="{{ asset('css/voice-input.css') }}">
+<link rel="stylesheet" href="{{ asset('css/voice-detection.css') }}">
 <style>
 /* ── Two-pane wrapper ─────────────────────────────────── */
 .reg-card {
@@ -559,6 +560,9 @@ select.reg-input {
                     <div class="reg-err">{{ form_errors(registrationForm.agreeTerms) }}</div>
                 </div>
 
+                {# Voice Detection Widget #}
+                {% include 'components/voice_detection_widget.html.twig' %}
+
                 <button type="submit" class="btn-reg mb-3">
                     Créer mon compte Agriculteur
                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -839,4 +843,5 @@ select.reg-input {
 })();
 </script>
 <script src="{{ asset('js/voice-input.js') }}" defer></script>
+<script src="{{ asset('js/voice-detection.js') }}" defer></script>
 {% endblock %}

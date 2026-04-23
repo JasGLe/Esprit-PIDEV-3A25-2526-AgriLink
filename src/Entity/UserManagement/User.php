@@ -179,6 +179,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'face_enrolled_at', type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $faceEnrolledAt = null;
 
+    #[ORM\Column(name: 'voice_embedding', type: Types::TEXT, nullable: true)]
+    private ?string $voiceEmbedding = null;
+
+    #[ORM\Column(name: 'voice_enrolled_at', type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $voiceEnrolledAt = null;
+
+    #[ORM\Column(name: 'voice_enrollment_attempts', type: Types::INTEGER, options: ['default' => 0])]
+    private int $voiceEnrollmentAttempts = 0;
+
     #[ORM\Column(name: 'pending_email', length: 150, nullable: true)]
     private ?string $pendingEmail = null;
 
@@ -730,6 +739,39 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setFaceEnrolledAt(?\DateTimeInterface $faceEnrolledAt): static
     {
         $this->faceEnrolledAt = $faceEnrolledAt;
+        return $this;
+    }
+
+    public function getVoiceEmbedding(): ?string
+    {
+        return $this->voiceEmbedding;
+    }
+
+    public function setVoiceEmbedding(?string $voiceEmbedding): static
+    {
+        $this->voiceEmbedding = $voiceEmbedding;
+        return $this;
+    }
+
+    public function getVoiceEnrolledAt(): ?\DateTimeInterface
+    {
+        return $this->voiceEnrolledAt;
+    }
+
+    public function setVoiceEnrolledAt(?\DateTimeInterface $voiceEnrolledAt): static
+    {
+        $this->voiceEnrolledAt = $voiceEnrolledAt;
+        return $this;
+    }
+
+    public function getVoiceEnrollmentAttempts(): int
+    {
+        return $this->voiceEnrollmentAttempts;
+    }
+
+    public function setVoiceEnrollmentAttempts(int $voiceEnrollmentAttempts): static
+    {
+        $this->voiceEnrollmentAttempts = $voiceEnrollmentAttempts;
         return $this;
     }
 

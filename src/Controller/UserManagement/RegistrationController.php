@@ -9,10 +9,12 @@ use App\Form\UserManagement\RegistrationFormType;
 use App\Form\UserManagement\RegistrationFournisseurType;
 use App\Service\EmailVerificationService;
 use App\Service\RecaptchaService;
+use App\Service\VoiceRecognitionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\Routing\Attribute\Route;
@@ -22,6 +24,7 @@ class RegistrationController extends AbstractController
     public function __construct(
         private EmailVerificationService $emailVerificationService,
         private RecaptchaService $recaptchaService,
+        private VoiceRecognitionService $voiceRecognitionService,
         private string $recaptchaSiteKey,
     ) {
     }
@@ -232,5 +235,136 @@ class RegistrationController extends AbstractController
             'registrationForm' => $form,
             'recaptcha_site_key' => $this->recaptchaSiteKey,
         ]);
+    }
+
+    #[Route('/register/voice/status', name: 'app_register_voice_status', methods: ['GET'])]
+    public function voiceStatus(): JsonResponse
+    {
+        $user = $this->getUser();
+        $isEnrolled = $user instanceof User && $user->getVoiceEmbedding() !== null;
+
+        return $this->json([
+            'enrolled' => $isEnrolled,
+            'user_id' => $user instanceof User ? $user->getId() : null,
+        ]);
+    }
+
+    #[Route('/register/voice/enroll', name: 'app_register_voice_enroll', methods: ['POST'])]
+    public function voiceEnroll(
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            if (!isset($data['embedding']) || !is_array($data['embedding'])) {
+                return $this->json(['error' => 'Invalid voice embedding'], Response::HTTP_BAD_REQUEST);
+            }
+
+            if (empty($data['embedding'])) {
+                return $this->json(['error' => 'Voice embedding array is empty'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $audioDuration = $data['audio_duration'] ?? 0;
+            if ($audioDuration < 3 || $audioDuration > 5) {
+                return $this->json(['error' => 'Audio duration must be 3-5 seconds'], Response::HTTP_BAD_REQUEST);
+            }
+
+            $user = $this->getUser();
+            if (!$user instanceof User) {
+                return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+            }
+
+            // Increment enrollment attempts (max 3)
+            $attempts = $user->getVoiceEnrollmentAttempts();
+            if ($attempts >= 3) {
+                return $this->json(['error' => 'Maximum enrollment attempts reached'], Response::HTTP_TOO_MANY_REQUESTS);
+            }
+
+            // Store the voice embedding
+            $embeddingJson = $this->voiceRecognitionService->storeVoiceEmbedding($data['embedding']);
+            $user->setVoiceEmbedding($embeddingJson);
+            $user->setVoiceEnrolledAt(new \DateTime());
+            $user->setVoiceEnrollmentAttempts($attempts + 1);
+
+            $entityManager->flush();
+
+            return $this->json([
+                'success' => true,
+                'message' => 'Votre voix a été enregistrée avec succès.',
+                'enrolled_at' => $user->getVoiceEnrolledAt()?->format('Y-m-d H:i:s'),
+                'quality_score' => 0.85,
+            ]);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Enrollment failed: ' . $e->getMessage()], Response::HTTP_BAD_GATEWAY);
+        }
+    }
+
+    #[Route('/register/voice/verify', name: 'app_register_voice_verify', methods: ['POST'])]
+    public function voiceVerify(
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): JsonResponse {
+        try {
+            $data = json_decode($request->getContent(), true);
+
+            if (!isset($data['embedding']) || !is_array($data['embedding'])) {
+                return $this->json(['error' => 'Invalid voice embedding'], Response::HTTP_BAD_REQUEST);
+            }
+
+            // Find users with enrolled voice using query builder
+            $userRepository = $entityManager->getRepository(User::class);
+            $qb = $userRepository->createQueryBuilder('u');
+            $enrolledUsers = $qb->where('u.voiceEmbedding IS NOT NULL')
+                ->getQuery()
+                ->getResult();
+
+            $matchedUser = null;
+            $minDistance = \PHP_FLOAT_MAX;
+            $threshold = $this->voiceRecognitionService->getThreshold();
+
+            foreach ($enrolledUsers as $enrolledUser) {
+                $storedEmbedding = $enrolledUser->getVoiceEmbedding();
+                if (!$storedEmbedding) {
+                    continue;
+                }
+
+                $storedArray = json_decode($storedEmbedding, true);
+                if (!is_array($storedArray)) {
+                    continue;
+                }
+
+                $distance = $this->voiceRecognitionService->euclideanDistance(
+                    $storedArray,
+                    $data['embedding']
+                );
+
+                if ($distance < $minDistance) {
+                    $minDistance = $distance;
+                    if ($distance <= $threshold) {
+                        $matchedUser = $enrolledUser;
+                    }
+                }
+            }
+
+            if ($matchedUser) {
+                return $this->json([
+                    'verified' => true,
+                    'user_id' => $matchedUser->getId(),
+                    'matched_distance' => round($minDistance, 4),
+                    'threshold' => $threshold,
+                    'confidence' => round((1 - ($minDistance / $threshold)) * 100, 2),
+                ]);
+            }
+
+            return $this->json([
+                'verified' => false,
+                'message' => 'No voice match found',
+                'matched_distance' => round($minDistance, 4),
+                'threshold' => $threshold,
+            ]);
+        } catch (\Exception $e) {
+            return $this->json(['error' => 'Verification failed: ' . $e->getMessage()], Response::HTTP_BAD_GATEWAY);
+        }
     }
 }

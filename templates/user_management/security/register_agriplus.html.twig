@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
 <link rel="stylesheet" href="{{ asset('css/voice-input.css') }}">
+<link rel="stylesheet" href="{{ asset('css/voice-detection.css') }}">
 {% endblock %}
 
 {% block body %}
@@ -357,6 +358,9 @@
                             </label>
                         </div>
                         {{ form_errors(registrationForm.agreeTerms) }}
+
+                        {# Voice Detection Widget #}
+                        {% include 'components/voice_detection_widget.html.twig' %}
 
                         <div class="info-note mt-3">
                             <svg width="15" height="15" fill="currentColor" viewBox="0 0 20 20" class="flex-shrink-0 mt-1" style="color:#1a7a4a;">
@@ -1063,4 +1067,5 @@ document.addEventListener('DOMContentLoaded', function () {
 })();
 </script>
 <script src="{{ asset('js/voice-input.js') }}" defer></script>
+<script src="{{ asset('js/voice-detection.js') }}" defer></script>
 {% endblock %}
