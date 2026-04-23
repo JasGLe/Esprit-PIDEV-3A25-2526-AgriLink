@@ -2,7 +2,8 @@
  * CalendarPro - FullCalendar configuration with a clean, modern UI.
  * Focus: layout quality, readability and responsive behavior.
  */
-class CalendarPro {
+if (typeof CalendarPro === 'undefined') {
+    class CalendarPro {
     constructor(config = {}) {
         this.config = {
             calendarElementId: 'calendar',
@@ -548,6 +549,7 @@ class CalendarPro {
         }
     }
 }
+} // Close the conditional block
 
 function initializeCalendar() {
     if (typeof FullCalendar === 'undefined') {
