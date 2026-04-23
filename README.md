@@ -5,11 +5,10 @@
   
   <p><em>Plateforme Agricole Collaborative — Symfony 6.4</em></p>
 
-  ![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)
-  ![Symfony](https://img.shields.io/badge/Symfony-6.4-000000?style=flat-square&logo=symfony&logoColor=white)
-  ![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat-square&logo=mysql&logoColor=white)
-  ![Tailwind CSS](https://img.shields.io/badge/TailwindCSS-3.x-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white)
-  ![License](https://img.shields.io/badge/Licence-Académique-green?style=flat-square)
+![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=flat-square&logo=php&logoColor=white)
+![Symfony](https://img.shields.io/badge/Symfony-6.4-000000?style=flat-square&logo=symfony&logoColor=white)
+![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?style=flat-square&logo=mysql&logoColor=white)
+![Bootstrap 5](https://img.shields.io/badge/Bootstrap-5.x-7952B3?style=flat-square&logo=bootstrap&logoColor=white) ![License](https://img.shields.io/badge/Licence-Académique-green?style=flat-square)
 
 </div>
 
@@ -25,14 +24,14 @@
 
 Le projet est structuré en **6 modules** développés en parallèle :
 
-| # | Module | Description | Responsable | Branche |
-|---|--------|-------------|-------------|---------|
-| `1` | 👤 Utilisateurs & Auth | Gestion des comptes et authentification | [@JasGLe](https://github.com/JasGLe) | `features/module1` |
-| `2` | 🌾 Exploitations | Gestion des exploitations agricoles | [@BoualiWejdene](https://github.com/BoualiWejdene) | `features/module2` |
-| `3` | 📅 Activités | Planification et suivi des activités | [@Yvssine04](https://github.com/Yvssine04) | `features/module3` |
-| `4` | 🛒 Marketplace | E-commerce et vente de produits | [@selmiroua](https://github.com/selmiroua) | `features/module4` |
-| `5` | 📰 Actualités | Interactions sociales et forum | [@yassineazzouz1920](https://github.com/yassineazzouz1920) | `features/module5` |
-| `6` | 🔧 Équipements | Gestion et maintenance du matériel | [@RSassi22](https://github.com/RSassi22) | `features/module6` |
+| #   | Module                 | Description                             | Responsable                                                | Branche            |
+| --- | ---------------------- | --------------------------------------- | ---------------------------------------------------------- | ------------------ |
+| `1` | 👤 Utilisateurs & Auth | Gestion des comptes et authentification | [@JasGLe](https://github.com/JasGLe)                       | `features/module1` |
+| `2` | 🌾 Exploitations       | Gestion des exploitations agricoles     | [@BoualiWejdene](https://github.com/BoualiWejdene)         | `features/module2` |
+| `3` | 📅 Activités           | Planification et suivi des activités    | [@Yvssine04](https://github.com/Yvssine04)                 | `features/module3` |
+| `4` | 🛒 Marketplace         | E-commerce et vente de produits         | [@selmiroua](https://github.com/selmiroua)                 | `features/module4` |
+| `5` | 📰 Actualités          | Interactions sociales et forum          | [@yassineazzouz1920](https://github.com/yassineazzouz1920) | `features/module5` |
+| `6` | 🔧 Équipements         | Gestion et maintenance du matériel      | [@RSassi22](https://github.com/RSassi22)                   | `features/module6` |
 
 > 📖 **Documentation complète :** [docs/MODULES.md](docs/MODULES.md)
 
@@ -40,13 +39,13 @@ Le projet est structuré en **6 modules** développés en parallèle :
 
 ## 🛠️ Technologies
 
-| Couche | Technologie |
-|--------|-------------|
-| **Backend** | Symfony 6.4 |
+| Couche              | Technologie              |
+| ------------------- | ------------------------ |
+| **Backend**         | Symfony 6.4              |
 | **Base de données** | MySQL 8.0 + Doctrine ORM |
-| **Frontend** | Twig + Tailwind CSS |
-| **Sécurité** | Symfony Security + 2FA |
-| **Email** | Symfony Mailer |
+| **Frontend**        | Twig + Bootstrap         |
+| **Sécurité**        | Symfony Security + 2FA   |
+| **Email**           | Symfony Mailer           |
 
 ---
 
@@ -58,7 +57,7 @@ Avant de commencer, assurez-vous d'avoir installé :
 - 🎼 **Composer**
 - 🗄️ **MySQL** 8.0+
 - 🟢 **Node.js** 18+ & npm
-- ⚡ **Symfony CLI** *(recommandé)*
+- ⚡ **Symfony CLI** _(recommandé)_
 
 ---
 
@@ -150,10 +149,10 @@ git push origin features/module[X]
 
 ## 🔑 Comptes de Test
 
-| Rôle | Email | Mot de passe |
-|------|-------|--------------|
-| 🛡️ Admin | jasser@agrilink.tn | `test123` |
-| 🌾 Agriculteur | hassen.trabelsi@agrilink.tn | `agri123` |
+| Rôle           | Email                       | Mot de passe |
+| -------------- | --------------------------- | ------------ |
+| 🛡️ Admin       | jasser@agrilink.tn          | `test123`    |
+| 🌾 Agriculteur | hassen.trabelsi@agrilink.tn | `agri123`    |
 
 > ⚠️ Ces identifiants sont réservés à l'environnement de développement local.
 
@@ -163,7 +162,6 @@ git push origin features/module[X]
 
 - 📘 [Documentation Symfony](https://symfony.com/doc/current/index.html)
 - 🗃️ [Doctrine ORM](https://www.doctrine-project.org/projects/orm.html)
-- 🎨 [Tailwind CSS](https://tailwindcss.com/docs)
 - 🔒 [Symfony Security](https://symfony.com/doc/current/security.html)
 
 ---
