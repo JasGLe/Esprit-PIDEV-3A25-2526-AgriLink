@@ -30,6 +30,7 @@ services:
             string $openWeatherApiKey: "%env(OPENWEATHER_API_KEY)%"
             string $openWeatherBaseUrl: "%env(OPENWEATHER_BASE_URL)%"
             string $geminiApiKey: "%env(GEMINI_API_KEY)%"
+            string $geminiApiKey1: "%env(GEMINI_API_KEY1)%"
             string $geminiApiBaseUrl: "%env(GEMINI_API_BASE_URL)%"
             string $geminiModel: "%env(GEMINI_MODEL)%"
             string $groqApiKey: "%env(GROQ_API_KEY)%"
@@ -112,6 +113,11 @@ services:
         arguments:
             $groqApiKey: "%env(GROQ_API_KEY)%"
             $groqModel: "%env(GROQ_MODEL)%"
+
+    # GeminiActivityService — AI recommendations for activities
+    App\Service\Activity\GeminiActivityService:
+        arguments:
+            $geminiApiKey1: "%env(GEMINI_API_KEY1)%"
 
     # GeminiVisionService — analyse visuelle photo équipements (via Groq LLaMA 4 Scout)
     App\Service\Equipment\GeminiVisionService:

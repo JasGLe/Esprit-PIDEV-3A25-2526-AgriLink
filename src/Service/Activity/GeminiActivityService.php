@@ -9,10 +9,10 @@ class GeminiActivityService
     private HttpClientInterface $client;
     private string $apiKey;
 
-    public function __construct(HttpClientInterface $client)
+    public function __construct(HttpClientInterface $client, string $geminiApiKey1)
     {
         $this->client = $client;
-        $this->apiKey = $_ENV['GEMINI_API_KEY'];
+        $this->apiKey = $geminiApiKey1;
     }
 
     public function recommanderCulture(array $parcelle): array
