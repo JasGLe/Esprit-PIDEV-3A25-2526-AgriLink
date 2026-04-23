@@ -197,7 +197,7 @@
                                     </h2>
                                     <p class="mpc-section__hint small mb-3">Choisissez comment vous souhaitez payer. Le montant total inclut la livraison.</p>
 
-                                    <form id="mpc-form-commande" class="mpc-form-commande" method="post" action="{{ path('marketplace_panier_commander') }}" novalidate>
+                                    <form id="mpc-form-commande" class="mpc-form-commande" method="post" action="{{ path('marketplace_panier_commander') }}" novalidate data-turbo="false">
                                         <input type="hidden" name="_token" value="{{ csrf_token('checkout_commander') }}">
                                         <input type="hidden" name="nom" id="mpc-order-nom" value="">
                                         <input type="hidden" name="telephone" id="mpc-order-tel" value="">
