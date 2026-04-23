@@ -15,8 +15,10 @@ use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Stripe\StripeClient;
 
@@ -187,7 +189,7 @@ class MarketplaceCartController extends AbstractController
                 }
                 $produit = $this->produitsRepository->find($pid);
                 if (!$produit || !$this->isProduitAchetableMarche($produit)) {
-                    throw new \RuntimeException(sprintf('Le produit « %s » n’est plus disponible.', (string) $lignePanier->getNomProduit()));
+                    throw new \RuntimeException(sprintf('Le produit « %s » n\'est plus disponible.', (string) $lignePanier->getNomProduit()));
                 }
                 $qty = $lignePanier->getQuantite();
                 if ($qty < 1 || $qty > $produit->getQuantite()) {
@@ -258,34 +260,44 @@ class MarketplaceCartController extends AbstractController
             }
 
             $this->entityManager->flush();
+
+            $stripeCheckoutUrl = null;
+            if ($mode === self::MODE_PAIEMENT_EN_LIGNE) {
+                // Build Stripe session before commit.
+                // If Stripe fails, exception triggers rollback and order won't be finalized.
+                $stripeCheckoutUrl = $this->createStripeCheckoutUrl($commande);
+            }
+
             $conn->commit();
 
-            try {
-                $this->orderNotificationService->notifyOrderCreated(
-                    $commande,
-                    $user,
-                    array_keys($responsableUserIds),
-                    $nomComplet
-                );
-            } catch (\Throwable $e) {
-                // Do not block order flow if notification delivery fails.
-                $this->logger->warning('Order notifications failed after order creation', [
-                    'commandeId' => $commandeId,
-                    'message' => $e->getMessage(),
+            // For online payment, do not mark UX as confirmed before Stripe success.
+            // Keep order confirmation + notifications for non-online flow only.
+            if ($mode !== self::MODE_PAIEMENT_EN_LIGNE) {
+                try {
+                    $this->orderNotificationService->notifyOrderCreated(
+                        $commande,
+                        $user,
+                        array_keys($responsableUserIds),
+                        $nomComplet
+                    );
+                } catch (\Throwable $e) {
+                    // Do not block order flow if notification delivery fails.
+                    $this->logger->warning('Order notifications failed after order creation', [
+                        'commandeId' => $commandeId,
+                        'message' => $e->getMessage(),
+                    ]);
+                }
+
+                $request->getSession()->set('marketplace_order_confirm', [
+                    'numCommande' => $numCommande,
+                    'commande_id' => $commandeId,
+                    'paiement_en_ligne' => false,
                 ]);
             }
 
-            $request->getSession()->set('marketplace_order_confirm', [
-                'numCommande' => $numCommande,
-                'commande_id' => $commandeId,
-                'paiement_en_ligne' => $mode === self::MODE_PAIEMENT_EN_LIGNE,
-            ]);
-
-            if ($mode === self::MODE_PAIEMENT_EN_LIGNE) {
-                $redirect = $this->createStripeCheckoutRedirect($commande);
-                if ($redirect instanceof Response) {
-                    return $redirect;
-                }
+            if ($mode === self::MODE_PAIEMENT_EN_LIGNE && is_string($stripeCheckoutUrl) && $stripeCheckoutUrl !== '') {
+                // 303 avoids form POST re-submission ambiguity in some browsers/proxies.
+                return new RedirectResponse($stripeCheckoutUrl, Response::HTTP_SEE_OTHER);
             }
 
             return $this->redirectToRoute('marketplace_index');
@@ -298,11 +310,11 @@ class MarketplaceCartController extends AbstractController
             if ($e instanceof \RuntimeException) {
                 $message = $raw;
             } elseif (str_contains($raw, 'Unknown column')) {
-                $message = 'La base de données ne correspond pas au schéma attendu (colonne manquante). Vérifiez les migrations ou le schéma partagé avec l’app desktop.';
+                $message = 'La base de données ne correspond pas au schéma attendu (colonne manquante). Vérifiez les migrations ou le schéma partagé avec l\'app desktop.';
             } elseif ($this->getParameter('kernel.debug')) {
                 $message = $raw;
             } else {
-                $message = 'Impossible d’enregistrer la commande. Réessayez plus tard.';
+                $message = 'Impossible d\'enregistrer la commande. Réessayez plus tard.';
             }
 
             $this->addFlash('error', $message);
@@ -329,7 +341,7 @@ class MarketplaceCartController extends AbstractController
         try {
             $client = $this->stripeClient();
             if ($client === null) {
-                $this->addFlash('error', 'Stripe n’est pas configuré.');
+                $this->addFlash('error', 'Stripe n\'est pas configuré.');
                 return $this->redirectToRoute('mes_commandes_index');
             }
 
@@ -344,6 +356,25 @@ class MarketplaceCartController extends AbstractController
                 $commande->setStatus('EN_PREPARATION');
                 $this->entityManager->persist($commande);
                 $this->entityManager->flush();
+            }
+
+            // Notify order creation only after payment is confirmed online.
+            try {
+                /** @var User|null $buyer */
+                $buyer = $this->getUser();
+                if ($buyer instanceof User) {
+                    $this->orderNotificationService->notifyOrderCreated(
+                        $commande,
+                        $buyer,
+                        [],
+                        trim((string) ($commande->getPrenom().' '.$commande->getNom()))
+                    );
+                }
+            } catch (\Throwable $e) {
+                $this->logger->warning('Order notifications failed after Stripe success', [
+                    'commandeId' => $commande->getId(),
+                    'message' => $e->getMessage(),
+                ]);
             }
 
             $this->addFlash('success', 'Paiement confirmé. Votre commande est en préparation.');
@@ -361,28 +392,37 @@ class MarketplaceCartController extends AbstractController
         return $this->redirectToRoute('mes_commandes_index');
     }
 
-    private function createStripeCheckoutRedirect(Commandes $commande): ?Response
+    private function createStripeCheckoutUrl(Commandes $commande): string
     {
         $client = $this->stripeClient();
         if ($client === null) {
-            $this->addFlash('error', 'Stripe n’est pas configuré (clé manquante ou dépendance).');
-            return $this->redirectToRoute('marketplace_panier_index');
+            throw new \RuntimeException('Stripe n\'est pas configuré (clé manquante ou dépendance).');
         }
 
         $currency = strtolower((string) ($_ENV['STRIPE_CURRENCY'] ?? self::STRIPE_CURRENCY_DEFAULT));
         $amountCents = (int) round(max(0.0, (float) $commande->getPrixTotal()) * 100);
         if ($amountCents < 50) {
-            $this->addFlash('error', 'Montant trop faible pour Stripe.');
-            return $this->redirectToRoute('marketplace_panier_index');
+            throw new \RuntimeException('Montant trop faible pour Stripe.');
         }
 
-        $successUrl = $this->generateUrl('marketplace_panier_stripe_success', ['id' => $commande->getId()], 0).'?session_id={CHECKOUT_SESSION_ID}';
-        $cancelUrl  = $this->generateUrl('marketplace_panier_stripe_cancel', ['id' => $commande->getId()], 0);
+        // FIX: Use ABSOLUTE_URL so Stripe can redirect back correctly
+        $successUrl = $this->generateUrl(
+            'marketplace_panier_stripe_success',
+            ['id' => $commande->getId()],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        ).'?session_id={CHECKOUT_SESSION_ID}';
 
+        $cancelUrl = $this->generateUrl(
+            'marketplace_panier_stripe_cancel',
+            ['id' => $commande->getId()],
+            UrlGeneratorInterface::ABSOLUTE_URL
+        );
         $session = $client->checkout->sessions->create([
             'mode' => 'payment',
             'success_url' => $successUrl,
             'cancel_url' => $cancelUrl,
+            'payment_method_types' => ['card'],
+            'customer_email' => $commande->getEmail() ?: null,
             'line_items' => [[
                 'quantity' => 1,
                 'price_data' => [
@@ -399,7 +439,12 @@ class MarketplaceCartController extends AbstractController
             ],
         ]);
 
-        return $this->redirect((string) $session->url);
+        $url = (string) ($session->url ?? '');
+        if ($url === '' || !str_contains($url, 'checkout.stripe.com')) {
+            throw new \RuntimeException('Stripe a retourné une session sans URL de redirection.');
+        }
+
+        return $url;
     }
 
     private function stripeClient(): ?StripeClient
@@ -612,11 +657,11 @@ class MarketplaceCartController extends AbstractController
             $this->entityManager->remove($ligne);
             $this->entityManager->flush();
 
-            return $this->jsonPanierEtat($uid, true, 'Ce produit n’est plus disponible.');
+            return $this->jsonPanierEtat($uid, true, 'Ce produit n\'est plus disponible.');
         }
 
         if ($delta === 1 && !$this->isProduitAchetableMarche($produit)) {
-            return $this->jsonPanierEtat($uid, false, 'Ce produit n’est plus disponible à l’achat.', Response::HTTP_UNPROCESSABLE_ENTITY);
+            return $this->jsonPanierEtat($uid, false, 'Ce produit n\'est plus disponible à l\'achat.', Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         if ($newQty > $produit->getQuantite()) {
@@ -673,7 +718,7 @@ class MarketplaceCartController extends AbstractController
         }
 
         if (!$this->isProduitAchetableMarche($produit)) {
-            return $this->panierJsonOrRedirect($request, false, 'Ce produit n’est pas disponible à l’achat.', $uid);
+            return $this->panierJsonOrRedirect($request, false, 'Ce produit n\'est pas disponible à l\'achat.', $uid);
         }
 
         if ($produit->getIdFournisseur() === $uid) {
