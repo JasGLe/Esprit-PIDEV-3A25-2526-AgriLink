@@ -16,9 +16,28 @@
             padding: 1.75rem 1.5rem;
             margin-bottom: 1.5rem;
             box-shadow: 0 12px 40px rgba(20, 83, 45, 0.25);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
         }
+        .reco-hero-title { flex: 1; }
         .reco-hero h1 { font-size: 1.35rem; font-weight: 700; margin: 0 0 .5rem; }
         .reco-hero p  { margin: 0; opacity: .92; font-size: .95rem; line-height: 1.55; }
+        .reco-hero-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.25);
+            color: #fff;
+            padding: .35rem .75rem;
+            border-radius: 20px;
+            font-size: .75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            white-space: nowrap;
+            margin-left: 1rem;
+        }
+        .reco-hero-badge.manual { background: rgba(100, 116, 139, 0.3); }
+        .reco-hero-badge.pollination { background: rgba(99, 102, 241, 0.3); }
 
         /* ── Stats ── */
         .reco-stats {
@@ -284,12 +303,15 @@
         </div>
 
         <header class="reco-hero">
-            <h1>🤖 Bonjour {{ recoUserDisplayName|e }}</h1>
-            <p>
-                Analyse de <strong>vos activités agricoles</strong> sur les
-                <strong>{{ nextDays }} prochains jours</strong> — recommandations de planification
-                et conseils météo personnalisés. Cliquez sur une carte pour voir les détails.
-            </p>
+            <div class="reco-hero-title">
+                <h1>🤖 Bonjour {{ recoUserDisplayName|e }}</h1>
+                <p>
+                    Analyse de <strong>vos activités agricoles</strong> sur les
+                    <strong>{{ nextDays }} prochains jours</strong> — recommandations de planification
+                    et conseils météo personnalisés. Cliquez sur une carte pour voir les détails.
+                </p>
+            </div>
+            <div id="reco-model-badge" class="reco-hero-badge" style="display:none;"></div>
         </header>
 
         <div class="reco-stats">
@@ -400,6 +422,20 @@
             btn.setAttribute('aria-selected', 'true');
         };
 
+        // ── Model Badge ───────────────────────────────────────────────────────
+        window.updateModelBadge = function (model) {
+            const badge = document.getElementById('reco-model-badge');
+            const badges = {
+                'gemini': { icon: '🤖', label: 'Google Gemini' },
+                'manuel': { icon: '📋', label: 'Généré manuellement' },
+                'pollination': { icon: '🤖', label: 'Pollination AI' }
+            };
+            const config = badges[model] || { icon: '🤖', label: 'IA' };
+            badge.textContent = `${config.icon} ${config.label}`;
+            badge.className = `reco-hero-badge ${model === 'manuel' ? 'manual' : model === 'pollination' ? 'pollination' : ''}`;
+            badge.style.display = 'inline-block';
+        };
+
         // ── Modal ─────────────────────────────────────────────────────────────
         const backdrop = document.getElementById('reco-modal-backdrop');
 
@@ -508,8 +544,15 @@
                 return;
             }
 
+            if (data.status === 'error') {
+                renderError(data.error || 'Erreur IA inconnue', true, data.ai_model_failed || 'gemini');
+                return;
+            }
+
+            // For both 'ok' (IA) and 'manual' statuses
             const planning = data.planning ?? [];
             const weather  = data.weather  ?? [];
+            const isManual = data.status === 'manual';
 
             // Store rec objects for modal access
             planning.forEach((r, i) => { window.__recs['recs_planning_' + i] = r; });
@@ -542,23 +585,110 @@
             loaderWrap.style.display  = 'none';
             contentWrap.style.display = 'block';
 
+            // Update model badge
+            const modelUsed = data.status === 'manual' ? 'manuel' : data.ai_model ?? 'gemini';
+            updateModelBadge(modelUsed);
+
             if (overallSev !== 'ok' && planSev === 'ok' && wSev !== 'ok') {
                 switchTab('weather');
             }
         }
 
-        function renderError(msg) {
-            loaderWrap.innerHTML = `<div class="reco-act-card severity-critical">
-                <div class="reco-act-header">
-                    <span style="font-size:1.1rem">🔴</span>
-                    <span class="reco-act-title">Erreur lors du chargement</span>
-                </div>
-                <ul class="reco-act-bullets"><li>${esc(msg)}</li></ul>
-                <button class="btn btn-outline-danger btn-sm mt-2" onclick="location.reload()">Réessayer</button>
-            </div>`;
+        function renderError(msg, isAiFailure = true, failedModel = 'gemini') {
+            const isGeminiFailure = failedModel === 'gemini';
+            const isPollinationsFailure = failedModel === 'pollination';
+
+            const aiErrorHTML = isGeminiFailure
+                ? `<div class="reco-act-card severity-critical">
+                    <div class="reco-act-header">
+                        <span style="font-size:1.1rem">🔴</span>
+                        <span class="reco-act-title">Service IA Gemini indisponible</span>
+                    </div>
+                    <ul class="reco-act-bullets">
+                        <li><strong>${esc(msg)}</strong></li>
+                        <li>Choisissez une alternative pour continuer la génération.</li>
+                    </ul>
+                    <div class="mt-3 d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-success btn-sm" onclick="retryWithModel('pollination')">
+                            🤖 Génération automatique avec Pollinations
+                        </button>
+                        <button class="btn btn-outline-primary btn-sm" onclick="retryWithModel('manuel')">
+                            ⚙️ Génération manuelle
+                        </button>
+                    </div>
+                </div>`
+                : isPollinationsFailure
+                ? `<div class="reco-act-card severity-critical">
+                    <div class="reco-act-header">
+                        <span style="font-size:1.1rem">🔴</span>
+                        <span class="reco-act-title">Pollinations indisponible</span>
+                    </div>
+                    <ul class="reco-act-bullets">
+                        <li><strong>${esc(msg)}</strong></li>
+                        <li>Vous pouvez passer en génération manuelle ou retenter Gemini.</li>
+                    </ul>
+                    <div class="mt-3 d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-primary btn-sm" onclick="retryWithModel('manuel')">
+                            ⚙️ Génération manuelle
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="retryWithModel('gemini')">
+                            🤖 Réessayer Gemini
+                        </button>
+                    </div>
+                </div>`
+                : `<div class="reco-act-card severity-critical">
+                    <div class="reco-act-header">
+                        <span style="font-size:1.1rem">🔴</span>
+                        <span class="reco-act-title">Erreur de génération IA</span>
+                    </div>
+                    <ul class="reco-act-bullets"><li>${esc(msg)}</li></ul>
+                    <button class="btn btn-outline-primary btn-sm mt-2" onclick="retryWithModel('manuel')">⚙️ Génération manuelle</button>
+                </div>`;
+
+            const errorHTML = isAiFailure
+                ? aiErrorHTML
+                : `<div class="reco-act-card severity-critical">
+                    <div class="reco-act-header">
+                        <span style="font-size:1.1rem">🔴</span>
+                        <span class="reco-act-title">Erreur lors du chargement</span>
+                    </div>
+                    <ul class="reco-act-bullets"><li>${esc(msg)}</li></ul>
+                    <button class="btn btn-outline-danger btn-sm mt-2" onclick="location.reload()">Réessayer</button>
+                </div>`;
+            
+            loaderWrap.innerHTML = errorHTML;
             statStatus.querySelector('.num').textContent = '❌';
             statStatus.querySelector('.lbl').textContent = 'Erreur';
         }
+
+        window.retryWithModel = function (model) {
+            const url = new URL(payloadUrl, window.location.origin);
+            url.searchParams.set('ai_model', model);
+
+            const labels = {
+                gemini: 'Gemini',
+                pollination: 'Pollinations',
+                manuel: 'génération manuelle'
+            };
+            
+            loaderWrap.innerHTML = `<div class="reco-loader">
+                <div class="reco-spinner"></div>
+                <p>Chargement avec ${labels[model] || 'IA'}...</p>
+            </div>`;
+            
+            fetch(url.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function (res) {
+                    if (!res.ok) throw new Error('HTTP ' + res.status);
+                    return res.json();
+                })
+                .then(function (data) {
+                    if (data.error && !data.status) throw new Error(data.error);
+                    render(data);
+                })
+                .catch(function (err) {
+                    renderError(err.message || 'Erreur inconnue', false);
+                });
+        };
 
         // ── Fetch ─────────────────────────────────────────────────────────────
         fetch(payloadUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
@@ -567,7 +697,7 @@
                 return res.json();
             })
             .then(function (data) {
-                if (data.error) throw new Error(data.error);
+                if (data.error && !data.status) throw new Error(data.error);
                 render(data);
             })
             .catch(function (err) {

@@ -257,6 +257,12 @@ IMPORTANT:
 
         $data = $response->toArray(false);
 
+        // Check for API error responses from Gemini
+        if (isset($data['error'])) {
+            $errorMsg = $this->buildGeminiErrorMessage($data['error']);
+            throw new \Exception($errorMsg);
+        }
+
         if (isset($data['promptFeedback'])) {
             throw new \Exception("Gemini blocked: " . json_encode($data['promptFeedback']));
         }
@@ -284,5 +290,26 @@ IMPORTANT:
         }
 
         return $json;
+    }
+
+    /**
+     * Transform Gemini API error code into user-friendly French message
+     */
+    private function buildGeminiErrorMessage(array $error): string
+    {
+        $code = $error['code'] ?? 0;
+
+        switch ($code) {
+            case 429:
+                return "Quota IA dépassée. Trop de requêtes. Réessaie dans quelques secondes.";
+            case 503:
+            case 'UNAVAILABLE':
+                return "Service IA temporairement indisponible. Réessaie dans quelques instants.";
+            case 401:
+            case 403:
+                return "Clé API Gemini invalide ou expirée.";
+            default:
+                return "Erreur IA (code: $code). Réessaie plus tard.";
+        }
     }
 }

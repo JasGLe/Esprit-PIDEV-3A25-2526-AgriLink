@@ -2,8 +2,8 @@
  * CalendarPro - FullCalendar configuration with a clean, modern UI.
  * Focus: layout quality, readability and responsive behavior.
  */
-if (typeof CalendarPro === 'undefined') {
-    class CalendarPro {
+if (typeof window.CalendarPro === 'undefined') {
+    window.CalendarPro = class CalendarPro {
     constructor(config = {}) {
         this.config = {
             calendarElementId: 'calendar',
@@ -549,17 +549,33 @@ if (typeof CalendarPro === 'undefined') {
         }
     }
 }
-} // Close the conditional block
+}
 
 function initializeCalendar() {
+    const calendarEl = document.getElementById('calendar');
+    if (!calendarEl) {
+        return;
+    }
+
+    if (calendarEl.dataset.calendarProInitialized === 'true') {
+        return;
+    }
+
     if (typeof FullCalendar === 'undefined') {
         console.error('FullCalendar is not loaded.');
         return;
     }
 
     try {
-        const calendar = new CalendarPro();
+        const CalendarProClass = window.CalendarPro;
+        if (typeof CalendarProClass === 'undefined') {
+            console.error('CalendarPro is not loaded.');
+            return;
+        }
+
+        const calendar = new CalendarProClass();
         calendar.init();
+        calendarEl.dataset.calendarProInitialized = 'true';
     } catch (error) {
         console.error('Error initializing calendar:', error);
     }
@@ -571,6 +587,8 @@ if (document.readyState === 'loading') {
     initializeCalendar();
 }
 
+document.addEventListener('turbo:load', initializeCalendar);
+
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = CalendarPro;
+    module.exports = window.CalendarPro;
 }
