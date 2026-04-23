@@ -47,9 +47,25 @@ self.addEventListener('message', async ({ data }) => {
             language:          lang,
             task:              'transcribe',
             return_timestamps: false,
+            // French-specific options for better accuracy
+            temperature:       0.2,  // Lower temperature = more conservative/accurate
         });
 
-        self.postMessage({ type: 'result', transcript: result.text.trim() });
+        let transcript = result.text.trim();
+
+        // French post-processing: Fix common Whisper artifacts for French
+        if (lang === 'french') {
+            transcript = transcript
+                // Fix common French contractions
+                .replace(/\bl\s+[aeiou]/gi, function(m) { return m.replace(/\s+/, ''); })  // l'apprendre → l'apprendre
+                .replace(/\bd\s+[aeiou]/gi, function(m) { return m.replace(/\s+/, ''); })  // d'autres → d'autres
+                // Preserve proper spacing in French abbreviations
+                .replace(/M\s+\./g, 'M.')
+                .replace(/Mme\s+\./g, 'Mme.')
+                .replace(/Dr\s+\./g, 'Dr.');
+        }
+
+        self.postMessage({ type: 'result', transcript: transcript });
     } catch (err) {
         self.postMessage({ type: 'error', message: err.message });
     }

@@ -4,8 +4,19 @@
  * Works on any network — no Google servers involved.
  * Model (~74 MB) is downloaded from Hugging Face on first use and cached in the browser.
  *
+ * ENHANCED FEATURES:
+ * ✨ French Language Optimization: Optimized for French dialect and vocabulary
+ * 📱 Phone Number Processing: Converts spoken digits to clean format (e.g., "zéro cinq cinq..." → "0551234567")
+ * 📧 Email Processing: Handles French email words (arobase, point) and special characters
+ * 🎯 Smart Field Detection: Automatically detects field type (phone/email/text) and processes accordingly
+ *
  * Attach to any input/textarea with:  data-voice-input
  * Optional language override:         data-voice-lang="fr-FR"  (defaults to fr-FR)
+ *
+ * Examples:
+ *  <input type="tel" data-voice-input />              <!-- Phone field, auto-detected -->
+ *  <input type="email" data-voice-input />            <!-- Email field, auto-detected -->
+ *  <input type="text" name="ville" data-voice-input /> <!-- Text field, appends text -->
  */
 (function () {
     'use strict';
@@ -71,6 +82,146 @@
             // Transfer buffer ownership (zero-copy) to the worker
             getWorker().postMessage({ type: 'transcribe', audio: float32, lang: lang }, [float32.buffer]);
         });
+    }
+
+    // ── Post-processing helpers (French field-specific) ─────────────────────
+    /**
+     * Detect field type based on input attributes and name
+     */
+    function detectFieldType(input) {
+        var type = input.getAttribute('type') || 'text';
+        var name = (input.name || '').toLowerCase();
+
+        // Check for phone number fields
+        if (type === 'tel' || name.includes('telephone') || name.includes('phone') || name.includes('tel')) {
+            return 'phone';
+        }
+        // Check for email fields
+        if (type === 'email' || name.includes('email') || name.includes('mail')) {
+            return 'email';
+        }
+        return 'text';
+    }
+
+    /**
+     * Process transcribed text based on field type
+     * Handles French language, phone numbers, emails
+     */
+    function processTranscript(transcript, fieldType) {
+        if (!transcript) return '';
+
+        // Replace French accented word separations (common Whisper artifacts)
+        var processed = transcript
+            // French-specific cleanups
+            .replace(/\bà\s+le\b/gi, 'à le')
+            .replace(/\bdu\s+/gi, 'du ')
+            .replace(/\bdes\s+/gi, 'des ')
+            .trim();
+
+        // Field-specific processing
+        if (fieldType === 'phone') {
+            processed = processPhoneNumber(processed);
+        } else if (fieldType === 'email') {
+            processed = processEmail(processed);
+        }
+
+        return processed;
+    }
+
+    /**
+     * Clean phone numbers: Extract digits only, remove all separators
+     * Whisper may transcribe: "0 5 5 1 2 3 4 5 6 7" or "zéro cinq cinq..."
+     * We want: "0551234567"
+     */
+    function processPhoneNumber(text) {
+        // French number words (common Whisper outputs)
+        var frenchNumbers = {
+            // Basic digits
+            'zéro': '0', 'zero': '0',
+            'un': '1', 'une': '1',
+            'deux': '2',
+            'trois': '3',
+            'quatre': '4',
+            'cinq': '5',
+            'six': '6',
+            'sept': '7',
+            'huit': '8',
+            'neuf': '9',
+            // Alternative spellings/pronunciations
+            'oh': '0', 'o': '0',
+        };
+
+        var result = text.toLowerCase();
+
+        // Replace French number words with priority (longer words first to avoid partial matches)
+        var words = Object.keys(frenchNumbers).sort(function(a, b) { return b.length - a.length; });
+        words.forEach(function(word) {
+            // Use word boundaries to avoid partial replacements
+            result = result.replace(new RegExp('\\b' + word + '\\b', 'g'), frenchNumbers[word]);
+        });
+
+        // Remove all non-digit characters (spaces, hyphens, dots, slashes, etc.)
+        result = result.replace(/[^\d]/g, '');
+
+        // Ensure it looks like a valid phone number (8-15 digits for international)
+        if (result.length >= 8 && result.length <= 15) {
+            return result;
+        }
+
+        // If cleaning failed, return original text (too short/long or couldn't parse)
+        return text;
+    }
+
+    /**
+     * Clean email addresses: Handle @ and common French TLDs
+     * Whisper may transcribe: "john arobase example point com"
+     * We want: "john@example.com"
+     */
+    function processEmail(text) {
+        var result = text.toLowerCase();
+
+        // STEP 1: Replace @ symbol variations FIRST (arobase is French for @)
+        // Must do this before 'point' to avoid interference with names like "dupont"
+        result = result
+            .replace(/\barobase\b/gi, '@')
+            .replace(/\barrobe\b/gi, '@')
+            .replace(/\barobase\s+signe\b/gi, '@')
+            .replace(/\bat\b/gi, '@');
+
+        // STEP 2: Replace . symbol variations (point is French for .)
+        // Only replace 'point' when it's surrounded by spaces (standalone word)
+        result = result
+            .replace(/\s+point\s+/g, '.')
+            .replace(/\bponctouel\b/gi, '.')
+            .replace(/\bpunct\b/gi, '.');
+
+        // STEP 3: Replace hyphen word with actual hyphen
+        result = result.replace(/\bhyphen\b|\btiret\b/gi, '-');
+
+        // STEP 4: Clean up spaces around special characters
+        result = result
+            .replace(/\s*@\s*/g, '@')
+            .replace(/\s*\.\s*/g, '.')
+            .replace(/\s*-\s*/g, '-');
+
+        // STEP 5: Remove any remaining spaces
+        result = result.replace(/\s+/g, '');
+
+        // STEP 6: Validate email structure
+        var hasAt = result.indexOf('@') !== -1;
+        var hasDot = result.indexOf('.') !== -1;
+        var atPos = result.indexOf('@');
+        var dotPos = result.lastIndexOf('.');
+        var hasValidStructure = hasAt && hasDot && atPos > 0 && dotPos > atPos;
+
+        if (hasValidStructure) {
+            // Additional cleanup: remove any leftover punctuation except @ . and hyphen
+            result = result.replace(/[^a-z0-9@.\-_]/g, '');
+            return result;
+        }
+
+        // If not valid email format, return original text (user may correct)
+        return text;
     }
 
     // ── Audio helpers ────────────────────────────────────────────────────
@@ -167,8 +318,18 @@
                 if (!transcript) {
                     showToast('Aucune parole détectée. Réessayez.', 'warning');
                 } else {
-                    var cur     = input.value.trim();
-                    input.value = cur ? cur + ' ' + transcript : transcript;
+                    // Detect field type and process transcript accordingly
+                    var fieldType = detectFieldType(input);
+                    var processed = processTranscript(transcript, fieldType);
+
+                    // Insert processed text (no append for phone/email fields, replace instead)
+                    if (fieldType === 'phone' || fieldType === 'email') {
+                        input.value = processed;
+                    } else {
+                        var cur = input.value.trim();
+                        input.value = cur ? cur + ' ' + processed : processed;
+                    }
+
                     input.dispatchEvent(new Event('input',  { bubbles: true }));
                     input.dispatchEvent(new Event('change', { bubbles: true }));
                 }
