@@ -7,7 +7,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: SecurityEventRepository::class)]
-#[ORM\Table(name: 'SecurityEvent')]
+#[ORM\Table(name: 'security_event')]
 #[ORM\HasLifecycleCallbacks]
 class SecurityEvent
 {
@@ -35,17 +35,22 @@ class SecurityEvent
     private ?int $id = null;
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'securityEvents')]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'idUtilisateur', nullable: true, onDelete: 'SET NULL')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
     private ?User $user = null;
 
     #[ORM\Column(name: 'event_type', type: Types::STRING, length: 50)]
-    private ?string $eventType = null;
+    private string $eventType = '';
 
     #[ORM\Column(name: 'details', type: Types::TEXT, nullable: true)]
     private ?string $details = null;
 
-    #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $createdAt = null;
+    #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $createdAt;
+
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime();
+    }
 
     public function getId(): ?int
     {
@@ -88,12 +93,12 @@ class SecurityEvent
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): \DateTimeInterface
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $createdAt): static
+    protected function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
 
@@ -103,8 +108,6 @@ class SecurityEvent
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
-        if ($this->createdAt === null) {
-            $this->createdAt = new \DateTime();
-        }
+        $this->createdAt = new \DateTime();
     }
 }

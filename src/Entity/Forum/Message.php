@@ -21,7 +21,7 @@ class Message
     #[Assert\NotNull(message: 'Le forum associé est obligatoire.')]
     private Forum $forum;
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'idUtilisateur', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id_utilisateur', nullable: false, onDelete: 'CASCADE')]
     private User $user;
 
     #[ORM\Column(type: Types::TEXT)]

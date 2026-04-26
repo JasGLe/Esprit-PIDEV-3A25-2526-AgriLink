@@ -11,7 +11,9 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\Constraints as Assert;use Symfony\Component\Serializer\Annotation\Ignore;
+use SensitiveParameter;
+
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: 'User')]
@@ -42,13 +44,13 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
-    #[ORM\Column(name: 'idUtilisateur', type: Types::INTEGER)]
+    #[ORM\Column(name: 'id_utilisateur', type: Types::INTEGER)]
     private ?int $id = null;
 
     #[ORM\Column(name: 'Nom', length: 100)]
     #[Assert\NotBlank(message: 'Le nom est obligatoire.')]
     #[Assert\Length(max: 100, maxMessage: 'Le nom ne peut pas dépasser {{ limit }} caractères.')]
-    private ?string $nom = null;
+    private string $nom = '';
 
     #[ORM\Column(name: 'DateNaissance', type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $dateNaissance = null;
@@ -57,7 +59,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[Assert\NotBlank(message: "L'email est obligatoire.")]
     #[Assert\Email(message: "L'adresse email n'est pas valide.")]
     #[Assert\Length(max: 150, maxMessage: "L'email ne peut pas dépasser {{ limit }} caractères.")]
-    private ?string $email = null;
+    private string $email = '';
 
     #[ORM\Column(name: 'telephone', length: 20, nullable: true)]
     #[Assert\Regex(
@@ -67,7 +69,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $telephone = null;
 
     #[ORM\Column(name: 'Mdp', length: 255)]
-    private ?string $password = null;
+    #[Ignore]
+    private string $password = '';
 
     #[ORM\Column(name: 'PhotoProfil', length: 255, nullable: true)]
     private ?string $photoProfil = null;
@@ -125,11 +128,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'email_verified', type: Types::BOOLEAN, options: ['default' => false])]
     private bool $emailVerified = false;
 
-    #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $createdAt = null;
+    #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $createdAt;
 
-    #[ORM\Column(name: 'updated_at', type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $updatedAt = null;
+    #[ORM\Column(name: 'updated_at', type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $updatedAt;
 
     #[ORM\Column(name: 'oauth_provider', length: 20, nullable: true)]
     private ?string $oauthProvider = null;
@@ -138,6 +141,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $oauthProviderId = null;
 
     #[ORM\Column(name: 'password_migrated', type: Types::BOOLEAN, options: ['default' => false])]
+    #[Ignore]
     private bool $passwordMigrated = false;
 
     #[ORM\Column(name: 'failed_login_attempts', type: Types::INTEGER, options: ['default' => 0])]
@@ -150,6 +154,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?\DateTimeInterface $lastLogin = null;
 
     #[ORM\Column(name: 'email_verification_token', length: 10, nullable: true)]
+    #[Ignore]
     private ?string $emailVerificationToken = null;
 
     #[ORM\Column(name: 'email_verification_expires_at', type: Types::DATETIME_MUTABLE, nullable: true)]
@@ -235,6 +240,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->exploitations = new ArrayCollection();
         $this->securityEvents = new ArrayCollection();
         $this->userSessions = new ArrayCollection();
+        $this->createdAt = new \DateTime();
+        $this->updatedAt = new \DateTime();
     }
 
     // ==================== GETTERS & SETTERS ====================
@@ -296,7 +303,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->password;
     }
 
-    public function setPassword(string $password): static
+    public function setPassword(#[SensitiveParameter] string $password): self
     {
         $this->password = $password;
         return $this;
@@ -544,23 +551,23 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): \DateTimeInterface
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $createdAt): static
+    protected function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
         return $this;
     }
 
-    public function getUpdatedAt(): ?\DateTimeInterface
+    public function getUpdatedAt(): \DateTimeInterface
     {
         return $this->updatedAt;
     }
 
-    public function setUpdatedAt(?\DateTimeInterface $updatedAt): static
+    protected function setUpdatedAt(\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
         return $this;
@@ -593,7 +600,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->passwordMigrated;
     }
 
-    public function setPasswordMigrated(bool $passwordMigrated): static
+    public function setPasswordMigrated(#[SensitiveParameter] bool $passwordMigrated): self
     {
         $this->passwordMigrated = $passwordMigrated;
         return $this;
@@ -637,7 +644,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->emailVerificationToken;
     }
 
-    public function setEmailVerificationToken(?string $emailVerificationToken): static
+    public function setEmailVerificationToken(#[SensitiveParameter] ?string $emailVerificationToken): self
     {
         $this->emailVerificationToken = $emailVerificationToken;
         return $this;

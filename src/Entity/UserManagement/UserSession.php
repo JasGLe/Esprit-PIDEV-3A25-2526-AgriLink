@@ -16,24 +16,29 @@ class UserSession
     #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'userSessions')]
-    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'idUtilisateur', nullable: false, onDelete: 'CASCADE')]
+    #[ORM\ManyToOne(targetEntity: User::class, cascade: ['persist'], inversedBy: 'userSessions')]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id_utilisateur', nullable: false, onDelete: 'CASCADE')]
     private ?User $user = null;
 
     #[ORM\Column(name: 'refresh_token_hash', length: 255)]
-    private ?string $refresh_token_hash = null;
+    private string $refresh_token_hash = '';
 
     #[ORM\Column(name: 'device_info', length: 255, nullable: true)]
     private ?string $device_info = null;
 
-    #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $created_at = null;
+    #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $created_at;
 
     #[ORM\Column(name: 'expires_at', type: Types::DATETIME_MUTABLE)]
     private ?\DateTimeInterface $expires_at = null;
 
     #[ORM\Column(name: 'revoked', type: Types::BOOLEAN, options: ['default' => false])]
     private bool $revoked = false;
+
+    public function __construct()
+    {
+        $this->created_at = new \DateTime();
+    }
 
     public function getId(): ?int
     {
@@ -76,12 +81,12 @@ class UserSession
         return $this;
     }
 
-    public function getCreatedAt(): ?\DateTimeInterface
+    public function getCreatedAt(): \DateTimeInterface
     {
         return $this->created_at;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $created_at): static
+    protected function setCreatedAt(\DateTimeInterface $created_at): static
     {
         $this->created_at = $created_at;
 
@@ -125,8 +130,6 @@ class UserSession
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
-        if ($this->created_at === null) {
-            $this->created_at = new \DateTime();
-        }
+        $this->created_at = new \DateTime();
     }
 }
