@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\UserManagement\User;
+use App\Service\UserGamificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
@@ -20,6 +21,7 @@ class PhoneVerificationService
         private EntityManagerInterface $entityManager,
         private TwilioSmsService $twilioService,
         private Environment $twig,
+        private UserGamificationService $gamificationService,
         #[Autowire('%env(APP_URL)%')]
         private string $appUrl = 'http://localhost'
     ) {
@@ -99,6 +101,7 @@ class PhoneVerificationService
             $this->resetOtp($user);
             $this->entityManager->persist($user);
             $this->entityManager->flush();
+            $this->gamificationService->recalculate($user);
             return true;
         }
 

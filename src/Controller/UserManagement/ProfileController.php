@@ -13,6 +13,7 @@ use App\Service\EmailVerificationService;
 use App\Service\FaceRecognitionService;
 use App\Service\FileUploader;
 use App\Service\SecurityEventService;
+use App\Service\UserGamificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -231,7 +232,8 @@ class ProfileController extends AbstractController
     public function toggle2fa(
         Request $request,
         EntityManagerInterface $entityManager,
-        BackupCodeService $backupCodeService
+        BackupCodeService $backupCodeService,
+        UserGamificationService $gamificationService
     ): Response {
         /** @var User $user */
         $user = $this->getUser();
@@ -249,6 +251,7 @@ class ProfileController extends AbstractController
             $plainCodes = $backupCodeService->generate($user);
             $request->getSession()->set('_backup_codes_display', $plainCodes);
             $entityManager->flush();
+            $gamificationService->recalculate($user);
 
             $this->addFlash(
                 'success',
@@ -259,6 +262,7 @@ class ProfileController extends AbstractController
         }
 
         $entityManager->flush();
+        $gamificationService->recalculate($user);
 
         $this->addFlash('success', 'La double authentification (2FA) a été désactivée.');
 
@@ -394,7 +398,8 @@ class ProfileController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager,
         FaceRecognitionService $faceRecognitionService,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        UserGamificationService $gamificationService
     ): JsonResponse {
         /** @var User $user */
         $user = $this->getUser();
@@ -436,6 +441,7 @@ class ProfileController extends AbstractController
             $user->setFaceEnrolledAt(new \DateTime());
 
             $entityManager->flush();
+            $gamificationService->recalculate($user);
 
             return new JsonResponse([
                 'success' => true,
@@ -451,7 +457,8 @@ class ProfileController extends AbstractController
     public function removeFace(
         Request $request,
         EntityManagerInterface $entityManager,
-        UserPasswordHasherInterface $passwordHasher
+        UserPasswordHasherInterface $passwordHasher,
+        UserGamificationService $gamificationService
     ): JsonResponse {
         /** @var User $user */
         $user = $this->getUser();
@@ -472,6 +479,7 @@ class ProfileController extends AbstractController
             $user->setFaceDescriptor(null);
             $user->setFaceEnrolledAt(null);
             $entityManager->flush();
+            $gamificationService->recalculate($user);
 
             return new JsonResponse([
                 'success' => true,

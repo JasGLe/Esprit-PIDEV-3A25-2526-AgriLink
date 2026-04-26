@@ -7,12 +7,12 @@
         "php": ">=8.1",
         "ext-ctype": "*",
         "ext-iconv": "*",
+        "ahmed-bhs/doctrine-doctor": "^1.0",
         "doctrine/doctrine-bundle": "^2.18.2",
         "doctrine/doctrine-migrations-bundle": "^3.7",
         "doctrine/orm": "^2.20.10",
-        "dompdf/dompdf": "^3.1",
-        "endroid/qr-code": "^6.0.9",
         "dompdf/dompdf": "^3.1.5",
+        "endroid/qr-code": "^6.0.9",
         "hwi/oauth-bundle": "2.4",
         "knplabs/knp-paginator-bundle": "^6.10",
         "knplabs/knp-snappy-bundle": "^1.10.6",
@@ -47,8 +47,6 @@
         "symfony/translation": "6.4.*",
         "symfony/twig-bundle": "6.4.*",
         "symfony/twilio-notifier": "6.4.*",
-        "symfony/ux-chartjs": "^2.34",
-        "symfony/ux-turbo": "^2.34",
         "symfony/ux-chartjs": "^2.35",
         "symfony/ux-turbo": "^2.35",
         "symfony/validator": "6.4.*",
@@ -56,7 +54,8 @@
         "symfony/yaml": "6.4.*",
         "twig/extra-bundle": "^3.24",
         "twig/twig": "^3.24",
-        "twilio/sdk": "^8.11.4"
+        "twilio/sdk": "^8.11.4",
+        "webmozart/assert": "^1.11"
     },
     "config": {
         "allow-plugins": {

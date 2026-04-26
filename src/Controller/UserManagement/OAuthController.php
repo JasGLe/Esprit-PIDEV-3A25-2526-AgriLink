@@ -7,6 +7,7 @@ use App\Entity\UserManagement\UserSession;
 use App\Repository\UserManagement\UserRepository;
 use App\Service\OAuthService;
 use App\Service\SecurityEventService;
+use App\Service\UserGamificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,6 +25,7 @@ class OAuthController extends AbstractController
         private UserRepository $userRepository,
         private TokenStorageInterface $tokenStorage,
         private SecurityEventService $securityEventService,
+        private UserGamificationService $gamificationService,
     ) {}
 
     /**
@@ -179,6 +181,10 @@ class OAuthController extends AbstractController
 
         $this->entityManager->persist($userSession);
         $this->entityManager->flush();
+
+        // Gamification: increment login count and recalculate points/badges
+        $user->incrementLoginCount();
+        $this->gamificationService->recalculate($user);
 
         $token = new UsernamePasswordToken(
             $user,
