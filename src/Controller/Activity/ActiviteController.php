@@ -362,7 +362,7 @@ class ActiviteController extends AbstractController
     }
 
     #[Route('/recommendations/ia/payload', name: 'activite_recommendations_ia_payload', methods: ['GET'])]
-    public function recommendationsIaPayload(WeatherAwareRecommendationService $weatherAwareRecommendationService): JsonResponse
+    public function recommendationsIaPayload(Request $request, WeatherAwareRecommendationService $weatherAwareRecommendationService): JsonResponse
     {
         $this->assertModuleAccess();
 
@@ -372,7 +372,8 @@ class ActiviteController extends AbstractController
         }
 
         try {
-            $data = $weatherAwareRecommendationService->generateConciseWeatherAwareRecommendations($user, 10);
+            $aiModel = strtolower(trim((string) $request->query->get('ai_model', 'gemini')));
+            $data = $weatherAwareRecommendationService->generateConciseWeatherAwareRecommendations($user, 10, $aiModel);
             return $this->json($data);
         } catch (\Throwable $e) {
             return $this->json(['error' => $e->getMessage()], 500);
