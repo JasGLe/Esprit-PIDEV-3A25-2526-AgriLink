@@ -2,8 +2,9 @@
 
 namespace App\Tests\Service\Activity;
 
-use App\Tests\Fixtures\ActiviteTestFixture;
+use App\Entity\Activity\Activite;
 use App\Service\Activity\ActiviteManager;
+use App\Tests\ReflectionHelper;
 use PHPUnit\Framework\TestCase;
 
 class ActiviteManagerTest extends TestCase
@@ -20,11 +21,11 @@ class ActiviteManagerTest extends TestCase
      */
     public function testValidActivite(): void
     {
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setTitre('Semis de tomates');
         $activite->setTypeActivite('SEMIS');
-        $activite->setDateDebut(new \DateTime('tomorrow'));
-        $activite->setDateFin(new \DateTime('+2 days'));
+        ReflectionHelper::setProperty($activite, 'dateDebut', new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($activite, 'dateFin', new \DateTime('+2 days'));
         $activite->setStatut('PLANIFIEE');
         $activite->setCoutEstime('50.00');
         $activite->setIdAgriculteur(1);
@@ -40,10 +41,10 @@ class ActiviteManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Le titre est obligatoire');
 
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setTitre('');
         $activite->setTypeActivite('SEMIS');
-        $activite->setDateDebut(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($activite, 'dateDebut', new \DateTime('tomorrow'));
         $activite->setStatut('PLANIFIEE');
         $activite->setIdAgriculteur(1);
 
@@ -58,10 +59,10 @@ class ActiviteManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Le titre doit contenir au moins 3 caractères');
 
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setTitre('AB');
         $activite->setTypeActivite('SEMIS');
-        $activite->setDateDebut(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($activite, 'dateDebut', new \DateTime('tomorrow'));
         $activite->setStatut('PLANIFIEE');
         $activite->setIdAgriculteur(1);
 
@@ -76,10 +77,10 @@ class ActiviteManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Le titre ne peut pas dépasser 100 caractères');
 
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setTitre(str_repeat('a', 101));
         $activite->setTypeActivite('SEMIS');
-        $activite->setDateDebut(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($activite, 'dateDebut', new \DateTime('tomorrow'));
         $activite->setStatut('PLANIFIEE');
         $activite->setIdAgriculteur(1);
 
@@ -94,10 +95,10 @@ class ActiviteManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('La date de début ne peut pas être dans le passé');
 
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setTitre('Activité passée');
         $activite->setTypeActivite('SEMIS');
-        $activite->setDateDebut(new \DateTime('yesterday'));
+        ReflectionHelper::setProperty($activite, 'dateDebut', new \DateTime('yesterday'));
         $activite->setStatut('PLANIFIEE');
         $activite->setIdAgriculteur(1);
 
@@ -112,7 +113,7 @@ class ActiviteManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('La date de début est obligatoire');
 
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setTitre('Activité sans date');
         $activite->setTypeActivite('SEMIS');
         $activite->setStatut('PLANIFIEE');
@@ -129,11 +130,11 @@ class ActiviteManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('La date de fin doit être >= à la date de début');
 
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setTitre('Activité invalide');
         $activite->setTypeActivite('SEMIS');
-        $activite->setDateDebut(new \DateTime('+5 days'));
-        $activite->setDateFin(new \DateTime('+2 days'));
+        ReflectionHelper::setProperty($activite, 'dateDebut', new \DateTime('+5 days'));
+        ReflectionHelper::setProperty($activite, 'dateFin', new \DateTime('+2 days'));
         $activite->setStatut('PLANIFIEE');
         $activite->setIdAgriculteur(1);
 
@@ -148,10 +149,10 @@ class ActiviteManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Le statut doit être parmi');
 
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setTitre('Activité avec statut invalide');
         $activite->setTypeActivite('SEMIS');
-        $activite->setDateDebut(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($activite, 'dateDebut', new \DateTime('tomorrow'));
         $activite->setStatut('INVALIDE');
         $activite->setIdAgriculteur(1);
 
@@ -166,10 +167,10 @@ class ActiviteManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Le coût estimé doit être positif ou zéro');
 
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setTitre('Activité avec coût négatif');
         $activite->setTypeActivite('SEMIS');
-        $activite->setDateDebut(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($activite, 'dateDebut', new \DateTime('tomorrow'));
         $activite->setStatut('PLANIFIEE');
         $activite->setCoutEstime('-10.00');
         $activite->setIdAgriculteur(1);
@@ -182,10 +183,10 @@ class ActiviteManagerTest extends TestCase
      */
     public function testCompleteActivite(): void
     {
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setTitre('Activité à compléter');
         $activite->setTypeActivite('SEMIS');
-        $activite->setDateDebut(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($activite, 'dateDebut', new \DateTime('tomorrow'));
         $activite->setStatut('PLANIFIEE');
         $activite->setIdAgriculteur(1);
 
@@ -201,10 +202,10 @@ class ActiviteManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Cette activité est déjà terminée');
 
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setTitre('Activité déjà terminée');
         $activite->setTypeActivite('SEMIS');
-        $activite->setDateDebut(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($activite, 'dateDebut', new \DateTime('tomorrow'));
         $activite->setStatut('TERMINEE');
         $activite->setIdAgriculteur(1);
 
@@ -216,7 +217,7 @@ class ActiviteManagerTest extends TestCase
      */
     public function testCanCompleteActivite(): void
     {
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setStatut('EN_COURS');
 
         $this->assertTrue($this->activiteManager->canComplete($activite));
@@ -227,7 +228,7 @@ class ActiviteManagerTest extends TestCase
      */
     public function testCannotCompleteTerminatedActivite(): void
     {
-        $activite = new ActiviteTestFixture();
+        $activite = new Activite();
         $activite->setStatut('TERMINEE');
 
         $this->assertFalse($this->activiteManager->canComplete($activite));

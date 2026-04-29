@@ -2,8 +2,9 @@
 
 namespace App\Tests\Service\Activity;
 
-use App\Tests\Fixtures\EvenementTestFixture;
+use App\Entity\Activity\Evenement;
 use App\Service\Activity\EvenementManager;
+use App\Tests\ReflectionHelper;
 use PHPUnit\Framework\TestCase;
 
 class EvenementManagerTest extends TestCase
@@ -20,11 +21,11 @@ class EvenementManagerTest extends TestCase
      */
     public function testValidEvenement(): void
     {
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $evenement->setTitre('Conférence Agricole');
         $evenement->setDescription('Une conférence sur les nouvelles techniques agricoles');
         $evenement->setTypeEvenement('OFFICIEL');
-        $evenement->setDateEvenement(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($evenement, 'dateEvenement', new \DateTime('tomorrow'));
         $evenement->setLieu('Salle principale');
 
         $this->assertTrue($this->evenementManager->validate($evenement));
@@ -38,10 +39,10 @@ class EvenementManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Le titre est obligatoire');
 
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $evenement->setTitre('');
         $evenement->setTypeEvenement('OFFICIEL');
-        $evenement->setDateEvenement(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($evenement, 'dateEvenement', new \DateTime('tomorrow'));
         $evenement->setLieu('Salle');
 
         $this->evenementManager->validate($evenement);
@@ -55,10 +56,10 @@ class EvenementManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Le titre doit contenir au moins 3 caractères');
 
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $evenement->setTitre('AB');
         $evenement->setTypeEvenement('OFFICIEL');
-        $evenement->setDateEvenement(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($evenement, 'dateEvenement', new \DateTime('tomorrow'));
         $evenement->setLieu('Salle');
 
         $this->evenementManager->validate($evenement);
@@ -72,10 +73,10 @@ class EvenementManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Le titre ne peut pas dépasser 100 caractères');
 
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $evenement->setTitre(str_repeat('a', 101));
         $evenement->setTypeEvenement('OFFICIEL');
-        $evenement->setDateEvenement(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($evenement, 'dateEvenement', new \DateTime('tomorrow'));
         $evenement->setLieu('Salle');
 
         $this->evenementManager->validate($evenement);
@@ -89,10 +90,10 @@ class EvenementManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('La date de l\'événement ne peut pas être dans le passé');
 
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $evenement->setTitre('Événement passé');
         $evenement->setTypeEvenement('OFFICIEL');
-        $evenement->setDateEvenement(new \DateTime('yesterday'));
+        ReflectionHelper::setProperty($evenement, 'dateEvenement', new \DateTime('yesterday'));
         $evenement->setLieu('Salle');
 
         $this->evenementManager->validate($evenement);
@@ -106,7 +107,7 @@ class EvenementManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('La date de l\'événement est obligatoire');
 
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $evenement->setTitre('Événement sans date');
         $evenement->setTypeEvenement('OFFICIEL');
         $evenement->setLieu('Salle');
@@ -122,10 +123,10 @@ class EvenementManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Le type doit être parmi');
 
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $evenement->setTitre('Événement avec type invalide');
         $evenement->setTypeEvenement('INVALIDE');
-        $evenement->setDateEvenement(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($evenement, 'dateEvenement', new \DateTime('tomorrow'));
         $evenement->setLieu('Salle');
 
         $this->evenementManager->validate($evenement);
@@ -139,10 +140,10 @@ class EvenementManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Le lieu est obligatoire');
 
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $evenement->setTitre('Événement sans lieu');
         $evenement->setTypeEvenement('OFFICIEL');
-        $evenement->setDateEvenement(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($evenement, 'dateEvenement', new \DateTime('tomorrow'));
         $evenement->setLieu('');
 
         $this->evenementManager->validate($evenement);
@@ -156,10 +157,10 @@ class EvenementManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('Le lieu ne peut pas dépasser 150 caractères');
 
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $evenement->setTitre('Événement avec lieu long');
         $evenement->setTypeEvenement('OFFICIEL');
-        $evenement->setDateEvenement(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($evenement, 'dateEvenement', new \DateTime('tomorrow'));
         $evenement->setLieu(str_repeat('a', 151));
 
         $this->evenementManager->validate($evenement);
@@ -173,10 +174,10 @@ class EvenementManagerTest extends TestCase
         $this->expectException(\InvalidArgumentException::class);
         $this->expectExceptionMessage('La description ne peut pas dépasser 5000 caractères');
 
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $evenement->setTitre('Événement avec description longue');
         $evenement->setTypeEvenement('OFFICIEL');
-        $evenement->setDateEvenement(new \DateTime('tomorrow'));
+        ReflectionHelper::setProperty($evenement, 'dateEvenement', new \DateTime('tomorrow'));
         $evenement->setLieu('Salle');
         $evenement->setDescription(str_repeat('a', 5001));
 
@@ -188,7 +189,7 @@ class EvenementManagerTest extends TestCase
      */
     public function testIsOfficialEvenement(): void
     {
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $evenement->setTypeEvenement('OFFICIEL');
 
         $this->assertTrue($this->evenementManager->isOfficial($evenement));
@@ -200,7 +201,7 @@ class EvenementManagerTest extends TestCase
      */
     public function testIsPersonalEvenement(): void
     {
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $evenement->setTypeEvenement('PERSONNEL');
 
         $this->assertTrue($this->evenementManager->isPersonal($evenement));
@@ -212,9 +213,9 @@ class EvenementManagerTest extends TestCase
      */
     public function testDaysUntilEvent(): void
     {
-        $evenement = new EvenementTestFixture();
+        $evenement = new Evenement();
         $eventDate = new \DateTime('+5 days');
-        $evenement->setDateEvenement($eventDate);
+        ReflectionHelper::setProperty($evenement, 'dateEvenement', $eventDate);
 
         $daysUntil = $this->evenementManager->daysUntilEvent($evenement);
         
@@ -232,20 +233,20 @@ class EvenementManagerTest extends TestCase
         $today = new \DateTime('today 14:00:00');
         
         if ($today > new \DateTime()) {
-            $evenement = new EvenementTestFixture();
+            $evenement = new Evenement();
             $evenement->setTitre('Événement aujourd\'hui');
             $evenement->setTypeEvenement('OFFICIEL');
-            $evenement->setDateEvenement($today);
+            ReflectionHelper::setProperty($evenement, 'dateEvenement', $today);
             $evenement->setLieu('Salle');
 
             // Ne doit pas lever d'exception
             $this->assertTrue($this->evenementManager->validate($evenement));
         } else {
             // Si aujourd'hui 14h est passé, on teste avec demain
-            $evenement = new EvenementTestFixture();
+            $evenement = new Evenement();
             $evenement->setTitre('Événement demain');
             $evenement->setTypeEvenement('OFFICIEL');
-            $evenement->setDateEvenement(new \DateTime('+1 day'));
+            ReflectionHelper::setProperty($evenement, 'dateEvenement', new \DateTime('+1 day'));
             $evenement->setLieu('Salle');
 
             $this->assertTrue($this->evenementManager->validate($evenement));
