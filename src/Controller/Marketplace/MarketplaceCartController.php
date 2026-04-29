@@ -264,8 +264,8 @@ class MarketplaceCartController extends AbstractController
             $stripeCheckoutUrl = null;
             if ($mode === self::MODE_PAIEMENT_EN_LIGNE) {
                 // Build Stripe session before commit.
-                // If Stripe fails, exception triggers rollback and order won't be finalized.
-                $stripeCheckoutUrl = $this->createStripeCheckoutUrl($commande);
+                // If Stripe fails, exception triggecreateStripers rollback and order won't be finalized.
+                $stripeCheckoutUrl = $this->CheckoutUrl($commande);
             }
 
             $conn->commit();
