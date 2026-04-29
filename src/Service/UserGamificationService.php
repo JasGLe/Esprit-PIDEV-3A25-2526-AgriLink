@@ -53,6 +53,7 @@ class UserGamificationService
 
     /**
      * Full points breakdown for a user.
+     * @phpstan-impure
      */
     public function computePoints(User $user): int
     {
@@ -76,17 +77,16 @@ class UserGamificationService
         if ($user->getCodePostale())        $pts += 5;
 
         // Account seniority (5 pts/month, capped at 60)
-        if ($user->getCreatedAt()) {
-            $months = (int) $user->getCreatedAt()->diff(new \DateTime())->m
-                    + ((int) $user->getCreatedAt()->diff(new \DateTime())->y * 12);
-            $pts += min($months * 5, 60);
-        }
+        $months = (int) $user->getCreatedAt()->diff(new \DateTime())->m
+                + ((int) $user->getCreatedAt()->diff(new \DateTime())->y * 12);
+        $pts += min($months * 5, 60);
 
         return $pts;
     }
 
     /**
      * Compute all earned badge keys for a user.
+     * @phpstan-impure
      */
     public function computeBadges(User $user): array
     {
@@ -110,11 +110,9 @@ class UserGamificationService
         if ($profileScore >= 100) $earned[] = 'profile_complete';
 
         // Account seniority >= 6 months
-        if ($user->getCreatedAt()) {
-            $months = (int) $user->getCreatedAt()->diff(new \DateTime())->m
-                    + ((int) $user->getCreatedAt()->diff(new \DateTime())->y * 12);
-            if ($months >= 6) $earned[] = 'veteran_account';
-        }
+        $months = (int) $user->getCreatedAt()->diff(new \DateTime())->m
+                + ((int) $user->getCreatedAt()->diff(new \DateTime())->y * 12);
+        if ($months >= 6) $earned[] = 'veteran_account';
 
         return $earned;
     }
@@ -140,9 +138,14 @@ class UserGamificationService
         $nextMin = self::LEVELS[$levelNumber + 1]['min'] ?? null;
         if ($nextMin !== null) {
             $range = $nextMin - $level['min'];
-            $done  = $points - $level['min'];
-            $level['progress'] = (int) round(($done / $range) * 100);
-            $level['points_to_next'] = $nextMin - $points;
+            if ($range > 0) {
+                $done  = $points - $level['min'];
+                $level['progress'] = (int) round(($done / $range) * 100);
+                $level['points_to_next'] = $nextMin - $points;
+            } else {
+                $level['progress'] = 100;
+                $level['points_to_next'] = 0;
+            }
         } else {
             $level['progress'] = 100;
             $level['points_to_next'] = 0;

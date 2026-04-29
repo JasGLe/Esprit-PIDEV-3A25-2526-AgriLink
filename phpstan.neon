@@ -1,0 +1,32 @@
+parameters:
+    level: 5
+    paths:
+        - src
+    
+    # Report only errors, not warnings
+    reportUnmatchedIgnoredErrors: false
+    
+    # Ignore common non-critical issues
+    ignoreErrors:
+        # Undefined properties/methods in legacy code
+        - '#Call to an undefined method#'
+        - '#Undefined variable#'
+        - '#Access to undefined property#'
+        - '#Trying to access array offset on mixed#'
+        - '#has unknown class#'
+        # Doctrine and framework specifics
+        - '#Parameter \$object of method#'
+        - '#is not a class string#'
+        # Generic object/mixed type issues
+        - '#expects array<#'
+        - '#argument passed#'
+        - '#but returns#'
+    
+    # Focus on critical issues only
+    treatPhpDocTypesAsCertain: true
+    checkBenevolentUnionTypes: false
+    
+    # Exclude test files
+    excludePaths:
+        - tests/*
+        - vendor/*

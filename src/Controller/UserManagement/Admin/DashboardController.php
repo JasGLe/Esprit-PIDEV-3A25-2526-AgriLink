@@ -131,6 +131,19 @@ class DashboardController extends AbstractController
         $stats = $this->userRepository->getStatistics();
         $securityStats = $this->securityEventRepository->getStatistics(30);
         $recentUsers = $this->userRepository->findRecentUsers(7, 10);
+        
+        $previousPeriodStats = $this->userRepository->getStatisticsForPeriod(
+            new \DateTime('-60 days'),
+            new \DateTime('-30 days')
+        );
+        $currentPeriodStats = $this->userRepository->getStatisticsForPeriod(
+            new \DateTime('-30 days'),
+            new \DateTime('now')
+        );
+        $growthRate = $this->calculateGrowthRate(
+            $previousPeriodStats['newUsers'] ?? 0,
+            $currentPeriodStats['newUsers'] ?? 0
+        );
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
