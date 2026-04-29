@@ -126,4 +126,36 @@ class CultureManagerTest extends TestCase
         $this->assertTrue($this->manager->validate($culture));
     }
 
+    // ═══════════════════════════════════════════════════════
+    // RÈGLE 3 — Statut valide
+    // ═══════════════════════════════════════════════════════
+
+    /**
+     *  Test acceptation : statut PLANIFIEE valide
+     */
+    public function testStatutValide(): void
+    {
+        $culture = new Culture();
+        $culture->setNom('Carotte');
+        $culture->setStatut('PLANIFIEE');
+
+        $this->assertTrue($this->manager->validate($culture));
+    }
+
+ 
+    /**
+     *  Test refus : statut inconnu → exception
+     */
+    public function testStatutInvalide(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Statut invalide');
+
+        $culture = new Culture();
+        $culture->setNom('Courgette');
+        $culture->setStatut('STATUT_INEXISTANT');
+
+        $this->manager->validate($culture);
+    }
+
 }
