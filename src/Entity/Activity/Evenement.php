@@ -2,6 +2,7 @@
 
 namespace App\Entity\Activity;
 
+use App\Entity\Trait\BlameableTrait;
 use App\Entity\UserManagement\User;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -10,9 +11,11 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: \App\Repository\Activity\EvenementRepository::class)]
 #[ORM\Table(name: 'evenement')]
+#[ORM\HasLifecycleCallbacks]
 #[Assert\Callback('validateDateEvenement')]
 class Evenement
 {
+    use BlameableTrait;
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER)]
@@ -57,8 +60,14 @@ class Evenement
     private string $lieu;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'id_organisateur', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
+    #[ORM\JoinColumn(name: 'id_organisateur_id', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
     private ?User $organisateur = null;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $createdAt;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $updatedAt = null;
 
     public function getId(): int
     {
@@ -111,7 +120,7 @@ class Evenement
         return $this->dateEvenement;
     }
 
-    public function setDateEvenement(?\DateTimeInterface $dateEvenement): static
+    protected function setDateEvenement(?\DateTimeInterface $dateEvenement): static
     {
         $this->dateEvenement = $dateEvenement;
 
@@ -155,6 +164,31 @@ class Evenement
         $this->organisateur = $organisateur;
 
         return $this;
+    }
+
+    public function getCreatedAt(): \DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->createdAt = new \DateTime();
+        if ($this->dateEvenement === null) {
+            $this->dateEvenement = new \DateTime();
+        }
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new \DateTime();
     }
 
     public function validateDateEvenement(ExecutionContextInterface $context, $payload): void

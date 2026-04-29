@@ -2,6 +2,7 @@
 
 namespace App\Entity\UserManagement;
 
+use App\Entity\Trait\BlameableTrait;
 use App\Repository\UserManagement\SecurityEventRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -11,6 +12,8 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\HasLifecycleCallbacks]
 class SecurityEvent
 {
+    use BlameableTrait;
+    
     public const EVENT_LOGIN_SUCCESS = 'LOGIN_SUCCESS';
     public const EVENT_LOGIN_FAILED = 'LOGIN_FAILED';
     public const EVENT_ACCOUNT_LOCKED = 'ACCOUNT_LOCKED';
@@ -46,6 +49,9 @@ class SecurityEvent
 
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE)]
     private \DateTimeInterface $createdAt;
+
+    #[ORM\Column(name: 'updated_at', type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $updatedAt = null;
 
     public function __construct()
     {
@@ -98,6 +104,11 @@ class SecurityEvent
         return $this->createdAt;
     }
 
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
     protected function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
@@ -109,5 +120,11 @@ class SecurityEvent
     public function onPrePersist(): void
     {
         $this->createdAt = new \DateTime();
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new \DateTime();
     }
 }
