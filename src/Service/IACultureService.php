@@ -29,6 +29,10 @@ class IACultureService
     //  RECOMMANDATION CULTURES — Groq LLaMA 3.3 
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * @param array<string, mixed> $parcelle
+     * @return array<string, mixed>
+     */
     public function recommanderCulture(array $parcelle): array
     {
         $response = $this->client->request('POST', self::GROQ_URL, [
@@ -66,6 +70,9 @@ class IACultureService
              . "Réponds UNIQUEMENT en JSON valide, sans texte avant ni après.";
     }
 
+    /**
+     * @param array<string, mixed> $p
+     */
     private function buildPrompt(array $p): string
     {
         return "Analyse cette parcelle agricole tunisienne et recommande 3 cultures.
@@ -103,11 +110,15 @@ Types: OLEICULTURE, GRANDES_CULTURES, MARAICHAGE, ARBORICULTURE_FRUITIERE, PHOEN
     //  ANALYSE IMAGE ANOMALIE — Groq Vision (plante + arbre + animal)
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * @param \Symfony\Component\HttpFoundation\File\UploadedFile $file
+     * @return array<string, mixed>
+     */
     public function analyserImage($file, string $nomSujet = ''): array
     {
         try {
-            $imageData = base64_encode(file_get_contents($file->getPathname()));
-            $mimeType  = $file->getMimeType();
+            $imageData = base64_encode((string) file_get_contents($file->getPathname()));
+            $mimeType  = $file->getMimeType() ?? 'image/jpeg';
 
             // ── Étape 1 : détecter le type de sujet (plante/arbre/animal/autre) ──
             $detection = $this->detecterTypeSujet($imageData, $mimeType);
@@ -132,6 +143,9 @@ Types: OLEICULTURE, GRANDES_CULTURES, MARAICHAGE, ARBORICULTURE_FRUITIERE, PHOEN
     }
 
     // ── Détecte si l'image est une plante, un arbre, un animal, ou autre ──
+    /**
+     * @return array{type: string, sujet_detecte: string, raison: string}
+     */
     private function detecterTypeSujet(string $imageData, string $mimeType): array
     {
         $prompt = "Regarde cette image et identifie le sujet principal.
@@ -173,6 +187,10 @@ IMPORTANT : si c'est 'autre', l'analyse sera refusée.";
     //  ANALYSE PLANTES ET ARBRES
     // ─────────────────────────────────────────────────────────
 
+    /**
+     * @param array{type: string, sujet_detecte: string, raison: string} $detection
+     * @return array<string, mixed>
+     */
     private function analyserPlantesArbres(
         string $imageData,
         string $mimeType,
@@ -248,6 +266,10 @@ Valeurs autorisées :
     //  ANALYSE ANIMAUX
     // ─────────────────────────────────────────────────────────
 
+    /**
+     * @param array{type: string, sujet_detecte: string, raison: string} $detection
+     * @return array<string, mixed>
+     */
     private function analyserAnimal(
         string $imageData,
         string $mimeType,
@@ -313,6 +335,9 @@ Valeurs autorisées :
     //  HUGGING FACE — Modèle PlantDisease (plantes uniquement)
     // ─────────────────────────────────────────────────────────
 
+    /**
+     * @return array<int, array{label: string, score: float}>|null
+     */
     private function analyserAvecHuggingFace(string $imageBase64, string $mimeType): ?array
     {
         try {
@@ -334,7 +359,7 @@ Valeurs autorisées :
 
             $predictions = $response->toArray(false);
 
-            if (!is_array($predictions) || empty($predictions) || isset($predictions['error'])) {
+            if (empty($predictions) || isset($predictions['error'])) {
                 return null;
             }
 
@@ -345,30 +370,33 @@ Valeurs autorisées :
         }
     }
 
-    // Enrichir le résultat HuggingFace avec les infos agronomiques
+    /**
+     * @param array<int, array{label: string, score: float}> $predictions
+     * @return array<string, mixed>
+     */
     private function enrichirResultatHF(array $predictions, string $nomSujet): array
     {
         $best      = $predictions[0];
-        $label     = $best['label'] ?? '';
-        $conf      = round(($best['score'] ?? 0) * 100, 1);
+        $label     = $best['label'];
+        $conf      = round($best['score'] * 100, 1);
         $healthy   = str_contains(strtolower($label), 'healthy');
         $parts     = explode('___', $label);
-        $plantName = str_replace('_', ' ', $parts[0] ?? $nomSujet);
+        $plantName = str_replace('_', ' ', $parts[0] !== '' ? $parts[0] : $nomSujet);
         $disease   = str_replace('_', ' ', $parts[1] ?? '');
         $info      = $this->getDiseaseInfo($label);
 
-        [$score, $sante] = $this->computeHealth($healthy, $best['score'] ?? 0, $info['gravite'] ?? 'MODERE');
+        [$score, $sante] = $this->computeHealth($healthy, $best['score'], $info['gravite']);
 
         $recommandations = [];
         if (!$healthy) {
             $recommandations[] = [
-                'priorite' => ($info['gravite'] ?? '') === 'CRITIQUE' ? 'URGENTE' : 'NORMALE',
-                'action'   => $info['traitement'] ?? 'Consulter un agronome',
-                'detail'   => 'Agent : ' . ($info['agent'] ?? 'Non identifié'),
+                'priorite' => $info['gravite'] === 'CRITIQUE' ? 'URGENTE' : 'NORMALE',
+                'action'   => $info['traitement'],
+                'detail'   => 'Agent : ' . $info['agent'],
             ];
             $recommandations[] = [
                 'priorite' => 'PREVENTIVE',
-                'action'   => $info['prevention'] ?? 'Surveiller régulièrement',
+                'action'   => $info['prevention'],
                 'detail'   => 'Mesure préventive recommandée',
             ];
         } else {
@@ -382,11 +410,11 @@ Valeurs autorisées :
         // Diagnostics secondaires (top 2-4)
         $secondaires = [];
         foreach (array_slice($predictions, 1, 3) as $p) {
-            $i2 = $this->getDiseaseInfo($p['label'] ?? '');
+            $i2 = $this->getDiseaseInfo($p['label']);
             $secondaires[] = [
-                'probleme'    => $i2['nom_fr'] ?? ($p['label'] ?? ''),
-                'description' => $p['label'] ?? '',
-                'confiance'   => round(($p['score'] ?? 0) * 100, 1),
+                'probleme'    => $i2['nom_fr'],
+                'description' => $p['label'],
+                'confiance'   => round($p['score'] * 100, 1),
             ];
         }
 
@@ -397,15 +425,15 @@ Valeurs autorisées :
             'score_sante'      => $score,
             'resume'           => $healthy
                 ? "Plante saine — {$plantName}"
-                : ($info['nom_fr'] ?? $disease) . " détectée sur {$plantName}",
+                : $info['nom_fr'] . " détectée sur {$plantName}",
             'stade_croissance' => 'Non déterminé',
             'stress_hydrique'  => [
                 'niveau'      => 'NON_ANALYSE',
                 'description' => 'Modèle spécialisé maladies — stress hydrique non analysé',
             ],
             'diagnostic_principal' => [
-                'probleme'        => $healthy ? 'Aucune anomalie détectée' : ($info['nom_fr'] ?? $disease),
-                'agent_pathogene' => $healthy ? 'Aucun' : ($info['agent'] ?? 'Non identifié'),
+                'probleme'        => $healthy ? 'Aucune anomalie détectée' : $info['nom_fr'],
+                'agent_pathogene' => $healthy ? 'Aucun' : $info['agent'],
                 'description'     => "Confiance : {$conf}% — Classe : {$label}",
                 'confiance'       => $conf,
             ],
@@ -419,6 +447,9 @@ Valeurs autorisées :
     //  BASE DE DONNÉES MALADIES (HuggingFace labels → français)
     // ─────────────────────────────────────────────────────────
 
+    /**
+     * @return array{nom_fr: string, agent: string, gravite: string, traitement: string, prevention: string}
+     */
     private function getDiseaseInfo(string $label): array
     {
         $db = [
@@ -444,8 +475,9 @@ Valeurs autorisées :
         if (isset($db[$label])) return $db[$label];
 
         $healthy = str_contains(strtolower($label), 'healthy');
+        $parts2  = explode('___', $label);
         return [
-            'nom_fr'     => $healthy ? 'Plante saine' : str_replace('_', ' ', explode('___', $label)[1] ?? $label),
+            'nom_fr'     => $healthy ? 'Plante saine' : str_replace('_', ' ', $parts2[1] ?? $label),
             'agent'      => $healthy ? 'Aucun' : 'Non identifié',
             'gravite'    => $healthy ? 'AUCUNE' : 'MODERE',
             'traitement' => $healthy ? 'Aucun' : 'Consulter un agronome',
@@ -453,6 +485,9 @@ Valeurs autorisées :
         ];
     }
 
+    /**
+     * @return array{0: int, 1: string}
+     */
     private function computeHealth(bool $healthy, float $score, string $gravite): array
     {
         if ($healthy) {
@@ -467,53 +502,228 @@ Valeurs autorisées :
     }
 
     // ═══════════════════════════════════════════════════════════
-    //  VALIDATION IMAGE / CULTURE (inchangé, utilise Gemini)
+    //  VALIDATION IMAGE / CULTURE — Groq Vision + comparaison stricte
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * @return array{valide: bool, confiance: int, culture_detectee: string, message: string}
+     */
     public function validerImageCulture(
         string $imageBase64,
         string $mimeType,
         string $culture
     ): array {
-        $prompt = "Tu es un botaniste expert.
+        // ── Étape 1 : identification visuelle pure via Groq Vision ──
+        // On NE mentionne PAS la culture attendue pour éviter tout biais.
+        $promptId = <<<PROMPT
+You are a botanical expert. Look at this image and identify the plant.
 
-Culture attendue : \"{$culture}\"
-
-Réponds UNIQUEMENT avec ce JSON :
+Respond ONLY with this JSON (no text before or after):
 {
-  \"culture_detectee\": \"nom exact\",
-  \"valide\": true,
-  \"confiance\": 90,
-  \"message\": \"raison courte\"
+  "plante_identifiee": "exact plant name in French",
+  "plante_en": "exact plant name in English",
+  "confiance": 85,
+  "caracteristiques_visuelles": "brief visual description"
 }
 
-RÈGLES :
-- valide = true si l'image montre \"{$culture}\" ou variété proche
-- valide = false si image montre autre chose (même si agricole)
-- valide = false si dessin, œuvre d'art, objet, personne, animal
-- Image floue/ambiguë → valide = true, confiance < 50";
+Rules:
+- "plante_identifiee" must be the plant you actually SEE in the image
+- Examples: "tomate", "olivier", "pomme de terre", "blé", "maïs", "vigne"
+- If NOT a plant at all (person, car, building, drawing) → plante_identifiee = "non-plante", plante_en = "non-plant"
+- If image is blurry/unreadable → plante_identifiee = "illisible", confiance = 5
+- confiance = your certainty 0-100
+- Do NOT be influenced by what you think the user wants — identify only what is visually present
+PROMPT;
 
         try {
-            $text = $this->geminiVisionText($imageBase64, $mimeType, $prompt, 20, 0.0);
-            $json = $this->extractJsonSafe($text);
+            // Utiliser Groq Vision (plus fiable que Gemini pour l'identification visuelle)
+            $textId = $this->groqVisionText($imageBase64, $mimeType, $promptId, 25, 0.0);
+            $jsonId = $this->extractJsonSafe($textId);
 
-            $confiance = (int)($json['confiance'] ?? 70);
+            $planteDetectee = strtolower(trim((string)($jsonId['plante_identifiee'] ?? '')));
+            $planteEn       = strtolower(trim((string)($jsonId['plante_en']         ?? '')));
+            $confiance      = (int)($jsonId['confiance'] ?? 50);
+            $caracVisuels   = (string)($jsonId['caracteristiques_visuelles'] ?? '');
 
-            // Image trop ambiguë → accepter
-            if ($confiance < 40) {
-                return ['valide' => true, 'confiance' => $confiance, 'culture_detectee' => $culture, 'message' => 'Image ambiguë acceptée'];
+            // Déduire est_plante depuis le nom détecté, pas depuis le champ booléen
+            // (le champ booléen peut être absent ou mal parsé)
+            $estNonPlante = ($planteDetectee === 'non-plante' || $planteDetectee === '')
+                         && isset($jsonId['est_plante']) && $jsonId['est_plante'] === false;
+
+            // Image illisible → accepter sans bloquer
+            if ($planteDetectee === 'illisible' || $confiance < 20) {
+                return [
+                    'valide'           => true,
+                    'confiance'        => $confiance,
+                    'culture_detectee' => $culture,
+                    'message'          => 'Image ambiguë — validation impossible',
+                ];
             }
 
+            // Pas une plante → rejeter seulement si le nom détecté est explicitement "non-plante"
+            if ($estNonPlante) {
+                return [
+                    'valide'           => false,
+                    'confiance'        => $confiance,
+                    'culture_detectee' => (string)($jsonId['plante_identifiee'] ?? 'non-plante'),
+                    'message'          => 'L\'image ne montre pas une plante agricole.',
+                ];
+            }
+
+            // Si le nom détecté est vide (parsing raté) → accepter sans bloquer
+            if ($planteDetectee === '') {
+                return [
+                    'valide'           => true,
+                    'confiance'        => 0,
+                    'culture_detectee' => $culture,
+                    'message'          => 'Validation non disponible',
+                ];
+            }
+
+            // ── Étape 2 : comparaison PHP stricte ──
+            $cultureNorm = strtolower(trim($culture));
+            $match = $this->nomsCultureCorrespondent($cultureNorm, $planteDetectee)
+                  || $this->nomsCultureCorrespondent($cultureNorm, $planteEn);
+
+            if ($match) {
+                return [
+                    'valide'           => true,
+                    'confiance'        => $confiance,
+                    'culture_detectee' => (string)($jsonId['plante_identifiee'] ?? $culture),
+                    'message'          => $caracVisuels ?: 'Image validée',
+                ];
+            }
+
+            // ── Étape 3 : si confiance < 50, demander confirmation à Groq ──
+            // (cas où l'identification est incertaine — ex: jeune pousse difficile à distinguer)
+            if ($confiance < 50) {
+                $confirm = $this->confirmerCorrespondance($imageBase64, $mimeType, $culture, $planteDetectee);
+                if ($confirm) {
+                    return [
+                        'valide'           => true,
+                        'confiance'        => $confiance,
+                        'culture_detectee' => $culture,
+                        'message'          => 'Image acceptée (identification incertaine)',
+                    ];
+                }
+            }
+
+            // Noms différents → rejeter
             return [
-                'valide'           => (bool)($json['valide'] ?? true),
+                'valide'           => false,
                 'confiance'        => $confiance,
-                'culture_detectee' => (string)($json['culture_detectee'] ?? ''),
-                'message'          => (string)($json['message'] ?? ''),
+                'culture_detectee' => (string)($jsonId['plante_identifiee'] ?? $planteDetectee),
+                'message'          => sprintf(
+                    'Image refusée : l\'IA a identifié « %s » mais vous avez saisi « %s ».',
+                    $jsonId['plante_identifiee'] ?? $planteDetectee,
+                    $culture
+                ),
             ];
 
         } catch (\Throwable $e) {
+            // Erreur API → accepter pour ne pas bloquer
             return ['valide' => true, 'confiance' => 0, 'culture_detectee' => '', 'message' => 'Validation non disponible'];
         }
+    }
+
+    /**
+     * Confirmation binaire : est-ce que l'image montre bien $culture ?
+     * Utilisé uniquement quand la confiance d'identification est faible.
+     */
+    private function confirmerCorrespondance(
+        string $imageBase64,
+        string $mimeType,
+        string $culture,
+        string $detecte
+    ): bool {
+        $prompt = <<<PROMPT
+Look at this image carefully.
+
+Does this image show "{$culture}" (also known as "{$detecte}")?
+
+Answer ONLY with this JSON:
+{"correspond": true}
+or
+{"correspond": false}
+
+Be strict. If you are not sure, answer false.
+PROMPT;
+
+        try {
+            $text = $this->groqVisionText($imageBase64, $mimeType, $prompt, 15, 0.0);
+            $json = $this->extractJsonSafe($text);
+            return (bool)($json['correspond'] ?? false);
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Compare le nom de culture attendu avec le nom détecté par l'IA.
+     * Gère les synonymes, variétés et traductions courants.
+     */
+    private function nomsCultureCorrespondent(string $attendu, string $detecte): bool
+    {
+        if (!$attendu || !$detecte) return false;
+
+        // Correspondance exacte
+        if ($attendu === $detecte) return true;
+
+        // L'un contient l'autre (ex: "tomate cerise" contient "tomate")
+        if (str_contains($detecte, $attendu) || str_contains($attendu, $detecte)) return true;
+
+        // Table de synonymes / variétés / traductions
+        // Chaque groupe = toutes les façons de nommer la même plante
+        $groupes = [
+            ['tomate', 'tomato', 'tomates', 'tomate cerise', 'tomate grappe', 'cherry tomato'],
+            ['pomme de terre', 'potato', 'patate', 'pommes de terre', 'spud'],
+            ['blé', 'wheat', 'blé dur', 'blé tendre', 'triticum'],
+            ['maïs', 'corn', 'maize', 'mais'],
+            ['olive', 'olivier', 'olives', 'olive tree', 'olea europaea'],
+            ['vigne', 'raisin', 'grape', 'vignes', 'grapevine', 'vitis'],
+            ['orge', 'barley', 'hordeum'],
+            ['sorgho', 'sorghum'],
+            ['tournesol', 'sunflower', 'helianthus'],
+            ['piment', 'poivron', 'pepper', 'capsicum', 'chili', 'bell pepper'],
+            ['aubergine', 'eggplant', 'brinjal'],
+            ['courgette', 'zucchini', 'courgettes'],
+            ['concombre', 'cucumber'],
+            ['carotte', 'carrot'],
+            ['oignon', 'onion'],
+            ['ail', 'garlic'],
+            ['laitue', 'salade', 'lettuce'],
+            ['épinard', 'spinach'],
+            ['haricot', 'bean', 'haricots', 'green bean'],
+            ['pois', 'pea', 'pois chiche', 'chickpea'],
+            ['fève', 'fava bean', 'broad bean'],
+            ['lentille', 'lentil'],
+            ['pastèque', 'watermelon'],
+            ['melon', 'cantaloupe'],
+            ['fraise', 'strawberry'],
+            ['figuier', 'figue', 'fig', 'fig tree'],
+            ['grenadier', 'grenade', 'pomegranate'],
+            ['dattier', 'datte', 'palmier dattier', 'date palm', 'date tree'],
+            ['amandier', 'amande', 'almond', 'almond tree'],
+            ['pommier', 'pomme', 'apple', 'apple tree'],
+            ['poirier', 'poire', 'pear', 'pear tree'],
+            ['cerisier', 'cerise', 'cherry', 'cherry tree'],
+            ['abricotier', 'abricot', 'apricot', 'apricot tree'],
+            ['pêcher', 'pêche', 'peach', 'peach tree'],
+            ['citronnier', 'citron', 'lemon', 'lemon tree'],
+            ['oranger', 'orange', 'orange tree'],
+            ['mandarinier', 'mandarine', 'tangerine', 'clementine'],
+            ['caroubier', 'caroube', 'carob'],
+            ['pistachier', 'pistache', 'pistachio'],
+            ['noyer', 'noix', 'walnut'],
+        ];
+
+        foreach ($groupes as $groupe) {
+            if (in_array($attendu, $groupe, true) && in_array($detecte, $groupe, true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     // ═══════════════════════════════════════════════════════════
@@ -568,7 +778,8 @@ RÈGLES :
         return $text;
     }
 
-    // Appel Gemini Vision (utilisé seulement pour validerImageCulture)
+    // Appel Gemini Vision — conservé pour usage futur éventuel
+    /** @phpstan-ignore method.unused */
     private function geminiVisionText(
         string $imageBase64,
         string $mimeType,
@@ -610,27 +821,33 @@ RÈGLES :
     //  PARSER JSON
     // ═══════════════════════════════════════════════════════════
 
+    /**
+     * @return array<string, mixed>
+     */
     private function extractJsonSafe(string $text): array
     {
-        $text  = preg_replace('/```json\s*/i', '', $text);
-        $text  = preg_replace('/```\s*/', '', $text);
-        $text  = trim($text);
-        $start = strpos($text, '{');
-        $end   = strrpos($text, '}');
+        $cleaned = preg_replace('/```json\s*/i', '', $text) ?? $text;
+        $cleaned = preg_replace('/```\s*/', '', $cleaned) ?? $cleaned;
+        $cleaned = trim($cleaned);
+        $start   = strpos($cleaned, '{');
+        $end     = strrpos($cleaned, '}');
 
         if ($start === false || $end === false || $end <= $start) {
-            return ['valide' => true, 'confiance' => 70, 'culture_detectee' => '', 'message' => 'Réponse acceptée'];
+            return ['valide' => false, 'confiance' => 0, 'culture_detectee' => '', 'message' => 'Réponse IA non parseable'];
         }
 
-        $json = json_decode(substr($text, $start, $end - $start + 1), true);
+        $json = json_decode(substr($cleaned, $start, $end - $start + 1), true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
-            return ['valide' => true, 'confiance' => 70, 'culture_detectee' => '', 'message' => 'Réponse acceptée'];
+            return ['valide' => false, 'confiance' => 0, 'culture_detectee' => '', 'message' => 'Réponse IA invalide'];
         }
 
         return $json;
     }
 
+    /**
+     * @return array<string, mixed>
+     */
     private function buildErreurAnalyse(string $message): array
     {
         return [
