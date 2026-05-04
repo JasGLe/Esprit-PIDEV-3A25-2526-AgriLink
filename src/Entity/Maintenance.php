@@ -159,7 +159,8 @@ class Maintenance
     #[ORM\Column(type: Types::INTEGER)]
     #[Assert\NotBlank(message: 'Veuillez choisir un équipement.')]
     #[Assert\Positive(message: 'Équipement invalide.')]
-    private ?int $equipementId = null;
+    // int non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
+    private int $equipementId = 0;
 
     /**
      * Identifiant de l'utilisateur qui a créé la maintenance.
@@ -302,14 +303,17 @@ class Maintenance
     public function getStatut(): ?string { return $this->statut; }
     public function setStatut(?string $statut): static { $this->statut = $statut; return $this; }
 
-    public function getEquipementId(): ?int { return $this->equipementId; }
-    public function setEquipementId(?int $equipementId): static { $this->equipementId = $equipementId; return $this; }
+    // Retour int non-nullable — aligné sur la propriété (Doctrine Doctor fix)
+    public function getEquipementId(): int { return $this->equipementId; }
+    // Paramètre ?int conservé pour compatibilité (null coercé en 0)
+    public function setEquipementId(?int $equipementId): static { $this->equipementId = $equipementId ?? 0; return $this; }
 
     public function getUserlog(): ?int { return $this->userlog; }
     public function setUserlog(?int $userlog): static { $this->userlog = $userlog; return $this; }
 
     public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
-    public function setDateCreation(?\DateTimeInterface $dateCreation): static { $this->dateCreation = $dateCreation; return $this; }
+    // protected — dateCreation gérée par onPrePersist(), pas de setter public (Doctrine Doctor fix)
+    protected function setDateCreation(?\DateTimeInterface $dateCreation): static { $this->dateCreation = $dateCreation; return $this; }
 
     public function getDeclencheur(): ?string { return $this->declencheur; }
     public function setDeclencheur(?string $declencheur): static { $this->declencheur = $declencheur; return $this; }

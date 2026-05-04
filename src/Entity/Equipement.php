@@ -507,7 +507,8 @@ class Equipement
         return $this->dateCreation;
     }
 
-    public function setDateCreation(?\DateTimeInterface $dateCreation): static
+    // protected — dateCreation gérée par onPrePersist(), pas de setter public (Doctrine Doctor fix)
+    protected function setDateCreation(?\DateTimeInterface $dateCreation): static
     {
         $this->dateCreation = $dateCreation;
         return $this;
@@ -518,7 +519,8 @@ class Equipement
         return $this->dateModification;
     }
 
-    public function setDateModification(?\DateTimeInterface $dateModification): static
+    // protected — dateModification gérée par onPreUpdate(), pas de setter public (Doctrine Doctor fix)
+    protected function setDateModification(?\DateTimeInterface $dateModification): static
     {
         $this->dateModification = $dateModification;
         return $this;
