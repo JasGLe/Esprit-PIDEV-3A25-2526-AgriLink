@@ -80,7 +80,8 @@ class Maintenance
         choices: ['Préventive', 'Corrective'],
         message: 'Type invalide.'
     )]
-    private ?string $type = null;
+    // string non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
+    private string $type = '';
 
     /**
      * Catégorie : "Régulière" (périodique planifiée) ou "Imprévue" (urgence).
@@ -92,7 +93,8 @@ class Maintenance
         choices: ['Régulière', 'Imprévue'],
         message: 'Catégorie invalide.'
     )]
-    private ?string $categorie = null;
+    // string non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
+    private string $categorie = '';
 
     /**
      * Description détaillée des travaux à effectuer ou effectués.
@@ -107,7 +109,8 @@ class Maintenance
         minMessage: 'La description doit contenir au moins {{ limit }} caractères.',
         maxMessage: 'La description ne peut pas dépasser {{ limit }} caractères.'
     )]
-    private ?string $description = null;
+    // string non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
+    private string $description = '';
 
     /**
      * Date à laquelle la maintenance est planifiée.
@@ -121,7 +124,9 @@ class Maintenance
         value: 'today',
         message: 'La date planifiée doit être aujourd\'hui ou dans le futur.'
     )]
-    private ?\DateTimeInterface $datePlanifiee = null;
+    // \DateTimeInterface non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
+    // Initialisé dans le constructeur car new \DateTime() n'est pas une expression constante PHP
+    private \DateTimeInterface $datePlanifiee;
 
     /**
      * Date à laquelle la maintenance a réellement été effectuée (optionnel).
@@ -203,6 +208,21 @@ class Maintenance
     private ?string $technicien = null;
 
     // ════════════════════════════════════════════════════════
+    // Constructeur
+    // ════════════════════════════════════════════════════════
+
+    /**
+     * Initialise datePlanifiee à aujourd'hui pour les nouveaux objets créés via formulaire.
+     * Doctrine bypasse ce constructeur lors de l'hydration depuis la base (doctrine/instantiator),
+     * donc il n'interfère pas avec les entités chargées depuis la DB.
+     */
+    public function __construct()
+    {
+        // Doctrine Doctor fix — datePlanifiee non-nullable, initialisée à today par défaut
+        $this->datePlanifiee = new \DateTime('today');
+    }
+
+    // ════════════════════════════════════════════════════════
     // Lifecycle callbacks
     // ════════════════════════════════════════════════════════
 
@@ -256,17 +276,25 @@ class Maintenance
 
     public function getId(): int { return $this->id; }
 
-    public function getType(): ?string { return $this->type; }
-    public function setType(?string $type): static { $this->type = $type; return $this; }
+    // Retour string non-nullable — aligné sur la propriété (Doctrine Doctor fix)
+    public function getType(): string { return $this->type; }
+    // Paramètre ?string conservé pour compatibilité Symfony forms (null coercé en '')
+    public function setType(?string $type): static { $this->type = $type ?? ''; return $this; }
 
-    public function getCategorie(): ?string { return $this->categorie; }
-    public function setCategorie(?string $categorie): static { $this->categorie = $categorie; return $this; }
+    // Retour string non-nullable — aligné sur la propriété (Doctrine Doctor fix)
+    public function getCategorie(): string { return $this->categorie; }
+    // Paramètre ?string conservé pour compatibilité Symfony forms (null coercé en '')
+    public function setCategorie(?string $categorie): static { $this->categorie = $categorie ?? ''; return $this; }
 
-    public function getDescription(): ?string { return $this->description; }
-    public function setDescription(?string $description): static { $this->description = $description; return $this; }
+    // Retour string non-nullable — aligné sur la propriété (Doctrine Doctor fix)
+    public function getDescription(): string { return $this->description; }
+    // Paramètre ?string conservé pour compatibilité Symfony forms (null coercé en '')
+    public function setDescription(?string $description): static { $this->description = $description ?? ''; return $this; }
 
-    public function getDatePlanifiee(): ?\DateTimeInterface { return $this->datePlanifiee; }
-    public function setDatePlanifiee(?\DateTimeInterface $datePlanifiee): static { $this->datePlanifiee = $datePlanifiee; return $this; }
+    // Retour \DateTimeInterface non-nullable — aligné sur la propriété (Doctrine Doctor fix)
+    public function getDatePlanifiee(): \DateTimeInterface { return $this->datePlanifiee; }
+    // Paramètre ?\DateTimeInterface conservé pour compatibilité Symfony forms (null → today par défaut)
+    public function setDatePlanifiee(?\DateTimeInterface $datePlanifiee): static { $this->datePlanifiee = $datePlanifiee ?? new \DateTime('today'); return $this; }
 
     public function getDateReelle(): ?\DateTimeInterface { return $this->dateReelle; }
     public function setDateReelle(?\DateTimeInterface $dateReelle): static { $this->dateReelle = $dateReelle; return $this; }
