@@ -23,10 +23,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * - Un équipement peut avoir plusieurs maintenances (relation via equipementId dans Maintenance).
  * - L'exploitationId est une clé étrangère vers l'entité exploitation (non mappée en ORM ici).
  *
- * @ORM\Entity(repositoryClass: \App\Repository\EquipementRepository::class)
- * @ORM\Table(name: "equipement")
- * @ORM\HasLifecycleCallbacks
- */
+ */ // Fix PHPStan — suppression des annotations PHPDoc @ORM redondantes avec les attributs PHP 8
 #[ORM\Entity(repositoryClass: \App\Repository\EquipementRepository::class)]
 #[ORM\Table(name: 'equipement')]
 #[ORM\HasLifecycleCallbacks]
@@ -631,7 +628,7 @@ class Equipement
      */
     public function genererCodePasseport(): string
     {
-        return 'EQ-' . date('Y') . '-' . str_pad($this->id, 4, '0', STR_PAD_LEFT);
+        return 'EQ-' . date('Y') . '-' . str_pad((string) $this->id, 4, '0', STR_PAD_LEFT); // Fix PHPStan — str_pad attend string, $id est int
     }
 
     public function getLatitude(): ?float { return $this->latitude; }

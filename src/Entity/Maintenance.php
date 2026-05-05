@@ -24,10 +24,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * - L'accès est contrôlé dans MaintenanceController via denyAccessUnlessOwner()
  *   qui compare le userlog de l'équipement associé avec l'utilisateur connecté.
  *
- * @ORM\Entity(repositoryClass: \App\Repository\MaintenanceRepository::class)
- * @ORM\Table(name: "maintenance")
- * @ORM\HasLifecycleCallbacks
- */
+ */ // Fix PHPStan — suppression des annotations PHPDoc @ORM redondantes avec les attributs PHP 8
 #[ORM\Entity(repositoryClass: \App\Repository\MaintenanceRepository::class)]
 #[ORM\Table(name: 'maintenance')]
 #[ORM\HasLifecycleCallbacks]
@@ -64,7 +61,10 @@ class Maintenance
     // Propriétés
     // ════════════════════════════════════════════════════════
 
-    /** Identifiant primaire auto-généré. */
+    /**
+     * Identifiant primaire auto-généré.
+     * @phpstan-ignore property.onlyRead -- Fix PHPStan : Doctrine écrit $id via reflection lors de la persistance, jamais via setter PHP
+     */
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER)]
@@ -267,8 +267,7 @@ class Maintenance
         if ($this->statut === 'Terminée' || $this->statut === 'Annulée') {
             return false;
         }
-        return $this->datePlanifiee !== null
-            && $this->datePlanifiee < new \DateTime('today');
+        return $this->datePlanifiee < new \DateTime('today'); // Fix PHPStan — $datePlanifiee est non-nullable, vérification null redondante supprimée
     }
 
     // ════════════════════════════════════════════════════════

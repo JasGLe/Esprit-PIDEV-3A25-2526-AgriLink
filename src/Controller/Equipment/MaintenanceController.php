@@ -65,16 +65,18 @@ class MaintenanceController extends AbstractController
         ExchangeRateService   $exchangeRateService,
         Request               $request
     ): Response {
-        $userId = $this->getUser()->getId();
+        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        $user   = $this->getUser();
+        $userId = $user->getId();
 
         // ── Récupérer tous les équipements de l'utilisateur ───────────────────
         $equipements   = $equipRepo->findBy(['userlog' => $userId]);
         $equipementIds = array_map(fn($e) => $e->getId(), $equipements);
 
         // ── Filtres URL ────────────────────────────────────────────────────────
-        $search = trim($request->query->get('search', ''));
-        $statut = $request->query->get('statut', '');
-        $type   = $request->query->get('type', '');
+        $search = trim((string) $request->query->get('search', '')); // Fix PHPStan — get() retourne mixed, trim() attend string
+        $statut = (string) $request->query->get('statut', ''); // Fix PHPStan
+        $type   = (string) $request->query->get('type', ''); // Fix PHPStan
 
         // ── KPIs globaux (calculés sur TOUTES les maintenances, sans filtre) ───
         // Les filtres n'affectent que la liste paginée, pas les compteurs KPI
@@ -146,8 +148,10 @@ class MaintenanceController extends AbstractController
 
         // Le formulaire filtre les équipements par user_id pour n'afficher
         // que ceux qui appartiennent à l'agriculteur connecté
+        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        $user = $this->getUser();
         $form = $this->createForm(MaintenanceType::class, $maintenance, [
-            'user_id' => $this->getUser()->getId(),
+            'user_id' => $user->getId(),
         ]);
         $form->handleRequest($request);
 
@@ -156,7 +160,7 @@ class MaintenanceController extends AbstractController
             if ($maintenance->getCout() === null) {
                 $maintenance->setCout('0.00');
             }
-            $maintenance->setUserlog($this->getUser()->getId());
+            $maintenance->setUserlog($user->getId());
             $em->persist($maintenance);
             $em->flush();
 
@@ -233,8 +237,10 @@ class MaintenanceController extends AbstractController
     ): Response {
         $this->denyAccessUnlessOwner($maintenance, $equipRepo);
 
+        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        $user = $this->getUser();
         $form = $this->createForm(MaintenanceType::class, $maintenance, [
-            'user_id' => $this->getUser()->getId(),
+            'user_id' => $user->getId(),
         ]);
         $form->handleRequest($request);
 
@@ -283,7 +289,7 @@ class MaintenanceController extends AbstractController
 
         $equipementId = $maintenance->getEquipementId();
 
-        if ($this->isCsrfTokenValid('delete' . $maintenance->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $maintenance->getId(), $request->request->getString('_token'))) { // Fix PHPStan — getString() retourne string (get() retourne mixed)
             $em->remove($maintenance);
             $em->flush();
             $this->addFlash('success', 'Maintenance supprimée.');
@@ -314,7 +320,9 @@ class MaintenanceController extends AbstractController
         EquipementRepository $equipRepo
     ): void {
         $equipement = $equipRepo->find($maintenance->getEquipementId());
-        if (!$equipement || $equipement->getUserlog() !== $this->getUser()->getId()) {
+        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        $user = $this->getUser();
+        if (!$equipement || $equipement->getUserlog() !== $user->getId()) {
             throw $this->createAccessDeniedException(
                 'Vous n\'avez pas accès à cette maintenance.'
             );

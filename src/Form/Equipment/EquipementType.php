@@ -54,8 +54,8 @@ class EquipementType extends AbstractType
     /**
      * Construction du formulaire avec tous les champs de l'équipement.
      *
-     * @param FormBuilderInterface $builder  Constructeur de formulaire Symfony
-     * @param array                $options  Options du formulaire (data_class uniquement)
+     * @param FormBuilderInterface      $builder  Constructeur de formulaire Symfony
+     * @param array<string, mixed>      $options  Options du formulaire (data_class uniquement) // Fix PHPStan
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
@@ -299,7 +299,7 @@ class EquipementType extends AbstractType
      *
      * @param string $categorie  La catégorie sélectionnée
      *
-     * @return array  Constante TYPES_VEHICULES ou TYPES_EQUIPEMENTS selon la catégorie
+     * @return array<string, string>  Constante TYPES_VEHICULES ou TYPES_EQUIPEMENTS selon la catégorie // Fix PHPStan
      */
     private function getTypesForCategorie(string $categorie): array
     {

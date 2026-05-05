@@ -136,7 +136,7 @@ class AssistantIAController extends AbstractController
         $lastUserMsg = null;
         $history     = $messages;
 
-        if (!empty($history) && $history[count($history) - 1]['role'] === 'user') {
+        if (count($history) > 0 && $history[count($history) - 1]['role'] === 'user') { // Fix PHPStan — empty() sur variable toujours existante remplacé par count()
             $lastUserMsg = array_pop($history);
         }
 

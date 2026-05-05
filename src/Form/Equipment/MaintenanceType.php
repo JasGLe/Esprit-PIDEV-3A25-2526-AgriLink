@@ -47,8 +47,8 @@ class MaintenanceType extends AbstractType
     /**
      * Construction du formulaire avec tous les champs d'une maintenance.
      *
-     * @param FormBuilderInterface $builder  Constructeur de formulaire Symfony
-     * @param array                $options  Options du formulaire (doit contenir 'user_id')
+     * @param FormBuilderInterface  $builder  Constructeur de formulaire Symfony
+     * @param array<string, mixed>  $options  Options du formulaire (doit contenir 'user_id') // Fix PHPStan
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {

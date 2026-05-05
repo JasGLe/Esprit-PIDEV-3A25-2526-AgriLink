@@ -98,9 +98,9 @@ class GeminiVisionService
      * @param string     $mimeType     Type MIME : image/jpeg, image/png ou image/webp
      * @param Equipement $equipement   Entité pour enrichir le prompt (nom, type, marque, statut)
      *
-     * @return array  Résultat normalisé avec conformite (statut, equipement_detecte,
-     *                equipement_attendu, message_conformite, continuer_diagnostic),
-     *                etat_visuel, score_visuel, anomalies, zones, recommandations et conclusion
+     * @return array<string, mixed>  Résultat normalisé avec conformite (statut, equipement_detecte, // Fix PHPStan
+     *                               equipement_attendu, message_conformite, continuer_diagnostic),
+     *                               etat_visuel, score_visuel, anomalies, zones, recommandations et conclusion
      *
      * @throws \RuntimeException  Si l'API retourne une erreur HTTP, une réponse vide ou un JSON invalide
      */
@@ -214,8 +214,8 @@ class GeminiVisionService
 
         // ── Nettoyer les éventuels backticks markdown du LLM ─────────────────
         // Malgré la consigne, le LLM peut parfois entourer le JSON de ```json ... ```
-        $content = preg_replace('/^```json\s*/i', '', trim($content));
-        $content = preg_replace('/```\s*$/', '', $content);
+        $content = preg_replace('/^```json\s*/i', '', trim($content)) ?? ''; // Fix PHPStan — preg_replace retourne string|null
+        $content = preg_replace('/```\s*$/', '', $content) ?? ''; // Fix PHPStan
         $content = trim($content);
 
         $analyse = json_decode($content, true);

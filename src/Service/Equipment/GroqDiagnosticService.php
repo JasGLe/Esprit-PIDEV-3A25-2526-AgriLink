@@ -76,14 +76,14 @@ PROMPT;
     /**
      * Génère un diagnostic IA textuel pour un équipement agricole.
      *
-     * @param array $equipementData  Données structurées de l'équipement (depuis DiagnosticController).
-     *                               Clés : categorie, nom, type, marque, modele, statut, description,
-     *                               isVehicule, dateAcquisition, ageAnnees, kilometrageActuel,
-     *                               seuilKmMaintenance, heuresUtilisation, seuilHeuresMaintenance,
-     *                               seuilJoursMaintenance, dateDerniereMaintenance, joursDepuisMaintenance
-     * @param array $maintenances    Les 10 dernières maintenances (objets Maintenance)
+     * @param array<string, mixed> $equipementData  Données structurées de l'équipement (depuis DiagnosticController). // Fix PHPStan
+     *                                              Clés : categorie, nom, type, marque, modele, statut, description,
+     *                                              isVehicule, dateAcquisition, ageAnnees, kilometrageActuel,
+     *                                              seuilKmMaintenance, heuresUtilisation, seuilHeuresMaintenance,
+     *                                              seuilJoursMaintenance, dateDerniereMaintenance, joursDepuisMaintenance
+     * @param array<int, mixed>    $maintenances    Les 10 dernières maintenances (objets Maintenance) // Fix PHPStan
      *
-     * @return array  Diagnostic parsé depuis la réponse JSON du LLM (voir format ci-dessus)
+     * @return array<string, mixed>  Diagnostic parsé depuis la réponse JSON du LLM (voir format ci-dessus) // Fix PHPStan
      *
      * @throws \RuntimeException  Si l'API retourne une erreur HTTP, une réponse vide ou un JSON invalide
      */
@@ -143,8 +143,8 @@ PROMPT;
 
         // ── 4. Nettoyer et parser le JSON retourné par le LLM ────────────────
         // Le LLM peut parfois ajouter des backticks ```json ... ``` malgré la consigne
-        $content = preg_replace('/^```json\s*/i', '', trim($content));
-        $content = preg_replace('/```\s*$/', '', $content);
+        $content = preg_replace('/^```json\s*/i', '', trim($content)) ?? ''; // Fix PHPStan — preg_replace retourne string|null
+        $content = preg_replace('/```\s*$/', '', $content) ?? ''; // Fix PHPStan
         $content = trim($content);
 
         $diagnostic = json_decode($content, true);
@@ -169,8 +169,8 @@ PROMPT;
      * Plus les données sont complètes, plus le diagnostic sera précis.
      * Les champs null sont affichés comme "Non renseigné" ou omis selon leur pertinence.
      *
-     * @param array $d            Données de l'équipement
-     * @param array $maintenances Objets Maintenance (les 10 dernières)
+     * @param array<string, mixed> $d            Données de l'équipement // Fix PHPStan
+     * @param array<int, mixed>    $maintenances Objets Maintenance (les 10 dernières) // Fix PHPStan
      *
      * @return string  Prompt texte prêt à être envoyé au LLM
      */

@@ -85,7 +85,9 @@ class DiagnosticController extends AbstractController
     {
         // ── 1. Vérification ownership ──────────────────────────────────────────
         // L'agriculteur ne peut diagnostiquer QUE ses propres équipements
-        if ($equipement->getUserlog() !== $this->getUser()?->getId()) {
+        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        $user = $this->getUser();
+        if ($equipement->getUserlog() !== $user->getId()) {
             return $this->json(['error' => 'Accès refusé.'], 403);
         }
 
@@ -197,7 +199,9 @@ class DiagnosticController extends AbstractController
     public function analyserPhoto(Equipement $equipement, Request $request): JsonResponse
     {
         // ── 1. Vérification ownership ──────────────────────────────────────────
-        if ($equipement->getUserlog() !== $this->getUser()?->getId()) {
+        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        $user = $this->getUser();
+        if ($equipement->getUserlog() !== $user->getId()) {
             return $this->json(['error' => 'Accès refusé.'], 403);
         }
 

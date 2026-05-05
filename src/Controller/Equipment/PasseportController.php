@@ -3,6 +3,7 @@
 namespace App\Controller\Equipment;
 
 use App\Entity\Equipement;
+use App\Entity\Maintenance; // Fix PHPStan — import manquant causait App\Controller\Equipment\Maintenance
 use App\Repository\EquipementRepository;
 use App\Repository\MaintenanceRepository;
 use BaconQrCode\Renderer\Image\SvgImageBackEnd;
@@ -208,8 +209,8 @@ class PasseportController extends AbstractController
      * Retourne un tableau avec : niveau, label, emoji, color (hex), score (0-100), message.
      * Utilisé dans le template pour l'indicateur visuel et la barre de progression.
      *
-     * @param Equipement   $eq           Équipement dont on calcule la santé
-     * @param Maintenance[] $maintenances Les 3 dernières maintenances (peut être vide)
+     * @param Equipement          $eq           Équipement dont on calcule la santé
+     * @param array<Maintenance>  $maintenances Les 3 dernières maintenances (peut être vide) // Fix PHPStan
      *
      * @return array{niveau: string, label: string, emoji: string, color: string, score: int, message: string}
      */

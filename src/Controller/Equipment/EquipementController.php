@@ -69,6 +69,7 @@ class EquipementController extends AbstractController
         ProduitsRepository $produitsRepository,
         PaginatorInterface $paginator
     ): Response {
+        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
         $user      = $this->getUser();
         $search    = $request->query->get('search', '');
         $statut    = $request->query->get('statut', '');
@@ -203,7 +204,9 @@ class EquipementController extends AbstractController
             }
 
             // ── Lier l'équipement à l'utilisateur connecté ──────────────────────
-            $equipement->setUserlog($this->getUser()->getId());
+            /** @var \App\Entity\User $currentUser */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+            $currentUser = $this->getUser();
+            $equipement->setUserlog($currentUser->getId());
             $em->persist($equipement);
             $em->flush();
 
@@ -302,6 +305,7 @@ class EquipementController extends AbstractController
             // Envoie un SMS Twilio informant l'agriculteur du changement de statut
             $nouveauStatut = $equipement->getStatut();
             if ($ancienStatut !== $nouveauStatut) {
+                /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
                 $user      = $this->getUser();
                 $telephone = method_exists($user, 'getTelephone') ? $user->getTelephone() : null;
 
@@ -315,7 +319,7 @@ class EquipementController extends AbstractController
 
                     try {
                         $notification = new EquipementStatutNotification(
-                            $equipement->getNom() ?? 'Équipement',
+                            $equipement->getNom(), // Fix PHPStan — getNom() retourne string (non-nullable), ?? redondant supprimé
                             $ancienStatut ?? '—',
                             $nouveauStatut ?? '—'
                         );
@@ -360,7 +364,7 @@ class EquipementController extends AbstractController
     ): Response {
         $this->denyAccessUnlessOwner($equipement);
 
-        if ($this->isCsrfTokenValid('delete' . $equipement->getId(), $request->request->get('_token'))) {
+        if ($this->isCsrfTokenValid('delete' . $equipement->getId(), $request->request->getString('_token'))) { // Fix PHPStan — getString() retourne string (get() retourne mixed)
             $em->remove($equipement);
             $em->flush();
             $this->addFlash('success', 'Équipement supprimé avec succès.');
@@ -406,7 +410,9 @@ class EquipementController extends AbstractController
      */
     private function denyAccessUnlessOwner(Equipement $equipement): void
     {
-        if ($equipement->getUserlog() !== $this->getUser()->getId()) {
+        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        $user = $this->getUser();
+        if ($equipement->getUserlog() !== $user->getId()) {
             throw $this->createAccessDeniedException('Vous n\'avez pas accès à cet équipement.');
         }
     }
