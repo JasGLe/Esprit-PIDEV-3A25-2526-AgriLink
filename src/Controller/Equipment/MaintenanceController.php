@@ -65,7 +65,7 @@ class MaintenanceController extends AbstractController
         ExchangeRateService   $exchangeRateService,
         Request               $request
     ): Response {
-        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        /** @var \App\Entity\UserManagement\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
         $user   = $this->getUser();
         $userId = $user->getId();
 
@@ -148,7 +148,7 @@ class MaintenanceController extends AbstractController
 
         // Le formulaire filtre les équipements par user_id pour n'afficher
         // que ceux qui appartiennent à l'agriculteur connecté
-        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        /** @var \App\Entity\UserManagement\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
         $user = $this->getUser();
         $form = $this->createForm(MaintenanceType::class, $maintenance, [
             'user_id' => $user->getId(),
@@ -237,7 +237,7 @@ class MaintenanceController extends AbstractController
     ): Response {
         $this->denyAccessUnlessOwner($maintenance, $equipRepo);
 
-        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        /** @var \App\Entity\UserManagement\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
         $user = $this->getUser();
         $form = $this->createForm(MaintenanceType::class, $maintenance, [
             'user_id' => $user->getId(),
@@ -320,7 +320,7 @@ class MaintenanceController extends AbstractController
         EquipementRepository $equipRepo
     ): void {
         $equipement = $equipRepo->find($maintenance->getEquipementId());
-        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        /** @var \App\Entity\UserManagement\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
         $user = $this->getUser();
         if (!$equipement || $equipement->getUserlog() !== $user->getId()) {
             throw $this->createAccessDeniedException(

@@ -69,7 +69,7 @@ class EquipementController extends AbstractController
         ProduitsRepository $produitsRepository,
         PaginatorInterface $paginator
     ): Response {
-        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        /** @var \App\Entity\UserManagement\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
         $user      = $this->getUser();
         $search    = $request->query->get('search', '');
         $statut    = $request->query->get('statut', '');
@@ -102,9 +102,7 @@ class EquipementController extends AbstractController
 
         // ── Équipements déjà en vente en boutique (pour désactiver le bouton) ───
         $equipementIdsEnBoutique = [];
-        if ($user !== null && method_exists($user, 'getId') && $user->getId() !== null) {
-            $equipementIdsEnBoutique = $produitsRepository->findEquipementIdsAlreadyInBoutiqueByOwner((int) $user->getId());
-        }
+        $equipementIdsEnBoutique = $produitsRepository->findEquipementIdsAlreadyInBoutiqueByOwner($user->getId()); // Fix PHPStan #105 — $user typé non-nullable, gardes $user!==null et method_exists supprimées
 
         // ── Tokens CSRF pour les formulaires "Mettre en vente" ──────────────────
         // Un token unique par équipement pour prévenir les soumissions forgées
@@ -204,7 +202,7 @@ class EquipementController extends AbstractController
             }
 
             // ── Lier l'équipement à l'utilisateur connecté ──────────────────────
-            /** @var \App\Entity\User $currentUser */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+            /** @var \App\Entity\UserManagement\User $currentUser */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
             $currentUser = $this->getUser();
             $equipement->setUserlog($currentUser->getId());
             $em->persist($equipement);
@@ -305,9 +303,9 @@ class EquipementController extends AbstractController
             // Envoie un SMS Twilio informant l'agriculteur du changement de statut
             $nouveauStatut = $equipement->getStatut();
             if ($ancienStatut !== $nouveauStatut) {
-                /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+                /** @var \App\Entity\UserManagement\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
                 $user      = $this->getUser();
-                $telephone = method_exists($user, 'getTelephone') ? $user->getTelephone() : null;
+                $telephone = $user->getTelephone(); // Fix PHPStan #310 — App\Entity\UserManagement\User::getTelephone() existe, method_exists() redondant supprimé
 
                 if ($telephone !== null && $telephone !== '') {
                     // Normalisation E.164 : 0XXXXXXXX → +216XXXXXXXX (Tunisie)
@@ -410,7 +408,7 @@ class EquipementController extends AbstractController
      */
     private function denyAccessUnlessOwner(Equipement $equipement): void
     {
-        /** @var \App\Entity\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        /** @var \App\Entity\UserManagement\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
         $user = $this->getUser();
         if ($equipement->getUserlog() !== $user->getId()) {
             throw $this->createAccessDeniedException('Vous n\'avez pas accès à cet équipement.');

@@ -63,7 +63,7 @@ class Maintenance
 
     /**
      * Identifiant primaire auto-généré.
-     * @phpstan-ignore property.onlyRead -- Fix PHPStan : Doctrine écrit $id via reflection lors de la persistance, jamais via setter PHP
+     * @phpstan-ignore property.onlyRead (Fix PHPStan #66 : Doctrine écrit $id via reflection lors de la persistance, jamais via setter PHP)
      */
     #[ORM\Id]
     #[ORM\GeneratedValue]
