@@ -32,8 +32,8 @@ class LigneCommande
     #[ORM\Column(type: Types::FLOAT)]
     private float $prixUnitaire;
 
-    #[ORM\Column(type: Types::FLOAT)]
-    private float $prixTotal;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3)]
+    private string $prixTotal = '0.000';
 
     public function getId(): int
     {
@@ -114,12 +114,12 @@ class LigneCommande
 
     public function getPrixTotal(): float
     {
-        return $this->prixTotal;
+        return (float) $this->prixTotal;
     }
 
     public function setPrixTotal(float $prixTotal): static
     {
-        $this->prixTotal = $prixTotal;
+        $this->prixTotal = number_format($prixTotal, 3, '.', '');
 
         return $this;
     }

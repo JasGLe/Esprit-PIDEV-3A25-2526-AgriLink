@@ -73,8 +73,8 @@ class Produits
     #[ORM\Column(type: Types::BOOLEAN)]
     private bool $isRental = false;
 
-    #[ORM\Column(type: Types::FLOAT, nullable: true)]
-    private ?float $rentalPricePerDay = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3, nullable: true)]
+    private ?string $rentalPricePerDay = null;
 
     #[ORM\Column(type: Types::STRING, length: 800, nullable: true)]
     private ?string $rentalDescription = null;
@@ -335,12 +335,12 @@ class Produits
 
     public function getRentalPricePerDay(): ?float
     {
-        return $this->rentalPricePerDay;
+        return $this->rentalPricePerDay !== null ? (float) $this->rentalPricePerDay : null;
     }
 
     public function setRentalPricePerDay(?float $rentalPricePerDay): static
     {
-        $this->rentalPricePerDay = $rentalPricePerDay;
+        $this->rentalPricePerDay = $rentalPricePerDay !== null ? number_format($rentalPricePerDay, 3, '.', '') : null;
 
         return $this;
     }

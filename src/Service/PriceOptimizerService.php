@@ -45,9 +45,6 @@ final class PriceOptimizerService
         $needle = mb_strtolower(trim($nom));
 
         foreach ($candidates as $p) {
-            if (!$p instanceof Produits) {
-                continue;
-            }
             if (!$p->getActive() || $p->getQuantite() <= 0) {
                 continue;
             }

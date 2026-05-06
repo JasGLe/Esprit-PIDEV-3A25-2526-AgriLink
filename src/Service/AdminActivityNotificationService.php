@@ -158,6 +158,8 @@ class AdminActivityNotificationService
 
     /**
      * Get admin activity summary for dashboard.
+     *
+     * @return array{newUsersLast24h:int,totalUsers:int,activeUsers:int,inactiveUsers:int,timestamp:\DateTimeInterface}
      */
     public function getActivitySummary(): array
     {
@@ -199,9 +201,9 @@ class AdminActivityNotificationService
 
     private function buildNewUserBody(User $newUser): string
     {
-        $email = $newUser->getEmail();
+        $email = (string) ($newUser->getEmail() ?? '');
         $role = $this->formatRole($newUser->getRole());
-        $date = $newUser->getCreatedAt()?->format('d/m/Y H:i') ?? 'N/A';
+        $date = $newUser->getCreatedAt()->format('d/m/Y H:i');
 
         return "📧 $email\n🔑 Rôle: $role\n📅 $date";
     }

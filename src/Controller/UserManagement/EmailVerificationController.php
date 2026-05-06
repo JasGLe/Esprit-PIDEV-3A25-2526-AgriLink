@@ -2,6 +2,7 @@
 
 namespace App\Controller\UserManagement;
 
+use App\Entity\UserManagement\User;
 use App\Service\EmailVerificationService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -24,6 +25,9 @@ class EmailVerificationController extends AbstractController
     public function verifyEmail(Request $request): Response
     {
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
         // If already verified, redirect to dashboard
         if ($user->isEmailVerified()) {
@@ -44,8 +48,7 @@ class EmailVerificationController extends AbstractController
 
         // Handle form submission
         if ($request->isMethod('POST')) {
-            $code = $request->request->get('verification_code', '');
-            $code = trim($code);
+            $code = trim($request->request->getString('verification_code', ''));
 
             if (empty($code)) {
                 $this->addFlash('error', 'Veuillez entrer le code de vérification.');
@@ -111,6 +114,9 @@ class EmailVerificationController extends AbstractController
     public function resendVerification(Request $request): Response
     {
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
         // If already verified, redirect
         if ($user->isEmailVerified()) {
@@ -158,6 +164,9 @@ class EmailVerificationController extends AbstractController
     public function verificationChoice(): Response
     {
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
         // If both email and phone are verified, redirect to dashboard
         if ($user->isEmailVerified() && $user->isPhoneVerified()) {
@@ -174,6 +183,9 @@ class EmailVerificationController extends AbstractController
     public function verifyUnified(Request $request): Response
     {
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
         // If both already verified, redirect to dashboard
         if ($user->isEmailVerified() && $user->isPhoneVerified()) {
@@ -183,8 +195,7 @@ class EmailVerificationController extends AbstractController
 
         // Handle email verification POST request
         if ($request->isMethod('POST') && $request->request->has('verification_code')) {
-            $code = $request->request->get('verification_code', '');
-            $code = trim($code);
+            $code = trim($request->request->getString('verification_code', ''));
 
             if (empty($code)) {
                 $this->addFlash('error', 'Veuillez entrer le code de vérification.');

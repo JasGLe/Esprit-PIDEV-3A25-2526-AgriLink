@@ -54,8 +54,7 @@ class TwoFactorController extends AbstractController
 
         // Handle POST (OTP verification)
         if ($request->isMethod('POST')) {
-            $code = $request->request->get('otp_code', '');
-            $rawCode = trim($code);
+            $rawCode = trim($request->request->getString('otp_code', ''));
             
             if (empty($rawCode)) {
                 $error = 'Veuillez entrer le code de vérification.';
@@ -100,7 +99,7 @@ class TwoFactorController extends AbstractController
 
                 // Try OTP (6 numeric digits) - only if backup code failed
                 $cleanedOtp = preg_replace('/[^0-9]/', '', $rawCode);
-                $isOtpValid = $this->twoFactorService->verifyOtp($user, $cleanedOtp);
+                $isOtpValid = $this->twoFactorService->verifyOtp($user, $cleanedOtp ?? '');
 
                 if ($isOtpValid) {
                     // Success! Complete the login with OTP
@@ -130,15 +129,11 @@ class TwoFactorController extends AbstractController
                     return $this->redirectToRoute('app_dashboard');
                 } else {
                     $remainingAttempts = $this->twoFactorService->getRemainingAttempts($user);
-                    if ($remainingAttempts > 0) {
-                        $error = sprintf(
-                            'Code incorrect. Il vous reste %d tentative%s.',
-                            $remainingAttempts,
-                            $remainingAttempts > 1 ? 's' : ''
-                        );
-                    } else {
-                        $error = 'Nombre maximum de tentatives atteint. Veuillez demander un nouveau code.';
-                    }
+                    $error = sprintf(
+                        'Code incorrect. Il vous reste %d tentative%s.',
+                        $remainingAttempts,
+                        $remainingAttempts > 1 ? 's' : ''
+                    );
                 }
             }
         }

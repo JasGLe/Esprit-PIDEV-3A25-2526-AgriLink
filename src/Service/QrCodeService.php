@@ -8,7 +8,7 @@ class QrCodeService
 
     /**
      * Generate QR code URL for an event deep link with UTF-8 encoded parameters.
-     * @param array $params Array containing: titre, date, heure, lieu, type, desc
+     * @param array<string, mixed> $params Array containing: titre, date, heure, lieu, type, desc
      */
     public function generateQrCodeForEvent(array $params): string
     {
@@ -26,7 +26,7 @@ class QrCodeService
 
     /**
      * Generate QR code URL for an activity deep link with UTF-8 encoded parameters.
-     * @param array $params Array containing: titre, type_act, debut, fin, statut, cout
+     * @param array<string, mixed> $params Array containing: titre, type_act, debut, fin, statut, cout
      */
     public function generateQrCodeForActivity(array $params): string
     {
@@ -44,6 +44,8 @@ class QrCodeService
 
     /**
      * Build the final deep-link URL with UTF-8 URL-encoded parameters.
+     *
+     * @param array<string, mixed> $params
      */
     public function buildDeepLink(array $params): string
     {
@@ -73,11 +75,18 @@ class QrCodeService
     /**
      * Generate QR code from arbitrary data
      * Returns a data URL for use in <img> tags
+     *
+     * @param array<string, mixed>|string $data
      */
     public function generateQrCodeFromData(array|string $data): string
     {
         // Convert data to JSON if it's an array
-        $content = is_array($data) ? json_encode($data) : $data;
+        if (is_array($data)) {
+            $json = json_encode($data, JSON_UNESCAPED_UNICODE);
+            $content = $json === false ? '' : $json;
+        } else {
+            $content = $data;
+        }
 
         // Use qr-server.com API to generate QR code
         // This is a free, reliable service that returns PNG

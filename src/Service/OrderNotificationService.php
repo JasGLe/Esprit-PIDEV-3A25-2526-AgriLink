@@ -35,7 +35,7 @@ class OrderNotificationService
             $sellerById[(int) $sellerUser->getId()] = $sellerUser;
         }
 
-        $buyerLabel = trim($buyerDisplayName) !== '' ? trim($buyerDisplayName) : ((string) ($buyer->getDisplayName() ?? $buyer->getEmail()));
+        $buyerLabel = trim($buyerDisplayName) !== '' ? trim($buyerDisplayName) : trim((string) ($buyer->getDisplayName() ?: $buyer->getEmail()));
         $orderRef = $this->formatOrderRef($commande);
         $total = number_format((float) $commande->getPrixTotal(), 3, ',', ' ');
 
@@ -69,11 +69,11 @@ class OrderNotificationService
                 [
                     'type' => 'order_received',
                     'orderRef' => $orderRef,
-                    'commandeId' => (string) ($commande->getId() ?? 0),
+                    'commandeId' => (string) $commande->getId(),
                     'targetRole' => 'seller',
                 ]
             );
-            if (($sellerPushResult['ok'] ?? false) !== true) {
+            if ($sellerPushResult['ok'] !== true) {
                 $this->logger->warning('Seller OneSignal push failed', [
                     'commandeId' => $commande->getId(),
                     'orderRef' => $orderRef,
@@ -119,11 +119,11 @@ class OrderNotificationService
                 [
                     'type' => 'order_created_admin',
                     'orderRef' => $orderRef,
-                    'commandeId' => (string) ($commande->getId() ?? 0),
+                    'commandeId' => (string) $commande->getId(),
                     'targetRole' => 'admin',
                 ]
             );
-            if (($adminPushResult['ok'] ?? false) !== true) {
+            if ($adminPushResult['ok'] !== true) {
                 $this->logger->warning('Admin OneSignal push failed', [
                     'commandeId' => $commande->getId(),
                     'orderRef' => $orderRef,
@@ -180,12 +180,12 @@ class OrderNotificationService
             [
                 'type' => 'order_status_changed',
                 'orderRef' => $orderRef,
-                'commandeId' => (string) ($commande->getId() ?? 0),
+                'commandeId' => (string) $commande->getId(),
                 'oldStatus' => $oldStatus,
                 'newStatus' => $newStatus,
             ]
         );
-        if (($result['ok'] ?? false) !== true) {
+        if ($result['ok'] !== true) {
             $this->logger->warning('Buyer OneSignal status-change push failed', [
                 'commandeId' => $commande->getId(),
                 'orderRef' => $orderRef,
@@ -233,11 +233,11 @@ class OrderNotificationService
                 [
                     'type' => 'order_cancellation_requested_admin',
                     'orderRef' => $orderRef,
-                    'commandeId' => (string) ($commande->getId() ?? 0),
+                    'commandeId' => (string) $commande->getId(),
                     'targetRole' => 'admin',
                 ]
             );
-            if (($result['ok'] ?? false) !== true) {
+            if ($result['ok'] !== true) {
                 $this->logger->warning('Admin OneSignal cancellation-request push failed', [
                     'commandeId' => $commande->getId(),
                     'orderRef' => $orderRef,

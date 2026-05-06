@@ -87,6 +87,8 @@ class UserGamificationService
     /**
      * Compute all earned badge keys for a user.
      * @phpstan-impure
+     *
+     * @return list<string>
      */
     public function computeBadges(User $user): array
     {
@@ -119,6 +121,8 @@ class UserGamificationService
 
     /**
      * Returns the level info array for the given points total.
+     *
+     * @return array<string, mixed>
      */
     public function getLevel(int $points): array
     {
@@ -156,6 +160,8 @@ class UserGamificationService
 
     /**
      * Full gamification summary as an array (for JSON API / Twig).
+     *
+     * @return array<string, mixed>
      */
     public function getSummary(User $user): array
     {
@@ -213,6 +219,8 @@ class UserGamificationService
 
     /**
      * Returns badge definitions the user hasn't earned yet (hints).
+     *
+     * @return list<array<string, mixed>>
      */
     private function getNextBadges(User $user): array
     {

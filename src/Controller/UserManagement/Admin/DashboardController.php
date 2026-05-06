@@ -24,7 +24,6 @@ use Twig\Environment;
 class DashboardController extends AbstractController
 {
     public function __construct(
-        private EntityManagerInterface $entityManager,
         private UserRepository $userRepository,
         private SecurityEventRepository $securityEventRepository,
         private Environment $twig

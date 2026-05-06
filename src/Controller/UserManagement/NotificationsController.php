@@ -33,10 +33,12 @@ class NotificationsController extends AbstractController
     #[Route('/unread', name: 'unread', methods: ['GET'])]
     public function getUnread(): JsonResponse
     {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
 
-        $notifications = $this->notificationsRepository->findUnreadByUserId($user->getId(), limit: 20);
+        $notifications = $this->notificationsRepository->findUnreadByUserId((int) $user->getId(), limit: 20);
 
         return $this->json([
             'count' => count($notifications),
@@ -56,8 +58,10 @@ class NotificationsController extends AbstractController
     #[Route('/{id}/read', name: 'read', methods: ['POST'])]
     public function markRead(int $id): JsonResponse
     {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
         $notification = $this->notificationsRepository->find($id);
 
         if (!$notification || $notification->getUserId() !== $user->getId()) {
@@ -76,8 +80,10 @@ class NotificationsController extends AbstractController
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
     public function delete(int $id): JsonResponse
     {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
         $notification = $this->notificationsRepository->find($id);
 
         if (!$notification || $notification->getUserId() !== $user->getId()) {
@@ -95,8 +101,10 @@ class NotificationsController extends AbstractController
     #[Route('/gamification', name: 'gamification', methods: ['GET'])]
     public function getGamification(): JsonResponse
     {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
 
         return $this->json($this->gamificationService->getSummary($user));
     }
@@ -107,8 +115,10 @@ class NotificationsController extends AbstractController
     #[Route('/profile-status', name: 'profile_status', methods: ['GET'])]
     public function getProfileStatus(): JsonResponse
     {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
 
         $completionScore = $this->profileNotificationService->getProfileCompletionScore($user);
         $contextualNotifications = $this->profileNotificationService->generateContextualNotifications($user);
@@ -142,8 +152,10 @@ class NotificationsController extends AbstractController
     #[IsGranted('ROLE_ADMIN')]
     public function getAdminActivity(): JsonResponse
     {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
 
         // Get activity notifications (user_joined, user_left, role_changed, etc.)
         $activityTypes = [
@@ -191,10 +203,12 @@ class NotificationsController extends AbstractController
     #[Route('/test-push', name: 'test_push', methods: ['POST'])]
     public function testPush(): JsonResponse
     {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->json(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
         $userId = (int) ($user->getId() ?? 0);
-        $displayName = trim((string) ($user->getDisplayName() ?? $user->getEmail() ?? 'Utilisateur'));
+        $displayName = trim((string) ($user->getDisplayName() ?: ($user->getEmail() ?: 'Utilisateur')));
 
         $title = 'Test notification OneSignal';
         $body = sprintf('Bonjour %s, ceci est un test push + in-app.', $displayName);
@@ -232,13 +246,15 @@ class NotificationsController extends AbstractController
     #[Route('', name: 'center', methods: ['GET'])]
     public function center(): Response
     {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
         // Get all notifications (not just unread)
         $notifications = $this->notificationsRepository->createQueryBuilder('n')
             ->where('n.userId = :userId')
-            ->setParameter('userId', $user->getId())
+            ->setParameter('userId', (int) $user->getId())
             ->orderBy('n.createdAt', 'DESC')
             ->setMaxResults(100)
             ->getQuery()

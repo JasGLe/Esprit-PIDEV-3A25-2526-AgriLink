@@ -134,8 +134,8 @@ class RentalRequest
     )]
     private string $transportResponsibility;
 
-    #[ORM\Column(type: Types::FLOAT, options: ['default' => 0])]
-    private float $totalPrice = 0.0;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3, options: ['default' => '0.000'])]
+    private string $totalPrice = '0.000';
 
     // ── Getters / Setters ────────────────────────────────────────────────────
 
@@ -170,6 +170,6 @@ class RentalRequest
     public function setUsageLocation(string $usageLocation): static { $this->usageLocation = $usageLocation; return $this; }
     public function getTransportResponsibility(): string { return $this->transportResponsibility; }
     public function setTransportResponsibility(string $transportResponsibility): static { $this->transportResponsibility = $transportResponsibility; return $this; }
-    public function getTotalPrice(): float { return $this->totalPrice; }
-    public function setTotalPrice(float $totalPrice): static { $this->totalPrice = $totalPrice; return $this; }
+    public function getTotalPrice(): float { return (float) $this->totalPrice; }
+    public function setTotalPrice(float $totalPrice): static { $this->totalPrice = number_format($totalPrice, 3, '.', ''); return $this; }
 }

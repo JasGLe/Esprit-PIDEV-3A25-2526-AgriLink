@@ -58,13 +58,13 @@ class UserManager
      * Note: In real application, this would query the database
      * 
      * @param User $user The user to check
-     * @param array $existingEmails Array of existing emails for testing
+     * @param list<string> $existingEmails Array of existing emails for testing
      * @return bool True if email is unique
      * @throws \InvalidArgumentException If email already exists
      */
     public function isEmailUnique(User $user, array $existingEmails = []): bool
     {
-        if (in_array($user->getEmail(), $existingEmails)) {
+        if (in_array($user->getEmail(), $existingEmails, true)) {
             throw new \InvalidArgumentException('Cet email est déjà utilisé');
         }
 

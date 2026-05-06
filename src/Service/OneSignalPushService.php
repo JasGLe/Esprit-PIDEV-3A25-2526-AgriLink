@@ -71,7 +71,7 @@ class OneSignalPushService
             return [
                 'ok' => $ok,
                 'status' => $status,
-                'response' => \is_array($payload) ? $payload : [],
+                'response' => $payload,
                 'externalIds' => $externalIds,
             ];
         } catch (\Throwable $e) {

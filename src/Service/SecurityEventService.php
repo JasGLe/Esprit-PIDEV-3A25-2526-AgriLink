@@ -39,7 +39,7 @@ class SecurityEventService
             }
         }
 
-        $securityEvent->setDetails(json_encode($detailsArray, JSON_UNESCAPED_UNICODE));
+        $securityEvent->setDetails($this->encodeDetails($detailsArray));
 
         $this->em->persist($securityEvent);
         $this->em->flush();
@@ -55,7 +55,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_LOGIN_SUCCESS,
             $user,
-            json_encode(['email' => $user->getEmail()])
+            $this->encodeDetails(['email' => $user->getEmail()])
         );
     }
 
@@ -73,7 +73,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_LOGIN_FAILED,
             $user,
-            json_encode([
+            $this->encodeDetails([
                 'email' => $email,
                 'reason' => $reason
             ])
@@ -88,7 +88,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_ACCOUNT_LOCKED,
             $user,
-            json_encode([
+            $this->encodeDetails([
                 'email' => $user->getEmail(),
                 'locked_until' => $user->getLockedUntil()?->format('Y-m-d H:i:s')
             ])
@@ -103,7 +103,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_2FA_OTP_SENT,
             $user,
-            json_encode(['email' => $user->getEmail()])
+            $this->encodeDetails(['email' => $user->getEmail()])
         );
     }
 
@@ -115,8 +115,17 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_2FA_SUCCESS,
             $user,
-            json_encode(['email' => $user->getEmail()])
+            $this->encodeDetails(['email' => $user->getEmail()])
         );
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private function encodeDetails(array $payload): ?string
+    {
+        $json = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        return $json === false ? null : $json;
     }
 
     /**
@@ -127,7 +136,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_2FA_FAILED,
             $user,
-            json_encode(['email' => $user->getEmail()])
+            $this->encodeDetails(['email' => $user->getEmail()])
         );
     }
 
@@ -139,7 +148,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_PASSWORD_CHANGED,
             $user,
-            json_encode(['email' => $user->getEmail()])
+            $this->encodeDetails(['email' => $user->getEmail()])
         );
     }
 
@@ -151,7 +160,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_EMAIL_VERIFIED,
             $user,
-            json_encode(['email' => $user->getEmail()])
+            $this->encodeDetails(['email' => $user->getEmail()])
         );
     }
 
@@ -163,7 +172,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_OAUTH_LOGIN,
             $user,
-            json_encode([
+            $this->encodeDetails([
                 'email' => $user->getEmail(),
                 'provider' => $provider
             ])
@@ -178,7 +187,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_OAUTH_REGISTER,
             $user,
-            json_encode([
+            $this->encodeDetails([
                 'email' => $user->getEmail(),
                 'provider' => $provider
             ])
@@ -193,7 +202,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_SESSION_REVOKED,
             $user,
-            json_encode(['email' => $user->getEmail()])
+            $this->encodeDetails(['email' => $user->getEmail()])
         );
     }
 
@@ -205,7 +214,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_LOGOUT,
             $user,
-            json_encode(['email' => $user->getEmail()])
+            $this->encodeDetails(['email' => $user->getEmail()])
         );
     }
 
@@ -217,7 +226,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_SUSPICIOUS_ACTIVITY,
             $user,
-            json_encode([
+            $this->encodeDetails([
                 'email' => $user->getEmail(),
                 'reason' => $reason
             ])
@@ -229,7 +238,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_ACCOUNT_BANNED,
             $user,
-            json_encode([
+            $this->encodeDetails([
                 'email' => $user->getEmail(),
                 'reason' => $reason
             ])
@@ -241,7 +250,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_ACCOUNT_UNBANNED,
             $user,
-            json_encode(['email' => $user->getEmail()])
+            $this->encodeDetails(['email' => $user->getEmail()])
         );
     }
 
@@ -250,7 +259,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_BACKUP_CODE_USED,
             $user,
-            json_encode(['email' => $user->getEmail()])
+            $this->encodeDetails(['email' => $user->getEmail()])
         );
     }
 
@@ -259,7 +268,7 @@ class SecurityEventService
         $this->log(
             SecurityEvent::EVENT_EMAIL_CHANGE_REQUESTED,
             $user,
-            json_encode([
+            $this->encodeDetails([
                 'email' => $user->getEmail(),
                 'new_email' => $newEmail
             ])
@@ -268,6 +277,8 @@ class SecurityEventService
 
     /**
      * Build base details array with IP and user agent from current request
+     *
+     * @return array{ip_address: string|null, user_agent: string|null, timestamp: string}
      */
     private function buildBaseDetails(): array
     {

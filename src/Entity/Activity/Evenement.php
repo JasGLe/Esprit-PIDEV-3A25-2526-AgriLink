@@ -57,7 +57,7 @@ class Evenement
     private string $lieu;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
-    #[ORM\JoinColumn(name: 'id_organisateur', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
+    #[ORM\JoinColumn(name: 'organisateur_id', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
     private ?User $organisateur = null;
 
     public function getId(): int

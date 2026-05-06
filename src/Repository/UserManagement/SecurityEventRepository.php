@@ -10,9 +10,9 @@ use Doctrine\Persistence\ManagerRegistry;
  * @extends ServiceEntityRepository<SecurityEvent>
  *
  * @method SecurityEvent|null find($id, $lockMode = null, $lockVersion = null)
- * @method SecurityEvent|null findOneBy(array $criteria, array $orderBy = null)
+ * @method SecurityEvent|null findOneBy(array<string, mixed> $criteria, array<string, 'ASC'|'DESC'>|null $orderBy = null)
  * @method SecurityEvent[]    findAll()
- * @method SecurityEvent[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method SecurityEvent[]    findBy(array<string, mixed> $criteria, array<string, 'ASC'|'DESC'>|null $orderBy = null, $limit = null, $offset = null)
  */
 class SecurityEventRepository extends ServiceEntityRepository
 {
@@ -41,6 +41,8 @@ class SecurityEventRepository extends ServiceEntityRepository
 
     /**
      * Get security statistics for the last N days
+     *
+     * @return array<string, mixed>
      */
     public function getStatistics(int $days = 30): array
     {
@@ -89,6 +91,8 @@ class SecurityEventRepository extends ServiceEntityRepository
 
     /**
      * Find recent security events
+     *
+     * @return list<SecurityEvent>
      */
     public function findRecent(int $limit = 15): array
     {
@@ -101,6 +105,8 @@ class SecurityEventRepository extends ServiceEntityRepository
 
     /**
      * Find events by user
+     *
+     * @return list<SecurityEvent>
      */
     public function findByUser(int $userId, int $limit = 50): array
     {
@@ -116,6 +122,8 @@ class SecurityEventRepository extends ServiceEntityRepository
 
     /**
      * Find login history events for a specific user
+     *
+     * @return list<SecurityEvent>
      */
     public function findLoginHistoryByUser(int $userId, int $limit = 50): array
     {
@@ -138,6 +146,8 @@ class SecurityEventRepository extends ServiceEntityRepository
 
     /**
      * Find events by type
+     *
+     * @return list<SecurityEvent>
      */
     public function findByType(string $eventType, int $days = 30, int $limit = 100): array
     {

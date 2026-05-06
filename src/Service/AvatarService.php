@@ -134,7 +134,10 @@ class AvatarService
 
     private function isLocalhost(): bool
     {
-        $host = parse_url($this->appUrl, PHP_URL_HOST) ?? '';
+        $host = parse_url($this->appUrl, PHP_URL_HOST);
+        if (!is_string($host)) {
+            $host = '';
+        }
         return in_array($host, ['localhost', '127.0.0.1', '::1'], true)
             || str_ends_with($host, '.local');
     }
