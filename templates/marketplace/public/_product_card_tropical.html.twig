@@ -6,7 +6,10 @@
 {% set is_eq = p.equipementId is not null %}
 {% set is_rental = p.isRental %}
 {% set cat_code = p.category|default('') %}
-<article class="tropical-card h-100">
+<article class="tropical-card h-100 js-product-card-nav"
+         data-detail-url="{{ path('marketplace_product_show', { id: p.id }) }}"
+         onclick="if(!event.target.closest('a,button,form,input,select,textarea,label')){window.location.href=this.dataset.detailUrl;}"
+         style="cursor:pointer;">
     <div class="tropical-card__inner">
         <button type="button" class="tropical-card__wishlist" disabled title="Bientôt disponible">
             <span class="tropical-card__wishlist-txt">Liste d’envies</span>
@@ -14,21 +17,23 @@
         </button>
 
         <div class="tropical-card__media">
-            {% if p.image and p.image|trim != '' %}
-                {% if is_eq %}
-                    <img src="{{ uploads_base_url }}/{{ p.image }}" alt="{{ p.nom }}" loading="lazy">
-                {% else %}
-                    <img src="{{ uploads_base_url }}/cultures/{{ p.image }}" alt="{{ p.nom }}" loading="lazy">
-                {% endif %}
-            {% else %}
-                <div class="tropical-card__placeholder">
+            <a href="{{ path('marketplace_product_show', { id: p.id }) }}" class="d-block text-decoration-none" aria-label="Voir le détail de {{ p.nom }}">
+                {% if p.image and p.image|trim != '' %}
                     {% if is_eq %}
-                        <i class="bi bi-tools"></i>
+                        <img src="{{ uploads_base_url }}/{{ p.image }}" alt="{{ p.nom }}" loading="lazy">
                     {% else %}
-                        <i class="bi bi-flower2"></i>
+                        <img src="{{ uploads_base_url }}/cultures/{{ p.image }}" alt="{{ p.nom }}" loading="lazy">
                     {% endif %}
-                </div>
-            {% endif %}
+                {% else %}
+                    <div class="tropical-card__placeholder">
+                        {% if is_eq %}
+                            <i class="bi bi-tools"></i>
+                        {% else %}
+                            <i class="bi bi-flower2"></i>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </a>
         </div>
 
         <div class="tropical-card__body">
@@ -47,7 +52,13 @@
                 {% endif %}
             </div>
 
-            <h3 class="tropical-card__title">{{ p.nom }}</h3>
+            <h3 class="tropical-card__title">
+                <a href="{{ path('marketplace_product_show', { id: p.id }) }}"
+                   class="text-decoration-none"
+                   style="color: inherit;">
+                    {{ p.nom }}
+                </a>
+            </h3>
             <p class="tropical-card__desc">
                 {% if p.description %}
                     {{ p.description|length > 100 ? p.description|slice(0, 97) ~ '…' : p.description }}
@@ -86,7 +97,7 @@
 
             <div class="tropical-card__links">
                 <a href="#" class="tropical-card__link" onclick="return false;">Voir l’image</a>
-                <a href="#produits" class="tropical-card__link">Plus d’infos</a>
+                <a href="{{ path('marketplace_product_show', { id: p.id }) }}" class="tropical-card__link">Plus d’infos</a>
             </div>
 
             {% if is_owner %}

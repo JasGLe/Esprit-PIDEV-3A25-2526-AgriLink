@@ -5,8 +5,8 @@ namespace App\Entity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Repository\LigneCommandeRepository::class)]
-#[ORM\Table(name: 'ligne_commande')]
+// Legacy class — superseded by App\Entity\Marketplace\LigneCommande.
+// ORM attributes removed to prevent duplicate 'ligne_commande' table mapping in SchemaTool.
 class LigneCommande
 {
     #[ORM\Id]
