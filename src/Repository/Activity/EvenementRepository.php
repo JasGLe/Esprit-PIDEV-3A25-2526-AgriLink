@@ -24,11 +24,13 @@ class EvenementRepository extends ServiceEntityRepository
     /**
      * @return Evenement[]
      */
-    public function findAllOrderedByDateDesc(): array
+    public function findAllOrderedByDateDesc(int $limit = 50, int $offset = 0): array
     {
         return $this->createQueryBuilder('e')
             ->orderBy('e.dateEvenement', 'DESC')
             ->addOrderBy('e.idEvenement', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
             ->getQuery()
             ->getResult();
     }
@@ -36,11 +38,13 @@ class EvenementRepository extends ServiceEntityRepository
     /**
      * @return Evenement[]
      */
-    public function findBySearchAndType(?string $search, ?string $type): array
+    public function findBySearchAndType(?string $search, ?string $type, int $limit = 50, int $offset = 0): array
     {
         $qb = $this->createQueryBuilder('e')
             ->orderBy('e.dateEvenement', 'DESC')
-            ->addOrderBy('e.idEvenement', 'DESC');
+            ->addOrderBy('e.idEvenement', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
 
         if ($search) {
             $qb
@@ -55,6 +59,29 @@ class EvenementRepository extends ServiceEntityRepository
         }
 
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Count total records matching search criteria
+     */
+    public function countBySearchAndType(?string $search, ?string $type): int
+    {
+        $qb = $this->createQueryBuilder('e')
+            ->select('COUNT(e.idEvenement)');
+
+        if ($search) {
+            $qb
+                ->andWhere('LOWER(e.titre) LIKE :search')
+                ->setParameter('search', '%' . mb_strtolower($search) . '%');
+        }
+
+        if ($type) {
+            $qb
+                ->andWhere('e.typeEvenement = :type')
+                ->setParameter('type', $type);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
     /**
@@ -78,7 +105,8 @@ class EvenementRepository extends ServiceEntityRepository
     public function findLatestByOrganisateurId(int $organisateurId, int $limit = 6): array
     {
         return $this->createQueryBuilder('e')
-            ->andWhere('IDENTITY(e.organisateur) = :organisateurId')
+            ->innerJoin('e.organisateur', 'o')
+            ->andWhere('o.id = :organisateurId')
             ->setParameter('organisateurId', $organisateurId)
             ->orderBy('e.dateEvenement', 'DESC')
             ->addOrderBy('e.idEvenement', 'DESC')
@@ -91,7 +119,8 @@ class EvenementRepository extends ServiceEntityRepository
     {
         return (int) $this->createQueryBuilder('e')
             ->select('COUNT(e.idEvenement)')
-            ->andWhere('IDENTITY(e.organisateur) = :organisateurId')
+            ->innerJoin('e.organisateur', 'o')
+            ->andWhere('o.id = :organisateurId')
             ->setParameter('organisateurId', $organisateurId)
             ->getQuery()
             ->getSingleScalarResult();

@@ -53,7 +53,25 @@ class EvenementController extends AbstractController
         $search = trim((string) $request->query->get('q', ''));
         $type = trim((string) $request->query->get('type', ''));
 
-        $evenements = $this->evenementRepository->findBySearchAndType($search ?: null, $type ?: null);
+        // Pagination parameters
+        $pageSize = 50;
+        $page = max(1, (int) $request->query->get('page', 1));
+        $offset = ($page - 1) * $pageSize;
+
+        // Get paginated results and total count
+        $evenements = $this->evenementRepository->findBySearchAndType(
+            $search ?: null,
+            $type ?: null,
+            $pageSize,
+            $offset
+        );
+        
+        $totalCount = $this->evenementRepository->countBySearchAndType(
+            $search ?: null,
+            $type ?: null
+        );
+        
+        $totalPages = ceil($totalCount / $pageSize);
 
         $viewData = [
             'evenements' => $evenements,
@@ -61,6 +79,14 @@ class EvenementController extends AbstractController
             'filters' => [
                 'q' => $search,
                 'type' => $type,
+            ],
+            'pagination' => [
+                'page' => $page,
+                'pageSize' => $pageSize,
+                'totalCount' => $totalCount,
+                'totalPages' => $totalPages,
+                'hasNextPage' => $page < $totalPages,
+                'hasPreviousPage' => $page > 1,
             ],
             'typeOptions' => $this->evenementRepository->findAvailableTypes(),
             'invitationMailForm' => $this->createInvitationMailForm()->createView(),

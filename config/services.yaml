@@ -117,7 +117,7 @@ services:
     # GeminiActivityService — AI recommendations for activities
     App\Service\Activity\GeminiActivityService:
         arguments:
-            $geminiApiKey1: "%env(GEMINI_API_KEY1)%"
+            $geminiApiKey1: "%env(GEMINI_API_KEY)%"
 
     # GeminiVisionService — analyse visuelle photo équipements (via Groq LLaMA 4 Scout)
     App\Service\Equipment\GeminiVisionService:
