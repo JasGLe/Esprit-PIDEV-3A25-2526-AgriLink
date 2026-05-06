@@ -134,6 +134,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_MUTABLE)]
     private \DateTimeInterface $updatedAt;
 
+    #[ORM\ManyToOne(targetEntity: self::class)]
+    #[ORM\JoinColumn(name: 'created_by_id', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
+    private ?self $createdBy = null;
+
+    #[ORM\ManyToOne(targetEntity: self::class)]
+    #[ORM\JoinColumn(name: 'updated_by_id', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
+    private ?self $updatedBy = null;
+
     #[ORM\Column(name: 'oauth_provider', length: 20, nullable: true)]
     private ?string $oauthProvider = null;
 
@@ -573,6 +581,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getCreatedBy(): ?self
+    {
+        return $this->createdBy;
+    }
+
+    protected function setCreatedBy(?self $createdBy): static
+    {
+        $this->createdBy = $createdBy;
+        return $this;
+    }
+
+    public function getUpdatedBy(): ?self
+    {
+        return $this->updatedBy;
+    }
+
+    protected function setUpdatedBy(?self $updatedBy): static
+    {
+        $this->updatedBy = $updatedBy;
+        return $this;
+    }
+
     public function getOauthProvider(): ?string
     {
         return $this->oauthProvider;
@@ -913,12 +943,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->createdAt = new \DateTime();
         $this->updatedAt = new \DateTime();
+        
+        // Set createdBy to self on first creation (User creating itself)
+        if ($this->createdBy === null) {
+            $this->createdBy = $this;
+        }
+        if ($this->updatedBy === null) {
+            $this->updatedBy = $this;
+        }
     }
 
     #[ORM\PreUpdate]
     public function onPreUpdate(): void
     {
         $this->updatedAt = new \DateTime();
+        
+        // Set updatedBy to self on updates
+        if ($this->updatedBy === null) {
+            $this->updatedBy = $this;
+        }
     }
 
     // ==================== HELPER METHODS ====================

@@ -47,6 +47,17 @@ class SecurityEvent
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE)]
     private \DateTimeInterface $createdAt;
 
+    #[ORM\Column(name: 'updated_at', type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $updatedAt = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'created_by_id', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
+    private ?User $createdBy = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'updated_by_id', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
+    private ?User $updatedBy = null;
+
     public function __construct()
     {
         $this->createdAt = new \DateTime();
@@ -105,9 +116,52 @@ class SecurityEvent
         return $this;
     }
 
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
+    protected function setUpdatedAt(?\DateTimeInterface $updatedAt): static
+    {
+        $this->updatedAt = $updatedAt;
+        return $this;
+    }
+
+    public function getCreatedBy(): ?User
+    {
+        return $this->createdBy;
+    }
+
+    protected function setCreatedBy(?User $createdBy): static
+    {
+        $this->createdBy = $createdBy;
+        return $this;
+    }
+
+    public function getUpdatedBy(): ?User
+    {
+        return $this->updatedBy;
+    }
+
+    protected function setUpdatedBy(?User $updatedBy): static
+    {
+        $this->updatedBy = $updatedBy;
+        return $this;
+    }
+
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
         $this->createdAt = new \DateTime();
+        
+        // Set blameable fields to a default user (ID 1) if not set
+        if ($this->createdBy === null) {
+            // For security events without explicit creator, we'll set it to null
+            // and it will be populated by an event listener or caller
+            $this->createdBy = null;
+        }
+        if ($this->updatedBy === null) {
+            $this->updatedBy = null;
+        }
     }
 }
