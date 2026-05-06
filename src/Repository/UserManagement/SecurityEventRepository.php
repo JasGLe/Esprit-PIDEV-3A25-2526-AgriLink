@@ -2,6 +2,7 @@
 
 namespace App\Repository\UserManagement;
 
+use App\Dto\Equipment\LabelCountDto;
 use App\Entity\UserManagement\SecurityEvent;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -55,8 +56,12 @@ class SecurityEventRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
 
+        /** @var list<LabelCountDto> $byType */
         $byType = $this->createQueryBuilder('e')
-            ->select('e.eventType, COUNT(e.id) as count')
+            ->select(sprintf(
+                'NEW %s(e.eventType, COUNT(e.id))',
+                LabelCountDto::class
+            ))
             ->where('e.createdAt >= :date')
             ->setParameter('date', $date)
             ->groupBy('e.eventType')
@@ -65,7 +70,11 @@ class SecurityEventRepository extends ServiceEntityRepository
 
         $typeStats = [];
         foreach ($byType as $row) {
-            $typeStats[$row['eventType']] = (int) $row['count'];
+            if ($row->label === null || $row->label === '') {
+                continue;
+            }
+
+            $typeStats[$row->label] = $row->total;
         }
 
         $loginSuccess = $typeStats[SecurityEvent::EVENT_LOGIN_SUCCESS] ?? 0;

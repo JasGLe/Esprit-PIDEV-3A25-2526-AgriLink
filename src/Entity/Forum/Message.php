@@ -16,7 +16,7 @@ class Message
     #[ORM\Column(type: Types::INTEGER)]
     private int $id;
 
-    #[ORM\ManyToOne(targetEntity: Forum::class)]
+    #[ORM\ManyToOne(targetEntity: Forum::class, cascade: ['persist'])]
     #[ORM\JoinColumn(name: 'forum_id', referencedColumnName: 'id', nullable: false, onDelete: 'CASCADE')]
     #[Assert\NotNull(message: 'Le forum associé est obligatoire.')]
     private Forum $forum;
@@ -96,9 +96,10 @@ class Message
         return $this->dateEnvoi;
     }
 
-    public function setDateEnvoi(\DateTimeInterface $dateEnvoi): static
+    protected function setDateEnvoi(\DateTimeInterface $dateEnvoi): static
     {
         $this->dateEnvoi = $dateEnvoi;
         return $this;
     }
+
 }

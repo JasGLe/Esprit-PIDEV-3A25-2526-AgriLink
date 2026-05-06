@@ -57,7 +57,6 @@ class OrderNotificationService
                 $total
             ));
             $notif->setCommandeId($commande->getId());
-            $notif->setCreatedAt(new \DateTimeImmutable());
             $this->notificationsRepository->save($notif, flush: false);
         }
 
@@ -106,7 +105,6 @@ class OrderNotificationService
                 $total
             ));
             $notif->setCommandeId($commande->getId());
-            $notif->setCreatedAt(new \DateTimeImmutable());
             $this->notificationsRepository->save($notif, flush: false);
         }
 
@@ -170,7 +168,6 @@ class OrderNotificationService
             $actorLabel !== '' ? $actorLabel : 'le vendeur'
         ));
         $notif->setCommandeId($commande->getId());
-        $notif->setCreatedAt(new \DateTimeImmutable());
         $this->notificationsRepository->save($notif, flush: false);
 
         $result = $this->oneSignalPushService->sendToUserIds(
@@ -220,7 +217,6 @@ class OrderNotificationService
                 $orderRef
             ));
             $notif->setCommandeId($commande->getId());
-            $notif->setCreatedAt(new \DateTimeImmutable());
             $this->notificationsRepository->save($notif, flush: false);
         }
 

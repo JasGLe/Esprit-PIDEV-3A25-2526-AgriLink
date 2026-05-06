@@ -43,7 +43,7 @@ class UserNotificationsComponent extends AbstractController
     {
         $notification = $this->notificationsRepository->find($notificationId);
         if ($notification && $notification->getUserId() === $this->getUser()?->getId()) {
-            $notification->setReadAt(new \DateTime());
+            $notification->markAsRead();
             $this->notificationsRepository->save($notification, flush: true);
         }
     }

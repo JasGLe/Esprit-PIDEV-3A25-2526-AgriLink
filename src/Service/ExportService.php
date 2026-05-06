@@ -31,8 +31,8 @@ class ExportService
     ): Response {
             /** @var Exploitation[] $exploitations */
             $exploitations = $isAdmin
-                ? $this->repo->findAll()
-                : $this->repo->findBy(['user' => $user]);
+                ? $this->repo->findAllWithParcellesAndCultures()
+                : $this->repo->findAllWithParcellesAndCultures($user);
 
         
             $rows = $this->buildRows($exploitations);
@@ -118,8 +118,8 @@ class ExportService
     ): StreamedResponse {
         /** @var Exploitation[] $exploitations */
         $exploitations = $isAdmin
-            ? $this->repo->findAll()
-            : $this->repo->findBy(['user' => $user]);
+            ? $this->repo->findAllWithParcellesAndCultures()
+            : $this->repo->findAllWithParcellesAndCultures($user);
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();

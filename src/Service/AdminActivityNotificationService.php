@@ -33,7 +33,6 @@ class AdminActivityNotificationService
             $notification->setType('user_joined');
             $notification->setTitle('👤 Nouvel utilisateur');
             $notification->setBody($this->buildNewUserBody($newUser));
-            $notification->setCreatedAt(new \DateTime());
 
             $this->notificationsRepository->save($notification, flush: false);
         }
@@ -54,7 +53,6 @@ class AdminActivityNotificationService
             $notification->setType('user_left');
             $notification->setTitle('👋 Utilisateur supprimé');
             $notification->setBody($this->buildUserLeftBody($deletedUser));
-            $notification->setCreatedAt(new \DateTime());
 
             $this->notificationsRepository->save($notification, flush: false);
         }
@@ -75,7 +73,6 @@ class AdminActivityNotificationService
             $notification->setType('role_changed');
             $notification->setTitle('🔄 Rôle modifié');
             $notification->setBody($this->buildRoleChangeBody($user, $oldRole, $newRole));
-            $notification->setCreatedAt(new \DateTime());
 
             $this->notificationsRepository->save($notification, flush: false);
         }
@@ -96,7 +93,6 @@ class AdminActivityNotificationService
             $notification->setType('user_deactivated');
             $notification->setTitle('🚫 Utilisateur désactivé');
             $notification->setBody($this->buildUserDeactivatedBody($user, $reason));
-            $notification->setCreatedAt(new \DateTime());
 
             $this->notificationsRepository->save($notification, flush: false);
         }
@@ -117,7 +113,6 @@ class AdminActivityNotificationService
             $notification->setType('user_reactivated');
             $notification->setTitle('✅ Utilisateur réactivé');
             $notification->setBody($this->buildUserReactivatedBody($user));
-            $notification->setCreatedAt(new \DateTime());
 
             $this->notificationsRepository->save($notification, flush: false);
         }
@@ -148,7 +143,6 @@ class AdminActivityNotificationService
             $notification->setType('bulk_operation');
             $notification->setTitle($title);
             $notification->setBody($this->buildBulkOperationBody($operationType, $count, $details));
-            $notification->setCreatedAt(new \DateTime());
 
             $this->notificationsRepository->save($notification, flush: false);
         }

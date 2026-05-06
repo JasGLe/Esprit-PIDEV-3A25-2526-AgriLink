@@ -93,7 +93,7 @@ class Equipement
         pattern: '/^[\p{L}0-9 \-_]+$/u',
         message: 'Le nom contient des caractères non autorisés.'
     )]
-    private ?string $nom = null;
+    private string $nom = '';
 
     /**
      * Type précis de l'équipement (ex: Tracteur, Pulvérisateur).
@@ -101,7 +101,7 @@ class Equipement
      */
     #[ORM\Column(type: Types::STRING, length: 50)]
     #[Assert\NotBlank(message: 'Le type est obligatoire.')]
-    private ?string $type = null;
+    private string $type = '';
 
     /**
      * Catégorie principale : "Véhicule Motorisé" ou "Autre Équipement".
@@ -113,7 +113,7 @@ class Equipement
         choices: ['Véhicule Motorisé', 'Autre Équipement'],
         message: 'Catégorie invalide.'
     )]
-    private ?string $categorie = null;
+    private string $categorie = '';
 
     /** Marque du fabricant (optionnel) — utilisée dans le diagnostic IA. */
     #[ORM\Column(type: Types::STRING, length: 50, nullable: true)]
@@ -372,36 +372,36 @@ class Equipement
         return $this->id;
     }
 
-    public function getNom(): ?string
+    public function getNom(): string
     {
         return $this->nom;
     }
 
     public function setNom(?string $nom): static
     {
-        $this->nom = $nom;
+        $this->nom = $nom ?? '';
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): string
     {
         return $this->type;
     }
 
     public function setType(?string $type): static
     {
-        $this->type = $type;
+        $this->type = $type ?? '';
         return $this;
     }
 
-    public function getCategorie(): ?string
+    public function getCategorie(): string
     {
         return $this->categorie;
     }
 
     public function setCategorie(?string $categorie): static
     {
-        $this->categorie = $categorie;
+        $this->categorie = $categorie ?? '';
         return $this;
     }
 

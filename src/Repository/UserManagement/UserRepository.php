@@ -2,6 +2,7 @@
 
 namespace App\Repository\UserManagement;
 
+use App\Dto\Equipment\LabelCountDto;
 use App\Entity\UserManagement\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -66,15 +67,23 @@ class UserRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
 
+        /** @var list<LabelCountDto> $byRole */
         $byRole = $this->createQueryBuilder('u')
-            ->select('u.role, COUNT(u.id) as count')
+            ->select(sprintf(
+                'NEW %s(u.role, COUNT(u.id))',
+                LabelCountDto::class
+            ))
             ->groupBy('u.role')
             ->getQuery()
             ->getResult();
 
         $roleStats = [];
         foreach ($byRole as $row) {
-            $roleStats['ROLE_' . $row['role']] = (int) $row['count'];
+            if ($row->label === null || $row->label === '') {
+                continue;
+            }
+
+            $roleStats['ROLE_' . $row->label] = $row->total;
         }
 
         return [

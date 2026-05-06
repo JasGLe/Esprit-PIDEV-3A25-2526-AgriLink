@@ -8,6 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: \App\Repository\NotificationsRepository::class)]
 #[ORM\Table(name: 'notifications')]
+#[ORM\HasLifecycleCallbacks]
 class Notifications
 {
     #[ORM\Id]
@@ -123,7 +124,7 @@ class Notifications
         return $this->readAt;
     }
 
-    public function setReadAt(?\DateTimeInterface $readAt): static
+    protected function setReadAt(?\DateTimeInterface $readAt): static
     {
         $this->readAt = $readAt;
 
@@ -135,9 +136,23 @@ class Notifications
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeInterface $createdAt): static
+    protected function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function markAsRead(?\DateTimeInterface $readAt = null): static
+    {
+        $this->readAt = $readAt ?? new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    public function markAsUnread(): static
+    {
+        $this->readAt = null;
 
         return $this;
     }
@@ -152,5 +167,13 @@ class Notifications
         $this->productId = $productId;
 
         return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function initializeCreatedAt(): void
+    {
+        if (!isset($this->createdAt)) {
+            $this->createdAt = new \DateTimeImmutable();
+        }
     }
 }

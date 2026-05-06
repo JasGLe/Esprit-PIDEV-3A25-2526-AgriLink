@@ -697,6 +697,7 @@ body.marketplace-tropical .tropical-footer {
                                 id="marketplace-sort-select"
                                 class="form-select form-select-sm tropical-select tropical-filter-select tropical-filter-select--fit"
                                 onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
+                            <option value="recent" {{ filter_sort == 'recent' ? 'selected' : '' }}>Plus récents</option>
                             <option value="price_asc" {{ filter_sort == 'price_asc' ? 'selected' : '' }}>Prix croissant</option>
                             <option value="price_desc" {{ filter_sort == 'price_desc' ? 'selected' : '' }}>Prix décroissant</option>
                         </select>

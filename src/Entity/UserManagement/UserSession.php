@@ -18,7 +18,7 @@ class UserSession
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'userSessions')]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id_utilisateur', nullable: false, onDelete: 'CASCADE')]
-    private ?User $user = null;
+    private User $user;
 
     #[ORM\Column(name: 'refresh_token_hash', length: 255)]
     private string $refresh_token_hash = '';
@@ -58,11 +58,17 @@ class UserSession
 
     public function getUser(): ?User
     {
-        return $this->user;
+        return isset($this->user) ? $this->user : null;
     }
 
     public function setUser(?User $user): static
     {
+        if ($user === null) {
+            unset($this->user);
+
+            return $this;
+        }
+
         $this->user = $user;
 
         return $this;

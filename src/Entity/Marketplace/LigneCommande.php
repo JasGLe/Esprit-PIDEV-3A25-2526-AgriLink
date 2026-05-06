@@ -29,8 +29,8 @@ class LigneCommande
     #[ORM\Column(type: Types::INTEGER)]
     private int $quantite;
 
-    #[ORM\Column(type: Types::FLOAT)]
-    private float $prixUnitaire;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3)]
+    private string $prixUnitaire = '0.000';
 
     #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3)]
     private string $prixTotal = '0.000';
@@ -102,12 +102,12 @@ class LigneCommande
 
     public function getPrixUnitaire(): float
     {
-        return $this->prixUnitaire;
+        return (float) $this->prixUnitaire;
     }
 
     public function setPrixUnitaire(float $prixUnitaire): static
     {
-        $this->prixUnitaire = $prixUnitaire;
+        $this->prixUnitaire = number_format($prixUnitaire, 3, '.', '');
 
         return $this;
     }

@@ -245,7 +245,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $securityEvents;
 
     /** @var Collection<int, UserSession> */
-    #[ORM\OneToMany(targetEntity: UserSession::class, mappedBy: 'user')]
+    #[ORM\OneToMany(targetEntity: UserSession::class, mappedBy: 'user', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $userSessions;
 
     public function __construct()

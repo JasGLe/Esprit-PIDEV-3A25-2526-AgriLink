@@ -68,7 +68,7 @@ class NotificationsController extends AbstractController
             return $this->json(['error' => 'Not found'], Response::HTTP_NOT_FOUND);
         }
 
-        $notification->setReadAt(new \DateTime());
+        $notification->markAsRead();
         $this->notificationsRepository->save($notification, flush: true);
 
         return $this->json(['success' => true]);
@@ -218,7 +218,6 @@ class NotificationsController extends AbstractController
         $notif->setType('test_push');
         $notif->setTitle('🔔 '.$title);
         $notif->setBody($body);
-        $notif->setCreatedAt(new \DateTimeImmutable());
         $this->notificationsRepository->save($notif, flush: true);
 
         $pushResult = $this->oneSignalPushService->sendToUserIds(
@@ -266,4 +265,3 @@ class NotificationsController extends AbstractController
         ]);
     }
 }
-

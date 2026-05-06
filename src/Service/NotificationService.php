@@ -18,7 +18,6 @@ class NotificationService
         $notif->setType($type);
         $notif->setTitle($titre);
         $notif->setBody($corps);
-        $notif->setCreatedAt(new \DateTime());
 
         $this->em->persist($notif);
         $this->em->flush();
@@ -32,7 +31,6 @@ class NotificationService
         $notif->setType($type);
         $notif->setTitle($titre);
         $notif->setBody($corps);
-        $notif->setCreatedAt(new \DateTime());
 
         $this->em->persist($notif);
         $this->em->flush();
