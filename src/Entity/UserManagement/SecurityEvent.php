@@ -2,7 +2,6 @@
 
 namespace App\Entity\UserManagement;
 
-use App\Entity\Trait\BlameableTrait;
 use App\Repository\UserManagement\SecurityEventRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -12,8 +11,6 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\HasLifecycleCallbacks]
 class SecurityEvent
 {
-    use BlameableTrait;
-    
     public const EVENT_LOGIN_SUCCESS = 'LOGIN_SUCCESS';
     public const EVENT_LOGIN_FAILED = 'LOGIN_FAILED';
     public const EVENT_ACCOUNT_LOCKED = 'ACCOUNT_LOCKED';
