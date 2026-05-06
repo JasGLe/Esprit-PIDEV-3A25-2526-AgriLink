@@ -37,7 +37,27 @@ class ActiviteController extends AbstractController
         $user = $this->getUser();
         $connectedUserId = $user instanceof User ? $user->getId() : null;
 
-        $activites = $this->activiteRepository->findBySearchTypeAndStatus($search ?: null, $type ?: null, $status ?: null);
+        // Pagination parameters
+        $pageSize = 50;
+        $page = max(1, (int) $request->query->get('page', 1));
+        $offset = ($page - 1) * $pageSize;
+
+        // Get paginated results and total count
+        $activites = $this->activiteRepository->findBySearchTypeAndStatus(
+            $search ?: null,
+            $type ?: null,
+            $status ?: null,
+            $pageSize,
+            $offset
+        );
+        
+        $totalCount = $this->activiteRepository->countBySearchTypeAndStatus(
+            $search ?: null,
+            $type ?: null,
+            $status ?: null
+        );
+        
+        $totalPages = ceil($totalCount / $pageSize);
 
         $viewData = [
             'activites' => $activites,
@@ -46,6 +66,14 @@ class ActiviteController extends AbstractController
                 'q' => $search,
                 'type' => $type,
                 'status' => $status,
+            ],
+            'pagination' => [
+                'page' => $page,
+                'pageSize' => $pageSize,
+                'totalCount' => $totalCount,
+                'totalPages' => $totalPages,
+                'hasNextPage' => $page < $totalPages,
+                'hasPreviousPage' => $page > 1,
             ],
             'typeOptions' => $this->activiteRepository->findAvailableTypes(),
             'statusOptions' => $this->activiteRepository->findAvailableStatuses(),
