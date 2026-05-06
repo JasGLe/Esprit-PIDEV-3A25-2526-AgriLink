@@ -16,7 +16,7 @@ use SensitiveParameter;
 
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\Table(name: 'users')]
+#[ORM\Table(name: 'user')]
 #[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['email'], message: 'Cette adresse email est déjà utilisée.')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
