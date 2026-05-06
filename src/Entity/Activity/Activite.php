@@ -113,7 +113,7 @@ class Activite
         return $this->dateDebut;
     }
 
-    protected function setDateDebut(?\DateTimeInterface $dateDebut): static
+    public function setDateDebut(?\DateTimeInterface $dateDebut): static
     {
         $this->dateDebut = $dateDebut;
 
@@ -125,7 +125,7 @@ class Activite
         return $this->dateFin;
     }
 
-    protected function setDateFin(?\DateTimeInterface $dateFin): static
+    public function setDateFin(?\DateTimeInterface $dateFin): static
     {
         $this->dateFin = $dateFin;
 
@@ -139,7 +139,7 @@ class Activite
 
     public function setStatut(string $statut): static
     {
-        $this->statut = $statut ?? 'PLANIFIEE';
+        $this->statut = $statut;
 
         return $this;
     }
@@ -163,7 +163,7 @@ class Activite
 
     public function setIdAgriculteur(int $idAgriculteur): static
     {
-        $this->idAgriculteur = $idAgriculteur ?? 0;
+        $this->idAgriculteur = $idAgriculteur;
 
         return $this;
     }

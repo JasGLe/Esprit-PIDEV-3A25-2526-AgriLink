@@ -92,8 +92,15 @@ class EvenementManager
      */
     public function daysUntilEvent(Evenement $evenement): int
     {
+        $eventDate = $evenement->getDateEvenement();
+        if (!$eventDate instanceof \DateTimeInterface) {
+            return 0;
+        }
+
         $today = new \DateTime('today');
-        $interval = $today->diff($evenement->getDateEvenement());
+
+        $interval = $today->diff($eventDate);
+
         return (int) $interval->format('%a');
     }
 }

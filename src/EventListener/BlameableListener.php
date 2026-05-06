@@ -78,8 +78,9 @@ final class BlameableListener
     private function usesBlameableTrait(object $entity): bool
     {
         $traitsUsed = class_uses($entity);
-        return isset($traitsUsed[BlameableTrait::class]) || 
-               in_array(BlameableTrait::class, $traitsUsed ?? [], true);
+
+        return isset($traitsUsed[BlameableTrait::class])
+            || in_array(BlameableTrait::class, $traitsUsed, true);
     }
 
     private function setProperty(object $entity, string $propertyName, mixed $value): void
