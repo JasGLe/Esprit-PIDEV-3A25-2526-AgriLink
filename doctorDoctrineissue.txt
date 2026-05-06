@@ -1,0 +1,12 @@
+Field user in entity App\Entity\UserManagement\UserSession has "remove" on ManyToOne relation to User. Deleting a UserSession will also delete the User, which may be referenced by other entities.
+On ManyToOne, the target entity is shared. Remove cascade="remove" to avoid deleting shared data.
+
+Entity "User" has cascade remove on property "$userSessions" pointing to independent entity "UserSession". Deleting a User will automatically delete all associated UserSession entities. This is usually NOT what you want for independent entities. Consider removing cascade="remove" and handling deletion separately.
+Remove cascade remove to prevent accidental data loss
+File: App\Entity\UserManagement\User
+
+Entity "UserSession" has cascade remove on property "$user" pointing to independent entity "User". Deleting a UserSession will automatically delete all associated User entities. This is usually NOT what you want for independent entities. Consider removing cascade="remove" and handling deletion separately.
+Remove cascade remove to prevent accidental data loss
+
+File: App\Entity\UserManagement\UserSession
+

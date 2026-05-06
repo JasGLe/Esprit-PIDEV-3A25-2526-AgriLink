@@ -51,7 +51,7 @@ final class ProductAdminNotificationSubscriber
 
         foreach ($admins as $admin) {
             $notification = (new Notifications())
-                ->setUserId((int) $admin->getId())
+                ->setUser($admin)
                 ->setType('marketplace_product_submitted')
                 ->setTitle('Nouveau produit en attente')
                 ->setBody(sprintf(

@@ -14,7 +14,7 @@ class NotificationService
                                   string $titre, string $corps): void
     {
         $notif = new Notifications();
-        $notif->setUserId((int) $admin->getId());
+        $notif->setUser($admin);
         $notif->setType($type);
         $notif->setTitle($titre);
         $notif->setBody($corps);
@@ -28,7 +28,7 @@ class NotificationService
                                  string $titre, string $corps): void
     {
         $notif = new Notifications();
-        $notif->setUserId((int) $user->getId());
+        $notif->setUser($user);
         $notif->setType($type);
         $notif->setTitle($titre);
         $notif->setBody($corps);

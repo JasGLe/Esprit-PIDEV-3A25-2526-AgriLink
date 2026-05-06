@@ -137,7 +137,7 @@ final class ModerationController extends AbstractController
         }
 
         $sellerNotification = (new Notifications())
-            ->setUserId((int) $seller->getId())
+            ->setUser($seller)
             ->setType(self::SELLER_UNBAN_NOTIFICATION_TYPE)
             ->setTitle('Acces boutique reactive')
             ->setBody('Votre suspension boutique a ete levee. Vous pouvez publier et gerer vos produits a nouveau.')

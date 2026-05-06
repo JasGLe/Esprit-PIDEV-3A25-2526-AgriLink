@@ -29,7 +29,7 @@ class AdminActivityNotificationService
 
         foreach ($admins as $admin) {
             $notification = new Notifications();
-            $notification->setUserId($admin->getId());
+            $notification->setUser($admin);
             $notification->setType('user_joined');
             $notification->setTitle('👤 Nouvel utilisateur');
             $notification->setBody($this->buildNewUserBody($newUser));
@@ -50,7 +50,7 @@ class AdminActivityNotificationService
 
         foreach ($admins as $admin) {
             $notification = new Notifications();
-            $notification->setUserId($admin->getId());
+            $notification->setUser($admin);
             $notification->setType('user_left');
             $notification->setTitle('👋 Utilisateur supprimé');
             $notification->setBody($this->buildUserLeftBody($deletedUser));
@@ -71,7 +71,7 @@ class AdminActivityNotificationService
 
         foreach ($admins as $admin) {
             $notification = new Notifications();
-            $notification->setUserId($admin->getId());
+            $notification->setUser($admin);
             $notification->setType('role_changed');
             $notification->setTitle('🔄 Rôle modifié');
             $notification->setBody($this->buildRoleChangeBody($user, $oldRole, $newRole));
@@ -92,7 +92,7 @@ class AdminActivityNotificationService
 
         foreach ($admins as $admin) {
             $notification = new Notifications();
-            $notification->setUserId($admin->getId());
+            $notification->setUser($admin);
             $notification->setType('user_deactivated');
             $notification->setTitle('🚫 Utilisateur désactivé');
             $notification->setBody($this->buildUserDeactivatedBody($user, $reason));
@@ -113,7 +113,7 @@ class AdminActivityNotificationService
 
         foreach ($admins as $admin) {
             $notification = new Notifications();
-            $notification->setUserId($admin->getId());
+            $notification->setUser($admin);
             $notification->setType('user_reactivated');
             $notification->setTitle('✅ Utilisateur réactivé');
             $notification->setBody($this->buildUserReactivatedBody($user));
@@ -144,7 +144,7 @@ class AdminActivityNotificationService
 
         foreach ($admins as $admin) {
             $notification = new Notifications();
-            $notification->setUserId($admin->getId());
+            $notification->setUser($admin);
             $notification->setType('bulk_operation');
             $notification->setTitle($title);
             $notification->setBody($this->buildBulkOperationBody($operationType, $count, $details));

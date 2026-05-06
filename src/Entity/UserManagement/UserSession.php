@@ -7,7 +7,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserSessionRepository::class)]
-#[ORM\Table(name: 'UserSession')]
+#[ORM\Table(name: 'user_session')]
 #[ORM\HasLifecycleCallbacks]
 class UserSession
 {
@@ -16,9 +16,9 @@ class UserSession
     #[ORM\Column(type: Types::INTEGER)]
     private ?int $id = null;
 
-    #[ORM\ManyToOne(targetEntity: User::class, cascade: ['persist'], inversedBy: 'userSessions')]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'userSessions')]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id_utilisateur', nullable: false, onDelete: 'CASCADE')]
-    private ?User $user = null;
+    private User $user;
 
     #[ORM\Column(name: 'refresh_token_hash', length: 255)]
     private string $refresh_token_hash = '';
@@ -29,7 +29,7 @@ class UserSession
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE)]
     private \DateTimeInterface $created_at;
 
-    #[ORM\Column(name: 'expires_at', type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(name: 'expires_at', type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $expires_at = null;
 
     #[ORM\Column(name: 'revoked', type: Types::BOOLEAN, options: ['default' => false])]

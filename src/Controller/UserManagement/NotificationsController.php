@@ -200,7 +200,7 @@ class NotificationsController extends AbstractController
         $body = sprintf('Bonjour %s, ceci est un test push + in-app.', $displayName);
 
         $notif = new Notifications();
-        $notif->setUserId($userId);
+        $notif->setUser($user);
         $notif->setType('test_push');
         $notif->setTitle('🔔 '.$title);
         $notif->setBody($body);

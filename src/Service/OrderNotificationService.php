@@ -47,7 +47,7 @@ class OrderNotificationService
             }
 
             $notif = new Notifications();
-            $notif->setUserId($sellerUserId);
+            $notif->setUser($seller);
             $notif->setType('order_received');
             $notif->setTitle('🛒 Nouvelle commande reçue');
             $notif->setBody(sprintf(
@@ -95,7 +95,7 @@ class OrderNotificationService
 
         foreach ($admins as $admin) {
             $notif = new Notifications();
-            $notif->setUserId((int) $admin->getId());
+            $notif->setUser($admin);
             $notif->setType('order_created_admin');
             $notif->setTitle('📦 Nouvelle commande marketplace');
             $notif->setBody(sprintf(
@@ -159,7 +159,7 @@ class OrderNotificationService
         $newLabel = $this->humanizeStatus($newStatus);
 
         $notif = new Notifications();
-        $notif->setUserId($buyerId);
+        $notif->setUser($buyer);
         $notif->setType('order_status_changed');
         $notif->setTitle('Mise à jour de votre commande');
         $notif->setBody(sprintf(
@@ -211,7 +211,7 @@ class OrderNotificationService
 
         foreach ($admins as $admin) {
             $notif = new Notifications();
-            $notif->setUserId((int) $admin->getId());
+            $notif->setUser($admin);
             $notif->setType('order_cancellation_requested_admin');
             $notif->setTitle('Demande d’annulation commande');
             $notif->setBody(sprintf(
