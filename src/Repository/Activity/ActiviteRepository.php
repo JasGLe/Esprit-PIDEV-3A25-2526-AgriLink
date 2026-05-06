@@ -24,11 +24,13 @@ class ActiviteRepository extends ServiceEntityRepository
     /**
      * @return Activite[]
      */
-    public function findAllOrderedByDateDesc(): array
+    public function findAllOrderedByDateDesc(int $limit = 50, int $offset = 0): array
     {
         return $this->createQueryBuilder('a')
             ->orderBy('a.dateDebut', 'DESC')
             ->addOrderBy('a.idActivite', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset)
             ->getQuery()
             ->getResult();
     }
@@ -36,11 +38,13 @@ class ActiviteRepository extends ServiceEntityRepository
     /**
      * @return Activite[]
      */
-    public function findBySearchTypeAndStatus(?string $search, ?string $type, ?string $status): array
+    public function findBySearchTypeAndStatus(?string $search, ?string $type, ?string $status, int $limit = 50, int $offset = 0): array
     {
         $qb = $this->createQueryBuilder('a')
             ->orderBy('a.dateDebut', 'DESC')
-            ->addOrderBy('a.idActivite', 'DESC');
+            ->addOrderBy('a.idActivite', 'DESC')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
 
         if ($search) {
             $qb
@@ -61,6 +65,35 @@ class ActiviteRepository extends ServiceEntityRepository
         }
 
         return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Count total records matching search criteria
+     */
+    public function countBySearchTypeAndStatus(?string $search, ?string $type, ?string $status): int
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->select('COUNT(a.idActivite)');
+
+        if ($search) {
+            $qb
+                ->andWhere('LOWER(a.titre) LIKE :search')
+                ->setParameter('search', '%' . mb_strtolower($search) . '%');
+        }
+
+        if ($type) {
+            $qb
+                ->andWhere('a.typeActivite = :type')
+                ->setParameter('type', $type);
+        }
+
+        if ($status) {
+            $qb
+                ->andWhere('a.statut = :status')
+                ->setParameter('status', $status);
+        }
+
+        return (int) $qb->getQuery()->getSingleScalarResult();
     }
 
     /**

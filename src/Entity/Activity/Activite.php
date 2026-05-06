@@ -2,6 +2,7 @@
 
 namespace App\Entity\Activity;
 
+use App\Entity\Trait\BlameableTrait;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -9,9 +10,11 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: \App\Repository\Activity\ActiviteRepository::class)]
 #[ORM\Table(name: 'activite')]
+#[ORM\HasLifecycleCallbacks]
 #[Assert\Callback('validateDates')]
 class Activite
 {
+    use BlameableTrait;
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER)]
@@ -65,6 +68,12 @@ class Activite
     #[ORM\Column(type: Types::INTEGER)]
     private int $idAgriculteur = 0;
 
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $createdAt;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $updatedAt = null;
+
     public function getId(): int
     {
         return $this->idActivite;
@@ -104,7 +113,7 @@ class Activite
         return $this->dateDebut;
     }
 
-    public function setDateDebut(?\DateTimeInterface $dateDebut): static
+    protected function setDateDebut(?\DateTimeInterface $dateDebut): static
     {
         $this->dateDebut = $dateDebut;
 
@@ -116,7 +125,7 @@ class Activite
         return $this->dateFin;
     }
 
-    public function setDateFin(?\DateTimeInterface $dateFin): static
+    protected function setDateFin(?\DateTimeInterface $dateFin): static
     {
         $this->dateFin = $dateFin;
 
@@ -128,7 +137,7 @@ class Activite
         return $this->statut;
     }
 
-    public function setStatut(?string $statut): static
+    public function setStatut(string $statut): static
     {
         $this->statut = $statut ?? 'PLANIFIEE';
 
@@ -152,16 +161,40 @@ class Activite
         return $this->idAgriculteur;
     }
 
-    public function setIdAgriculteur(?int $idAgriculteur): static
+    public function setIdAgriculteur(int $idAgriculteur): static
     {
         $this->idAgriculteur = $idAgriculteur ?? 0;
 
         return $this;
     }
 
+    public function getCreatedAt(): \DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->createdAt = new \DateTime();
+        if ($this->dateDebut === null) {
+            $this->dateDebut = new \DateTime();
+        }
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new \DateTime();
+    }
+
     public function validateDates(ExecutionContextInterface $context, $payload): void
     {
-        // Check if dateDebut is not in the past
         if ($this->dateDebut !== null) {
             $today = new \DateTime('today');
             if ($this->dateDebut < $today) {
@@ -171,7 +204,6 @@ class Activite
             }
         }
 
-        // Check if dateFin is after dateDebut
         if ($this->dateFin !== null && $this->dateDebut !== null) {
             if ($this->dateFin <= $this->dateDebut) {
                 $context->buildViolation('La date de fin doit être après la date de début.')

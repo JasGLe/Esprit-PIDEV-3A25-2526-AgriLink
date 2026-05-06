@@ -773,6 +773,66 @@ body.marketplace-tropical .tropical-footer {
 </section>
 {% endif %}
 
+{% set rs = recommendation_sections|default({}) %}
+{% set rs_recommended = rs.recommended|default([]) %}
+{% set rs_similar = rs.similar|default([]) %}
+{% set rs_trending = rs.trending|default([]) %}
+{% set rs_offers = rs.offers|default([]) %}
+
+{% if is_granted('ROLE_USER') and (rs_recommended|length > 0 or rs_similar|length > 0 or rs_trending|length > 0 or rs_offers|length > 0) %}
+<section id="ai-reco-sections" class="tropical-products-section pt-1 pb-3">
+    <div class="container-fluid px-2 px-md-3 tropical-page-gutter">
+        {% if rs_recommended|length > 0 %}
+            <h2 class="tropical-section-title text-start mb-1">Recommended for you</h2>
+            <p class="tropical-muted mb-3 small">Based on your searches, views and shopping behavior.</p>
+            <div class="tropical-products-wrap mb-4">
+                {% for p in rs_recommended %}
+                    <div class="tropical-card-shell">
+                        {% include 'marketplace/public/_product_card_tropical.html.twig' with { p: p, vendeurs: vendeurs } %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if rs_similar|length > 0 %}
+            <h2 class="tropical-section-title text-start mb-1">Similar products</h2>
+            <p class="tropical-muted mb-3 small">Because you viewed a related product recently.</p>
+            <div class="tropical-products-wrap mb-4">
+                {% for p in rs_similar %}
+                    <div class="tropical-card-shell">
+                        {% include 'marketplace/public/_product_card_tropical.html.twig' with { p: p, vendeurs: vendeurs } %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if rs_trending|length > 0 %}
+            <h2 class="tropical-section-title text-start mb-1">Trending now</h2>
+            <p class="tropical-muted mb-3 small">Most popular products on the marketplace.</p>
+            <div class="tropical-products-wrap mb-4">
+                {% for p in rs_trending %}
+                    <div class="tropical-card-shell">
+                        {% include 'marketplace/public/_product_card_tropical.html.twig' with { p: p, vendeurs: vendeurs } %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if rs_offers|length > 0 %}
+            <h2 class="tropical-section-title text-start mb-1">Special offers for you</h2>
+            <p class="tropical-muted mb-3 small">Promotions aligned with your interests.</p>
+            <div class="tropical-products-wrap">
+                {% for p in rs_offers %}
+                    <div class="tropical-card-shell">
+                        {% include 'marketplace/public/_product_card_tropical.html.twig' with { p: p, vendeurs: vendeurs } %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
 {# ── Products (horizontal scroll mobile / grid desktop) — data: même requête contrôleur ── #}
 <section id="produits" class="tropical-products-section py-3 py-md-4">
     <div class="container-fluid px-2 px-md-3 tropical-page-gutter">

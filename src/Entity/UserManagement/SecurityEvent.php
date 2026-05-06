@@ -124,6 +124,7 @@ class SecurityEvent
     protected function setUpdatedAt(?\DateTimeInterface $updatedAt): static
     {
         $this->updatedAt = $updatedAt;
+
         return $this;
     }
 
@@ -135,6 +136,7 @@ class SecurityEvent
     protected function setCreatedBy(?User $createdBy): static
     {
         $this->createdBy = $createdBy;
+
         return $this;
     }
 
@@ -146,6 +148,7 @@ class SecurityEvent
     protected function setUpdatedBy(?User $updatedBy): static
     {
         $this->updatedBy = $updatedBy;
+
         return $this;
     }
 
@@ -153,15 +156,18 @@ class SecurityEvent
     public function onPrePersist(): void
     {
         $this->createdAt = new \DateTime();
-        
-        // Set blameable fields to a default user (ID 1) if not set
+
         if ($this->createdBy === null) {
-            // For security events without explicit creator, we'll set it to null
-            // and it will be populated by an event listener or caller
             $this->createdBy = null;
         }
         if ($this->updatedBy === null) {
             $this->updatedBy = null;
         }
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new \DateTime();
     }
 }

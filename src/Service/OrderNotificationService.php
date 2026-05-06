@@ -7,6 +7,7 @@ use App\Entity\Notifications;
 use App\Entity\UserManagement\User;
 use App\Repository\NotificationsRepository;
 use App\Repository\UserManagement\UserRepository;
+use App\Service\Marketplace\Sales\OrderStatusFormatter;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -18,6 +19,7 @@ class OrderNotificationService
         private readonly EntityManagerInterface $entityManager,
         private readonly OneSignalPushService $oneSignalPushService,
         private readonly LoggerInterface $logger,
+        private readonly OrderStatusFormatter $orderStatusFormatter,
     ) {
     }
 
@@ -35,8 +37,8 @@ class OrderNotificationService
             $sellerById[(int) $sellerUser->getId()] = $sellerUser;
         }
 
-        $buyerLabel = trim($buyerDisplayName) !== '' ? trim($buyerDisplayName) : trim((string) ($buyer->getDisplayName() ?: $buyer->getEmail()));
-        $orderRef = $this->formatOrderRef($commande);
+        $buyerLabel = trim($buyerDisplayName) !== '' ? trim($buyerDisplayName) : ((string) ($buyer->getDisplayName() ?? $buyer->getEmail()));
+        $orderRef = $this->orderStatusFormatter->formatOrderRef($commande);
         $total = number_format((float) $commande->getPrixTotal(), 3, ',', ' ');
 
         // Notify each responsible seller/farmer.
@@ -151,10 +153,10 @@ class OrderNotificationService
             return;
         }
 
-        $orderRef = $this->formatOrderRef($commande);
+        $orderRef = $this->orderStatusFormatter->formatOrderRef($commande);
         $actorLabel = trim((string) ($actor->getDisplayName() ?: $actor->getEmail()));
-        $oldLabel = $this->humanizeStatus($oldStatus);
-        $newLabel = $this->humanizeStatus($newStatus);
+        $oldLabel = $this->orderStatusFormatter->humanizeStatus($oldStatus);
+        $newLabel = $this->orderStatusFormatter->humanizeStatus($newStatus);
 
         $notif = new Notifications();
         $notif->setUser($buyer);
@@ -200,7 +202,7 @@ class OrderNotificationService
             return;
         }
 
-        $orderRef = $this->formatOrderRef($commande);
+        $orderRef = $this->orderStatusFormatter->formatOrderRef($commande);
         $buyerLabel = trim((string) ($buyer->getDisplayName() ?: $buyer->getEmail()));
         if ($buyerLabel === '') {
             $buyerLabel = 'Client';
@@ -245,25 +247,4 @@ class OrderNotificationService
         $this->entityManager->flush();
     }
 
-    private function formatOrderRef(Commandes $commande): string
-    {
-        $id = $commande->getId();
-        if ($id > 0) {
-            return '#CMD'.str_pad((string) $id, 3, '0', STR_PAD_LEFT);
-        }
-
-        return (string) $commande->getNumCommande();
-    }
-
-    private function humanizeStatus(string $status): string
-    {
-        $raw = trim($status);
-        if ($raw === '') {
-            return '-';
-        }
-
-        $normalized = str_replace('_', ' ', strtolower($raw));
-
-        return ucfirst($normalized);
-    }
 }

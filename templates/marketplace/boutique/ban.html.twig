@@ -447,7 +447,8 @@
                     </div>
                 </div>
 
-                {% if is_permanent %}
+                {% set has_countdown = banned_until is not null and (banned_until|date('U')) > ('now'|date('U')) %}
+                {% if is_permanent and not has_countdown %}
                     <div class="ban-perm">
                         <span class="ban-perm-icon">🚫</span>
                         <div>

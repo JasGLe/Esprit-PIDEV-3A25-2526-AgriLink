@@ -5,8 +5,8 @@ namespace App\Entity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Repository\PanierRepository::class)]
-#[ORM\Table(name: 'panier')]
+// Legacy class — superseded by App\Entity\Marketplace\Panier.
+// ORM attributes removed to prevent duplicate 'panier' table mapping in SchemaTool.
 class Panier
 {
     #[ORM\Id]
