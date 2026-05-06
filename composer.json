@@ -54,7 +54,7 @@
         "twig/extra-bundle": "^3.24",
         "twig/twig": "^3.24",
         "twilio/sdk": "^8.11.4",
-        "webmozart/assert": "^1.11"
+        "webmozart/assert": "1.11"
     },
     "config": {
         "allow-plugins": {

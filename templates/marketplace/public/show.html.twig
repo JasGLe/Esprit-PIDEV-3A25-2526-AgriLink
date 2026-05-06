@@ -1,0 +1,126 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ p.nom }} - Marketplace{% endblock %}
+{% block body_class %}marketplace-tropical{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" href="{{ asset('css/marketplace-front.css') }}">
+    <style>
+        .mp-show-wrap { max-width: 1200px; margin: 0 auto; }
+        .mp-show-card { background: #fff; border: 1px solid #eef2f7; border-radius: 16px; padding: 1rem; }
+        .mp-show-media { background: #fff; border: 1px solid #edf2f7; border-radius: 14px; overflow: hidden; }
+        .mp-show-media img { width: 100%; height: 100%; max-height: 640px; object-fit: cover; display: block; }
+        .mp-show-brand { font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: #6b7280; margin-bottom: .45rem; }
+        .mp-show-name { font-size: clamp(1.5rem, 2.2vw, 2.2rem); line-height: 1.2; margin: 0 0 .65rem; color: #0f172a; }
+        .mp-show-price { font-size: 2rem; font-weight: 700; color: #0f172a; margin-bottom: .15rem; }
+        .mp-show-tax { color: #6b7280; font-size: .9rem; margin-bottom: 1rem; }
+        .mp-show-stock { font-weight: 600; color: #16a34a; }
+        .mp-show-qty { display: flex; align-items: center; gap: .7rem; margin: .85rem 0 1rem; }
+        .mp-show-qty-control { display: inline-flex; border: 1px solid #d1d5db; border-radius: 0; overflow: hidden; height: 44px; }
+        .mp-show-qty-btn { width: 46px; border: 0; background: #fff; color: #0f172a; font-size: 1.1rem; }
+        .mp-show-qty-input { width: 64px; border: 0; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; text-align: center; }
+        .mp-show-btn { width: 100%; border-radius: 0; height: 46px; font-weight: 600; }
+        .mp-show-btn-outline { background: #fff; border: 1px solid #111827; color: #111827; }
+        .mp-show-btn-dark { background: #111827; border: 1px solid #111827; color: #fff; }
+        .mp-show-block { border-top: 1px solid #eef2f7; padding-top: .85rem; margin-top: .85rem; }
+        .mp-show-desc { color: #475569; line-height: 1.65; }
+    </style>
+{% endblock %}
+
+{% block body %}
+<div class="container-fluid px-2 px-md-3 py-4 tropical-page-gutter">
+    <div class="mp-show-wrap">
+        <a href="{{ back_url }}" class="text-decoration-none small" style="color:#16a34a;">← Retour au marketplace</a>
+
+        <div class="row g-4 mt-1 align-items-start">
+            <div class="col-lg-6">
+                <div class="mp-show-media">
+                    {% if p.image and p.image|trim != '' %}
+                        {% if p.equipementId is not null %}
+                            <img src="{{ uploads_base_url }}/{{ p.image }}" alt="{{ p.nom }}">
+                        {% else %}
+                            <img src="{{ uploads_base_url }}/cultures/{{ p.image }}" alt="{{ p.nom }}">
+                        {% endif %}
+                    {% else %}
+                        <div class="d-flex align-items-center justify-content-center" style="height:520px;background:#f8fafc;color:#94a3b8;">
+                            <div class="text-center">
+                                <div style="font-size:2.5rem;">📦</div>
+                                <div class="small">Aucune image</div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="mp-show-card">
+                    <div class="mp-show-brand">
+                        {% if seller %}
+                            {{ seller.displayName ?: seller.email }}
+                        {% else %}
+                            AgriLink Seller
+                        {% endif %}
+                    </div>
+                    <h1 class="mp-show-name">{{ p.nom }}</h1>
+                    <div class="mp-show-price">{{ p.prixUnitaire|number_format(3, '.', ' ') }} DT</div>
+                    <div class="mp-show-tax">Taxes incluses.</div>
+                    <div class="small mb-2"><span class="mp-show-stock">{{ p.quantite }} en stock</span></div>
+
+                    {% set is_owner = is_granted('ROLE_USER') and p.idFournisseur is not null and app.user.id == p.idFournisseur %}
+                    {% if is_owner %}
+                        <button type="button" class="btn mp-show-btn mp-show-btn-outline" disabled>Votre produit</button>
+                    {% elseif p.quantite < 1 %}
+                        <button type="button" class="btn mp-show-btn mp-show-btn-outline" disabled>Rupture de stock</button>
+                    {% elseif is_granted('ROLE_USER') %}
+                        <form method="post" action="{{ path('marketplace_panier_ajouter', { id: p.id }) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('panier_ajout') }}">
+
+                            <div class="mp-show-qty">
+                                <span class="small text-muted">Quantité</span>
+                                <div class="mp-show-qty-control">
+                                    <button type="button" class="mp-show-qty-btn" id="qtyMinus">−</button>
+                                    <input type="number" id="qtyInput" name="qty" class="mp-show-qty-input" min="1" max="{{ p.quantite }}" value="1">
+                                    <button type="button" class="mp-show-qty-btn" id="qtyPlus">+</button>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn mp-show-btn mp-show-btn-outline mb-2">Ajouter au panier</button>
+                            <button type="submit" class="btn mp-show-btn mp-show-btn-dark">Acheter maintenant</button>
+                        </form>
+                    {% else %}
+                        <a href="{{ path('app_login') }}" class="btn mp-show-btn mp-show-btn-dark">Connexion pour acheter</a>
+                    {% endif %}
+
+                    <div class="mp-show-block">
+                        <div class="small text-muted mb-1">Catégorie</div>
+                        <div>{{ p.categorie }}{% if p.category %} · {{ p.category }}{% endif %}</div>
+                    </div>
+
+                    {% if p.description %}
+                        <div class="mp-show-block">
+                            <div class="small text-muted mb-1">Description</div>
+                            <div class="mp-show-desc">{{ p.description }}</div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const minus = document.getElementById('qtyMinus');
+        const plus = document.getElementById('qtyPlus');
+        const input = document.getElementById('qtyInput');
+        if (!minus || !plus || !input) return;
+        const min = Math.max(1, parseInt(input.min || '1', 10));
+        const max = Math.max(min, parseInt(input.max || '1', 10));
+        const clamp = (v) => Math.min(max, Math.max(min, v));
+        minus.addEventListener('click', function () { input.value = String(clamp((parseInt(input.value || '1', 10) || 1) - 1)); });
+        plus.addEventListener('click', function () { input.value = String(clamp((parseInt(input.value || '1', 10) || 1) + 1)); });
+        input.addEventListener('change', function () { input.value = String(clamp(parseInt(input.value || '1', 10) || 1)); });
+    })();
+</script>
+{% endblock %}
+

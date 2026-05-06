@@ -9,6 +9,7 @@ use App\Entity\Marketplace\Produits;
 use App\Entity\UserManagement\User;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
+use App\Service\Marketplace\Recommendation\MarketplaceEventLogger;
 use App\Service\OrderNotificationService;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
@@ -42,6 +43,7 @@ class MarketplaceCartController extends AbstractController
         private readonly ProduitsRepository $produitsRepository,
         private readonly EntityManagerInterface $entityManager,
         private readonly OrderNotificationService $orderNotificationService,
+        private readonly MarketplaceEventLogger $eventLogger,
         private readonly LoggerInterface $logger,
     ) {
     }
@@ -261,11 +263,22 @@ class MarketplaceCartController extends AbstractController
 
             $this->entityManager->flush();
 
+            // Track purchase behavior for recommendation learning.
+            foreach ($prepared as [$lignePanier, $produit, $qty, $pu, $ligneTotal]) {
+                $this->eventLogger->log(
+                    $user,
+                    MarketplaceEventLogger::TYPE_PURCHASE,
+                    (int) $produit->getId(),
+                    null,
+                    ['qty' => (int) $qty, 'line_total' => (float) $ligneTotal, 'mode' => $mode]
+                );
+            }
+
             $stripeCheckoutUrl = null;
             if ($mode === self::MODE_PAIEMENT_EN_LIGNE) {
                 // Build Stripe session before commit.
-                // If Stripe fails, exception triggers rollback and order won't be finalized.
-                $stripeCheckoutUrl = $this->createStripeCheckoutUrl($commande);
+                // If Stripe fails, exception triggecreateStripers rollback and order won't be finalized.
+                $stripeCheckoutUrl = $this->CheckoutUrl($commande);
             }
 
             $conn->commit();
@@ -725,8 +738,11 @@ class MarketplaceCartController extends AbstractController
             return $this->panierJsonOrRedirect($request, false, 'Vous ne pouvez pas acheter votre propre produit.', $uid);
         }
 
+        $requestedQty = (int) $request->request->get('qty', 1);
+        $requestedQty = max(1, $requestedQty);
+
         $ligne = $this->panierRepository->findLigneByUtilisateurEtProduit($uid, $id);
-        $nouvelleQuantite = $ligne ? $ligne->getQuantite() + 1 : 1;
+        $nouvelleQuantite = $ligne ? $ligne->getQuantite() + $requestedQty : $requestedQty;
 
         if ($nouvelleQuantite > $produit->getQuantite()) {
             return $this->panierJsonOrRedirect($request, false, 'Stock insuffisant.', $uid);
@@ -741,13 +757,21 @@ class MarketplaceCartController extends AbstractController
             $ligne->setIdPersonne($uid);
             $ligne->setIdProduit($id);
             $ligne->setNomProduit($produit->getNom());
-            $ligne->setQuantite(1);
-            $ligne->setPrixTotal($prixUnitaire);
+            $ligne->setQuantite($requestedQty);
+            $ligne->setPrixTotal($prixUnitaire * $requestedQty);
             $ligne->setDateAjout(new \DateTime());
             $this->entityManager->persist($ligne);
         }
 
         $this->entityManager->flush();
+
+        $this->eventLogger->log(
+            $user,
+            MarketplaceEventLogger::TYPE_ADD_TO_CART,
+            (int) $produit->getId(),
+            null,
+            ['qty' => (int) $requestedQty, 'new_qty' => (int) $nouvelleQuantite]
+        );
 
         return $this->panierJsonOrRedirect($request, true, 'Produit ajouté au panier.', $uid);
     }

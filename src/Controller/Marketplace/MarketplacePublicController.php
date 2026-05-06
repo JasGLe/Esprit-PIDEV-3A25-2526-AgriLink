@@ -8,6 +8,7 @@ use App\Entity\UserManagement\User;
 use App\Form\Marketplace\EquipmentRentalRequestType;
 use App\Marketplace\TunisiaRegionList;
 use App\Service\MarketplaceProductRecommendationService;
+use App\Service\Marketplace\Recommendation\MarketplaceEventLogger;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Repository\Marketplace\PanierRepository;
 use App\Repository\Marketplace\ProduitsRepository;
@@ -40,6 +41,7 @@ class MarketplacePublicController extends AbstractController
         private readonly MarketplaceProductRecommendationService $recommendationService,
         private readonly EntityManagerInterface $entityManager,
         private readonly PaginatorInterface $paginator,
+        private readonly MarketplaceEventLogger $eventLogger,
     ) {
     }
 
@@ -49,11 +51,59 @@ class MarketplacePublicController extends AbstractController
         [$cat, $region, $q, $sort, $sellerIdsForRegion] = $this->readFilters($request);
         $produits = $this->paginateProducts($request, $q, $cat, $sellerIdsForRegion, $sort);
 
+        // Track search events for connected users only.
+        $user = $this->getUser();
+        if ($user instanceof User && trim($q) !== '') {
+            $this->eventLogger->log(
+                $user,
+                MarketplaceEventLogger::TYPE_SEARCH,
+                null,
+                $q,
+                ['cat' => $cat, 'region' => $region, 'sort' => $sort]
+            );
+        }
+
         $rentalRequest = new RentalRequest();
         $this->prefillRentalRequestFromUser($rentalRequest);
         $rentalForm = $this->createForm(EquipmentRentalRequestType::class, $rentalRequest);
 
         return $this->renderResponse($request, $cat, $region, $sort, $produits, $rentalForm, false, null);
+    }
+
+    #[Route('/produit/{id}', name: 'marketplace_product_show', requirements: ['id' => '\d+'], methods: ['GET'])]
+    public function show(int $id, Request $request): Response
+    {
+        $p = $this->produitsRepository->find($id);
+        if (!$p instanceof Produits || !$p->getActive()) {
+            throw $this->createNotFoundException('Produit introuvable.');
+        }
+
+        /** @var User|null $user */
+        $user = $this->getUser();
+        if ($user instanceof User) {
+            $this->eventLogger->log(
+                $user,
+                MarketplaceEventLogger::TYPE_VIEW_PRODUCT,
+                $p->getId(),
+                null,
+                ['cat' => (string) ($p->getCategory() ?? ''), 'price' => (float) $p->getPrixUnitaire()]
+            );
+        }
+
+        $seller = null;
+        $sellerId = (int) ($p->getIdFournisseur() ?? 0);
+        if ($sellerId > 0) {
+            $sellerEntity = $this->userRepository->find($sellerId);
+            if ($sellerEntity instanceof User) {
+                $seller = $sellerEntity;
+            }
+        }
+
+        return $this->render('marketplace/public/show.html.twig', [
+            'p' => $p,
+            'seller' => $seller,
+            'back_url' => $this->generateUrl('marketplace_index', $request->query->all()),
+        ]);
     }
 
     #[Route('/rental/request', name: 'marketplace_rental_request_submit', methods: ['POST'])]
@@ -220,6 +270,9 @@ class MarketplacePublicController extends AbstractController
         $recommendedProducts = $recommendationMode !== ''
             ? $this->recommendationService->recommendFor($user instanceof User ? $user : null, $recommendationMode, 6)
             : [];
+        $recommendationSections = $user instanceof User
+            ? $this->recommendationService->buildSectionsFor($user, 6)
+            : ['recommended' => [], 'similar' => [], 'trending' => [], 'offers' => []];
 
         $queryParams = $request->query->all();
         if (isset($queryParams['q']) && trim((string) $queryParams['q']) === '') {
@@ -278,6 +331,7 @@ class MarketplacePublicController extends AbstractController
             'rental_target_product_price' => $rentalTargetProductPrice,
             'recommended_products'      => $recommendedProducts,
             'recommendation_mode'       => $recommendationMode,
+            'recommendation_sections'   => $recommendationSections,
         ]);
     }
 
