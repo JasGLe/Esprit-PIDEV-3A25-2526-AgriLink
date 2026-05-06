@@ -18,6 +18,9 @@ class RecapitulatifMailService
         private string          $appName = 'AgriLink'
     ) {}
 
+    /**
+     * @param array<int, \App\Entity\Exploitation\Exploitation> $exploitations
+     */
     public function envoyer(User $user, array $exploitations): void
     {
         if (empty($exploitations)) return;
@@ -61,8 +64,8 @@ class RecapitulatifMailService
         $email = (new Email())
             ->from(new Address($this->mailerFrom, $this->appName))
             ->to(new Address(
-                $user->getEmail(),
-                $user->getDisplayName() ?? $user->getEmail()
+                (string) $user->getEmail(),
+                $user->getDisplayName()
             ))
             ->subject($sujet)
             ->html($htmlEmail)
@@ -91,6 +94,10 @@ class RecapitulatifMailService
 
     // ── Calculer statistiques ─────────────────────────────────
 
+    /**
+     * @param array<int, \App\Entity\Exploitation\Exploitation> $exploitations
+     * @return array<string, mixed>
+     */
     private function calculerStats(array $exploitations): array
     {
         $totalParcelles     = 0;
@@ -110,8 +117,8 @@ class RecapitulatifMailService
             }
 
             foreach ($exploitation->getParcelles() as $parcelle) {
-                if (str_starts_with($parcelle->getNom(), '[ATTENTE]')
-                    || str_starts_with($parcelle->getNom(), '[REJETE]')) {
+                if (str_starts_with((string) $parcelle->getNom(), '[ATTENTE]')
+                    || str_starts_with((string) $parcelle->getNom(), '[REJETE]')) {
                     continue;
                 }
 

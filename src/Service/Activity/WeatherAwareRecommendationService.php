@@ -6,6 +6,7 @@ use App\Entity\Activity\Activite;
 use App\Entity\UserManagement\User;
 use App\Repository\Activity\ActiviteRepository;
 use App\Service\Activity\GeminiActivityService;
+use App\Service\Activity\PollinationsActivityService;
 use App\Service\OpenWeatherMapService;
 
 class WeatherAwareRecommendationService
@@ -14,6 +15,7 @@ class WeatherAwareRecommendationService
         private readonly ActiviteRepository $activiteRepository,
         private readonly OpenWeatherMapService $weatherService,
         private readonly GeminiActivityService $geminiService,
+        private readonly PollinationsActivityService $pollinationsService,
     ) {
     }
 
@@ -21,6 +23,8 @@ class WeatherAwareRecommendationService
      * Single Gemini call → both planning + weather sections in one round-trip.
      *
      * Each card now carries a `detail` field used by the front-end modal.
+     *
+     * @param string $aiModel 'gemini' (default), 'manuel', or 'pollination'
      *
      * @return array{
      *   status: string,
@@ -30,7 +34,7 @@ class WeatherAwareRecommendationService
      *   weather:  list<array{activity: string, type: string, date: string, severity: string, bullets: list<string>, detail: string}>
      * }
      */
-    public function generateConciseWeatherAwareRecommendations(User $user, int $nextDays = 10): array
+    public function generateConciseWeatherAwareRecommendations(User $user, int $nextDays = 10, string $aiModel = 'gemini'): array
     {
         $userId = $user->getId();
 
@@ -56,28 +60,71 @@ class WeatherAwareRecommendationService
         $city     = trim((string) ($user->getVille() ?? ''));
         $forecast = $city !== '' ? $this->weatherService->getForecastForCity($city) : [];
 
-        try {
-            // ONE call — both sections returned in a single JSON response
-            $raw = $this->geminiService->callGemini(
-                $this->buildCombinedPrompt($userActivities, $forecast, $nextDays)
-            );
-
-            return [
-                'status'          => 'ok',
-                'total'           => count($userActivities),
-                'weather_summary' => $raw['weather_summary'] ?? null,
-                'planning'        => $raw['planning'] ?? [],
-                'weather'         => $raw['weather']  ?? [],
-            ];
-        } catch (\Throwable) {
+        // If user explicitly chose 'manuel', skip IA
+        if ($aiModel === 'manuel') {
             [$planningFallback, $weatherFallback] = $this->buildRuleBasedRecommendations($userActivities, $forecast);
-
             return [
-                'status'          => 'fallback',
+                'status'          => 'manual',
                 'total'           => count($userActivities),
                 'weather_summary' => $this->buildWeatherSummary($forecast),
                 'planning'        => $planningFallback,
                 'weather'         => $weatherFallback,
+            ];
+        }
+
+        // Pollinations can be explicitly selected after Gemini failure.
+        if ($aiModel === 'pollination') {
+            try {
+                $raw = $this->pollinationsService->generateRecommendations(
+                    $this->buildCombinedPrompt($userActivities, $forecast, $nextDays)
+                );
+                $normalized = $this->normalizeAiPayload($raw, $forecast);
+
+                return [
+                    'status'          => 'ok',
+                    'total'           => count($userActivities),
+                    'weather_summary' => $normalized['weather_summary'],
+                    'planning'        => $normalized['planning'],
+                    'weather'         => $normalized['weather'],
+                    'ai_model'        => 'pollination',
+                ];
+            } catch (\Throwable $e) {
+                return [
+                    'status'          => 'error',
+                    'total'           => count($userActivities),
+                    'weather_summary' => $this->buildWeatherSummary($forecast),
+                    'planning'        => [],
+                    'weather'         => [],
+                    'error'           => $e->getMessage(),
+                    'ai_model_failed' => 'pollination',
+                ];
+            }
+        }
+
+        // Try Gemini
+        try {
+            $raw = $this->geminiService->callGemini(
+                $this->buildCombinedPrompt($userActivities, $forecast, $nextDays)
+            );
+            $normalized = $this->normalizeAiPayload($raw, $forecast);
+
+            return [
+                'status'          => 'ok',
+                'total'           => count($userActivities),
+                'weather_summary' => $normalized['weather_summary'],
+                'planning'        => $normalized['planning'],
+                'weather'         => $normalized['weather'],
+                'ai_model'        => 'gemini',
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status'          => 'error',
+                'total'           => count($userActivities),
+                'weather_summary' => $this->buildWeatherSummary($forecast),
+                'planning'        => [],
+                'weather'         => [],
+                'error'           => $e->getMessage(),
+                'ai_model_failed' => 'gemini',
             ];
         }
     }
@@ -401,5 +448,119 @@ PROMPT;
         ));
 
         return 'Prévisions : ' . implode(', ', $conditions) . '.';
+    }
+
+    /**
+     * @param array<string, mixed>             $raw
+     * @param array<int, array<string, mixed>> $forecast
+     *
+     * @return array{weather_summary: string|null, planning: list<array<string,mixed>>, weather: list<array<string,mixed>>}
+     */
+    private function normalizeAiPayload(array $raw, array $forecast): array
+    {
+        $planningCandidates = [
+            $raw['planning'] ?? null,
+            $raw['planification'] ?? null,
+            $raw['recommendations_planning'] ?? null,
+            $raw['recommandations_planification'] ?? null,
+            $raw['recommandations'] ?? null,
+            $raw['recommendations'] ?? null,
+        ];
+
+        $weatherCandidates = [
+            $raw['weather'] ?? null,
+            $raw['meteo'] ?? null,
+            $raw['recommendations_weather'] ?? null,
+            $raw['recommandations_meteo'] ?? null,
+        ];
+
+        $planning = [];
+        foreach ($planningCandidates as $candidate) {
+            $planning = $this->normalizeSection($candidate);
+            if ($planning !== []) {
+                break;
+            }
+        }
+
+        $weather = [];
+        foreach ($weatherCandidates as $candidate) {
+            $weather = $this->normalizeSection($candidate);
+            if ($weather !== []) {
+                break;
+            }
+        }
+
+        if ($planning === [] && $weather === []) {
+            throw new \RuntimeException('Réponse IA invalide: aucune recommandation exploitable.');
+        }
+
+        $summary = isset($raw['weather_summary']) && is_string($raw['weather_summary'])
+            ? trim($raw['weather_summary'])
+            : '';
+
+        return [
+            'weather_summary' => $summary !== '' ? $summary : $this->buildWeatherSummary($forecast),
+            'planning' => $planning,
+            'weather' => $weather,
+        ];
+    }
+
+    /**
+     * @param mixed $section
+     *
+     * @return list<array{activity: string, type: string, date: string, severity: string, bullets: list<string>, detail: string}>
+     */
+    private function normalizeSection(mixed $section): array
+    {
+        if (!is_array($section)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($section as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $activity = trim((string) ($row['activity'] ?? ''));
+            $type = trim((string) ($row['type'] ?? ''));
+            $date = trim((string) ($row['date'] ?? ''));
+            $severity = strtolower(trim((string) ($row['severity'] ?? 'ok')));
+            if (!in_array($severity, ['ok', 'warning', 'critical'], true)) {
+                $severity = 'ok';
+            }
+
+            $bullets = [];
+            $rawBullets = $row['bullets'] ?? [];
+            if (is_string($rawBullets) && trim($rawBullets) !== '') {
+                $bullets[] = trim($rawBullets);
+            } elseif (is_array($rawBullets)) {
+                foreach ($rawBullets as $bullet) {
+                    if (is_string($bullet) && trim($bullet) !== '') {
+                        $bullets[] = trim($bullet);
+                    }
+                }
+            }
+
+            if ($bullets === []) {
+                $bullets[] = 'Vérifier les paramètres de cette activité avant exécution.';
+            }
+
+            $detail = trim((string) ($row['detail'] ?? ''));
+            if ($detail === '') {
+                $detail = implode(' ', $bullets);
+            }
+
+            $normalized[] = [
+                'activity' => $activity !== '' ? $activity : ($type !== '' ? $type : 'Activité'),
+                'type' => $type,
+                'date' => $date,
+                'severity' => $severity,
+                'bullets' => $bullets,
+                'detail' => $detail,
+            ];
+        }
+
+        return $normalized;
     }
 }

@@ -50,6 +50,7 @@ class PerenualApiService
 
     /**
      * Retourne la liste des noms de cultures pour un type donné
+     * @return string[]
      */
     public function getCulturesByType(string $type): array
     {
@@ -58,7 +59,7 @@ class PerenualApiService
 
     /**
      * Appelle Perenual et retourne saison + dates suggérées
-     
+     * @return array<string, mixed>|null
      */
     public function resolve(string $nomCulture, string $typeCulture): ?array
     {
@@ -93,6 +94,7 @@ class PerenualApiService
 
     /**
      * Recherche par mot-clé type si le nom exact ne donne rien
+     * @return array<string, mixed>|null
      */
     private function resolveByKeyword(string $keyword): ?array
     {
@@ -112,7 +114,8 @@ class PerenualApiService
 
     /**
      * Construit le résultat depuis la réponse Perenual
-     * Retourne : saison, dateSemis, dateRecolte
+     * @param array<string, mixed> $plant
+     * @return array<string, mixed>
      */
     private function buildResult(array $plant, ?string $typeCulture): array
     {
@@ -134,6 +137,7 @@ class PerenualApiService
 
     /**
      * Détermine la saison à partir des données Perenual
+     * @param array<string, mixed> $plant
      */
     private function extractSaison(array $plant, ?string $type): string
     {
@@ -163,7 +167,7 @@ class PerenualApiService
 
     /**
      * Calcule dateSemis et dateRecolte selon la saison
-     * Adapté au calendrier agricole tunisien
+     * @return array{0: string, 1: string}
      */
     private function computeDates(string $saison, ?string $type): array
     {
@@ -207,7 +211,9 @@ class PerenualApiService
         ];
     }
 
-   
+    /**
+     * @return array<string, mixed>
+     */
     private function fallbackResult(string $typeCulture): array
     {
         $saison = 'PRINTEMPS';
