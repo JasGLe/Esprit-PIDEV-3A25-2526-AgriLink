@@ -45,10 +45,10 @@ class Produits
     private ?int $cultureId = null;
 
     #[ORM\Column(type: Types::BOOLEAN)]
-    private ?bool $active = null;
+    private bool $active = false;
 
     #[ORM\Column(type: Types::INTEGER)]
-    private ?int $quantite = null;
+    private int $quantite = 0;
 
     public function getId(): int
     {

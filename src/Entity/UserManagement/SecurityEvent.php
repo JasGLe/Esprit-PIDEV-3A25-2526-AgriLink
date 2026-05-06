@@ -32,7 +32,7 @@ class SecurityEvent
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER)]
-    private ?int $id = null;
+    private int $id; // @phpstan-ignore-line
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'securityEvents')]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
@@ -65,7 +65,7 @@ class SecurityEvent
 
     public function getId(): ?int
     {
-        return $this->id;
+        return $this->id ?? null;
     }
 
     public function getUser(): ?User

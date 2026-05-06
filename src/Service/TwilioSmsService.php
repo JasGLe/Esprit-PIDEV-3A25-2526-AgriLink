@@ -139,6 +139,9 @@ class TwilioSmsService
     {
         // Remove any spaces, dashes, or parentheses
         $clean = preg_replace('/[\s\-\(\)]+/', '', $phoneNumber);
+        if ($clean === null) {
+            return null;
+        }
 
         // If already in E.164 format with +216, return as-is
         if (preg_match('/^\+216\d{8}$/', $clean)) {

@@ -45,7 +45,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id_utilisateur', type: Types::INTEGER)]
-    private ?int $id = null;
+    private int $id; // @phpstan-ignore-line
 
     #[ORM\Column(name: 'Nom', length: 100)]
     #[Assert\NotBlank(message: 'Le nom est obligatoire.')]
@@ -222,6 +222,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'is_permanently_banned', type: Types::BOOLEAN, options: ['default' => false])]
     private bool $isPermanentlyBanned = false;
 
+    /** @var list<array{code: string, used: bool}>|null */
     #[ORM\Column(name: 'backup_codes', type: Types::JSON, nullable: true)]
     private ?array $backupCodes = null;
 
@@ -231,15 +232,19 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'user_points', type: Types::INTEGER, options: ['default' => 0])]
     private int $userPoints = 0;
 
+    /** @var list<string>|null */
     #[ORM\Column(name: 'earned_badges', type: Types::JSON, nullable: true)]
     private ?array $earnedBadges = null;
 
+    /** @var Collection<int, Exploitation> */
     #[ORM\OneToMany(targetEntity: Exploitation::class, mappedBy: 'user')]
     private Collection $exploitations;
 
+    /** @var Collection<int, SecurityEvent> */
     #[ORM\OneToMany(targetEntity: SecurityEvent::class, mappedBy: 'user')]
     private Collection $securityEvents;
 
+    /** @var Collection<int, UserSession> */
     #[ORM\OneToMany(targetEntity: UserSession::class, mappedBy: 'user')]
     private Collection $userSessions;
 
@@ -256,7 +261,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getId(): ?int
     {
-        return $this->id;
+        return $this->id ?? null;
     }
 
     public function getNom(): ?string
@@ -906,11 +911,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->isBanned;
     }
 
+    /**
+     * @return list<array{code: string, used: bool}>|null
+     */
     public function getBackupCodes(): ?array
     {
         return $this->backupCodes;
     }
 
+    /**
+     * @param list<array{code: string, used: bool}>|null $backupCodes
+     */
     public function setBackupCodes(?array $backupCodes): static
     {
         $this->backupCodes = $backupCodes;
@@ -1030,7 +1041,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getDisplayName(): string
     {
-        return $this->nom ?: $this->email ?? 'Utilisateur';
+        return $this->nom !== '' ? $this->nom : $this->email;
     }
 
     /**
@@ -1061,7 +1072,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getInitials(): string
     {
         if (!$this->nom) {
-            return strtoupper(substr($this->email ?? 'U', 0, 2));
+            return strtoupper(substr($this->email, 0, 2));
         }
 
         $parts = explode(' ', trim($this->nom));
@@ -1267,11 +1278,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * @return list<string>
+     */
     public function getEarnedBadges(): array
     {
         return $this->earnedBadges ?? [];
     }
 
+    /**
+     * @param list<string>|null $earnedBadges
+     */
     public function setEarnedBadges(?array $earnedBadges): static
     {
         $this->earnedBadges = $earnedBadges;

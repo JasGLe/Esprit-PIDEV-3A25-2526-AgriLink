@@ -462,6 +462,9 @@ class EvenementController extends AbstractController
         foreach ($evenements as $evenement) {
             $type = strtoupper((string) $evenement->getTypeEvenement());
             $date = $evenement->getDateEvenement();
+            if ($date === null) {
+                continue;
+            }
 
             if ($type === 'OFFICIEL') {
                 ++$official;

@@ -14,11 +14,11 @@ class UserSession
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER)]
-    private ?int $id = null;
+    private int $id; // @phpstan-ignore-line
 
     #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'userSessions')]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id_utilisateur', nullable: false, onDelete: 'CASCADE')]
-    private User $user;
+    private ?User $user = null;
 
     #[ORM\Column(name: 'refresh_token_hash', length: 255)]
     private string $refresh_token_hash = '';
@@ -53,7 +53,7 @@ class UserSession
 
     public function getId(): ?int
     {
-        return $this->id;
+        return $this->id ?? null;
     }
 
     public function getUser(): ?User

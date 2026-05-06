@@ -23,10 +23,14 @@ class UserNotificationsComponent extends AbstractController
         if (!$user) {
             return [];
         }
+        $userId = $user->getId();
+        if ($userId === null) {
+            return [];
+        }
 
         // Get unread notifications
         $notifications = $this->notificationsRepository->findUnreadByUserId(
-            $user->getId(),
+            $userId,
             limit: 10
         );
 

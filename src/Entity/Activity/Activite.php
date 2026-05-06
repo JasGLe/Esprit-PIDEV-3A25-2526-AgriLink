@@ -52,7 +52,7 @@ class Activite
         message: 'Veuillez choisir un statut valide.'
     )]
     #[Assert\Length(max: 20)]
-    private ?string $statut = null;
+    private string $statut = 'PLANIFIEE';
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     #[Assert\PositiveOrZero(message: 'Le coût doit être positif ou zéro.')]
@@ -63,7 +63,7 @@ class Activite
     private ?string $coutEstime = null;
 
     #[ORM\Column(type: Types::INTEGER)]
-    private ?int $idAgriculteur = null;
+    private int $idAgriculteur = 0;
 
     public function getId(): int
     {
@@ -123,14 +123,14 @@ class Activite
         return $this;
     }
 
-    public function getStatut(): ?string
+    public function getStatut(): string
     {
         return $this->statut;
     }
 
     public function setStatut(?string $statut): static
     {
-        $this->statut = $statut;
+        $this->statut = $statut ?? 'PLANIFIEE';
 
         return $this;
     }
@@ -147,14 +147,14 @@ class Activite
         return $this;
     }
 
-    public function getIdAgriculteur(): ?int
+    public function getIdAgriculteur(): int
     {
         return $this->idAgriculteur;
     }
 
     public function setIdAgriculteur(?int $idAgriculteur): static
     {
-        $this->idAgriculteur = $idAgriculteur;
+        $this->idAgriculteur = $idAgriculteur ?? 0;
 
         return $this;
     }
