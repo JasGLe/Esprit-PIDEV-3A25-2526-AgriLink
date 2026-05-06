@@ -36,11 +36,11 @@ class UserController extends AbstractController
     {
         $page = max(1, $request->query->getInt('page', 1));
         $limit = 20;
-        $search = $request->query->get('search', '');
-        $roleFilter = $request->query->get('role');
-        $statusFilter = $request->query->get('status');
-        $orderBy = $request->query->get('orderBy', 'createdAt');
-        $orderDir = $request->query->get('orderDir', 'DESC');
+        $search = trim($request->query->getString('search', ''));
+        $roleFilter = trim($request->query->getString('role', ''));
+        $statusFilter = trim($request->query->getString('status', ''));
+        $orderBy = $request->query->getString('orderBy', 'createdAt');
+        $orderDir = strtoupper($request->query->getString('orderDir', 'DESC'));
 
         // Convert status filter to boolean
         $activeFilter = null;
@@ -52,16 +52,25 @@ class UserController extends AbstractController
 
         // Validate and clean role filter
         $validRoles = ['ADMIN', 'AGRICULTEUR', 'AGRIPLUS', 'FOURNISSEUR', 'USER'];
-        if (!$roleFilter || !in_array($roleFilter, $validRoles)) {
-            $roleFilter = null;
+        $roleFilterValue = null;
+        if ($roleFilter !== '' && in_array($roleFilter, $validRoles, true)) {
+            $roleFilterValue = $roleFilter;
+        }
+
+        $allowedOrderBy = ['createdAt', 'lastLogin', 'email', 'nom', 'role'];
+        if (!in_array($orderBy, $allowedOrderBy, true)) {
+            $orderBy = 'createdAt';
+        }
+        if (!in_array($orderDir, ['ASC', 'DESC'], true)) {
+            $orderDir = 'DESC';
         }
 
         $result = $this->userRepository->findPaginated(
             $page,
             $limit,
-            $roleFilter,
+            $roleFilterValue,
             $activeFilter,
-            $search ?: null,
+            $search !== '' ? $search : null,
             $orderBy,
             $orderDir
         );
@@ -78,8 +87,8 @@ class UserController extends AbstractController
             'limit' => $limit,
             'totalPages' => $totalPages,
             'search' => $search,
-            'roleFilter' => $roleFilter,
-            'statusFilter' => $statusFilter,
+            'roleFilter' => $roleFilterValue,
+            'statusFilter' => $statusFilter !== '' ? $statusFilter : null,
             'orderBy' => $orderBy,
             'orderDir' => $orderDir,
             'stats' => $stats,
@@ -92,11 +101,11 @@ class UserController extends AbstractController
     {
         $page = max(1, $request->query->getInt('page', 1));
         $limit = 20;
-        $search = $request->query->get('search', '');
-        $roleFilter = $request->query->get('role');
-        $statusFilter = $request->query->get('status');
-        $orderBy = $request->query->get('orderBy', 'createdAt');
-        $orderDir = $request->query->get('orderDir', 'DESC');
+        $search = trim($request->query->getString('search', ''));
+        $roleFilter = trim($request->query->getString('role', ''));
+        $statusFilter = trim($request->query->getString('status', ''));
+        $orderBy = $request->query->getString('orderBy', 'createdAt');
+        $orderDir = strtoupper($request->query->getString('orderDir', 'DESC'));
 
         // Convert status filter to boolean
         $activeFilter = null;
@@ -108,16 +117,25 @@ class UserController extends AbstractController
 
         // Validate and clean role filter
         $validRoles = ['ADMIN', 'AGRICULTEUR', 'AGRIPLUS', 'FOURNISSEUR', 'USER'];
-        if (!$roleFilter || !\in_array($roleFilter, $validRoles, true)) {
-            $roleFilter = null;
+        $roleFilterValue = null;
+        if ($roleFilter !== '' && \in_array($roleFilter, $validRoles, true)) {
+            $roleFilterValue = $roleFilter;
+        }
+
+        $allowedOrderBy = ['createdAt', 'lastLogin', 'email', 'nom', 'role'];
+        if (!in_array($orderBy, $allowedOrderBy, true)) {
+            $orderBy = 'createdAt';
+        }
+        if (!in_array($orderDir, ['ASC', 'DESC'], true)) {
+            $orderDir = 'DESC';
         }
 
         $result = $this->userRepository->findPaginated(
             $page,
             $limit,
-            $roleFilter,
+            $roleFilterValue,
             $activeFilter,
-            $search ?: null,
+            $search !== '' ? $search : null,
             $orderBy,
             $orderDir
         );
@@ -138,7 +156,7 @@ class UserController extends AbstractController
                     'isActive' => $user->isActive(),
                     'isBanned' => $user->isBanned(),
                     'emailVerified' => $user->isEmailVerified(),
-                    'createdAt' => $user->getCreatedAt()?->format('d/m/Y'),
+                    'createdAt' => $user->getCreatedAt()->format('d/m/Y'),
                     'lastLogin' => $user->getLastLogin()?->format('d/m/Y'),
                     'initials' => $user->getInitials(),
                     'photoProfil' => $user->getPhotoProfil(),
@@ -231,7 +249,7 @@ class UserController extends AbstractController
         $adminUserData = $request->request->all()['admin_user'] ?? [];
         $csrfToken = $adminUserData['_token'] ?? null;
 
-        if (!$this->isCsrfTokenValid('admin_user', $csrfToken)) {
+        if (!$this->isCsrfTokenValid('admin_user', is_string($csrfToken) ? $csrfToken : null)) {
             return $this->json(['success' => false, 'message' => 'Token de sécurité invalide.'], 403);
         }
 
@@ -263,8 +281,8 @@ class UserController extends AbstractController
     public function toggleStatus(User $user, Request $request): Response
     {
         // CSRF protection
-        $submittedToken = $request->request->get('_token');
-        if (!$this->isCsrfTokenValid('toggle-status-' . $user->getId(), $submittedToken)) {
+        $submittedToken = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('toggle-status-' . $user->getId(), $submittedToken !== '' ? $submittedToken : null)) {
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('admin_users_list');
         }
@@ -288,8 +306,8 @@ class UserController extends AbstractController
     public function delete(User $user, Request $request): Response
     {
         // CSRF protection
-        $submittedToken = $request->request->get('_token');
-        if (!$this->isCsrfTokenValid('delete-user-' . $user->getId(), $submittedToken)) {
+        $submittedToken = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('delete-user-' . $user->getId(), $submittedToken !== '' ? $submittedToken : null)) {
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('admin_users_list');
         }
@@ -320,8 +338,8 @@ class UserController extends AbstractController
         $expectsJson = $request->isXmlHttpRequest() || str_contains((string) $request->headers->get('Accept'), 'application/json');
 
         // CSRF protection
-        $submittedToken = $request->request->get('_token');
-        if (!$this->isCsrfTokenValid('delete-photo-' . $user->getId(), $submittedToken)) {
+        $submittedToken = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('delete-photo-' . $user->getId(), $submittedToken !== '' ? $submittedToken : null)) {
             if ($expectsJson) {
                 return $this->json(['success' => false, 'message' => 'Token CSRF invalide.'], 403);
             }
@@ -365,7 +383,8 @@ class UserController extends AbstractController
         string $appUrl
     ): Response {
         $submittedToken = $request->request->get('_token');
-        if (!$this->isCsrfTokenValid('ban-user-' . $user->getId(), $submittedToken)) {
+        $submittedTokenString = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('ban-user-' . $user->getId(), $submittedTokenString !== '' ? $submittedTokenString : null)) {
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('admin_users_list');
         }
@@ -375,7 +394,7 @@ class UserController extends AbstractController
             return $this->redirectToRoute('admin_users_list');
         }
 
-        $reason = $request->request->get('ban_reason', 'Violation des conditions d\'utilisation');
+        $reason = $request->request->getString('ban_reason', 'Violation des conditions d\'utilisation');
         $user->ban($reason);
         $this->entityManager->flush();
 
@@ -383,6 +402,10 @@ class UserController extends AbstractController
 
         // Send ban notification email
         try {
+            $toEmail = $user->getEmail();
+            if ($toEmail === null || $toEmail === '') {
+                throw new \RuntimeException('Missing user email');
+            }
             $htmlContent = $twig->render('emails/account_banned.html.twig', [
                 'user' => $user,
                 'reason' => $reason,
@@ -392,7 +415,7 @@ class UserController extends AbstractController
 
             $email = (new Email())
                 ->from('noreply@agrilink.com')
-                ->to($user->getEmail())
+                ->to($toEmail)
                 ->subject('AgriLink - Votre compte a été suspendu')
                 ->html($htmlContent);
 
@@ -410,8 +433,8 @@ class UserController extends AbstractController
         Request $request,
         SecurityEventService $securityEventService
     ): Response {
-        $submittedToken = $request->request->get('_token');
-        if (!$this->isCsrfTokenValid('unban-user-' . $user->getId(), $submittedToken)) {
+        $submittedToken = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('unban-user-' . $user->getId(), $submittedToken !== '' ? $submittedToken : null)) {
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('admin_users_list');
         }

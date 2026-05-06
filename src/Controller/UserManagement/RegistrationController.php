@@ -55,8 +55,8 @@ class RegistrationController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             // Validate reCAPTCHA v3
-            $recaptchaToken = $request->request->get('g-recaptcha-response', '');
-            if ($recaptchaToken && !$this->recaptchaService->verify($recaptchaToken, 'register')) {
+            $recaptchaToken = $request->request->getString('g-recaptcha-response', '');
+            if ($recaptchaToken !== '' && !$this->recaptchaService->verify($recaptchaToken, 'register')) {
                 $this->addFlash('error', 'La vérification reCAPTCHA a échoué. Veuillez réessayer.');
                 return $this->redirectToRoute('app_register_agriculteur');
             }
@@ -115,8 +115,8 @@ class RegistrationController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             // Validate reCAPTCHA v3
-            $recaptchaToken = $request->request->get('g-recaptcha-response', '');
-            if ($recaptchaToken && !$this->recaptchaService->verify($recaptchaToken, 'register')) {
+            $recaptchaToken = $request->request->getString('g-recaptcha-response', '');
+            if ($recaptchaToken !== '' && !$this->recaptchaService->verify($recaptchaToken, 'register')) {
                 $this->addFlash('error', 'La vérification reCAPTCHA a échoué. Veuillez réessayer.');
                 return $this->redirectToRoute('app_register_fournisseur');
             }
@@ -189,8 +189,8 @@ class RegistrationController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             // Validate reCAPTCHA v3
-            $recaptchaToken = $request->request->get('g-recaptcha-response', '');
-            if ($recaptchaToken && !$this->recaptchaService->verify($recaptchaToken, 'register')) {
+            $recaptchaToken = $request->request->getString('g-recaptcha-response', '');
+            if ($recaptchaToken !== '' && !$this->recaptchaService->verify($recaptchaToken, 'register')) {
                 $this->addFlash('error', 'La vérification reCAPTCHA a échoué. Veuillez réessayer.');
                 return $this->redirectToRoute('app_register_agriplus');
             }
@@ -265,6 +265,11 @@ class RegistrationController extends AbstractController
                 return $this->json(['error' => 'Voice embedding array is empty'], Response::HTTP_BAD_REQUEST);
             }
 
+            $normalizedEmbedding = $this->normalizeNumericList($data['embedding']);
+            if ($normalizedEmbedding === null) {
+                return $this->json(['error' => 'Invalid voice embedding'], Response::HTTP_BAD_REQUEST);
+            }
+
             $audioDuration = $data['audio_duration'] ?? 0;
             if ($audioDuration < 3 || $audioDuration > 5) {
                 return $this->json(['error' => 'Audio duration must be 3-5 seconds'], Response::HTTP_BAD_REQUEST);
@@ -282,7 +287,7 @@ class RegistrationController extends AbstractController
             }
 
             // Store the voice embedding
-            $embeddingJson = $this->voiceRecognitionService->storeVoiceEmbedding($data['embedding']);
+            $embeddingJson = $this->voiceRecognitionService->storeVoiceEmbedding($normalizedEmbedding);
             $user->setVoiceEmbedding($embeddingJson);
             $user->setVoiceEnrolledAt(new \DateTime());
             $user->setVoiceEnrollmentAttempts($attempts + 1);
@@ -312,6 +317,11 @@ class RegistrationController extends AbstractController
                 return $this->json(['error' => 'Invalid voice embedding'], Response::HTTP_BAD_REQUEST);
             }
 
+            $capturedEmbedding = $this->normalizeNumericList($data['embedding']);
+            if ($capturedEmbedding === null) {
+                return $this->json(['error' => 'Invalid voice embedding'], Response::HTTP_BAD_REQUEST);
+            }
+
             // Find users with enrolled voice using query builder
             $userRepository = $entityManager->getRepository(User::class);
             $qb = $userRepository->createQueryBuilder('u');
@@ -334,9 +344,14 @@ class RegistrationController extends AbstractController
                     continue;
                 }
 
+                $normalizedStoredEmbedding = $this->normalizeNumericList($storedArray);
+                if ($normalizedStoredEmbedding === null) {
+                    continue;
+                }
+
                 $distance = $this->voiceRecognitionService->euclideanDistance(
-                    $storedArray,
-                    $data['embedding']
+                    $normalizedStoredEmbedding,
+                    $capturedEmbedding
                 );
 
                 if ($distance < $minDistance) {
@@ -366,5 +381,26 @@ class RegistrationController extends AbstractController
         } catch (\Exception $e) {
             return $this->json(['error' => 'Verification failed: ' . $e->getMessage()], Response::HTTP_BAD_GATEWAY);
         }
+    }
+
+    /**
+     * @param array<mixed> $values
+     * @return list<float>|null
+     */
+    private function normalizeNumericList(array $values): ?array
+    {
+        if ($values === []) {
+            return null;
+        }
+
+        $list = [];
+        foreach (array_values($values) as $value) {
+            if (!is_int($value) && !is_float($value)) {
+                return null;
+            }
+            $list[] = (float) $value;
+        }
+
+        return $list;
     }
 }

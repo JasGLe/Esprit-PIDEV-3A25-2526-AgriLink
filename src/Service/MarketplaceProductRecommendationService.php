@@ -128,8 +128,8 @@ final class MarketplaceProductRecommendationService
         $email = strtolower(trim((string) ($user?->getEmail() ?? '')));
         if ($email !== '') {
             $signals = $this->ligneCommandeRepository->fetchBuyerPurchaseSignalsByEmail($email);
-            $userProductSales = $signals['productScores'] ?? [];
-            $userCategorySales = $signals['categoryScores'] ?? [];
+            $userProductSales = $signals['productScores'];
+            $userCategorySales = $signals['categoryScores'];
         }
 
         $hasGlobalSignals = $this->hasPositiveSignals($globalSales);
@@ -148,7 +148,7 @@ final class MarketplaceProductRecommendationService
         }
 
         $rankedIds = $this->rankWithPython(
-            $catalog,
+            array_values($catalog),
             $globalSales,
             $userProductSales,
             $userCategorySales,
@@ -157,7 +157,7 @@ final class MarketplaceProductRecommendationService
         );
         if ($rankedIds === []) {
             $rankedIds = $this->rankInPhp(
-                $catalog,
+                array_values($catalog),
                 $globalSales,
                 $userProductSales,
                 $userCategorySales,
@@ -168,9 +168,7 @@ final class MarketplaceProductRecommendationService
 
         $byId = [];
         foreach ($catalog as $p) {
-            if ($p->getId() !== null) {
-                $byId[(int) $p->getId()] = $p;
-            }
+            $byId[(int) $p->getId()] = $p;
         }
 
         $out = [];
@@ -208,7 +206,7 @@ final class MarketplaceProductRecommendationService
 
         $productsPayload = [];
         foreach ($catalog as $p) {
-            $id = (int) ($p->getId() ?? 0);
+            $id = (int) $p->getId();
             if ($id <= 0) {
                 continue;
             }
@@ -236,7 +234,8 @@ final class MarketplaceProductRecommendationService
         foreach ($commands as $cmd) {
             try {
                 $process = new Process($cmd, $this->projectDir);
-                $process->setInput(json_encode($payload, JSON_UNESCAPED_UNICODE));
+                $jsonPayload = json_encode($payload, JSON_UNESCAPED_UNICODE);
+                $process->setInput($jsonPayload === false ? null : $jsonPayload);
                 $process->setTimeout(3);
                 $process->run();
                 if (!$process->isSuccessful()) {
@@ -388,7 +387,7 @@ final class MarketplaceProductRecommendationService
 
         $scored = [];
         foreach ($catalog as $p) {
-            $id = (int) ($p->getId() ?? 0);
+            $id = (int) $p->getId();
             if ($id <= 0) {
                 continue;
             }

@@ -2,6 +2,7 @@
 
 namespace App\Repository\UserManagement;
 
+use App\Dto\Equipment\LabelCountDto;
 use App\Entity\UserManagement\SecurityEvent;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -10,9 +11,9 @@ use Doctrine\Persistence\ManagerRegistry;
  * @extends ServiceEntityRepository<SecurityEvent>
  *
  * @method SecurityEvent|null find($id, $lockMode = null, $lockVersion = null)
- * @method SecurityEvent|null findOneBy(array $criteria, array $orderBy = null)
+ * @method SecurityEvent|null findOneBy(array<string, mixed> $criteria, array<string, 'ASC'|'DESC'>|null $orderBy = null)
  * @method SecurityEvent[]    findAll()
- * @method SecurityEvent[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method SecurityEvent[]    findBy(array<string, mixed> $criteria, array<string, 'ASC'|'DESC'>|null $orderBy = null, $limit = null, $offset = null)
  */
 class SecurityEventRepository extends ServiceEntityRepository
 {
@@ -41,6 +42,8 @@ class SecurityEventRepository extends ServiceEntityRepository
 
     /**
      * Get security statistics for the last N days
+     *
+     * @return array<string, mixed>
      */
     public function getStatistics(int $days = 30): array
     {
@@ -53,8 +56,12 @@ class SecurityEventRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
 
+        /** @var list<LabelCountDto> $byType */
         $byType = $this->createQueryBuilder('e')
-            ->select('e.eventType, COUNT(e.id) as count')
+            ->select(sprintf(
+                'NEW %s(e.eventType, COUNT(e.id))',
+                LabelCountDto::class
+            ))
             ->where('e.createdAt >= :date')
             ->setParameter('date', $date)
             ->groupBy('e.eventType')
@@ -63,7 +70,11 @@ class SecurityEventRepository extends ServiceEntityRepository
 
         $typeStats = [];
         foreach ($byType as $row) {
-            $typeStats[$row['eventType']] = (int) $row['count'];
+            if ($row->label === null || $row->label === '') {
+                continue;
+            }
+
+            $typeStats[$row->label] = $row->total;
         }
 
         $loginSuccess = $typeStats[SecurityEvent::EVENT_LOGIN_SUCCESS] ?? 0;
@@ -89,6 +100,8 @@ class SecurityEventRepository extends ServiceEntityRepository
 
     /**
      * Find recent security events
+     *
+     * @return list<SecurityEvent>
      */
     public function findRecent(int $limit = 15): array
     {
@@ -101,6 +114,8 @@ class SecurityEventRepository extends ServiceEntityRepository
 
     /**
      * Find events by user
+     *
+     * @return list<SecurityEvent>
      */
     public function findByUser(int $userId, int $limit = 50): array
     {
@@ -116,6 +131,8 @@ class SecurityEventRepository extends ServiceEntityRepository
 
     /**
      * Find login history events for a specific user
+     *
+     * @return list<SecurityEvent>
      */
     public function findLoginHistoryByUser(int $userId, int $limit = 50): array
     {
@@ -138,6 +155,8 @@ class SecurityEventRepository extends ServiceEntityRepository
 
     /**
      * Find events by type
+     *
+     * @return list<SecurityEvent>
      */
     public function findByType(string $eventType, int $days = 30, int $limit = 100): array
     {

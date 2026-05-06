@@ -3,7 +3,6 @@
 namespace App\Service;
 
 use App\Entity\UserManagement\User;
-use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Generates contextual notifications for user profile completion & security.
@@ -12,13 +11,25 @@ use Doctrine\ORM\EntityManagerInterface;
 class UserProfileNotificationService
 {
     public function __construct(
-        private EntityManagerInterface $em,
         private NotificationService $notificationService,
     ) {}
 
     /**
      * Generate all contextual notifications for a user based on their profile state.
      * Called after login to show relevant reminders.
+     *
+     * @return list<array{
+     *   type: string,
+     *   icon: string,
+     *   title: string,
+     *   body: string,
+     *   priority: string,
+     *   actionUrl: string,
+     *   actionLabel: string,
+     *   dismissible: bool,
+     *   badge?: string,
+     *   missingFields?: list<string>
+     * }>
      */
     public function generateContextualNotifications(User $user): array
     {
@@ -84,6 +95,17 @@ class UserProfileNotificationService
 
     /**
      * Create email verification reminder notification.
+     *
+     * @return array{
+     *   type: string,
+     *   icon: string,
+     *   title: string,
+     *   body: string,
+     *   priority: string,
+     *   actionUrl: string,
+     *   actionLabel: string,
+     *   dismissible: bool
+     * }
      */
     private function createEmailVerificationReminder(User $user): array
     {
@@ -101,6 +123,17 @@ class UserProfileNotificationService
 
     /**
      * Create phone verification reminder notification.
+     *
+     * @return array{
+     *   type: string,
+     *   icon: string,
+     *   title: string,
+     *   body: string,
+     *   priority: string,
+     *   actionUrl: string,
+     *   actionLabel: string,
+     *   dismissible: bool
+     * }
      */
     private function createPhoneVerificationReminder(User $user): array
     {
@@ -118,6 +151,18 @@ class UserProfileNotificationService
 
     /**
      * Create two-factor authentication reminder notification.
+     *
+     * @return array{
+     *   type: string,
+     *   icon: string,
+     *   title: string,
+     *   body: string,
+     *   priority: string,
+     *   actionUrl: string,
+     *   actionLabel: string,
+     *   dismissible: bool,
+     *   badge: string
+     * }
      */
     private function createTwoFactorReminder(User $user): array
     {
@@ -136,6 +181,19 @@ class UserProfileNotificationService
 
     /**
      * Create profile completion reminder with specific missing fields.
+     *
+     * @param list<string> $missingFields
+     * @return array{
+     *   type: string,
+     *   icon: string,
+     *   title: string,
+     *   body: string,
+     *   priority: string,
+     *   actionUrl: string,
+     *   actionLabel: string,
+     *   dismissible: bool,
+     *   missingFields: list<string>
+     * }
      */
     private function createProfileCompletionReminder(User $user, array $missingFields): array
     {
@@ -169,6 +227,8 @@ class UserProfileNotificationService
 
     /**
      * Determine which profile fields are missing or incomplete.
+     *
+     * @return list<string>
      */
     private function getMissingProfileFields(User $user): array
     {
@@ -202,6 +262,9 @@ class UserProfileNotificationService
 
     /**
      * Store contextual notifications in database.
+     */
+    /**
+     * @param list<array{type:string,icon:string,title:string,body:string}> $notifications
      */
     public function persistNotifications(User $user, array $notifications): void
     {

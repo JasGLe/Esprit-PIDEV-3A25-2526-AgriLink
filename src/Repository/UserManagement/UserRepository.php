@@ -2,6 +2,7 @@
 
 namespace App\Repository\UserManagement;
 
+use App\Dto\Equipment\LabelCountDto;
 use App\Entity\UserManagement\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -10,9 +11,9 @@ use Doctrine\Persistence\ManagerRegistry;
  * @extends ServiceEntityRepository<User>
  *
  * @method User|null find($id, $lockMode = null, $lockVersion = null)
- * @method User|null findOneBy(array $criteria, array $orderBy = null)
+ * @method User|null findOneBy(array<string, mixed> $criteria, array<string, 'ASC'|'DESC'>|null $orderBy = null)
  * @method User[]    findAll()
- * @method User[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ * @method User[]    findBy(array<string, mixed> $criteria, array<string, 'ASC'|'DESC'>|null $orderBy = null, $limit = null, $offset = null)
  */
 class UserRepository extends ServiceEntityRepository
 {
@@ -41,6 +42,8 @@ class UserRepository extends ServiceEntityRepository
 
     /**
      * Get general statistics about users
+     *
+     * @return array<string, mixed>
      */
     public function getStatistics(): array
     {
@@ -64,15 +67,23 @@ class UserRepository extends ServiceEntityRepository
             ->getQuery()
             ->getSingleScalarResult();
 
+        /** @var list<LabelCountDto> $byRole */
         $byRole = $this->createQueryBuilder('u')
-            ->select('u.role, COUNT(u.id) as count')
+            ->select(sprintf(
+                'NEW %s(u.role, COUNT(u.id))',
+                LabelCountDto::class
+            ))
             ->groupBy('u.role')
             ->getQuery()
             ->getResult();
 
         $roleStats = [];
         foreach ($byRole as $row) {
-            $roleStats['ROLE_' . $row['role']] = (int) $row['count'];
+            if ($row->label === null || $row->label === '') {
+                continue;
+            }
+
+            $roleStats['ROLE_' . $row->label] = $row->total;
         }
 
         return [
@@ -92,6 +103,8 @@ class UserRepository extends ServiceEntityRepository
 
     /**
      * Get statistics for a specific period
+     *
+     * @return array<string, mixed>
      */
     public function getStatisticsForPeriod(\DateTimeInterface $from, \DateTimeInterface $to): array
     {
@@ -113,6 +126,8 @@ class UserRepository extends ServiceEntityRepository
 
     /**
      * Find recent users
+     *
+     * @return list<User>
      */
     public function findRecentUsers(int $days = 7, int $limit = 10): array
     {
@@ -129,6 +144,8 @@ class UserRepository extends ServiceEntityRepository
 
     /**
      * Find paginated users with filters
+     *
+     * @return array{data: list<User>, total: int, page: int, limit: int}
      */
     public function findPaginated(
         int $page = 1,
@@ -194,6 +211,8 @@ class UserRepository extends ServiceEntityRepository
 
     /**
      * Find all users with a specific role
+     *
+     * @return list<User>
      */
     public function findByRole(string $role): array
     {
@@ -207,6 +226,8 @@ class UserRepository extends ServiceEntityRepository
 
     /**
      * Find locked accounts
+     *
+     * @return list<User>
      */
     public function findLockedAccounts(): array
     {
@@ -220,6 +241,8 @@ class UserRepository extends ServiceEntityRepository
 
     /**
      * Find users with multiple failed login attempts
+     *
+     * @return list<User>
      */
     public function findUsersWithFailedLogins(int $minAttempts = 3): array
     {
@@ -234,6 +257,8 @@ class UserRepository extends ServiceEntityRepository
 
     /**
      * Find unverified accounts older than X days
+     *
+     * @return list<User>
      */
     public function findUnverifiedAccounts(int $olderThanDays = 7): array
     {
@@ -252,6 +277,8 @@ class UserRepository extends ServiceEntityRepository
 
     /**
      * Get account security statistics
+     *
+     * @return array<string, int>
      */
     public function getAccountSecurityStats(): array
     {
@@ -327,6 +354,8 @@ class UserRepository extends ServiceEntityRepository
 
     /**
      * Find all active, non-banned users that have a face descriptor enrolled.
+     *
+     * @return list<User>
      */
     public function findAllWithFaceDescriptor(): array
     {

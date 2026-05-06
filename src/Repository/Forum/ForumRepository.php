@@ -4,6 +4,7 @@ namespace App\Repository\Forum;
 
 use App\Entity\Forum\Forum;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -45,10 +46,7 @@ class ForumRepository extends ServiceEntityRepository
         }
     }
 
-    /**
-     * @return Forum[]
-     */
-    public function findForIndex(?string $search, string $sort): array
+    public function createIndexQueryBuilder(?string $search, string $sort): QueryBuilder
     {
         $qb = $this->createQueryBuilder('f');
 
@@ -63,8 +61,6 @@ class ForumRepository extends ServiceEntityRepository
 
         return $qb
             ->orderBy($field, $direction)
-            ->addOrderBy('f.id', 'DESC')
-            ->getQuery()
-            ->getResult();
+            ->addOrderBy('f.id', 'DESC');
     }
 }

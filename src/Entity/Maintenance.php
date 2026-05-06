@@ -60,6 +60,11 @@ class Maintenance
         'Annulée'   => 'Annulée',
     ];
 
+    public function __construct()
+    {
+        $this->datePlanifiee = new \DateTime('today');
+    }
+
     // ════════════════════════════════════════════════════════
     // Propriétés
     // ════════════════════════════════════════════════════════
@@ -80,7 +85,7 @@ class Maintenance
         choices: ['Préventive', 'Corrective'],
         message: 'Type invalide.'
     )]
-    private ?string $type = null;
+    private string $type = '';
 
     /**
      * Catégorie : "Régulière" (périodique planifiée) ou "Imprévue" (urgence).
@@ -92,7 +97,7 @@ class Maintenance
         choices: ['Régulière', 'Imprévue'],
         message: 'Catégorie invalide.'
     )]
-    private ?string $categorie = null;
+    private string $categorie = '';
 
     /**
      * Description détaillée des travaux à effectuer ou effectués.
@@ -107,7 +112,7 @@ class Maintenance
         minMessage: 'La description doit contenir au moins {{ limit }} caractères.',
         maxMessage: 'La description ne peut pas dépasser {{ limit }} caractères.'
     )]
-    private ?string $description = null;
+    private string $description = '';
 
     /**
      * Date à laquelle la maintenance est planifiée.
@@ -121,7 +126,7 @@ class Maintenance
         value: 'today',
         message: 'La date planifiée doit être aujourd\'hui ou dans le futur.'
     )]
-    private ?\DateTimeInterface $datePlanifiee = null;
+    private \DateTimeInterface $datePlanifiee;
 
     /**
      * Date à laquelle la maintenance a réellement été effectuée (optionnel).
@@ -154,7 +159,7 @@ class Maintenance
     #[ORM\Column(type: Types::INTEGER)]
     #[Assert\NotBlank(message: 'Veuillez choisir un équipement.')]
     #[Assert\Positive(message: 'Équipement invalide.')]
-    private ?int $equipementId = null;
+    private int $equipementId = 0;
 
     /**
      * Identifiant de l'utilisateur qui a créé la maintenance.
@@ -256,17 +261,17 @@ class Maintenance
 
     public function getId(): int { return $this->id; }
 
-    public function getType(): ?string { return $this->type; }
-    public function setType(?string $type): static { $this->type = $type; return $this; }
+    public function getType(): string { return $this->type; }
+    public function setType(?string $type): static { $this->type = $type ?? ''; return $this; }
 
-    public function getCategorie(): ?string { return $this->categorie; }
-    public function setCategorie(?string $categorie): static { $this->categorie = $categorie; return $this; }
+    public function getCategorie(): string { return $this->categorie; }
+    public function setCategorie(?string $categorie): static { $this->categorie = $categorie ?? ''; return $this; }
 
-    public function getDescription(): ?string { return $this->description; }
-    public function setDescription(?string $description): static { $this->description = $description; return $this; }
+    public function getDescription(): string { return $this->description; }
+    public function setDescription(?string $description): static { $this->description = $description ?? ''; return $this; }
 
-    public function getDatePlanifiee(): ?\DateTimeInterface { return $this->datePlanifiee; }
-    public function setDatePlanifiee(?\DateTimeInterface $datePlanifiee): static { $this->datePlanifiee = $datePlanifiee; return $this; }
+    public function getDatePlanifiee(): \DateTimeInterface { return $this->datePlanifiee; }
+    public function setDatePlanifiee(?\DateTimeInterface $datePlanifiee): static { $this->datePlanifiee = $datePlanifiee ?? new \DateTime('today'); return $this; }
 
     public function getDateReelle(): ?\DateTimeInterface { return $this->dateReelle; }
     public function setDateReelle(?\DateTimeInterface $dateReelle): static { $this->dateReelle = $dateReelle; return $this; }
@@ -274,8 +279,8 @@ class Maintenance
     public function getStatut(): ?string { return $this->statut; }
     public function setStatut(?string $statut): static { $this->statut = $statut; return $this; }
 
-    public function getEquipementId(): ?int { return $this->equipementId; }
-    public function setEquipementId(?int $equipementId): static { $this->equipementId = $equipementId; return $this; }
+    public function getEquipementId(): int { return $this->equipementId; }
+    public function setEquipementId(?int $equipementId): static { $this->equipementId = $equipementId ?? 0; return $this; }
 
     public function getUserlog(): ?int { return $this->userlog; }
     public function setUserlog(?int $userlog): static { $this->userlog = $userlog; return $this; }

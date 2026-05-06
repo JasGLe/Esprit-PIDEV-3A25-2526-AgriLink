@@ -24,8 +24,8 @@ class Commandes
     #[ORM\Column(type: Types::INTEGER)]
     private int $quantite;
 
-    #[ORM\Column(name: 'prixTotal', type: Types::FLOAT)]
-    private float $prixTotal;
+    #[ORM\Column(name: 'prixTotal', type: Types::DECIMAL, precision: 12, scale: 3)]
+    private string $prixTotal = '0.000';
 
     #[ORM\Column(type: Types::STRING, length: 50)]
     private string $status;
@@ -60,8 +60,8 @@ class Commandes
     #[ORM\Column(type: Types::STRING, length: 40, nullable: true)]
     private ?string $promoCodeApplied = null;
 
-    #[ORM\Column(type: Types::FLOAT, nullable: true)]
-    private ?float $promoDiscountTotal = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3, nullable: true)]
+    private ?string $promoDiscountTotal = null;
 
     #[ORM\Column(name: 'factureSignaturePath', type: Types::STRING, length: 255, nullable: true)]
     private ?string $factureSignaturePath = null;
@@ -109,12 +109,12 @@ class Commandes
 
     public function getPrixTotal(): float
     {
-        return $this->prixTotal;
+        return (float) $this->prixTotal;
     }
 
     public function setPrixTotal(float $prixTotal): static
     {
-        $this->prixTotal = $prixTotal;
+        $this->prixTotal = number_format($prixTotal, 3, '.', '');
 
         return $this;
     }
@@ -253,12 +253,12 @@ class Commandes
 
     public function getPromoDiscountTotal(): ?float
     {
-        return $this->promoDiscountTotal;
+        return $this->promoDiscountTotal !== null ? (float) $this->promoDiscountTotal : null;
     }
 
     public function setPromoDiscountTotal(?float $promoDiscountTotal): static
     {
-        $this->promoDiscountTotal = $promoDiscountTotal;
+        $this->promoDiscountTotal = $promoDiscountTotal !== null ? number_format($promoDiscountTotal, 3, '.', '') : null;
 
         return $this;
     }

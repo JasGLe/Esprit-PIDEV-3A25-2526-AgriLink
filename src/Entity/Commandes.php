@@ -23,8 +23,8 @@ class Commandes
     #[ORM\Column(type: Types::INTEGER)]
     private int $quantite;
 
-    #[ORM\Column(type: Types::FLOAT)]
-    private float $prixTotal;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3, options: ['default' => '0.000'])]
+    private string $prixTotal = '0.000';
 
     #[ORM\Column(type: Types::STRING, length: 50)]
     private string $status;
@@ -99,12 +99,12 @@ class Commandes
 
     public function getPrixTotal(): float
     {
-        return $this->prixTotal;
+        return (float) $this->prixTotal;
     }
 
     public function setPrixTotal(float $prixTotal): static
     {
-        $this->prixTotal = $prixTotal;
+        $this->prixTotal = number_format($prixTotal, 3, '.', '');
 
         return $this;
     }

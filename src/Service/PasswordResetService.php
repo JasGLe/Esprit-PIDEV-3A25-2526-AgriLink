@@ -79,9 +79,13 @@ class PasswordResetService
             'appUrl' => $this->appUrl,
         ]);
 
+        $toEmail = $user->getEmail();
+        if ($toEmail === null || $toEmail === '') {
+            throw new \RuntimeException('User email is missing');
+        }
         $email = (new Email())
             ->from($this->senderName . ' <' . $this->senderEmail . '>')
-            ->to($user->getEmail())
+            ->to($toEmail)
             ->subject('Réinitialisation de votre mot de passe - AgriLink')
             ->html($htmlContent);
 
@@ -99,19 +103,14 @@ class PasswordResetService
         $cacheKey = self::CACHE_PREFIX . $tokenHash;
 
         try {
-            // Try to get the user ID from cache
-            $userId = $this->cache->get($cacheKey, function (ItemInterface $item) {
-                // If we reach here, the item doesn't exist
-                $item->expiresAfter(0); // Don't cache this
-                return null;
+            // If the token doesn't exist, return -1 (invalid).
+            $userId = $this->cache->get($cacheKey, static function (ItemInterface $item): int {
+                $item->expiresAfter(0);
+                return -1;
             });
 
-            if ($userId === null) {
-                return null;
-            }
-
             return $this->userRepository->find($userId);
-        } catch (\Exception $e) {
+        } catch (\Throwable) {
             return null;
         }
     }
@@ -125,15 +124,10 @@ class PasswordResetService
         $hashedPassword = $this->passwordHasher->hashPassword($user, $newPassword);
         $user->setPassword($hashedPassword);
         
-        // Reset failed login attempts if any
-        if (method_exists($user, 'setFailedLoginAttempts')) {
-            $user->setFailedLoginAttempts(0);
-        }
+        $user->setFailedLoginAttempts(0);
         
         // Clear any lock
-        if (method_exists($user, 'setLockedUntil')) {
-            $user->setLockedUntil(null);
-        }
+        $user->setLockedUntil(null);
 
         $this->entityManager->persist($user);
         $this->entityManager->flush();

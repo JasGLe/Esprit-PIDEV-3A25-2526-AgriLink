@@ -12,6 +12,8 @@ class FaceRecognitionService
 
     /**
      * Store face descriptor for a user
+     *
+     * @param list<float|int> $descriptor
      */
     public function storeFaceDescriptor(array $descriptor): string
     {
@@ -21,6 +23,8 @@ class FaceRecognitionService
     /**
      * Verify if a face matches the stored descriptor.
      * Returns true when the Euclidean distance is within the accepted threshold.
+     *
+     * @param array<int, float|int> $capturedDescriptor
      */
     public function verifyFace(string $storedDescriptorJson, array $capturedDescriptor): bool
     {
@@ -30,7 +34,12 @@ class FaceRecognitionService
                 return false;
             }
 
-            $distance = $this->euclideanDistance($storedDescriptor, $capturedDescriptor);
+            /** @var list<float|int> $storedList */
+            $storedList = array_values($storedDescriptor);
+            /** @var list<float|int> $capturedList */
+            $capturedList = array_values($capturedDescriptor);
+
+            $distance = $this->euclideanDistance($storedList, $capturedList);
             return $this->isWithinThreshold($distance);
         } catch (\Exception) {
             return false;
@@ -40,6 +49,9 @@ class FaceRecognitionService
     /**
      * Calculate Euclidean distance between two 128-float face descriptors.
      * Lower distance = more similar faces.
+     *
+     * @param list<float|int> $descriptor1
+     * @param list<float|int> $descriptor2
      */
     public function euclideanDistance(array $descriptor1, array $descriptor2): float
     {

@@ -16,9 +16,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_USER')]
 class DashboardController extends AbstractController
 {
-    public function __construct(
-        private readonly OpenWeatherMapService $openWeatherMapService,
-    ) {
+    public function __construct()
+    {
     }
 
     #[Route('/dashboard', name: 'app_dashboard')]

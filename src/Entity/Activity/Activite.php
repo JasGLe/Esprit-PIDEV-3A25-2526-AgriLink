@@ -55,7 +55,7 @@ class Activite
         message: 'Veuillez choisir un statut valide.'
     )]
     #[Assert\Length(max: 20)]
-    private string $statut;
+    private string $statut = 'PLANIFIEE';
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     #[Assert\PositiveOrZero(message: 'Le coût doit être positif ou zéro.')]
@@ -66,7 +66,7 @@ class Activite
     private ?string $coutEstime = null;
 
     #[ORM\Column(type: Types::INTEGER)]
-    private int $idAgriculteur;
+    private int $idAgriculteur = 0;
 
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private \DateTimeInterface $createdAt;
@@ -139,7 +139,7 @@ class Activite
 
     public function setStatut(string $statut): static
     {
-        $this->statut = $statut;
+        $this->statut = $statut ?? 'PLANIFIEE';
 
         return $this;
     }
@@ -163,7 +163,7 @@ class Activite
 
     public function setIdAgriculteur(int $idAgriculteur): static
     {
-        $this->idAgriculteur = $idAgriculteur;
+        $this->idAgriculteur = $idAgriculteur ?? 0;
 
         return $this;
     }

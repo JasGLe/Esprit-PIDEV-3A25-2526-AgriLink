@@ -35,7 +35,7 @@ final class FacebookPublisherService
         }
 
         $id = $produit->getId();
-        if ($id === null || $id < 1) {
+        if ($id < 1) {
             return;
         }
 

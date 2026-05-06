@@ -2,6 +2,9 @@
 
 namespace App\Repository\Marketplace;
 
+use App\Dto\Marketplace\CategoryRevenueDto;
+use App\Dto\Marketplace\SalesEvolutionPointDto;
+use App\Dto\Marketplace\TopSellingProductDto;
 use App\Entity\Marketplace\Commandes;
 use App\Entity\Marketplace\LigneCommande;
 use App\Entity\Marketplace\Produits;
@@ -161,8 +164,12 @@ class LigneCommandeRepository extends ServiceEntityRepository
     public function fetchSalesEvolutionLast30DaysForSeller(int $sellerUserId): array
     {
         $start = (new \DateTimeImmutable('today'))->modify('-29 days');
+        /** @var list<SalesEvolutionPointDto> $rows */
         $rows = $this->createQueryBuilder('lc')
-            ->select('c.dateCommande AS day_date', 'COALESCE(SUM(lc.prixTotal), 0) AS revenue')
+            ->select(sprintf(
+                'NEW %s(c.dateCommande, COALESCE(SUM(lc.prixTotal), 0))',
+                SalesEvolutionPointDto::class
+            ))
             ->innerJoin(Commandes::class, 'c', Join::WITH, 'c.id = lc.idCommande')
             ->andWhere('lc.idFournisseur = :sid')
             ->andWhere('c.status != :cancelled')
@@ -177,11 +184,11 @@ class LigneCommandeRepository extends ServiceEntityRepository
 
         $byDay = [];
         foreach ($rows as $row) {
-            if (!$row['day_date'] instanceof \DateTimeInterface) {
+            if (!$row->dayDate instanceof \DateTimeInterface) {
                 continue;
             }
-            $key = $row['day_date']->format('Y-m-d');
-            $byDay[$key] = (float) $row['revenue'];
+            $key = $row->dayDate->format('Y-m-d');
+            $byDay[$key] = $row->revenue;
         }
 
         $series = [];
@@ -202,8 +209,12 @@ class LigneCommandeRepository extends ServiceEntityRepository
      */
     public function fetchTopSellingProductsForSeller(int $sellerUserId, int $limit = 5): array
     {
+        /** @var list<TopSellingProductDto> $rows */
         $rows = $this->createQueryBuilder('lc')
-            ->select('lc.nomProduit AS product_name', 'SUM(lc.quantite) AS qty', 'SUM(lc.prixTotal) AS revenue')
+            ->select(sprintf(
+                'NEW %s(lc.nomProduit, SUM(lc.quantite), SUM(lc.prixTotal))',
+                TopSellingProductDto::class
+            ))
             ->innerJoin(Commandes::class, 'c', Join::WITH, 'c.id = lc.idCommande')
             ->andWhere('lc.idFournisseur = :sid')
             ->andWhere('c.status != :cancelled')
@@ -219,9 +230,9 @@ class LigneCommandeRepository extends ServiceEntityRepository
         $out = [];
         foreach ($rows as $row) {
             $out[] = [
-                'name' => (string) $row['product_name'],
-                'quantity' => (int) $row['qty'],
-                'revenue' => (float) $row['revenue'],
+                'name' => $row->productName,
+                'quantity' => $row->quantity,
+                'revenue' => $row->revenue,
             ];
         }
 
@@ -233,8 +244,12 @@ class LigneCommandeRepository extends ServiceEntityRepository
      */
     public function fetchSalesDistributionByCategoryForSeller(int $sellerUserId): array
     {
+        /** @var list<CategoryRevenueDto> $rows */
         $rows = $this->createQueryBuilder('lc')
-            ->select('p.categorie AS category', 'SUM(lc.prixTotal) AS revenue')
+            ->select(sprintf(
+                'NEW %s(p.categorie, SUM(lc.prixTotal))',
+                CategoryRevenueDto::class
+            ))
             ->innerJoin(Commandes::class, 'c', Join::WITH, 'c.id = lc.idCommande')
             ->leftJoin(Produits::class, 'p', Join::WITH, 'p.id = lc.idProduit')
             ->andWhere('lc.idFournisseur = :sid')
@@ -248,11 +263,10 @@ class LigneCommandeRepository extends ServiceEntityRepository
 
         $out = [];
         foreach ($rows as $row) {
+            $category = trim((string) ($row->category ?? ''));
             $out[] = [
-                'category' => trim((string) ($row['category'] ?? 'Non classé')) !== ''
-                    ? (string) $row['category']
-                    : 'Non classé',
-                'revenue' => (float) $row['revenue'],
+                'category' => $category !== '' ? $category : 'Non classé',
+                'revenue' => $row->revenue,
             ];
         }
 

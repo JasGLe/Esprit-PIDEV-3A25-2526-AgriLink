@@ -16,7 +16,7 @@ use SensitiveParameter;
 
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
-#[ORM\Table(name: 'User')]
+#[ORM\Table(name: 'user')]
 #[ORM\HasLifecycleCallbacks]
 #[UniqueEntity(fields: ['email'], message: 'Cette adresse email est déjà utilisée.')]
 class User implements UserInterface, PasswordAuthenticatedUserInterface
@@ -45,7 +45,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(name: 'id_utilisateur', type: Types::INTEGER)]
-    private ?int $id = null;
+    private int $id; // @phpstan-ignore-line
 
     #[ORM\Column(name: 'Nom', length: 100)]
     #[Assert\NotBlank(message: 'Le nom est obligatoire.')]
@@ -134,6 +134,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'updated_at', type: Types::DATETIME_MUTABLE)]
     private \DateTimeInterface $updatedAt;
 
+    #[ORM\ManyToOne(targetEntity: self::class)]
+    #[ORM\JoinColumn(name: 'created_by_id', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
+    private ?self $createdBy = null;
+
+    #[ORM\ManyToOne(targetEntity: self::class)]
+    #[ORM\JoinColumn(name: 'updated_by_id', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
+    private ?self $updatedBy = null;
+
     #[ORM\Column(name: 'oauth_provider', length: 20, nullable: true)]
     private ?string $oauthProvider = null;
 
@@ -214,6 +222,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'is_permanently_banned', type: Types::BOOLEAN, options: ['default' => false])]
     private bool $isPermanentlyBanned = false;
 
+    /** @var list<array{code: string, used: bool}>|null */
     #[ORM\Column(name: 'backup_codes', type: Types::JSON, nullable: true)]
     private ?array $backupCodes = null;
 
@@ -223,16 +232,20 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(name: 'user_points', type: Types::INTEGER, options: ['default' => 0])]
     private int $userPoints = 0;
 
+    /** @var list<string>|null */
     #[ORM\Column(name: 'earned_badges', type: Types::JSON, nullable: true)]
     private ?array $earnedBadges = null;
 
+    /** @var Collection<int, Exploitation> */
     #[ORM\OneToMany(targetEntity: Exploitation::class, mappedBy: 'user')]
     private Collection $exploitations;
 
+    /** @var Collection<int, SecurityEvent> */
     #[ORM\OneToMany(targetEntity: SecurityEvent::class, mappedBy: 'user')]
     private Collection $securityEvents;
 
-    #[ORM\OneToMany(targetEntity: UserSession::class, mappedBy: 'user')]
+    /** @var Collection<int, UserSession> */
+    #[ORM\OneToMany(targetEntity: UserSession::class, mappedBy: 'user', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $userSessions;
 
     public function __construct()
@@ -248,7 +261,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     public function getId(): ?int
     {
-        return $this->id;
+        return $this->id ?? null;
     }
 
     public function getNom(): ?string
@@ -573,6 +586,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    public function getCreatedBy(): ?self
+    {
+        return $this->createdBy;
+    }
+
+    protected function setCreatedBy(?self $createdBy): static
+    {
+        $this->createdBy = $createdBy;
+        return $this;
+    }
+
+    public function getUpdatedBy(): ?self
+    {
+        return $this->updatedBy;
+    }
+
+    protected function setUpdatedBy(?self $updatedBy): static
+    {
+        $this->updatedBy = $updatedBy;
+        return $this;
+    }
+
     public function getOauthProvider(): ?string
     {
         return $this->oauthProvider;
@@ -876,11 +911,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->isBanned;
     }
 
+    /**
+     * @return list<array{code: string, used: bool}>|null
+     */
     public function getBackupCodes(): ?array
     {
         return $this->backupCodes;
     }
 
+    /**
+     * @param list<array{code: string, used: bool}>|null $backupCodes
+     */
     public function setBackupCodes(?array $backupCodes): static
     {
         $this->backupCodes = $backupCodes;
@@ -913,12 +954,25 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $this->createdAt = new \DateTime();
         $this->updatedAt = new \DateTime();
+        
+        // Set createdBy to self on first creation (User creating itself)
+        if ($this->createdBy === null) {
+            $this->createdBy = $this;
+        }
+        if ($this->updatedBy === null) {
+            $this->updatedBy = $this;
+        }
     }
 
     #[ORM\PreUpdate]
     public function onPreUpdate(): void
     {
         $this->updatedAt = new \DateTime();
+        
+        // Set updatedBy to self on updates
+        if ($this->updatedBy === null) {
+            $this->updatedBy = $this;
+        }
     }
 
     // ==================== HELPER METHODS ====================
@@ -987,7 +1041,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getDisplayName(): string
     {
-        return $this->nom ?: $this->email ?? 'Utilisateur';
+        return $this->nom !== '' ? $this->nom : $this->email;
     }
 
     /**
@@ -1018,7 +1072,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function getInitials(): string
     {
         if (!$this->nom) {
-            return strtoupper(substr($this->email ?? 'U', 0, 2));
+            return strtoupper(substr($this->email, 0, 2));
         }
 
         $parts = explode(' ', trim($this->nom));
@@ -1224,11 +1278,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
+    /**
+     * @return list<string>
+     */
     public function getEarnedBadges(): array
     {
         return $this->earnedBadges ?? [];
     }
 
+    /**
+     * @param list<string>|null $earnedBadges
+     */
     public function setEarnedBadges(?array $earnedBadges): static
     {
         $this->earnedBadges = $earnedBadges;

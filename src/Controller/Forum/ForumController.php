@@ -19,6 +19,7 @@ use App\Service\ForumAiAssistantException;
 use App\Service\ForumAiAssistantService;
 use App\Service\PdfService;
 use Doctrine\ORM\EntityManagerInterface;
+use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Form\FormFactoryInterface;
 use Symfony\Component\Form\FormError;
@@ -70,7 +71,12 @@ class ForumController extends AbstractController
     }
 
     #[Route('/', name: 'forum_index', methods: ['GET', 'POST'])]
-    public function index(Request $request, ForumRepository $repo, FormFactoryInterface $formFactory): Response
+    public function index(
+        Request $request,
+        ForumRepository $repo,
+        FormFactoryInterface $formFactory,
+        PaginatorInterface $paginator
+    ): Response
     {
         $search = trim((string) $request->query->get('q', ''));
         $sort = (string) $request->query->get('sort', 'recent');
@@ -129,8 +135,14 @@ class ForumController extends AbstractController
             }
         }
 
+        $forums = $paginator->paginate(
+            $repo->createIndexQueryBuilder($search, $sort),
+            $request->query->getInt('page', 1),
+            12
+        );
+
         return $this->render('Forum/index.html.twig', [
-            'forums' => $repo->findForIndex($search, $sort),
+            'forums' => $forums,
             'filters' => [
                 'q' => $search,
                 'sort' => $sort,
@@ -153,8 +165,6 @@ class ForumController extends AbstractController
             if ($user instanceof User) {
                 $forum->setUserId($user->getId());
             }
-
-            $forum->setDateCreation(new \DateTimeImmutable());
 
             try {
                 $em->persist($forum);
@@ -295,8 +305,6 @@ class ForumController extends AbstractController
         $message->setForum($forum);
         $message->setContenu($content);
         $message->setAudioPath($audioPath);
-        $message->setDateEnvoi(new \DateTimeImmutable());
-
         $user = $this->getUser();
         if ($user instanceof User) {
             $message->setUser($user);

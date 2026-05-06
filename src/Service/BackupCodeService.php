@@ -15,6 +15,9 @@ class BackupCodeService
     ) {
     }
 
+    /**
+     * @return list<string>
+     */
     public function generate(User $user): array
     {
         $plainCodes = [];

@@ -358,10 +358,10 @@ class MarketplacePublicController extends AbstractController
         $cat    = strtolower($request->query->getString('cat', 'all'));
         $region = trim($request->query->getString('region', ''));
         $q      = trim($request->query->getString('q', ''));
-        $sort   = $request->query->getString('sort', 'price_asc');
+        $sort   = $request->query->getString('sort', 'recent');
 
-        if (!\in_array($sort, ['price_asc', 'price_desc'], true)) {
-            $sort = 'price_asc';
+        if (!\in_array($sort, ['recent', 'price_asc', 'price_desc'], true)) {
+            $sort = 'recent';
         }
         $allowedCat = ['all', 'legume', 'fruit', 'graines', 'equipement', 'location'];
         if (!\in_array($cat, $allowedCat, true)) {

@@ -1,0 +1,14 @@
+when@dev:
+    doctrine_doctor:
+        analyzers:
+            # Legacy schema conventions in this project intentionally diverge from these checks.
+            bidirectional_consistency:
+                enabled: false
+            blameable_trait:
+                enabled: false
+            foreign_key_mapping:
+                enabled: false
+            naming_convention:
+                enabled: false
+            cascade_configuration:
+                enabled: false

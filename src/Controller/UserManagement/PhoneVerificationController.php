@@ -5,7 +5,6 @@ namespace App\Controller\UserManagement;
 use App\Entity\UserManagement\User;
 use App\Service\PhoneVerificationService;
 use App\Service\TwilioSmsService;
-use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,7 +16,6 @@ class PhoneVerificationController extends AbstractController
     public function __construct(
         private PhoneVerificationService $phoneVerificationService,
         private TwilioSmsService $twilioService,
-        private EntityManagerInterface $entityManager
     ) {
     }
 
@@ -40,7 +38,7 @@ class PhoneVerificationController extends AbstractController
         }
 
         // Get source (registration or profile security)
-        $source = $request->query->get('source', 'registration');
+        $source = $request->query->getString('source', 'registration');
 
         return $this->render('user_management/verify_phone.html.twig', [
             'source' => $source,
@@ -61,10 +59,10 @@ class PhoneVerificationController extends AbstractController
                 return $this->redirectToRoute('app_login');
             }
 
-            $phone = $request->request->get('phone');
+            $phone = trim($request->request->getString('phone', ''));
 
             // Validate phone number format
-            if (empty($phone)) {
+            if ($phone === '') {
                 return $this->json([
                     'success' => false,
                     'message' => 'Le numéro de téléphone est requis.',
@@ -73,6 +71,12 @@ class PhoneVerificationController extends AbstractController
 
             // Format and validate phone number (Tunisia)
             $formattedPhone = $this->twilioService->formatPhoneNumber($phone);
+            if ($formattedPhone === null || $formattedPhone === '') {
+                return $this->json([
+                    'success' => false,
+                    'message' => 'Format de numéro de téléphone invalide.',
+                ], Response::HTTP_BAD_REQUEST);
+            }
 
             if (!$this->twilioService->isValidPhoneNumber($formattedPhone)) {
                 return $this->json([
@@ -98,7 +102,7 @@ class PhoneVerificationController extends AbstractController
             $user->setTelephone($formattedPhone);
 
             // Generate new OTP code
-            $code = $this->phoneVerificationService->generateVerificationCode($user);
+            $this->phoneVerificationService->generateVerificationCode($user);
 
             // Send SMS
             $smsSent = $this->phoneVerificationService->sendVerificationSms($user);
@@ -142,10 +146,10 @@ class PhoneVerificationController extends AbstractController
                 return $this->redirectToRoute('app_login');
             }
 
-            $code = $request->request->get('code');
+            $code = trim($request->request->getString('code', ''));
 
             // Validate code input
-            if (empty($code)) {
+            if ($code === '') {
                 return $this->json([
                     'success' => false,
                     'message' => 'Le code de vérification est requis.',

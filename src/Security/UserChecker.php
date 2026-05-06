@@ -27,6 +27,11 @@ class UserChecker implements UserCheckerInterface
         // Check if account is locked
         if ($user->isLockedOut()) {
             $lockedUntil = $user->getLockedUntil();
+            if ($lockedUntil === null) {
+                throw new CustomUserMessageAccountStatusException(
+                    'Votre compte est temporairement verrouillé suite à plusieurs tentatives de connexion échouées.'
+                );
+            }
             $remainingMinutes = ceil(($lockedUntil->getTimestamp() - time()) / 60);
             
             throw new CustomUserMessageAccountStatusException(

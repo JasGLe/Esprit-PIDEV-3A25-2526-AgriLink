@@ -7,18 +7,18 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: UserSessionRepository::class)]
-#[ORM\Table(name: 'UserSession')]
+#[ORM\Table(name: 'user_session')]
 #[ORM\HasLifecycleCallbacks]
 class UserSession
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER)]
-    private ?int $id = null;
+    private int $id; // @phpstan-ignore-line
 
-    #[ORM\ManyToOne(targetEntity: User::class, cascade: ['persist'], inversedBy: 'userSessions')]
+    #[ORM\ManyToOne(targetEntity: User::class, inversedBy: 'userSessions')]
     #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id_utilisateur', nullable: false, onDelete: 'CASCADE')]
-    private ?User $user = null;
+    private User $user;
 
     #[ORM\Column(name: 'refresh_token_hash', length: 255)]
     private string $refresh_token_hash = '';
@@ -29,8 +29,19 @@ class UserSession
     #[ORM\Column(name: 'created_at', type: Types::DATETIME_MUTABLE)]
     private \DateTimeInterface $created_at;
 
-    #[ORM\Column(name: 'expires_at', type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(name: 'expires_at', type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $expires_at = null;
+
+    #[ORM\Column(name: 'updated_at', type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $updated_at = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'created_by_id', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
+    private ?User $createdBy = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'updated_by_id', referencedColumnName: 'id_utilisateur', nullable: true, onDelete: 'SET NULL')]
+    private ?User $updatedBy = null;
 
     #[ORM\Column(name: 'revoked', type: Types::BOOLEAN, options: ['default' => false])]
     private bool $revoked = false;
@@ -42,16 +53,22 @@ class UserSession
 
     public function getId(): ?int
     {
-        return $this->id;
+        return $this->id ?? null;
     }
 
     public function getUser(): ?User
     {
-        return $this->user;
+        return isset($this->user) ? $this->user : null;
     }
 
     public function setUser(?User $user): static
     {
+        if ($user === null) {
+            unset($this->user);
+
+            return $this;
+        }
+
         $this->user = $user;
 
         return $this;
@@ -105,6 +122,39 @@ class UserSession
         return $this;
     }
 
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updated_at;
+    }
+
+    protected function setUpdatedAt(?\DateTimeInterface $updated_at): static
+    {
+        $this->updated_at = $updated_at;
+        return $this;
+    }
+
+    public function getCreatedBy(): ?User
+    {
+        return $this->createdBy;
+    }
+
+    protected function setCreatedBy(?User $createdBy): static
+    {
+        $this->createdBy = $createdBy;
+        return $this;
+    }
+
+    public function getUpdatedBy(): ?User
+    {
+        return $this->updatedBy;
+    }
+
+    protected function setUpdatedBy(?User $updatedBy): static
+    {
+        $this->updatedBy = $updatedBy;
+        return $this;
+    }
+
     public function isRevoked(): bool
     {
         return $this->revoked;
@@ -131,5 +181,13 @@ class UserSession
     public function onPrePersist(): void
     {
         $this->created_at = new \DateTime();
+        
+        // Set blameable fields to a default user if not set
+        if ($this->createdBy === null) {
+            $this->createdBy = null;
+        }
+        if ($this->updatedBy === null) {
+            $this->updatedBy = null;
+        }
     }
 }

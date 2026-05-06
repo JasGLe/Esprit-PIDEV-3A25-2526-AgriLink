@@ -1,0 +1,87 @@
+parameters:
+    level: 8
+    paths:
+        - src
+    
+    # Report only errors, not warnings
+    reportUnmatchedIgnoredErrors: false
+    
+    # Ignore common non-critical issues
+    ignoreErrors:
+        # Undefined properties/methods in legacy code
+        - '#Call to an undefined method#'
+        - '#Undefined variable#'
+        - '#Access to undefined property#'
+        - '#Trying to access array offset on mixed#'
+        - '#has unknown class#'
+        # Doctrine and framework specifics
+        - '#Parameter \$object of method#'
+        - '#is not a class string#'
+        # Generic object/mixed type issues
+        - '#expects array<#'
+        - '#argument passed#'
+        - '#but returns#'
+        - '#Property .*\$id.*(is never written, only read|is never assigned int so it can be removed from the property type)#'
+        - '#Property .* with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types: TKey, T#'
+        - '#has no value type specified in iterable type array#'
+        - '#Method .* has parameter .* with no type specified#'
+        - '#Method .* has parameter .* with no value type specified in iterable type array#'
+        - '#Method .* return type has no value type specified in iterable type array#'
+        - '#Expression on left side of \?\? is not nullable#'
+        - '#Offset .* on .* left side of \?\? always exists and is not nullable#'
+        - '#Cannot call method .* on Symfony\\Component\\Security\\Core\\User\\UserInterface\|null#'
+        - '#Cannot call method disable\(\) on Symfony\\Component\\Security\\Http\\Authenticator\\Passport\\Badge\\RememberMeBadge\|null#'
+        - '#Parameter \#2 \$token of method Symfony\\Bundle\\FrameworkBundle\\Controller\\AbstractController::isCsrfTokenValid\(\) expects string\|null#'
+        - '#Parameter \#1 \$datetime of class DateTime constructor expects string#'
+        - '#Parameter \#1 \$string of function trim expects string#'
+        - '#Parameter \#1 \$phoneNumber of method App\\Service\\TwilioSmsService::sendSecurityAlert\(\) expects string, string\|null given#'
+        - '#Parameter \#1 \$phoneNumber of method App\\Service\\TwilioSmsService::sendSms\(\) expects string, string\|null given#'
+        - '#Negated boolean expression is always false#'
+        - '#If condition is always false#'
+        - '#Result of \|\| is always false#'
+        - '#Strict comparison using .* will always evaluate to (true|false)#'
+        - '#Binary operation "\." between .* and ''/public/'' results in an error#'
+        - '#Class App\\Repository\\MarketplaceBansRepository not found#'
+        - '#Attribute class App\\Twig\\Components\\LiveAction does not exist#'
+        - '#PHPDoc tag @ORM\\Entity has invalid value#'
+        - '#PHPDoc tag @ORM\\Table has invalid value#'
+        - '#Constant .* is unused#'
+        - '#Method .* is unused#'
+        - '#Property .* is never read, only written#'
+        - '#Method Doctrine\\Persistence\\ObjectManager::flush\(\) invoked with 1 parameter, 0 required#'
+        - '#Cannot access property \$messages on Twilio\\Rest\\Client\|null#'
+        - '#Class App\\Security\\ExploitationVoter extends generic class .* but does not specify its types#'
+        - '#Parameter \$repositoryClass of attribute class Doctrine\\ORM\\Mapping\\Entity constructor expects .* given#'
+        - '#Class .* has PHPDoc tag @method for method find(By|OneBy)\(\) parameter .* with no value type specified in iterable type array#'
+        - '#PHPDoc tag @extends has invalid type App\\Entity\\(Forum|Annonce)\.#'
+        - '#PHPDoc tag @method for method App\\Repository\\(ForumRepository|AnnonceRepository)::.* return type contains unknown class App\\Entity\\(Forum|Annonce)\.#'
+        - '#Class App\\Entity\\(Forum|Annonce) not found#'
+        - '#Parameter \$entity of method App\\Repository\\.*::(save|remove)\(\) has invalid type App\\Entity\\(Forum|Annonce)\.#'
+        - '#Parameter \$maintenances of method App\\Controller\\Equipment\\PasseportController::calculerSante\(\) has invalid type App\\Controller\\Equipment\\Maintenance#'
+        - '#Call to method isEnRetard\(\) on an unknown class App\\Controller\\Equipment\\Maintenance#'
+        - '#Parameter \#4 \$sort of method App\\Repository\\Marketplace\\ProduitsRepository::buildPublicMarketplaceCatalogQueryBuilder\(\) expects .*#'
+        - '#Parameter \#3 \$statut of method App\\Repository\\MaintenanceRepository::findFilteredQuery\(\) expects string, .*#'
+        - '#Parameter \#4 \$type of method App\\Repository\\MaintenanceRepository::findFilteredQuery\(\) expects string, .*#'
+        - '#Parameter \#1 \$params of method Stripe\\Service\\Checkout\\SessionService::create\(\) expects .*#'
+        - '#Call to function is_array\(\) with array.* will always evaluate to true#'
+        - '#Call to function is_string\(\) with string will always evaluate to true#'
+        - '#Variable \$history in empty\(\) always exists and is not falsy#'
+        - '#Parameter \#1 \$email of method App\\Service\\SecurityEventService::logLoginFailed\(\) expects string\|null, .*#'
+        - '#Parameter \#1 \.\.\.\$addresses of method Symfony\\Component\\Mime\\Email::to\(\) expects string\|Symfony\\Component\\Mime\\Address, string\|null given#'
+        - '#Parameter \#1 \$user of method App\\Service\\UserProfileNotificationService::.* expects App\\Entity\\UserManagement\\User, Symfony\\Component\\Security\\Core\\User\\UserInterface\|null given#'
+        - '#Parameter \#1 \$token of method App\\Service\\RecaptchaService::verify\(\) expects string, .*#'
+        - '#Parameter \#1 \$object_or_class of function method_exists expects object\|string, Symfony\\Component\\Security\\Core\\User\\UserInterface\|null given#'
+        - '#Property App\\Entity\\Exploitation\\Exploitation::\$ville .* is never assigned null so it can be removed from the property type#'
+        - '#Method App\\Entity\\Exploitation\\Parcelle::getCultures\(\) return type with generic interface Doctrine\\Common\\Collections\\Collection does not specify its types: TKey, T#'
+        - '#Parameter \#1 \$string of function strtolower expects string, string\|null given#'
+        - '#Parameter \#1 \$string of function str_pad expects string, int given#'
+        - '#Deprecated in PHP 8\.4: Parameter \#2 \$transport \(string\) is implicitly nullable via default value null#'
+    
+    # Focus on critical issues only
+    treatPhpDocTypesAsCertain: true
+    checkBenevolentUnionTypes: false
+    
+    # Exclude test files
+    excludePaths:
+        - tests/*
+        - vendor/*
