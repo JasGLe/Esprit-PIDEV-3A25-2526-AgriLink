@@ -24,10 +24,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * - L'accès est contrôlé dans MaintenanceController via denyAccessUnlessOwner()
  *   qui compare le userlog de l'équipement associé avec l'utilisateur connecté.
  *
- * @ORM\Entity(repositoryClass: \App\Repository\MaintenanceRepository::class)
- * @ORM\Table(name: "maintenance")
- * @ORM\HasLifecycleCallbacks
- */
+ */ // Fix PHPStan — suppression des annotations PHPDoc @ORM redondantes avec les attributs PHP 8
 #[ORM\Entity(repositoryClass: \App\Repository\MaintenanceRepository::class)]
 #[ORM\Table(name: 'maintenance')]
 #[ORM\HasLifecycleCallbacks]
@@ -69,7 +66,10 @@ class Maintenance
     // Propriétés
     // ════════════════════════════════════════════════════════
 
-    /** Identifiant primaire auto-généré. */
+    /**
+     * Identifiant primaire auto-généré.
+     * @phpstan-ignore property.onlyRead (Fix PHPStan #66 : Doctrine écrit $id via reflection lors de la persistance, jamais via setter PHP)
+     */
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER)]
@@ -208,6 +208,21 @@ class Maintenance
     private ?string $technicien = null;
 
     // ════════════════════════════════════════════════════════
+    // Constructeur
+    // ════════════════════════════════════════════════════════
+
+    /**
+     * Initialise datePlanifiee à aujourd'hui pour les nouveaux objets créés via formulaire.
+     * Doctrine bypasse ce constructeur lors de l'hydration depuis la base (doctrine/instantiator),
+     * donc il n'interfère pas avec les entités chargées depuis la DB.
+     */
+    public function __construct()
+    {
+        // Doctrine Doctor fix — datePlanifiee non-nullable, initialisée à today par défaut
+        $this->datePlanifiee = new \DateTime('today');
+    }
+
+    // ════════════════════════════════════════════════════════
     // Lifecycle callbacks
     // ════════════════════════════════════════════════════════
 
@@ -251,8 +266,7 @@ class Maintenance
         if ($this->statut === 'Terminée' || $this->statut === 'Annulée') {
             return false;
         }
-        return $this->datePlanifiee !== null
-            && $this->datePlanifiee < new \DateTime('today');
+        return $this->datePlanifiee < new \DateTime('today'); // Fix PHPStan — $datePlanifiee est non-nullable, vérification null redondante supprimée
     }
 
     // ════════════════════════════════════════════════════════
@@ -286,7 +300,8 @@ class Maintenance
     public function setUserlog(?int $userlog): static { $this->userlog = $userlog; return $this; }
 
     public function getDateCreation(): ?\DateTimeInterface { return $this->dateCreation; }
-    public function setDateCreation(?\DateTimeInterface $dateCreation): static { $this->dateCreation = $dateCreation; return $this; }
+    // protected — dateCreation gérée par onPrePersist(), pas de setter public (Doctrine Doctor fix)
+    protected function setDateCreation(?\DateTimeInterface $dateCreation): static { $this->dateCreation = $dateCreation; return $this; }
 
     public function getDeclencheur(): ?string { return $this->declencheur; }
     public function setDeclencheur(?string $declencheur): static { $this->declencheur = $declencheur; return $this; }

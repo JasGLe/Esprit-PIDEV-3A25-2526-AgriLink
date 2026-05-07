@@ -48,7 +48,9 @@ class StatistiquesController extends AbstractController
         EquipementRepository  $equipRepo,
         MaintenanceRepository $mainRepo
     ): Response {
-        $userId        = $this->getUser()->getId();
+        /** @var \App\Entity\UserManagement\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        $user          = $this->getUser();
+        $userId        = $user->getId();
         $equipements   = $equipRepo->findBy(['userlog' => $userId]);
         $equipementIds = array_map(fn($e) => $e->getId(), $equipements);
 
@@ -79,7 +81,9 @@ class StatistiquesController extends AbstractController
         EquipementRepository  $equipRepo,
         MaintenanceRepository $mainRepo
     ): Response {
-        $userId        = $this->getUser()->getId();
+        /** @var \App\Entity\UserManagement\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
+        $user          = $this->getUser();
+        $userId        = $user->getId();
         $equipements   = $equipRepo->findBy(['userlog' => $userId]);
         $equipementIds = array_map(fn($e) => $e->getId(), $equipements);
 

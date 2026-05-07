@@ -23,10 +23,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  * - Un équipement peut avoir plusieurs maintenances (relation via equipementId dans Maintenance).
  * - L'exploitationId est une clé étrangère vers l'entité exploitation (non mappée en ORM ici).
  *
- * @ORM\Entity(repositoryClass: \App\Repository\EquipementRepository::class)
- * @ORM\Table(name: "equipement")
- * @ORM\HasLifecycleCallbacks
- */
+ */ // Fix PHPStan — suppression des annotations PHPDoc @ORM redondantes avec les attributs PHP 8
 #[ORM\Entity(repositoryClass: \App\Repository\EquipementRepository::class)]
 #[ORM\Table(name: 'equipement')]
 #[ORM\HasLifecycleCallbacks]
@@ -377,6 +374,7 @@ class Equipement
         return $this->nom;
     }
 
+    // Paramètre ?string conservé pour compatibilité Symfony forms (null coercé en '')
     public function setNom(?string $nom): static
     {
         $this->nom = $nom ?? '';
@@ -388,6 +386,7 @@ class Equipement
         return $this->type;
     }
 
+    // Paramètre ?string conservé pour compatibilité Symfony forms (null coercé en '')
     public function setType(?string $type): static
     {
         $this->type = $type ?? '';
@@ -399,6 +398,7 @@ class Equipement
         return $this->categorie;
     }
 
+    // Paramètre ?string conservé pour compatibilité Symfony forms (null coercé en '')
     public function setCategorie(?string $categorie): static
     {
         $this->categorie = $categorie ?? '';
@@ -498,7 +498,8 @@ class Equipement
         return $this->dateCreation;
     }
 
-    public function setDateCreation(?\DateTimeInterface $dateCreation): static
+    // protected — dateCreation gérée par onPrePersist(), pas de setter public (Doctrine Doctor fix)
+    protected function setDateCreation(?\DateTimeInterface $dateCreation): static
     {
         $this->dateCreation = $dateCreation;
         return $this;
@@ -509,7 +510,8 @@ class Equipement
         return $this->dateModification;
     }
 
-    public function setDateModification(?\DateTimeInterface $dateModification): static
+    // protected — dateModification gérée par onPreUpdate(), pas de setter public (Doctrine Doctor fix)
+    protected function setDateModification(?\DateTimeInterface $dateModification): static
     {
         $this->dateModification = $dateModification;
         return $this;
@@ -620,7 +622,7 @@ class Equipement
      */
     public function genererCodePasseport(): string
     {
-        return 'EQ-' . date('Y') . '-' . str_pad($this->id, 4, '0', STR_PAD_LEFT);
+        return 'EQ-' . date('Y') . '-' . str_pad((string) $this->id, 4, '0', STR_PAD_LEFT); // Fix PHPStan — str_pad attend string, $id est int
     }
 
     public function getLatitude(): ?float { return $this->latitude; }
