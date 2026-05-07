@@ -1009,6 +1009,12 @@
         {% endfor %}
     </div>
 
+    {% if forums is defined and forums.getPageCount() > 1 %}
+        <div class="d-flex justify-content-center mt-4">
+            {{ knp_pagination_render(forums) }}
+        </div>
+    {% endif %}
+
     <div
         id="forum-ai-widget"
         class="forum-ai-widget"

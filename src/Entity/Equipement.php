@@ -90,7 +90,6 @@ class Equipement
         pattern: '/^[\p{L}0-9 \-_]+$/u',
         message: 'Le nom contient des caractères non autorisés.'
     )]
-    // string non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
     private string $nom = '';
 
     /**
@@ -99,7 +98,6 @@ class Equipement
      */
     #[ORM\Column(type: Types::STRING, length: 50)]
     #[Assert\NotBlank(message: 'Le type est obligatoire.')]
-    // string non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
     private string $type = '';
 
     /**
@@ -112,7 +110,6 @@ class Equipement
         choices: ['Véhicule Motorisé', 'Autre Équipement'],
         message: 'Catégorie invalide.'
     )]
-    // string non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
     private string $categorie = '';
 
     /** Marque du fabricant (optionnel) — utilisée dans le diagnostic IA. */
@@ -372,7 +369,6 @@ class Equipement
         return $this->id;
     }
 
-    // Retour string non-nullable — aligné sur la propriété (Doctrine Doctor fix)
     public function getNom(): string
     {
         return $this->nom;
@@ -385,7 +381,6 @@ class Equipement
         return $this;
     }
 
-    // Retour string non-nullable — aligné sur la propriété (Doctrine Doctor fix)
     public function getType(): string
     {
         return $this->type;
@@ -398,7 +393,6 @@ class Equipement
         return $this;
     }
 
-    // Retour string non-nullable — aligné sur la propriété (Doctrine Doctor fix)
     public function getCategorie(): string
     {
         return $this->categorie;

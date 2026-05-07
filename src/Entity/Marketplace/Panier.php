@@ -27,8 +27,8 @@ class Panier
     #[ORM\Column(type: Types::INTEGER)]
     private int $quantite;
 
-    #[ORM\Column(name: 'prixTotal', type: Types::FLOAT, nullable: true)]
-    private ?float $prixTotal = null;
+    #[ORM\Column(name: 'prixTotal', type: Types::DECIMAL, precision: 12, scale: 3, nullable: true)]
+    private ?string $prixTotal = null;
 
     #[ORM\Column(name: 'dateAjout', type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $dateAjout = null;
@@ -88,12 +88,12 @@ class Panier
 
     public function getPrixTotal(): ?float
     {
-        return $this->prixTotal;
+        return $this->prixTotal !== null ? (float) $this->prixTotal : null;
     }
 
     public function setPrixTotal(?float $prixTotal): static
     {
-        $this->prixTotal = $prixTotal;
+        $this->prixTotal = $prixTotal !== null ? number_format($prixTotal, 3, '.', '') : null;
 
         return $this;
     }

@@ -2,6 +2,7 @@
 
 namespace App\Entity\Activity;
 
+use App\Entity\Trait\BlameableTrait;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Validator\Constraints as Assert;
@@ -9,9 +10,11 @@ use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 #[ORM\Entity(repositoryClass: \App\Repository\Activity\ActiviteRepository::class)]
 #[ORM\Table(name: 'activite')]
+#[ORM\HasLifecycleCallbacks]
 #[Assert\Callback('validateDates')]
 class Activite
 {
+    use BlameableTrait;
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column(type: Types::INTEGER)]
@@ -52,7 +55,7 @@ class Activite
         message: 'Veuillez choisir un statut valide.'
     )]
     #[Assert\Length(max: 20)]
-    private ?string $statut = null;
+    private string $statut = 'PLANIFIEE';
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
     #[Assert\PositiveOrZero(message: 'Le coût doit être positif ou zéro.')]
@@ -63,7 +66,13 @@ class Activite
     private ?string $coutEstime = null;
 
     #[ORM\Column(type: Types::INTEGER)]
-    private ?int $idAgriculteur = null;
+    private int $idAgriculteur = 0;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $createdAt;
+
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
+    private ?\DateTimeInterface $updatedAt = null;
 
     public function getId(): int
     {
@@ -104,7 +113,7 @@ class Activite
         return $this->dateDebut;
     }
 
-    public function setDateDebut(?\DateTimeInterface $dateDebut): static
+    protected function setDateDebut(?\DateTimeInterface $dateDebut): static
     {
         $this->dateDebut = $dateDebut;
 
@@ -116,21 +125,21 @@ class Activite
         return $this->dateFin;
     }
 
-    public function setDateFin(?\DateTimeInterface $dateFin): static
+    protected function setDateFin(?\DateTimeInterface $dateFin): static
     {
         $this->dateFin = $dateFin;
 
         return $this;
     }
 
-    public function getStatut(): ?string
+    public function getStatut(): string
     {
         return $this->statut;
     }
 
-    public function setStatut(?string $statut): static
+    public function setStatut(string $statut): static
     {
-        $this->statut = $statut;
+        $this->statut = $statut ?? 'PLANIFIEE';
 
         return $this;
     }
@@ -147,21 +156,45 @@ class Activite
         return $this;
     }
 
-    public function getIdAgriculteur(): ?int
+    public function getIdAgriculteur(): int
     {
         return $this->idAgriculteur;
     }
 
-    public function setIdAgriculteur(?int $idAgriculteur): static
+    public function setIdAgriculteur(int $idAgriculteur): static
     {
-        $this->idAgriculteur = $idAgriculteur;
+        $this->idAgriculteur = $idAgriculteur ?? 0;
 
         return $this;
     }
 
+    public function getCreatedAt(): \DateTimeInterface
+    {
+        return $this->createdAt;
+    }
+
+    public function getUpdatedAt(): ?\DateTimeInterface
+    {
+        return $this->updatedAt;
+    }
+
+    #[ORM\PrePersist]
+    public function onPrePersist(): void
+    {
+        $this->createdAt = new \DateTime();
+        if ($this->dateDebut === null) {
+            $this->dateDebut = new \DateTime();
+        }
+    }
+
+    #[ORM\PreUpdate]
+    public function onPreUpdate(): void
+    {
+        $this->updatedAt = new \DateTime();
+    }
+
     public function validateDates(ExecutionContextInterface $context, $payload): void
     {
-        // Check if dateDebut is not in the past
         if ($this->dateDebut !== null) {
             $today = new \DateTime('today');
             if ($this->dateDebut < $today) {
@@ -171,7 +204,6 @@ class Activite
             }
         }
 
-        // Check if dateFin is after dateDebut
         if ($this->dateFin !== null && $this->dateDebut !== null) {
             if ($this->dateFin <= $this->dateDebut) {
                 $context->buildViolation('La date de fin doit être après la date de début.')

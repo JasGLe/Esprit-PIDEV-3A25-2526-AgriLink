@@ -48,15 +48,15 @@ class OAuthController extends AbstractController
             return $this->redirectToRoute('app_dashboard');
         }
 
-        $code = $request->query->get('code');
-        $error = $request->query->get('error');
+        $code = $request->query->getString('code', '');
+        $error = $request->query->getString('error', '');
 
-        if ($error) {
+        if ($error !== '') {
             $this->addFlash('danger', 'Erreur OAuth: ' . $error);
             return $this->redirectToRoute('app_login');
         }
 
-        if (!$code) {
+        if ($code === '') {
             $this->addFlash('danger', 'Code d\'autorisation manquant');
             return $this->redirectToRoute('app_login');
         }
@@ -91,15 +91,15 @@ class OAuthController extends AbstractController
             return $this->redirectToRoute('app_dashboard');
         }
 
-        $code = $request->query->get('code');
-        $error = $request->query->get('error');
+        $code = $request->query->getString('code', '');
+        $error = $request->query->getString('error', '');
 
-        if ($error) {
+        if ($error !== '') {
             $this->addFlash('danger', 'Erreur OAuth: ' . $error);
             return $this->redirectToRoute('app_login');
         }
 
-        if (!$code) {
+        if ($code === '') {
             $this->addFlash('danger', 'Code d\'autorisation manquant');
             return $this->redirectToRoute('app_login');
         }
@@ -116,6 +116,9 @@ class OAuthController extends AbstractController
 
     /**
      * Authenticate or create user based on OAuth data
+     */
+    /**
+     * @param array<string, mixed> $oauthUser
      */
     private function authenticateOrCreateUser(array $oauthUser, Request $request): Response
     {

@@ -36,7 +36,7 @@ class CancellationRequests
     private \DateTimeInterface $requestedAt;
 
     #[ORM\Column(type: Types::STRING, length: 20)]
-    private ?string $status = null;
+    private string $status = '';
 
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     private ?int $handledByUserId = null;
@@ -135,7 +135,7 @@ class CancellationRequests
 
     public function getStatus(): string
     {
-        return (string) $this->status;
+        return $this->status;
     }
 
     public function setStatus(string $status): static

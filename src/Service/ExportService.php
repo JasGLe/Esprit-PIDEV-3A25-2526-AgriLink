@@ -2,6 +2,7 @@
 namespace App\Service;
 
 use App\Repository\Exploitation\ExploitationRepository;
+use App\Entity\Exploitation\Exploitation;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -24,11 +25,14 @@ class ExportService
     /**
      * Génère le PDF des exploitations d'un utilisateur
      */
-    public function exportPdf($user, bool $isAdmin): Response
-        {
+    public function exportPdf(
+        \Symfony\Component\Security\Core\User\UserInterface|null $user,
+        bool $isAdmin
+    ): Response {
+            /** @var Exploitation[] $exploitations */
             $exploitations = $isAdmin
-                ? $this->repo->findAll()
-                : $this->repo->findBy(['user' => $user]);
+                ? $this->repo->findAllWithParcellesAndCultures()
+                : $this->repo->findAllWithParcellesAndCultures($user);
 
         
             $rows = $this->buildRows($exploitations);
@@ -37,11 +41,11 @@ class ExportService
             $docNumber = 'AGR-' . date('Y') . '-' . strtoupper(uniqid());
 
         
-            $logoPath = __DIR__ . '/../../public/logo_with_text.png';
+            $logoPath   = __DIR__ . '/../../public/logo_with_text.png';
             $logoBase64 = null;
 
             if (file_exists($logoPath)) {
-                $logoBase64 = 'data:image/png;base64,' . base64_encode(file_get_contents($logoPath));
+                $logoBase64 = 'data:image/png;base64,' . base64_encode((string) file_get_contents($logoPath));
             }
 
             $html = $this->twig->render('exploitation/export/pdf.html.twig', [
@@ -73,6 +77,10 @@ class ExportService
             );
         }
 
+        /**
+         * @param Exploitation[] $exploitations
+         * @return array<int, array<string, mixed>>
+         */
         private function buildRows(array $exploitations): array
         {
             $rows = [];
@@ -104,11 +112,14 @@ class ExportService
     /**
      * Génère le fichier Excel des exploitations
      */
-    public function exportExcel($user, bool $isAdmin): StreamedResponse
-    {
+    public function exportExcel(
+        \Symfony\Component\Security\Core\User\UserInterface|null $user,
+        bool $isAdmin
+    ): StreamedResponse {
+        /** @var Exploitation[] $exploitations */
         $exploitations = $isAdmin
-            ? $this->repo->findAll()
-            : $this->repo->findBy(['user' => $user]);
+            ? $this->repo->findAllWithParcellesAndCultures()
+            : $this->repo->findAllWithParcellesAndCultures($user);
 
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();

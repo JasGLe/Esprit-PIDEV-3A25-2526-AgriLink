@@ -91,7 +91,7 @@ class LibreTranslateService
             return null;
         }
 
-        return $values[0] ?? null;
+        return $values[0];
     }
 
     /**
@@ -124,15 +124,10 @@ class LibreTranslateService
                 'timeout' => 20,
             ]);
 
-            $data = $response->toArray(false);
-            if (\is_array($data)) {
-                return $data;
-            }
-        } catch (TransportExceptionInterface|\Throwable) {
+            return $response->toArray(false);
+        } catch (\Throwable) {
             return null;
         }
-
-        return null;
     }
 
     /**

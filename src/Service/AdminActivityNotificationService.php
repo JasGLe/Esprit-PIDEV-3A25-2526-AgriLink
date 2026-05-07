@@ -29,11 +29,10 @@ class AdminActivityNotificationService
 
         foreach ($admins as $admin) {
             $notification = new Notifications();
-            $notification->setUserId($admin->getId());
+            $notification->setUser($admin);
             $notification->setType('user_joined');
             $notification->setTitle('👤 Nouvel utilisateur');
             $notification->setBody($this->buildNewUserBody($newUser));
-            $notification->setCreatedAt(new \DateTime());
 
             $this->notificationsRepository->save($notification, flush: false);
         }
@@ -50,11 +49,10 @@ class AdminActivityNotificationService
 
         foreach ($admins as $admin) {
             $notification = new Notifications();
-            $notification->setUserId($admin->getId());
+            $notification->setUser($admin);
             $notification->setType('user_left');
             $notification->setTitle('👋 Utilisateur supprimé');
             $notification->setBody($this->buildUserLeftBody($deletedUser));
-            $notification->setCreatedAt(new \DateTime());
 
             $this->notificationsRepository->save($notification, flush: false);
         }
@@ -71,11 +69,10 @@ class AdminActivityNotificationService
 
         foreach ($admins as $admin) {
             $notification = new Notifications();
-            $notification->setUserId($admin->getId());
+            $notification->setUser($admin);
             $notification->setType('role_changed');
             $notification->setTitle('🔄 Rôle modifié');
             $notification->setBody($this->buildRoleChangeBody($user, $oldRole, $newRole));
-            $notification->setCreatedAt(new \DateTime());
 
             $this->notificationsRepository->save($notification, flush: false);
         }
@@ -92,11 +89,10 @@ class AdminActivityNotificationService
 
         foreach ($admins as $admin) {
             $notification = new Notifications();
-            $notification->setUserId($admin->getId());
+            $notification->setUser($admin);
             $notification->setType('user_deactivated');
             $notification->setTitle('🚫 Utilisateur désactivé');
             $notification->setBody($this->buildUserDeactivatedBody($user, $reason));
-            $notification->setCreatedAt(new \DateTime());
 
             $this->notificationsRepository->save($notification, flush: false);
         }
@@ -113,11 +109,10 @@ class AdminActivityNotificationService
 
         foreach ($admins as $admin) {
             $notification = new Notifications();
-            $notification->setUserId($admin->getId());
+            $notification->setUser($admin);
             $notification->setType('user_reactivated');
             $notification->setTitle('✅ Utilisateur réactivé');
             $notification->setBody($this->buildUserReactivatedBody($user));
-            $notification->setCreatedAt(new \DateTime());
 
             $this->notificationsRepository->save($notification, flush: false);
         }
@@ -144,11 +139,10 @@ class AdminActivityNotificationService
 
         foreach ($admins as $admin) {
             $notification = new Notifications();
-            $notification->setUserId($admin->getId());
+            $notification->setUser($admin);
             $notification->setType('bulk_operation');
             $notification->setTitle($title);
             $notification->setBody($this->buildBulkOperationBody($operationType, $count, $details));
-            $notification->setCreatedAt(new \DateTime());
 
             $this->notificationsRepository->save($notification, flush: false);
         }
@@ -158,6 +152,8 @@ class AdminActivityNotificationService
 
     /**
      * Get admin activity summary for dashboard.
+     *
+     * @return array{newUsersLast24h:int,totalUsers:int,activeUsers:int,inactiveUsers:int,timestamp:\DateTimeInterface}
      */
     public function getActivitySummary(): array
     {
@@ -199,9 +195,9 @@ class AdminActivityNotificationService
 
     private function buildNewUserBody(User $newUser): string
     {
-        $email = $newUser->getEmail();
+        $email = (string) ($newUser->getEmail() ?? '');
         $role = $this->formatRole($newUser->getRole());
-        $date = $newUser->getCreatedAt()?->format('d/m/Y H:i') ?? 'N/A';
+        $date = $newUser->getCreatedAt()->format('d/m/Y H:i');
 
         return "📧 $email\n🔑 Rôle: $role\n📅 $date";
     }

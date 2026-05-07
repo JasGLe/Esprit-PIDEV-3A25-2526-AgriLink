@@ -43,9 +43,9 @@ class NotificationsRepository extends ServiceEntityRepository
     public function findUnreadByUser(User $user): array
     {
         return $this->createQueryBuilder('n')
-            ->where('n.userId = :userId')  
+            ->where('n.user = :user')  
             ->andWhere('n.readAt IS NULL')
-            ->setParameter('userId', $user->getId()) 
+            ->setParameter('user', $user) 
             ->orderBy('n.createdAt', 'DESC')
             ->getQuery()
             ->getResult();
@@ -54,9 +54,9 @@ class NotificationsRepository extends ServiceEntityRepository
     {
         return $this->createQueryBuilder('n')
             ->select('COUNT(n.id)')
-            ->where('n.userId = :userId')  
+            ->where('n.user = :user')  
             ->andWhere('n.readAt IS NULL')
-            ->setParameter('userId', $user->getId()) 
+            ->setParameter('user', $user) 
             ->getQuery()
             ->getSingleScalarResult();
     }
@@ -64,8 +64,8 @@ class NotificationsRepository extends ServiceEntityRepository
     public function findRecentByUser(User $user, int $limit = 10): array
     {
         return $this->createQueryBuilder('n')
-            ->where('n.userId = :userId')  
-            ->setParameter('userId', $user->getId()) 
+            ->where('n.user = :user')  
+            ->setParameter('user', $user) 
             ->orderBy('n.createdAt', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
@@ -76,7 +76,7 @@ class NotificationsRepository extends ServiceEntityRepository
     public function findUnreadByUserId(int $userId, int $limit = 20): array
     {
         return $this->createQueryBuilder('n')
-            ->where('n.userId = :userId')
+            ->where('n.user = :userId')
             ->andWhere('n.readAt IS NULL')
             ->setParameter('userId', $userId)
             ->orderBy('n.createdAt', 'DESC')
@@ -91,7 +91,7 @@ class NotificationsRepository extends ServiceEntityRepository
     public function findUnreadByUserIdAndType(int $userId, string $type, int $limit = 10): array
     {
         return $this->createQueryBuilder('n')
-            ->where('n.userId = :userId')
+            ->where('n.user = :userId')
             ->andWhere('n.type = :type')
             ->andWhere('n.readAt IS NULL')
             ->setParameter('userId', $userId)
@@ -107,7 +107,7 @@ class NotificationsRepository extends ServiceEntityRepository
         $this->createQueryBuilder('n')
             ->update()
             ->set('n.readAt', ':readAt')
-            ->where('n.userId = :userId')
+            ->where('n.user = :userId')
             ->andWhere('n.readAt IS NULL')
             ->setParameter('readAt', new \DateTimeImmutable())
             ->setParameter('userId', $userId)
@@ -121,9 +121,9 @@ class NotificationsRepository extends ServiceEntityRepository
     public function findRecentByUserAndType(User $user, string $type, int $limit = 10): array
     {
         return $this->createQueryBuilder('n')
-            ->where('n.userId = :userId')
+            ->where('n.user = :user')
             ->andWhere('n.type = :type')
-            ->setParameter('userId', $user->getId())
+            ->setParameter('user', $user)
             ->setParameter('type', $type)
             ->orderBy('n.createdAt', 'DESC')
             ->setMaxResults($limit)
@@ -135,10 +135,10 @@ class NotificationsRepository extends ServiceEntityRepository
     {
         return (int) $this->createQueryBuilder('n')
             ->select('COUNT(n.id)')
-            ->where('n.userId = :userId')
+            ->where('n.user = :user')
             ->andWhere('n.type = :type')
             ->andWhere('n.readAt IS NULL')
-            ->setParameter('userId', $user->getId())
+            ->setParameter('user', $user)
             ->setParameter('type', $type)
             ->getQuery()
             ->getSingleScalarResult();
@@ -149,7 +149,7 @@ class NotificationsRepository extends ServiceEntityRepository
         $this->createQueryBuilder('n')
             ->update()
             ->set('n.readAt', ':readAt')
-            ->where('n.userId = :userId')
+            ->where('n.user = :userId')
             ->andWhere('n.type = :type')
             ->andWhere('n.readAt IS NULL')
             ->setParameter('readAt', new \DateTimeImmutable())

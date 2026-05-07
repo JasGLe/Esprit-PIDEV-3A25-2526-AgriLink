@@ -5,8 +5,8 @@ namespace App\Entity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Repository\PanierRepository::class)]
-#[ORM\Table(name: 'panier')]
+// Legacy class — superseded by App\Entity\Marketplace\Panier.
+// ORM attributes removed to prevent duplicate 'panier' table mapping in SchemaTool.
 class Panier
 {
     #[ORM\Id]
@@ -26,8 +26,8 @@ class Panier
     #[ORM\Column(type: Types::INTEGER)]
     private int $quantite;
 
-    #[ORM\Column(type: Types::FLOAT, nullable: true)]
-    private ?float $prixTotal = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3, nullable: true)]
+    private ?string $prixTotal = null;
 
     #[ORM\Column(type: Types::DATE_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $dateAjout = null;
@@ -87,12 +87,12 @@ class Panier
 
     public function getPrixTotal(): ?float
     {
-        return $this->prixTotal;
+        return $this->prixTotal !== null ? (float) $this->prixTotal : null;
     }
 
     public function setPrixTotal(?float $prixTotal): static
     {
-        $this->prixTotal = $prixTotal;
+        $this->prixTotal = $prixTotal !== null ? number_format($prixTotal, 3, '.', '') : null;
 
         return $this;
     }

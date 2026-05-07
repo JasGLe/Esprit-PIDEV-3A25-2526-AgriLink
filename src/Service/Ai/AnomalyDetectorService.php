@@ -8,6 +8,9 @@ use App\Service\Activity\GeminiActivityService;
 
 class AnomalyDetectorService
 {
+    /**
+     * @var array<string, array{min: float|int, max: float|int}>
+     */
     private array $normalCosts = [
         'SEMIS' => ['min' => 20, 'max' => 100],
         'IRRIGATION' => ['min' => 30, 'max' => 150],
@@ -17,6 +20,9 @@ class AnomalyDetectorService
         'AUTRE' => ['min' => 10, 'max' => 500],
     ];
 
+    /**
+     * @var array<string, array{min: float|int, max: float|int}>
+     */
     private array $normalDurations = [
         'SEMIS' => ['min' => 1, 'max' => 8],
         'IRRIGATION' => ['min' => 2, 'max' => 12],
@@ -34,6 +40,8 @@ class AnomalyDetectorService
 
     /**
      * Détecte les anomalies dans les activités des 10 prochains jours
+     *
+     * @return list<array{activity: Activite, issues: list<array<string, mixed>>}>
      */
     public function detectAnomalies(int $userId): array
     {
@@ -44,9 +52,10 @@ class AnomalyDetectorService
         $activities = $this->activiteRepository->findBetweenDates($today, $tenDaysLater);
         
         // Filtre par utilisateur
-        $activities = array_filter($activities, function(Activite $a) use ($userId) {
+        $activities = array_filter($activities, function (Activite $a) use ($userId): bool {
             return $a->getIdAgriculteur() === $userId;
         });
+        $activities = array_values($activities);
 
         $anomalies = [];
 
@@ -66,6 +75,9 @@ class AnomalyDetectorService
 
     /**
      * Vérifie les anomalies pour une activité spécifique
+     *
+     * @param list<Activite> $allActivities
+     * @return list<array<string, mixed>>
      */
     private function checkActivityAnomalies(Activite $activity, array $allActivities): array
     {
@@ -83,6 +95,9 @@ class AnomalyDetectorService
         return $issues;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     private function checkCostAnomaly(Activite $activity): array
     {
         $issues = [];
@@ -115,16 +130,24 @@ class AnomalyDetectorService
         return $issues;
     }
 
+    /**
+     * @return list<array<string, mixed>>
+     */
     private function checkDurationAnomaly(Activite $activity): array
     {
         $issues = [];
         $type = $activity->getTypeActivite();
         
-        if (!$activity->getDateDebut() || !$activity->getDateFin()) {
+        if ($activity->getDateDebut() === null || $activity->getDateFin() === null) {
             return $issues;
         }
 
-        $diff     = $activity->getDateFin()->diff($activity->getDateDebut());
+        $start = $activity->getDateDebut();
+        $end = $activity->getDateFin();
+        if ($start === null || $end === null) {
+            return $issues;
+        }
+        $diff     = $end->diff($start);
         $duration = (int) ($diff->days * 24 + $diff->h);
         $normal = $this->normalDurations[$type] ?? null;
 
@@ -149,6 +172,10 @@ class AnomalyDetectorService
         return $issues;
     }
 
+    /**
+     * @param list<Activite> $allActivities
+     * @return list<array<string, mixed>>
+     */
     private function checkSequenceLogic(Activite $activity, array $allActivities): array
     {
         $issues = [];
@@ -171,7 +198,7 @@ class AnomalyDetectorService
                 continue;
             }
 
-            $daysDiff = $activity->getDateDebut()->diff($otherDate)->days;
+            $daysDiff = $activityDate->diff($otherDate)->days;
 
             // RECOLTE après SEMIS en moins de 7 jours = anormal
             if ($type === 'RECOLTE' && $otherType === 'SEMIS' && $daysDiff < 7 && $otherDate < $activityDate) {
@@ -197,6 +224,9 @@ class AnomalyDetectorService
 
     /**
      * Génère des recommandations IA basées sur les anomalies
+     *
+     * @param list<array{activity: Activite, issues: list<array<string, mixed>>}> $anomalies
+     * @return array<string, mixed>
      */
     public function generateRecommendations(array $anomalies, int $userId): array
     {
@@ -228,6 +258,9 @@ class AnomalyDetectorService
         }
     }
 
+    /**
+     * @param list<array{activity: Activite, issues: list<array<string, mixed>>}> $anomalies
+     */
     private function buildAnomalyPrompt(array $anomalies, int $userId): string
     {
         $anomalyText = '';
@@ -238,7 +271,9 @@ class AnomalyDetectorService
             $anomalyText .= "\n📌 Activité: {$activity->getTitre()}\n";
             $anomalyText .= "   Type: {$activity->getTypeActivite()}\n";
             $anomalyText .= "   Date: " . $activity->getDateDebut()?->format('d/m/Y H:i') . "\n";
-            $diffInterval = $activity->getDateFin()?->diff($activity->getDateDebut());
+            $start = $activity->getDateDebut();
+            $end = $activity->getDateFin();
+            $diffInterval = ($start !== null && $end !== null) ? $end->diff($start) : null;
             $totalHours   = $diffInterval ? (int) ($diffInterval->days * 24 + $diffInterval->h) : null;
             $anomalyText .= "   Durée estimée: " . ($totalHours ?? 'N/A') . "h\n";
             $anomalyText .= "   Coût: {$activity->getCoutEstime()} DT\n";

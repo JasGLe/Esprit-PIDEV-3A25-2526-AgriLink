@@ -58,6 +58,10 @@ class TwoFactorService
         if ($code === null) {
             throw new \RuntimeException('Aucun code OTP à envoyer. Générez d\'abord un code.');
         }
+        $toEmail = $user->getEmail();
+        if ($toEmail === null || $toEmail === '') {
+            throw new \RuntimeException('User email is missing');
+        }
 
         $htmlContent = $this->twig->render('emails/2fa_code.html.twig', [
             'user' => $user,
@@ -68,7 +72,7 @@ class TwoFactorService
 
         $email = (new Email())
             ->from('noreply@agrilink.com')
-            ->to($user->getEmail())
+            ->to($toEmail)
             ->subject('Votre code de vérification AgriLink')
             ->html($htmlContent);
 

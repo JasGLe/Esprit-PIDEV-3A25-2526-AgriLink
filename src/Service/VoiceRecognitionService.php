@@ -12,6 +12,8 @@ class VoiceRecognitionService
 
     /**
      * Store voice embedding for a user
+     *
+     * @param list<float|int> $embedding
      */
     public function storeVoiceEmbedding(array $embedding): string
     {
@@ -21,6 +23,8 @@ class VoiceRecognitionService
     /**
      * Verify if a voice matches the stored embedding.
      * Returns true when the Euclidean distance is within the accepted threshold.
+     *
+     * @param list<float|int> $capturedEmbedding
      */
     public function verifyVoice(string $storedEmbeddingJson, array $capturedEmbedding): bool
     {
@@ -30,7 +34,11 @@ class VoiceRecognitionService
                 return false;
             }
 
-            $distance = $this->euclideanDistance($storedEmbedding, $capturedEmbedding);
+            /** @var list<float|int> $storedList */
+            $storedList = array_values($storedEmbedding);
+            $capturedList = $capturedEmbedding;
+
+            $distance = $this->euclideanDistance($storedList, $capturedList);
             return $this->isWithinThreshold($distance);
         } catch (\Exception) {
             return false;
@@ -40,6 +48,9 @@ class VoiceRecognitionService
     /**
      * Calculate Euclidean distance between two 256-float voice embeddings.
      * Lower distance = more similar voice profiles.
+     *
+     * @param list<float|int> $embedding1
+     * @param list<float|int> $embedding2
      */
     public function euclideanDistance(array $embedding1, array $embedding2): float
     {

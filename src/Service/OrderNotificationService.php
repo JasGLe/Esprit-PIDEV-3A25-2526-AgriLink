@@ -7,6 +7,7 @@ use App\Entity\Notifications;
 use App\Entity\UserManagement\User;
 use App\Repository\NotificationsRepository;
 use App\Repository\UserManagement\UserRepository;
+use App\Service\Marketplace\Sales\OrderStatusFormatter;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -18,6 +19,7 @@ class OrderNotificationService
         private readonly EntityManagerInterface $entityManager,
         private readonly OneSignalPushService $oneSignalPushService,
         private readonly LoggerInterface $logger,
+        private readonly OrderStatusFormatter $orderStatusFormatter,
     ) {
     }
 
@@ -36,7 +38,7 @@ class OrderNotificationService
         }
 
         $buyerLabel = trim($buyerDisplayName) !== '' ? trim($buyerDisplayName) : ((string) ($buyer->getDisplayName() ?? $buyer->getEmail()));
-        $orderRef = $this->formatOrderRef($commande);
+        $orderRef = $this->orderStatusFormatter->formatOrderRef($commande);
         $total = number_format((float) $commande->getPrixTotal(), 3, ',', ' ');
 
         // Notify each responsible seller/farmer.
@@ -47,7 +49,7 @@ class OrderNotificationService
             }
 
             $notif = new Notifications();
-            $notif->setUserId($sellerUserId);
+            $notif->setUser($seller);
             $notif->setType('order_received');
             $notif->setTitle('🛒 Nouvelle commande reçue');
             $notif->setBody(sprintf(
@@ -57,7 +59,6 @@ class OrderNotificationService
                 $total
             ));
             $notif->setCommandeId($commande->getId());
-            $notif->setCreatedAt(new \DateTimeImmutable());
             $this->notificationsRepository->save($notif, flush: false);
         }
 
@@ -69,11 +70,11 @@ class OrderNotificationService
                 [
                     'type' => 'order_received',
                     'orderRef' => $orderRef,
-                    'commandeId' => (string) ($commande->getId() ?? 0),
+                    'commandeId' => (string) $commande->getId(),
                     'targetRole' => 'seller',
                 ]
             );
-            if (($sellerPushResult['ok'] ?? false) !== true) {
+            if ($sellerPushResult['ok'] !== true) {
                 $this->logger->warning('Seller OneSignal push failed', [
                     'commandeId' => $commande->getId(),
                     'orderRef' => $orderRef,
@@ -95,7 +96,7 @@ class OrderNotificationService
 
         foreach ($admins as $admin) {
             $notif = new Notifications();
-            $notif->setUserId((int) $admin->getId());
+            $notif->setUser($admin);
             $notif->setType('order_created_admin');
             $notif->setTitle('📦 Nouvelle commande marketplace');
             $notif->setBody(sprintf(
@@ -106,7 +107,6 @@ class OrderNotificationService
                 $total
             ));
             $notif->setCommandeId($commande->getId());
-            $notif->setCreatedAt(new \DateTimeImmutable());
             $this->notificationsRepository->save($notif, flush: false);
         }
 
@@ -119,11 +119,11 @@ class OrderNotificationService
                 [
                     'type' => 'order_created_admin',
                     'orderRef' => $orderRef,
-                    'commandeId' => (string) ($commande->getId() ?? 0),
+                    'commandeId' => (string) $commande->getId(),
                     'targetRole' => 'admin',
                 ]
             );
-            if (($adminPushResult['ok'] ?? false) !== true) {
+            if ($adminPushResult['ok'] !== true) {
                 $this->logger->warning('Admin OneSignal push failed', [
                     'commandeId' => $commande->getId(),
                     'orderRef' => $orderRef,
@@ -153,13 +153,13 @@ class OrderNotificationService
             return;
         }
 
-        $orderRef = $this->formatOrderRef($commande);
+        $orderRef = $this->orderStatusFormatter->formatOrderRef($commande);
         $actorLabel = trim((string) ($actor->getDisplayName() ?: $actor->getEmail()));
-        $oldLabel = $this->humanizeStatus($oldStatus);
-        $newLabel = $this->humanizeStatus($newStatus);
+        $oldLabel = $this->orderStatusFormatter->humanizeStatus($oldStatus);
+        $newLabel = $this->orderStatusFormatter->humanizeStatus($newStatus);
 
         $notif = new Notifications();
-        $notif->setUserId($buyerId);
+        $notif->setUser($buyer);
         $notif->setType('order_status_changed');
         $notif->setTitle('Mise à jour de votre commande');
         $notif->setBody(sprintf(
@@ -170,7 +170,6 @@ class OrderNotificationService
             $actorLabel !== '' ? $actorLabel : 'le vendeur'
         ));
         $notif->setCommandeId($commande->getId());
-        $notif->setCreatedAt(new \DateTimeImmutable());
         $this->notificationsRepository->save($notif, flush: false);
 
         $result = $this->oneSignalPushService->sendToUserIds(
@@ -180,12 +179,12 @@ class OrderNotificationService
             [
                 'type' => 'order_status_changed',
                 'orderRef' => $orderRef,
-                'commandeId' => (string) ($commande->getId() ?? 0),
+                'commandeId' => (string) $commande->getId(),
                 'oldStatus' => $oldStatus,
                 'newStatus' => $newStatus,
             ]
         );
-        if (($result['ok'] ?? false) !== true) {
+        if ($result['ok'] !== true) {
             $this->logger->warning('Buyer OneSignal status-change push failed', [
                 'commandeId' => $commande->getId(),
                 'orderRef' => $orderRef,
@@ -203,7 +202,7 @@ class OrderNotificationService
             return;
         }
 
-        $orderRef = $this->formatOrderRef($commande);
+        $orderRef = $this->orderStatusFormatter->formatOrderRef($commande);
         $buyerLabel = trim((string) ($buyer->getDisplayName() ?: $buyer->getEmail()));
         if ($buyerLabel === '') {
             $buyerLabel = 'Client';
@@ -211,7 +210,7 @@ class OrderNotificationService
 
         foreach ($admins as $admin) {
             $notif = new Notifications();
-            $notif->setUserId((int) $admin->getId());
+            $notif->setUser($admin);
             $notif->setType('order_cancellation_requested_admin');
             $notif->setTitle('Demande d’annulation commande');
             $notif->setBody(sprintf(
@@ -220,7 +219,6 @@ class OrderNotificationService
                 $orderRef
             ));
             $notif->setCommandeId($commande->getId());
-            $notif->setCreatedAt(new \DateTimeImmutable());
             $this->notificationsRepository->save($notif, flush: false);
         }
 
@@ -233,11 +231,11 @@ class OrderNotificationService
                 [
                     'type' => 'order_cancellation_requested_admin',
                     'orderRef' => $orderRef,
-                    'commandeId' => (string) ($commande->getId() ?? 0),
+                    'commandeId' => (string) $commande->getId(),
                     'targetRole' => 'admin',
                 ]
             );
-            if (($result['ok'] ?? false) !== true) {
+            if ($result['ok'] !== true) {
                 $this->logger->warning('Admin OneSignal cancellation-request push failed', [
                     'commandeId' => $commande->getId(),
                     'orderRef' => $orderRef,
@@ -249,25 +247,4 @@ class OrderNotificationService
         $this->entityManager->flush();
     }
 
-    private function formatOrderRef(Commandes $commande): string
-    {
-        $id = $commande->getId();
-        if ($id > 0) {
-            return '#CMD'.str_pad((string) $id, 3, '0', STR_PAD_LEFT);
-        }
-
-        return (string) $commande->getNumCommande();
-    }
-
-    private function humanizeStatus(string $status): string
-    {
-        $raw = trim($status);
-        if ($raw === '') {
-            return '-';
-        }
-
-        $normalized = str_replace('_', ' ', strtolower($raw));
-
-        return ucfirst($normalized);
-    }
 }

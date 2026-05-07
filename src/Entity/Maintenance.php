@@ -57,6 +57,11 @@ class Maintenance
         'Annulée'   => 'Annulée',
     ];
 
+    public function __construct()
+    {
+        $this->datePlanifiee = new \DateTime('today');
+    }
+
     // ════════════════════════════════════════════════════════
     // Propriétés
     // ════════════════════════════════════════════════════════
@@ -80,7 +85,6 @@ class Maintenance
         choices: ['Préventive', 'Corrective'],
         message: 'Type invalide.'
     )]
-    // string non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
     private string $type = '';
 
     /**
@@ -93,7 +97,6 @@ class Maintenance
         choices: ['Régulière', 'Imprévue'],
         message: 'Catégorie invalide.'
     )]
-    // string non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
     private string $categorie = '';
 
     /**
@@ -109,7 +112,6 @@ class Maintenance
         minMessage: 'La description doit contenir au moins {{ limit }} caractères.',
         maxMessage: 'La description ne peut pas dépasser {{ limit }} caractères.'
     )]
-    // string non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
     private string $description = '';
 
     /**
@@ -124,8 +126,6 @@ class Maintenance
         value: 'today',
         message: 'La date planifiée doit être aujourd\'hui ou dans le futur.'
     )]
-    // \DateTimeInterface non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
-    // Initialisé dans le constructeur car new \DateTime() n'est pas une expression constante PHP
     private \DateTimeInterface $datePlanifiee;
 
     /**
@@ -159,7 +159,6 @@ class Maintenance
     #[ORM\Column(type: Types::INTEGER)]
     #[Assert\NotBlank(message: 'Veuillez choisir un équipement.')]
     #[Assert\Positive(message: 'Équipement invalide.')]
-    // int non-nullable — aligné sur la colonne NOT NULL en base (Doctrine Doctor fix)
     private int $equipementId = 0;
 
     /**
@@ -276,24 +275,16 @@ class Maintenance
 
     public function getId(): int { return $this->id; }
 
-    // Retour string non-nullable — aligné sur la propriété (Doctrine Doctor fix)
     public function getType(): string { return $this->type; }
-    // Paramètre ?string conservé pour compatibilité Symfony forms (null coercé en '')
     public function setType(?string $type): static { $this->type = $type ?? ''; return $this; }
 
-    // Retour string non-nullable — aligné sur la propriété (Doctrine Doctor fix)
     public function getCategorie(): string { return $this->categorie; }
-    // Paramètre ?string conservé pour compatibilité Symfony forms (null coercé en '')
     public function setCategorie(?string $categorie): static { $this->categorie = $categorie ?? ''; return $this; }
 
-    // Retour string non-nullable — aligné sur la propriété (Doctrine Doctor fix)
     public function getDescription(): string { return $this->description; }
-    // Paramètre ?string conservé pour compatibilité Symfony forms (null coercé en '')
     public function setDescription(?string $description): static { $this->description = $description ?? ''; return $this; }
 
-    // Retour \DateTimeInterface non-nullable — aligné sur la propriété (Doctrine Doctor fix)
     public function getDatePlanifiee(): \DateTimeInterface { return $this->datePlanifiee; }
-    // Paramètre ?\DateTimeInterface conservé pour compatibilité Symfony forms (null → today par défaut)
     public function setDatePlanifiee(?\DateTimeInterface $datePlanifiee): static { $this->datePlanifiee = $datePlanifiee ?? new \DateTime('today'); return $this; }
 
     public function getDateReelle(): ?\DateTimeInterface { return $this->dateReelle; }
@@ -302,9 +293,7 @@ class Maintenance
     public function getStatut(): ?string { return $this->statut; }
     public function setStatut(?string $statut): static { $this->statut = $statut; return $this; }
 
-    // Retour int non-nullable — aligné sur la propriété (Doctrine Doctor fix)
     public function getEquipementId(): int { return $this->equipementId; }
-    // Paramètre ?int conservé pour compatibilité (null coercé en 0)
     public function setEquipementId(?int $equipementId): static { $this->equipementId = $equipementId ?? 0; return $this; }
 
     public function getUserlog(): ?int { return $this->userlog; }

@@ -3,7 +3,7 @@
 namespace App\Controller\Marketplace;
 
 use App\Entity\UserManagement\User;
-use App\Repository\Marketplace\LigneCommandeRepository;
+use App\Service\Marketplace\Sales\SalesStatsPayloadBuilder;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -13,7 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 final class SalesDashboardController extends AbstractController
 {
     public function __construct(
-        private readonly LigneCommandeRepository $ligneCommandeRepository,
+        private readonly SalesStatsPayloadBuilder $payloadBuilder,
     ) {
     }
 
@@ -62,23 +62,7 @@ final class SalesDashboardController extends AbstractController
      */
     private function buildPayload(int $sellerUserId): array
     {
-        $kpis = $this->ligneCommandeRepository->fetchSalesKpisForSeller($sellerUserId);
-        $evolutionRows = $this->ligneCommandeRepository->fetchSalesEvolutionLast30DaysForSeller($sellerUserId);
-        $topProducts = $this->ligneCommandeRepository->fetchTopSellingProductsForSeller($sellerUserId, 6);
-        $categoryRows = $this->ligneCommandeRepository->fetchSalesDistributionByCategoryForSeller($sellerUserId);
-
-        return [
-            'kpis' => $kpis,
-            'top_products' => $topProducts,
-            'evolution' => [
-                'labels' => array_map(static fn (array $r): string => $r['day_label'], $evolutionRows),
-                'data' => array_map(static fn (array $r): float => (float) $r['revenue'], $evolutionRows),
-            ],
-            'categories' => [
-                'labels' => array_map(static fn (array $r): string => $r['category'], $categoryRows),
-                'data' => array_map(static fn (array $r): float => (float) $r['revenue'], $categoryRows),
-            ],
-        ];
+        return $this->payloadBuilder->build($sellerUserId);
     }
 
 }

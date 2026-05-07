@@ -54,6 +54,10 @@ class EmailVerificationService
         if (!$code) {
             $code = $this->generateVerificationCode($user);
         }
+        $toEmail = $user->getEmail();
+        if ($toEmail === null || $toEmail === '') {
+            throw new \RuntimeException('User email is missing');
+        }
 
         $htmlContent = $this->twig->render('emails/verification_code.html.twig', [
             'user' => $user,
@@ -64,7 +68,7 @@ class EmailVerificationService
 
         $email = (new Email())
             ->from($this->mailerFrom)
-            ->to($user->getEmail())
+            ->to($toEmail)
             ->subject('AgriLink - Vérification de votre adresse email')
             ->html($htmlContent);
 
@@ -140,13 +144,17 @@ class EmailVerificationService
     /**
      * Check if user can resend verification email (rate limiting)
      */
+    /**
+     * @param list<int> $resendAttempts
+     * @return array{canResend: bool, reason: 'max_attempts'|'cooldown'|null, waitSeconds: int, message: string|null}
+     */
     public function canResendVerification(User $user, array $resendAttempts = []): array
     {
         $now = new \DateTime();
         $oneHourAgo = (new \DateTime())->modify('-1 hour');
         
         // Filter attempts within the last hour
-        $recentAttempts = array_filter($resendAttempts, function ($timestamp) use ($oneHourAgo) {
+        $recentAttempts = array_filter($resendAttempts, function (int $timestamp) use ($oneHourAgo) {
             return $timestamp > $oneHourAgo->getTimestamp();
         });
 

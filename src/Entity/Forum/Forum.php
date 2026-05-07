@@ -82,7 +82,7 @@ class Forum
         return $this->dateCreation;
     }
 
-    public function setDateCreation(\DateTimeInterface $dateCreation): static
+    protected function setDateCreation(\DateTimeInterface $dateCreation): static
     {
         $this->dateCreation = $dateCreation;
 

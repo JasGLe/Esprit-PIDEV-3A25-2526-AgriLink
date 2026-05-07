@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Dto\Equipment\LabelCountDto;
 use App\Entity\Equipement;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -75,8 +76,12 @@ class EquipementRepository extends ServiceEntityRepository
         // Initialiser à 0 pour garantir que tous les statuts apparaissent dans le graphique
         $data = array_fill_keys($statutsConnus, 0);
 
+        /** @var list<LabelCountDto> $results */
         $results = $this->createQueryBuilder('e')
-            ->select('e.statut, COUNT(e.id) as total')
+            ->select(sprintf(
+                'NEW %s(e.statut, COUNT(e.id))',
+                LabelCountDto::class
+            ))
             ->where('e.userlog = :userId')
             ->setParameter('userId', $userId)
             ->groupBy('e.statut')
@@ -84,12 +89,12 @@ class EquipementRepository extends ServiceEntityRepository
             ->getResult();
 
         foreach ($results as $r) {
-            $statut = $r['statut'];
+            $statut = $r->label;
             // Normaliser : null / vide / valeur inconnue → "Hors service"
             if ($statut === null || $statut === '' || !in_array($statut, $statutsConnus, true)) {
                 $statut = 'Hors service';
             }
-            $data[$statut] = ($data[$statut] ?? 0) + (int) $r['total'];
+            $data[$statut] = ($data[$statut] ?? 0) + $r->total;
         }
 
         return $data;
@@ -107,8 +112,12 @@ class EquipementRepository extends ServiceEntityRepository
      */
     public function countByCategorie(int $userId): array
     {
+        /** @var list<LabelCountDto> $results */
         $results = $this->createQueryBuilder('e')
-            ->select('e.categorie, COUNT(e.id) as total')
+            ->select(sprintf(
+                'NEW %s(e.categorie, COUNT(e.id))',
+                LabelCountDto::class
+            ))
             ->where('e.userlog = :userId')
             ->setParameter('userId', $userId)
             ->groupBy('e.categorie')
@@ -117,7 +126,7 @@ class EquipementRepository extends ServiceEntityRepository
 
         $data = [];
         foreach ($results as $r) {
-            $data[$r['categorie'] ?? 'Inconnu'] = (int) $r['total'];
+            $data[$r->label ?? 'Inconnu'] = $r->total;
         }
         return $data;
     }
@@ -134,8 +143,12 @@ class EquipementRepository extends ServiceEntityRepository
      */
     public function countByType(int $userId): array
     {
+        /** @var list<LabelCountDto> $results */
         $results = $this->createQueryBuilder('e')
-            ->select('e.type, COUNT(e.id) as total')
+            ->select(sprintf(
+                'NEW %s(e.type, COUNT(e.id))',
+                LabelCountDto::class
+            ))
             ->where('e.userlog = :userId')
             ->setParameter('userId', $userId)
             ->groupBy('e.type')
@@ -145,7 +158,7 @@ class EquipementRepository extends ServiceEntityRepository
 
         $data = [];
         foreach ($results as $r) {
-            $data[$r['type'] ?? 'Inconnu'] = (int) $r['total'];
+            $data[$r->label ?? 'Inconnu'] = $r->total;
         }
         return $data;
     }

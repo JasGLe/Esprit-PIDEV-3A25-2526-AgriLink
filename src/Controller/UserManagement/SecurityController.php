@@ -57,7 +57,11 @@ class SecurityController extends AbstractController
         }
 
         $capturedDescriptor = json_decode($data['descriptor'], true);
-        if (!is_array($capturedDescriptor) || count($capturedDescriptor) !== 128) {
+        if (!is_array($capturedDescriptor)) {
+            return new JsonResponse(['error' => 'Format de descriptor invalide (128 valeurs attendues).'], Response::HTTP_BAD_REQUEST);
+        }
+        $normalizedCaptured = $this->normalizeNumericList($capturedDescriptor, 128);
+        if ($normalizedCaptured === null) {
             return new JsonResponse(['error' => 'Format de descriptor invalide (128 valeurs attendues).'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -74,11 +78,19 @@ class SecurityController extends AbstractController
         $bestDistance = PHP_FLOAT_MAX;
 
         foreach ($enrolledUsers as $candidate) {
-            $stored = json_decode($candidate->getFaceDescriptor(), true);
-            if (!is_array($stored) || count($stored) !== 128) {
+            $storedJson = $candidate->getFaceDescriptor();
+            if ($storedJson === null || $storedJson === '') {
                 continue;
             }
-            $distance = $faceRecognitionService->euclideanDistance($stored, $capturedDescriptor);
+            $stored = json_decode($storedJson, true);
+            if (!is_array($stored)) {
+                continue;
+            }
+            $normalizedStored = $this->normalizeNumericList($stored, 128);
+            if ($normalizedStored === null) {
+                continue;
+            }
+            $distance = $faceRecognitionService->euclideanDistance($normalizedStored, $normalizedCaptured);
             if ($distance < $bestDistance) {
                 $bestDistance = $distance;
                 $bestUser     = $candidate;
@@ -108,5 +120,26 @@ class SecurityController extends AbstractController
     public function logout(): void
     {
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
+    }
+
+    /**
+     * @param array<mixed> $values
+     * @return list<float>|null
+     */
+    private function normalizeNumericList(array $values, int $expectedCount): ?array
+    {
+        if (\count($values) !== $expectedCount) {
+            return null;
+        }
+
+        $list = [];
+        foreach (array_values($values) as $value) {
+            if (!is_int($value) && !is_float($value)) {
+                return null;
+            }
+            $list[] = (float) $value;
+        }
+
+        return $list;
     }
 }

@@ -25,8 +25,8 @@ class Produits
     #[ORM\Column(type: Types::STRING, length: 50)]
     private string $categorie;
 
-    #[ORM\Column(name: 'prixUnitaire', type: Types::FLOAT)]
-    private float $prixUnitaire;
+    #[ORM\Column(name: 'prixUnitaire', type: Types::DECIMAL, precision: 12, scale: 3)]
+    private string $prixUnitaire = '0.000';
 
     #[ORM\Column(type: Types::STRING, length: 50, nullable: true)]
     private ?string $image = null;
@@ -50,10 +50,10 @@ class Produits
     private ?int $cultureId = null;
 
     #[ORM\Column(type: Types::BOOLEAN)]
-    private ?bool $active = null;
+    private bool $active = false;
 
     #[ORM\Column(type: Types::INTEGER)]
-    private ?int $quantite = null;
+    private int $quantite = 0;
 
     #[ORM\Column(type: Types::STRING, length: 40, nullable: true)]
     private ?string $promoCode = null;
@@ -73,8 +73,8 @@ class Produits
     #[ORM\Column(type: Types::BOOLEAN)]
     private bool $isRental = false;
 
-    #[ORM\Column(type: Types::FLOAT, nullable: true)]
-    private ?float $rentalPricePerDay = null;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3, nullable: true)]
+    private ?string $rentalPricePerDay = null;
 
     #[ORM\Column(type: Types::STRING, length: 800, nullable: true)]
     private ?string $rentalDescription = null;
@@ -82,8 +82,8 @@ class Produits
     #[ORM\Column(type: Types::STRING, length: 20, options: ['default' => self::MODERATION_PENDING])]
     private string $moderationStatus = self::MODERATION_PENDING;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
-    private ?\DateTimeInterface $createdAt = null;
+    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    private \DateTimeInterface $createdAt;
 
     public function getId(): int
     {
@@ -116,12 +116,12 @@ class Produits
 
     public function getPrixUnitaire(): float
     {
-        return $this->prixUnitaire;
+        return (float) $this->prixUnitaire;
     }
 
     public function setPrixUnitaire(float $prixUnitaire): static
     {
-        $this->prixUnitaire = $prixUnitaire;
+        $this->prixUnitaire = number_format($prixUnitaire, 3, '.', '');
 
         return $this;
     }
@@ -335,12 +335,12 @@ class Produits
 
     public function getRentalPricePerDay(): ?float
     {
-        return $this->rentalPricePerDay;
+        return $this->rentalPricePerDay !== null ? (float) $this->rentalPricePerDay : null;
     }
 
     public function setRentalPricePerDay(?float $rentalPricePerDay): static
     {
-        $this->rentalPricePerDay = $rentalPricePerDay;
+        $this->rentalPricePerDay = $rentalPricePerDay !== null ? number_format($rentalPricePerDay, 3, '.', '') : null;
 
         return $this;
     }
@@ -380,11 +380,17 @@ class Produits
 
     public function getCreatedAt(): ?\DateTimeInterface
     {
-        return $this->createdAt;
+        return isset($this->createdAt) ? $this->createdAt : null;
     }
 
-    public function setCreatedAt(?\DateTimeInterface $createdAt): static
+    protected function setCreatedAt(?\DateTimeInterface $createdAt): static
     {
+        if ($createdAt === null) {
+            unset($this->createdAt);
+
+            return $this;
+        }
+
         $this->createdAt = $createdAt;
 
         return $this;

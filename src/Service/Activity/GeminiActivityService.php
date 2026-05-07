@@ -2,6 +2,7 @@
 
 namespace App\Service\Activity;
 
+use Symfony\Component\HttpFoundation\File\File;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class GeminiActivityService
@@ -15,6 +16,10 @@ class GeminiActivityService
         $this->apiKey = $geminiApiKey1;
     }
 
+    /**
+     * @param array{typeSol:string,etat:string,superficie:float|int,ville:string,saison:string} $parcelle
+     * @return array<string, mixed>
+     */
     public function recommanderCulture(array $parcelle): array
     {
         $prompt = $this->buildPrompt($parcelle);
@@ -70,6 +75,9 @@ class GeminiActivityService
         return $json;
     }
 
+    /**
+     * @param array{typeSol:string,etat:string,superficie:float|int,ville:string,saison:string} $p
+     */
     private function buildPrompt(array $p): string
     {
         return "
@@ -104,11 +112,18 @@ Réponds uniquement en JSON.
 ";
     }
 
-    public function analyserImage($file, string $nomCulture = ''): array
+    /**
+     * @return array<string, mixed>
+     */
+    public function analyserImage(File $file, string $nomCulture = ''): array
     {
         try {
-            $imageData = base64_encode(file_get_contents($file->getPathname()));
-            $mimeType = $file->getMimeType();
+            $raw = file_get_contents($file->getPathname());
+            if ($raw === false) {
+                throw new \RuntimeException('Impossible de lire le fichier image.');
+            }
+            $imageData = base64_encode($raw);
+            $mimeType = $file->getMimeType() ?? 'image/jpeg';
 
             $response = $this->client->request(
                 'POST',
@@ -232,6 +247,8 @@ IMPORTANT:
 
     /**
      * Appel générique à Gemini avec extraction JSON
+     *
+     * @return array<string, mixed>
      */
     public function callGemini(string $prompt): array
     {
@@ -294,6 +311,9 @@ IMPORTANT:
 
     /**
      * Transform Gemini API error code into user-friendly French message
+     */
+    /**
+     * @param array<string, mixed> $error
      */
     private function buildGeminiErrorMessage(array $error): string
     {

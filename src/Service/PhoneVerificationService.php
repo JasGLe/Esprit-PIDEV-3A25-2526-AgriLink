@@ -8,7 +8,6 @@ use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Mime\Email;
-use Twig\Environment;
 
 class PhoneVerificationService
 {
@@ -20,10 +19,7 @@ class PhoneVerificationService
     public function __construct(
         private EntityManagerInterface $entityManager,
         private TwilioSmsService $twilioService,
-        private Environment $twig,
         private UserGamificationService $gamificationService,
-        #[Autowire('%env(APP_URL)%')]
-        private string $appUrl = 'http://localhost'
     ) {
     }
 

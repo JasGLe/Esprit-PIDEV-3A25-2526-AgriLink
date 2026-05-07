@@ -66,6 +66,8 @@ class OAuthService
 
     /**
      * Exchange Google authorization code for access token and user info
+     *
+     * @return array{provider:'google',provider_id:string|null,email:string|null,name:string|null,picture:string|null}|null
      */
     public function handleGoogleCallback(string $code): ?array
     {
@@ -110,6 +112,8 @@ class OAuthService
 
     /**
      * Exchange Facebook authorization code for access token and user info
+     *
+     * @return array{provider:'facebook',provider_id:string|null,email:string|null,name:string|null,picture:string|null}|null
      */
     public function handleFacebookCallback(string $code): ?array
     {

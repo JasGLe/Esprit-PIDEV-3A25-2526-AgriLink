@@ -5,8 +5,8 @@ namespace App\Entity;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
-#[ORM\Entity(repositoryClass: \App\Repository\ProduitsRepository::class)]
-#[ORM\Table(name: 'produits')]
+// Legacy class — superseded by App\Entity\Marketplace\Produits.
+// ORM attributes removed to prevent duplicate 'produits' table mapping in SchemaTool.
 class Produits
 {
     #[ORM\Id]
@@ -20,8 +20,8 @@ class Produits
     #[ORM\Column(type: Types::STRING, length: 50)]
     private string $categorie;
 
-    #[ORM\Column(type: Types::FLOAT)]
-    private float $prixUnitaire;
+    #[ORM\Column(type: Types::DECIMAL, precision: 12, scale: 3)]
+    private string $prixUnitaire = '0.000';
 
     #[ORM\Column(type: Types::STRING, length: 50)]
     private string $image;
@@ -45,10 +45,10 @@ class Produits
     private ?int $cultureId = null;
 
     #[ORM\Column(type: Types::BOOLEAN)]
-    private ?bool $active = null;
+    private bool $active = false;
 
     #[ORM\Column(type: Types::INTEGER)]
-    private ?int $quantite = null;
+    private int $quantite = 0;
 
     public function getId(): int
     {
@@ -81,12 +81,12 @@ class Produits
 
     public function getPrixUnitaire(): float
     {
-        return $this->prixUnitaire;
+        return (float) $this->prixUnitaire;
     }
 
     public function setPrixUnitaire(float $prixUnitaire): static
     {
-        $this->prixUnitaire = $prixUnitaire;
+        $this->prixUnitaire = number_format($prixUnitaire, 3, '.', '');
 
         return $this;
     }

@@ -14,11 +14,10 @@ class NotificationService
                                   string $titre, string $corps): void
     {
         $notif = new Notifications();
-        $notif->setUserId($admin->getId());
+        $notif->setUser($admin);
         $notif->setType($type);
         $notif->setTitle($titre);
         $notif->setBody($corps);
-        $notif->setCreatedAt(new \DateTime());
 
         $this->em->persist($notif);
         $this->em->flush();
@@ -28,11 +27,10 @@ class NotificationService
                                  string $titre, string $corps): void
     {
         $notif = new Notifications();
-        $notif->setUserId($user->getId());
+        $notif->setUser($user);
         $notif->setType($type);
         $notif->setTitle($titre);
         $notif->setBody($corps);
-        $notif->setCreatedAt(new \DateTime());
 
         $this->em->persist($notif);
         $this->em->flush();

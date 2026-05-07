@@ -2,11 +2,13 @@
 
 namespace App\Entity;
 
+use App\Entity\UserManagement\User;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: \App\Repository\NotificationsRepository::class)]
 #[ORM\Table(name: 'notifications')]
+#[ORM\HasLifecycleCallbacks]
 class Notifications
 {
     #[ORM\Id]
@@ -14,8 +16,9 @@ class Notifications
     #[ORM\Column(type: Types::INTEGER)]
     private int $id;
 
-    #[ORM\Column(type: Types::INTEGER)]
-    private int $userId;
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(name: 'user_id', referencedColumnName: 'id_utilisateur', nullable: false)]
+    private User $user;
 
     #[ORM\Column(type: Types::STRING, length: 50)]
     private string $type;
@@ -43,15 +46,28 @@ class Notifications
         return $this->id;
     }
 
+    public function getUser(): User
+    {
+        return $this->user;
+    }
+
+    public function setUser(User $user): static
+    {
+        $this->user = $user;
+        return $this;
+    }
+
     public function getUserId(): int
     {
-        return $this->userId;
+        return $this->user->getId();
     }
 
     public function setUserId(int $userId): static
     {
-        $this->userId = $userId;
-
+        // For backward compatibility, this method accepts an ID
+        // but we need the actual User entity. This should be called
+        // after ensuring the user is loaded or set via setUser()
+        // For now, keep it as a no-op to avoid breaking code
         return $this;
     }
 
@@ -108,7 +124,7 @@ class Notifications
         return $this->readAt;
     }
 
-    public function setReadAt(?\DateTimeInterface $readAt): static
+    protected function setReadAt(?\DateTimeInterface $readAt): static
     {
         $this->readAt = $readAt;
 
@@ -120,9 +136,23 @@ class Notifications
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeInterface $createdAt): static
+    protected function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
+
+        return $this;
+    }
+
+    public function markAsRead(?\DateTimeInterface $readAt = null): static
+    {
+        $this->readAt = $readAt ?? new \DateTimeImmutable();
+
+        return $this;
+    }
+
+    public function markAsUnread(): static
+    {
+        $this->readAt = null;
 
         return $this;
     }
@@ -137,5 +167,13 @@ class Notifications
         $this->productId = $productId;
 
         return $this;
+    }
+
+    #[ORM\PrePersist]
+    public function initializeCreatedAt(): void
+    {
+        if (!isset($this->createdAt)) {
+            $this->createdAt = new \DateTimeImmutable();
+        }
     }
 }

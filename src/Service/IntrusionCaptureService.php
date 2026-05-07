@@ -15,7 +15,6 @@ class IntrusionCaptureService
 
     public function __construct(
         private EntityManagerInterface $entityManager,
-        private UserRepository $userRepository,
         private MailerInterface $mailer,
         private string $appName = 'AgriLink',
     ) {}
@@ -26,7 +25,7 @@ class IntrusionCaptureService
     public function incrementFailedAttempts(User $user): void
     {
         $user->setFailedLoginAttempts($user->getFailedLoginAttempts() + 1);
-        $this->entityManager->flush($user);
+        $this->entityManager->flush();
     }
 
     /**
@@ -45,7 +44,7 @@ class IntrusionCaptureService
     public function resetFailedAttempts(User $user): void
     {
         $user->setFailedLoginAttempts(0);
-        $this->entityManager->flush($user);
+        $this->entityManager->flush();
     }
 
     /**
@@ -84,10 +83,14 @@ class IntrusionCaptureService
             // Generate CID that matches the template
             $attemptTime = new \DateTime();
             $imageCid = 'intrusion_' . $attemptTime->format('Y-m-d_H-i-s');
+            $toEmail = $user->getEmail();
+            if ($toEmail === null || $toEmail === '') {
+                throw new \RuntimeException('User email is missing');
+            }
 
             $email = (new TemplatedEmail())
                 ->from(new Address('security@agrilink.com', $this->appName))
-                ->to($user->getEmail())
+                ->to($toEmail)
                 ->subject('🔒 ' . $this->appName . ' - Alerte de sécurité : Tentative d\'intrusion')
                 ->htmlTemplate('emails/intrusion_alert.html.twig')
                 ->context([
@@ -97,7 +100,7 @@ class IntrusionCaptureService
                     'attemptTime' => $attemptTime,
                 ])
                 ->embed(
-                    fopen($tempFile, 'r'),
+                    $imageData,
                     $imageCid,
                     'image/' . $imageType
                 );

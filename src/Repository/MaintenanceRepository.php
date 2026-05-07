@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Dto\Equipment\LabelCountDto;
 use App\Entity\Maintenance;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -210,8 +211,12 @@ class MaintenanceRepository extends ServiceEntityRepository
     {
         if (empty($ids)) return [];
 
+        /** @var list<LabelCountDto> $results */
         $results = $this->createQueryBuilder('m')
-            ->select('m.statut, COUNT(m.id) as total')
+            ->select(sprintf(
+                'NEW %s(m.statut, COUNT(m.id))',
+                LabelCountDto::class
+            ))
             ->where('m.equipementId IN (:ids)')
             ->setParameter('ids', $ids)
             ->groupBy('m.statut')
@@ -220,7 +225,7 @@ class MaintenanceRepository extends ServiceEntityRepository
 
         $data = [];
         foreach ($results as $r) {
-            $data[$r['statut'] ?? 'Inconnu'] = (int) $r['total'];
+            $data[$r->label ?? 'Inconnu'] = $r->total;
         }
         return $data;
     }
@@ -238,8 +243,12 @@ class MaintenanceRepository extends ServiceEntityRepository
     {
         if (empty($ids)) return [];
 
+        /** @var list<LabelCountDto> $results */
         $results = $this->createQueryBuilder('m')
-            ->select('m.type, COUNT(m.id) as total')
+            ->select(sprintf(
+                'NEW %s(m.type, COUNT(m.id))',
+                LabelCountDto::class
+            ))
             ->where('m.equipementId IN (:ids)')
             ->setParameter('ids', $ids)
             ->groupBy('m.type')
@@ -248,7 +257,7 @@ class MaintenanceRepository extends ServiceEntityRepository
 
         $data = [];
         foreach ($results as $r) {
-            $data[$r['type'] ?? 'Inconnu'] = (int) $r['total'];
+            $data[$r->label ?? 'Inconnu'] = $r->total;
         }
         return $data;
     }

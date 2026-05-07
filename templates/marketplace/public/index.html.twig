@@ -697,6 +697,7 @@ body.marketplace-tropical .tropical-footer {
                                 id="marketplace-sort-select"
                                 class="form-select form-select-sm tropical-select tropical-filter-select tropical-filter-select--fit"
                                 onchange="this.form.requestSubmit ? this.form.requestSubmit() : this.form.submit()">
+                            <option value="recent" {{ filter_sort == 'recent' ? 'selected' : '' }}>Plus récents</option>
                             <option value="price_asc" {{ filter_sort == 'price_asc' ? 'selected' : '' }}>Prix croissant</option>
                             <option value="price_desc" {{ filter_sort == 'price_desc' ? 'selected' : '' }}>Prix décroissant</option>
                         </select>
@@ -766,6 +767,66 @@ body.marketplace-tropical .tropical-footer {
         {% else %}
             <div class="tropical-empty text-center py-4 rounded-4">
                 <p class="tropical-muted mb-0">Aucune recommandation disponible pour ce mode pour le moment.</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+{% endif %}
+
+{% set rs = recommendation_sections|default({}) %}
+{% set rs_recommended = rs.recommended|default([]) %}
+{% set rs_similar = rs.similar|default([]) %}
+{% set rs_trending = rs.trending|default([]) %}
+{% set rs_offers = rs.offers|default([]) %}
+
+{% if is_granted('ROLE_USER') and (rs_recommended|length > 0 or rs_similar|length > 0 or rs_trending|length > 0 or rs_offers|length > 0) %}
+<section id="ai-reco-sections" class="tropical-products-section pt-1 pb-3">
+    <div class="container-fluid px-2 px-md-3 tropical-page-gutter">
+        {% if rs_recommended|length > 0 %}
+            <h2 class="tropical-section-title text-start mb-1">Recommended for you</h2>
+            <p class="tropical-muted mb-3 small">Based on your searches, views and shopping behavior.</p>
+            <div class="tropical-products-wrap mb-4">
+                {% for p in rs_recommended %}
+                    <div class="tropical-card-shell">
+                        {% include 'marketplace/public/_product_card_tropical.html.twig' with { p: p, vendeurs: vendeurs } %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if rs_similar|length > 0 %}
+            <h2 class="tropical-section-title text-start mb-1">Similar products</h2>
+            <p class="tropical-muted mb-3 small">Because you viewed a related product recently.</p>
+            <div class="tropical-products-wrap mb-4">
+                {% for p in rs_similar %}
+                    <div class="tropical-card-shell">
+                        {% include 'marketplace/public/_product_card_tropical.html.twig' with { p: p, vendeurs: vendeurs } %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if rs_trending|length > 0 %}
+            <h2 class="tropical-section-title text-start mb-1">Trending now</h2>
+            <p class="tropical-muted mb-3 small">Most popular products on the marketplace.</p>
+            <div class="tropical-products-wrap mb-4">
+                {% for p in rs_trending %}
+                    <div class="tropical-card-shell">
+                        {% include 'marketplace/public/_product_card_tropical.html.twig' with { p: p, vendeurs: vendeurs } %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if rs_offers|length > 0 %}
+            <h2 class="tropical-section-title text-start mb-1">Special offers for you</h2>
+            <p class="tropical-muted mb-3 small">Promotions aligned with your interests.</p>
+            <div class="tropical-products-wrap">
+                {% for p in rs_offers %}
+                    <div class="tropical-card-shell">
+                        {% include 'marketplace/public/_product_card_tropical.html.twig' with { p: p, vendeurs: vendeurs } %}
+                    </div>
+                {% endfor %}
             </div>
         {% endif %}
     </div>

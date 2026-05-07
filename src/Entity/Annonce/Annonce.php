@@ -23,7 +23,7 @@ class Annonce
         minMessage: 'Le titre doit contenir au moins {{ limit }} caracteres.',
         maxMessage: 'Le titre ne doit pas depasser {{ limit }} caracteres.'
     )]
-    private ?string $titre = null;
+    private string $titre = '';
 
     #[ORM\Column(type: Types::STRING, length: 80)]
     #[Assert\NotBlank(message: 'Le type de produit est obligatoire.')]
@@ -33,7 +33,7 @@ class Annonce
         minMessage: 'Le type doit contenir au moins {{ limit }} caracteres.',
         maxMessage: 'Le type ne doit pas depasser {{ limit }} caracteres.'
     )]
-    private ?string $type = null;
+    private string $type = '';
 
     #[ORM\Column(type: Types::INTEGER, nullable: true)]
     #[Assert\NotBlank(message: 'La quantite est obligatoire.')]
@@ -44,14 +44,14 @@ class Annonce
     )]
     private ?int $quantite = null;
 
-    #[ORM\Column(name: 'prixUnitaire', type: Types::FLOAT, nullable: true)]
+    #[ORM\Column(name: 'prixUnitaire', type: Types::DECIMAL, precision: 12, scale: 3, nullable: true)]
     #[Assert\NotBlank(message: 'Le prix unitaire est obligatoire.')]
     #[Assert\Positive(message: 'Le prix unitaire doit etre superieur a zero.')]
     #[Assert\LessThanOrEqual(
         value: 1000000,
         message: 'Le prix unitaire ne doit pas depasser {{ compared_value }} TND.'
     )]
-    private ?float $prixUnitaire = null;
+    private ?string $prixUnitaire = null;
 
     #[ORM\Column(type: Types::STRING, length: 30, nullable: true)]
     #[Assert\NotBlank(message: 'Le statut est obligatoire.')]
@@ -77,25 +77,25 @@ class Annonce
         return $this->id;
     }
 
-    public function getTitre(): ?string
+    public function getTitre(): string
     {
         return $this->titre;
     }
 
     public function setTitre(?string $titre): static
     {
-        $this->titre = $titre === '' ? null : $titre;
+        $this->titre = $titre ?? '';
         return $this;
     }
 
-    public function getType(): ?string
+    public function getType(): string
     {
         return $this->type;
     }
 
     public function setType(?string $type): static
     {
-        $this->type = $type === '' ? null : $type;
+        $this->type = $type ?? '';
         return $this;
     }
 
@@ -112,12 +112,12 @@ class Annonce
 
     public function getPrixUnitaire(): ?float
     {
-        return $this->prixUnitaire;
+        return $this->prixUnitaire !== null ? (float) $this->prixUnitaire : null;
     }
 
     public function setPrixUnitaire(?float $prixUnitaire): static
     {
-        $this->prixUnitaire = $prixUnitaire;
+        $this->prixUnitaire = $prixUnitaire !== null ? number_format($prixUnitaire, 3, '.', '') : null;
         return $this;
     }
 

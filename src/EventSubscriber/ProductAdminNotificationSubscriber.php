@@ -51,7 +51,7 @@ final class ProductAdminNotificationSubscriber
 
         foreach ($admins as $admin) {
             $notification = (new Notifications())
-                ->setUserId((int) $admin->getId())
+                ->setUser($admin)
                 ->setType('marketplace_product_submitted')
                 ->setTitle('Nouveau produit en attente')
                 ->setBody(sprintf(
@@ -61,8 +61,7 @@ final class ProductAdminNotificationSubscriber
                     (new \DateTimeImmutable())->format('Y-m-d H:i'),
                     $reviewUrl
                 ))
-                ->setProductId($productId)
-                ->setCreatedAt(new \DateTimeImmutable());
+                ->setProductId($productId);
 
             $this->entityManager->persist($notification);
         }
@@ -70,4 +69,3 @@ final class ProductAdminNotificationSubscriber
         $this->entityManager->flush();
     }
 }
-

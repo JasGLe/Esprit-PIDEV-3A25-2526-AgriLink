@@ -228,7 +228,7 @@ PROMPT;
             $type      = $a->getTypeActivite();
             $dateStr   = $a->getDateDebut()?->format('Y-m-d') ?? '';
             $dateLabel = $a->getDateDebut()?->format('d/m/Y') ?? '?';
-            $title     = $a->getTitre() ?? $type;
+            $title     = $a->getTitre();
             $cost      = (float) ($a->getCoutEstime() ?? 0);
             $durationH = $this->totalHours($a->getDateDebut(), $a->getDateFin());
             $w         = $forecastByDate[$dateStr] ?? null;
@@ -384,10 +384,10 @@ PROMPT;
             $text .= sprintf(
                 "- [%s] \"%s\" le %s (coût: %s DT, durée: %sh, statut: %s)\n",
                 $a->getTypeActivite(),
-                $a->getTitre() ?? $a->getTypeActivite(),
+                $a->getTitre(),
                 $a->getDateDebut()?->format('d/m/Y') ?? '?',
                 $a->getCoutEstime() ?? '?',
-                $this->totalHours($a->getDateDebut(), $a->getDateFin()) ?? '?',
+                $this->totalHours($a->getDateDebut(), $a->getDateFin()),
                 $a->getStatut() ?? '?'
             );
         }

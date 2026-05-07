@@ -52,13 +52,16 @@ class ProfileController extends AbstractController
         EmailVerificationService $emailVerificationService,
         SecurityEventService $securityEventService
     ): Response {
-        /** @var User $user */
         $user = $this->getUser();
-        $originalEmail = $user->getEmail();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
+        $originalEmail = $user->getEmail() ?? '';
 
         // Handle photo-only upload
         if ($request->isMethod('POST') && $request->request->get('photo_only')) {
-            if ($this->isCsrfTokenValid('profile_photo_upload', $request->request->get('_token'))) {
+            $csrf = $request->request->getString('_token', '');
+            if ($this->isCsrfTokenValid('profile_photo_upload', $csrf !== '' ? $csrf : null)) {
                 $profilePhotoFile = $request->files->get('profile_edit_form')['profilePhoto'] ?? null;
 
                 if ($profilePhotoFile) {
@@ -96,7 +99,7 @@ class ProfileController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             // Feature 4: Detect email change
             $newEmail = $user->getEmail();
-            if ($newEmail !== $originalEmail) {
+            if ($newEmail !== null && $newEmail !== $originalEmail) {
                 // Store new email as pending, revert current email
                 $user->setPendingEmail($newEmail);
                 $user->setEmail($originalEmail);
@@ -158,20 +161,26 @@ class ProfileController extends AbstractController
         SecurityEventService $securityEventService,
         #[Autowire('%env(APP_URL)%')] string $appUrl
     ): Response {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
         $form = $this->createForm(ChangePasswordType::class);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $currentPassword = $form->get('currentPassword')->getData();
 
-            if (!$passwordHasher->isPasswordValid($user, $currentPassword)) {
+            if (!is_string($currentPassword) || !$passwordHasher->isPasswordValid($user, $currentPassword)) {
                 $this->addFlash('error', 'Le mot de passe actuel est incorrect.');
                 return $this->redirectToRoute('app_profile_change_password');
             }
 
             $newPassword = $form->get('newPassword')->getData();
+            if (!is_string($newPassword)) {
+                $this->addFlash('error', 'Le nouveau mot de passe est invalide.');
+                return $this->redirectToRoute('app_profile_change_password');
+            }
             $hashedPassword = $passwordHasher->hashPassword($user, $newPassword);
             $user->setPassword($hashedPassword);
 
@@ -180,9 +189,13 @@ class ProfileController extends AbstractController
             $securityEventService->logPasswordChanged($user);
 
             try {
+                $toEmail = $user->getEmail();
+                if ($toEmail === null || $toEmail === '') {
+                    throw new \RuntimeException('Missing user email');
+                }
                 $email = (new TemplatedEmail())
                     ->from(new Address('noreply@agrilink.com', 'AgriLink'))
-                    ->to($user->getEmail())
+                    ->to($toEmail)
                     ->subject('Votre mot de passe AgriLink a été modifié')
                     ->htmlTemplate('emails/password_changed.html.twig')
                     ->context([
@@ -209,10 +222,12 @@ class ProfileController extends AbstractController
         SecurityEventRepository $securityEventRepository,
         BackupCodeService $backupCodeService
     ): Response {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
-        $recentEvents = $securityEventRepository->findByUser($user->getId(), 8);
+        $recentEvents = $securityEventRepository->findByUser((int) $user->getId(), 8);
         $backupCodesRemaining = $backupCodeService->getRemainingCount($user);
         
         // Get face recognition status
@@ -235,10 +250,13 @@ class ProfileController extends AbstractController
         BackupCodeService $backupCodeService,
         UserGamificationService $gamificationService
     ): Response {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
-        if (!$this->isCsrfTokenValid('toggle_2fa', $request->request->get('_token'))) {
+        $csrf = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('toggle_2fa', $csrf !== '' ? $csrf : null)) {
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('app_profile_security');
         }
@@ -276,15 +294,18 @@ class ProfileController extends AbstractController
         UserSessionRepository $userSessionRepository,
         SecurityEventService $securityEventService
     ): Response {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
-        if (!$this->isCsrfTokenValid('revoke_all_sessions', $request->request->get('_token'))) {
+        $csrf = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('revoke_all_sessions', $csrf !== '' ? $csrf : null)) {
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('app_profile_security');
         }
 
-        $count = $userSessionRepository->revokeAllForUser($user->getId());
+        $count = $userSessionRepository->revokeAllForUser((int) $user->getId());
         $securityEventService->logSessionRevoked($user);
 
         $this->addFlash('success', sprintf('%d session(s) ont été révoquées. Vous devrez vous reconnecter sur vos autres appareils.', $count));
@@ -297,10 +318,12 @@ class ProfileController extends AbstractController
     public function loginHistory(
         SecurityEventRepository $securityEventRepository
     ): Response {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
-        $events = $securityEventRepository->findLoginHistoryByUser($user->getId());
+        $events = $securityEventRepository->findLoginHistoryByUser((int) $user->getId());
 
         return $this->render('user_management/profile/login_history.html.twig', [
             'user' => $user,
@@ -314,8 +337,10 @@ class ProfileController extends AbstractController
         Request $request,
         BackupCodeService $backupCodeService
     ): Response {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
         // Show plain codes only once (from session, set during generation)
         $plainCodes = $request->getSession()->get('_backup_codes_display');
@@ -335,10 +360,13 @@ class ProfileController extends AbstractController
         Request $request,
         BackupCodeService $backupCodeService
     ): Response {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
-        if (!$this->isCsrfTokenValid('regenerate_backup_codes', $request->request->get('_token'))) {
+        $csrf = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('regenerate_backup_codes', $csrf !== '' ? $csrf : null)) {
             $this->addFlash('error', 'Token CSRF invalide.');
             return $this->redirectToRoute('app_profile_security');
         }
@@ -357,14 +385,16 @@ class ProfileController extends AbstractController
         EntityManagerInterface $entityManager,
         FileUploader $fileUploader
     ): Response {
-        $token = $request->request->get('_token');
-        if (!$this->isCsrfTokenValid('profile_photo_delete', $token)) {
+        $token = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('profile_photo_delete', $token !== '' ? $token : null)) {
             $this->addFlash('error', 'Token de sécurité invalide.');
             return $this->redirectToRoute('app_profile_edit');
         }
 
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return $this->redirectToRoute('app_login');
+        }
 
         if ($user->getPhotoProfil()) {
             try {
@@ -384,8 +414,10 @@ class ProfileController extends AbstractController
     #[Route('/face/status', name: 'app_profile_face_status', methods: ['GET'])]
     public function getFaceStatus(): JsonResponse
     {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
 
         return new JsonResponse([
             'enrolled' => !empty($user->getFaceDescriptor()),
@@ -401,23 +433,26 @@ class ProfileController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         UserGamificationService $gamificationService
     ): JsonResponse {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
 
-        if (!$this->isCsrfTokenValid('face_enroll', $request->request->get('_token'))) {
+        $csrf = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('face_enroll', $csrf !== '' ? $csrf : null)) {
             return new JsonResponse(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
         }
 
         // Skip password validation for OAuth users (they don't have passwords)
         if (!$user->getOauthProvider()) {
-            $password = $request->request->get('password');
-            if (!$password || !$passwordHasher->isPasswordValid($user, $password)) {
+            $password = $request->request->getString('password', '');
+            if ($password === '' || !$passwordHasher->isPasswordValid($user, $password)) {
                 return new JsonResponse(['error' => 'Mot de passe incorrect.'], Response::HTTP_UNAUTHORIZED);
             }
         }
 
-        $descriptor = $request->request->get('descriptor');
-        if (!$descriptor) {
+        $descriptor = $request->request->getString('descriptor', '');
+        if ($descriptor === '') {
             return new JsonResponse(['error' => 'Face descriptor manquant.'], Response::HTTP_BAD_REQUEST);
         }
 
@@ -432,11 +467,12 @@ class ProfileController extends AbstractController
                 return new JsonResponse(['success' => true, 'password_only' => true]);
             }
 
-            if (\count($descriptorArray) !== 128) {
+            $normalizedDescriptor = $this->normalizeNumericList($descriptorArray, 128);
+            if ($normalizedDescriptor === null) {
                 return new JsonResponse(['error' => 'Descriptor invalide (128 valeurs attendues).'], Response::HTTP_BAD_REQUEST);
             }
 
-            $storedDescriptor = $faceRecognitionService->storeFaceDescriptor($descriptorArray);
+            $storedDescriptor = $faceRecognitionService->storeFaceDescriptor($normalizedDescriptor);
             $user->setFaceDescriptor($storedDescriptor);
             $user->setFaceEnrolledAt(new \DateTime());
 
@@ -446,7 +482,7 @@ class ProfileController extends AbstractController
             return new JsonResponse([
                 'success' => true,
                 'message' => 'Votre visage a été enregistré avec succès.',
-                'enrolled_at' => $user->getFaceEnrolledAt()->format('Y-m-d H:i:s'),
+                'enrolled_at' => $user->getFaceEnrolledAt()?->format('Y-m-d H:i:s'),
             ]);
         } catch (\Exception $e) {
             return new JsonResponse(['error' => 'Erreur lors de l\'enregistrement du visage: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
@@ -460,17 +496,20 @@ class ProfileController extends AbstractController
         UserPasswordHasherInterface $passwordHasher,
         UserGamificationService $gamificationService
     ): JsonResponse {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
 
-        if (!$this->isCsrfTokenValid('face_remove', $request->request->get('_token'))) {
+        $csrf = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('face_remove', $csrf !== '' ? $csrf : null)) {
             return new JsonResponse(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
         }
 
         // Skip password validation for OAuth users (they don't have passwords)
         if (!$user->getOauthProvider()) {
-            $password = $request->request->get('password');
-            if (!$password || !$passwordHasher->isPasswordValid($user, $password)) {
+            $password = $request->request->getString('password', '');
+            if ($password === '' || !$passwordHasher->isPasswordValid($user, $password)) {
                 return new JsonResponse(['error' => 'Mot de passe incorrect.'], Response::HTTP_UNAUTHORIZED);
             }
         }
@@ -495,17 +534,20 @@ class ProfileController extends AbstractController
         Request $request,
         EntityManagerInterface $entityManager
     ): JsonResponse {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
 
-        if (!$this->isCsrfTokenValid('toggle_intrusion_capture', $request->request->get('_token'))) {
+        $csrf = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('toggle_intrusion_capture', $csrf !== '' ? $csrf : null)) {
             return new JsonResponse(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
         }
 
         try {
             $enabled = $request->request->getBoolean('enabled');
             $user->setIntrusionCaptureEnabled($enabled);
-            $entityManager->flush($user);
+            $entityManager->flush();
 
             return new JsonResponse([
                 'success' => true,
@@ -531,10 +573,13 @@ class ProfileController extends AbstractController
         Security $security,
         #[Autowire('%kernel.project_dir%')] string $projectDir
     ): JsonResponse {
-        /** @var User $user */
         $user = $this->getUser();
+        if (!$user instanceof User) {
+            return new JsonResponse(['error' => 'User not authenticated'], Response::HTTP_UNAUTHORIZED);
+        }
 
-        if (!$this->isCsrfTokenValid('generate_avatar', $request->request->get('_token'))) {
+        $csrf = $request->request->getString('_token', '');
+        if (!$this->isCsrfTokenValid('generate_avatar', $csrf !== '' ? $csrf : null)) {
             return new JsonResponse(['error' => 'Token CSRF invalide.'], Response::HTTP_FORBIDDEN);
         }
 
@@ -611,5 +656,26 @@ class ProfileController extends AbstractController
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
+    }
+
+    /**
+     * @param array<mixed> $values
+     * @return list<float>|null
+     */
+    private function normalizeNumericList(array $values, int $expectedCount): ?array
+    {
+        if (\count($values) !== $expectedCount) {
+            return null;
+        }
+
+        $list = [];
+        foreach (array_values($values) as $value) {
+            if (!is_int($value) && !is_float($value)) {
+                return null;
+            }
+            $list[] = (float) $value;
+        }
+
+        return $list;
     }
 }

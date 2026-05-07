@@ -26,6 +26,11 @@ class MarketplaceWarnings
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private \DateTimeInterface $createdAt;
 
+    public function __construct()
+    {
+        $this->createdAt = new \DateTimeImmutable();
+    }
+
     public function getId(): int
     {
         return $this->id;
@@ -72,10 +77,11 @@ class MarketplaceWarnings
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeInterface $createdAt): static
+    protected function setCreatedAt(\DateTimeInterface $createdAt): static
     {
         $this->createdAt = $createdAt;
 
         return $this;
     }
+
 }

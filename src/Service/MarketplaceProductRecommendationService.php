@@ -5,7 +5,9 @@ namespace App\Service;
 use App\Entity\Marketplace\Produits;
 use App\Entity\UserManagement\User;
 use App\Repository\Marketplace\LigneCommandeRepository;
+use App\Repository\Marketplace\MarketplaceUserEventRepository;
 use App\Repository\Marketplace\ProduitsRepository;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\Process\Process;
 
 final class MarketplaceProductRecommendationService
@@ -18,8 +20,93 @@ final class MarketplaceProductRecommendationService
     public function __construct(
         private readonly ProduitsRepository $produitsRepository,
         private readonly LigneCommandeRepository $ligneCommandeRepository,
+        private readonly MarketplaceUserEventRepository $eventRepository,
         private readonly string $projectDir,
+        private readonly ?LoggerInterface $logger = null,
     ) {
+    }
+
+    /**
+     * @return array{
+     *   recommended: list<Produits>,
+     *   similar: list<Produits>,
+     *   trending: list<Produits>,
+     *   offers: list<Produits>
+     * }
+     */
+    public function buildSectionsFor(?User $user, int $limitPerSection = 6): array
+    {
+        $limitPerSection = max(1, $limitPerSection);
+        $catalog = $this->produitsRepository->findPublicMarketplaceCatalog(null, 'all', null, 'recent');
+        if ($catalog === []) {
+            return ['recommended' => [], 'similar' => [], 'trending' => [], 'offers' => []];
+        }
+
+        $globalSales = $this->ligneCommandeRepository->fetchGlobalTopSellingProductScores();
+        $interactionScores = [];
+        $searchTerms = [];
+        $lastViewedProductId = null;
+
+        if ($user instanceof User && $user->getId() !== null) {
+            $uid = (int) $user->getId();
+            $interactionScores = $this->eventRepository->fetchUserProductInteractionScores($uid);
+            $searchTerms = $this->eventRepository->fetchRecentSearchQueries($uid, 25);
+            $lastViewedProductId = $this->eventRepository->findLastViewedProductId($uid);
+        }
+
+        $rankedSections = $this->rankSectionsWithPython(
+            $catalog,
+            $globalSales,
+            $interactionScores,
+            $searchTerms,
+            $lastViewedProductId,
+            $limitPerSection
+        );
+
+        $byId = [];
+        foreach ($catalog as $p) {
+            if ($p->getId() !== null) {
+                $byId[(int) $p->getId()] = $p;
+            }
+        }
+
+        $mapIdsToProducts = static function (array $ids) use ($byId, $limitPerSection): array {
+            $out = [];
+            foreach ($ids as $id) {
+                $i = (int) $id;
+                if ($i > 0 && isset($byId[$i])) {
+                    $out[] = $byId[$i];
+                }
+                if (\count($out) >= $limitPerSection) {
+                    break;
+                }
+            }
+
+            return $out;
+        };
+
+        $recommended = $mapIdsToProducts($rankedSections['recommended'] ?? []);
+        $similar = $mapIdsToProducts($rankedSections['similar'] ?? []);
+        $trending = $mapIdsToProducts($rankedSections['trending'] ?? []);
+        $offers = $mapIdsToProducts($rankedSections['offers'] ?? []);
+
+        // Fallbacks if ML returns empty rails.
+        if ($trending === []) {
+            $trending = $mapIdsToProducts($this->rankInPhp($catalog, $globalSales, [], [], self::MODE_TOP_SELLING, $limitPerSection));
+        }
+        if ($recommended === []) {
+            $recommended = $mapIdsToProducts($this->rankInPhp($catalog, $globalSales, $interactionScores, [], self::MODE_HYBRID, $limitPerSection));
+        }
+        if ($offers === []) {
+            $offers = array_values(array_slice(array_filter($catalog, static fn (Produits $p): bool => $p->isPromoActive()), 0, $limitPerSection));
+        }
+
+        return [
+            'recommended' => $recommended,
+            'similar' => $similar,
+            'trending' => $trending,
+            'offers' => $offers,
+        ];
     }
 
     /**
@@ -41,8 +128,8 @@ final class MarketplaceProductRecommendationService
         $email = strtolower(trim((string) ($user?->getEmail() ?? '')));
         if ($email !== '') {
             $signals = $this->ligneCommandeRepository->fetchBuyerPurchaseSignalsByEmail($email);
-            $userProductSales = $signals['productScores'] ?? [];
-            $userCategorySales = $signals['categoryScores'] ?? [];
+            $userProductSales = $signals['productScores'];
+            $userCategorySales = $signals['categoryScores'];
         }
 
         $hasGlobalSignals = $this->hasPositiveSignals($globalSales);
@@ -61,7 +148,7 @@ final class MarketplaceProductRecommendationService
         }
 
         $rankedIds = $this->rankWithPython(
-            $catalog,
+            array_values($catalog),
             $globalSales,
             $userProductSales,
             $userCategorySales,
@@ -70,7 +157,7 @@ final class MarketplaceProductRecommendationService
         );
         if ($rankedIds === []) {
             $rankedIds = $this->rankInPhp(
-                $catalog,
+                array_values($catalog),
                 $globalSales,
                 $userProductSales,
                 $userCategorySales,
@@ -81,9 +168,7 @@ final class MarketplaceProductRecommendationService
 
         $byId = [];
         foreach ($catalog as $p) {
-            if ($p->getId() !== null) {
-                $byId[(int) $p->getId()] = $p;
-            }
+            $byId[(int) $p->getId()] = $p;
         }
 
         $out = [];
@@ -121,7 +206,7 @@ final class MarketplaceProductRecommendationService
 
         $productsPayload = [];
         foreach ($catalog as $p) {
-            $id = (int) ($p->getId() ?? 0);
+            $id = (int) $p->getId();
             if ($id <= 0) {
                 continue;
             }
@@ -149,7 +234,8 @@ final class MarketplaceProductRecommendationService
         foreach ($commands as $cmd) {
             try {
                 $process = new Process($cmd, $this->projectDir);
-                $process->setInput(json_encode($payload, JSON_UNESCAPED_UNICODE));
+                $jsonPayload = json_encode($payload, JSON_UNESCAPED_UNICODE);
+                $process->setInput($jsonPayload === false ? null : $jsonPayload);
                 $process->setTimeout(3);
                 $process->run();
                 if (!$process->isSuccessful()) {
@@ -181,6 +267,108 @@ final class MarketplaceProductRecommendationService
     /**
      * @param list<Produits> $catalog
      * @param array<string, float> $globalSales
+     * @param array<string, float> $interactionScores
+     * @param list<string> $searchTerms
+     *
+     * @return array{recommended: list<int>, similar: list<int>, trending: list<int>, offers: list<int>}
+     */
+    private function rankSectionsWithPython(
+        array $catalog,
+        array $globalSales,
+        array $interactionScores,
+        array $searchTerms,
+        ?int $lastViewedProductId,
+        int $limit
+    ): array {
+        $script = $this->projectDir.'\\python\\recommend_marketplace.py';
+        if (!is_file($script)) {
+            return ['recommended' => [], 'similar' => [], 'trending' => [], 'offers' => []];
+        }
+
+        $productsPayload = [];
+        foreach ($catalog as $p) {
+            $id = (int) ($p->getId() ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+            $productsPayload[] = [
+                'id' => $id,
+                'name' => (string) $p->getNom(),
+                'description' => (string) ($p->getDescription() ?? ''),
+                'category' => strtoupper(trim((string) ($p->getCategory() ?? ''))),
+                'stock' => (int) $p->getQuantite(),
+                'price' => (float) $p->getPrixUnitaire(),
+                'promo_active' => (bool) $p->isPromoActive(),
+            ];
+        }
+
+        $payload = [
+            'products' => $productsPayload,
+            'global_sales' => $globalSales,
+            'user_interaction_scores' => $interactionScores,
+            'search_terms' => $searchTerms,
+            'last_viewed_product_id' => $lastViewedProductId,
+            'limit' => $limit,
+        ];
+
+        $pythonBin = trim((string) (getenv('PYTHON_BIN') ?: ($_ENV['PYTHON_BIN'] ?? '')));
+        $commands = array_values(array_filter([
+            $pythonBin !== '' ? [$pythonBin, $script] : null,
+            ['python', $script],
+            ['py', '-3', $script],
+        ]));
+        foreach ($commands as $cmd) {
+            try {
+                $process = new Process($cmd, $this->projectDir);
+                $process->setInput(json_encode($payload, JSON_UNESCAPED_UNICODE));
+                $process->setTimeout(5);
+                $process->run();
+
+                // When Python errors, Symfony used to silently fallback to PHP ranking (ignores search terms).
+                // Log stderr to help debug missing Python / missing sklearn / PATH issues in web runtime.
+                if (!$process->isSuccessful()) {
+                    $this->logger?->warning('Marketplace recommendation Python failed.', [
+                        'cmd' => $cmd,
+                        'exit_code' => $process->getExitCode(),
+                        'error_output' => trim($process->getErrorOutput()),
+                        'output' => trim($process->getOutput()),
+                    ]);
+                    continue;
+                }
+                $json = json_decode($process->getOutput(), true);
+                if (!\is_array($json)) {
+                    continue;
+                }
+                $sections = $json['sections'] ?? null;
+                if (!\is_array($sections)) {
+                    continue;
+                }
+
+                $out = ['recommended' => [], 'similar' => [], 'trending' => [], 'offers' => []];
+                foreach ($out as $k => $_) {
+                    $ids = $sections[$k] ?? [];
+                    if (!\is_array($ids)) {
+                        continue;
+                    }
+                    foreach ($ids as $id) {
+                        $i = (int) $id;
+                        if ($i > 0) {
+                            $out[$k][] = $i;
+                        }
+                    }
+                }
+                return $out;
+            } catch (\Throwable) {
+                // silent fallback
+            }
+        }
+
+        return ['recommended' => [], 'similar' => [], 'trending' => [], 'offers' => []];
+    }
+
+    /**
+     * @param list<Produits> $catalog
+     * @param array<string, float> $globalSales
      * @param array<string, float> $userProductSales
      * @param array<string, float> $userCategorySales
      * @return list<int>
@@ -199,7 +387,7 @@ final class MarketplaceProductRecommendationService
 
         $scored = [];
         foreach ($catalog as $p) {
-            $id = (int) ($p->getId() ?? 0);
+            $id = (int) $p->getId();
             if ($id <= 0) {
                 continue;
             }
