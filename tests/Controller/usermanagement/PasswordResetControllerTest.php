@@ -6,6 +6,12 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class PasswordResetControllerTest extends WebTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        static::ensureKernelShutdown();
+    }
+
     public function testForgotPasswordPageLoads(): void
     {
         // Boot an HTTP client against the Symfony test kernel.
@@ -27,4 +33,3 @@ final class PasswordResetControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
     }
 }
-

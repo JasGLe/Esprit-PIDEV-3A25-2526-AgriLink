@@ -6,6 +6,12 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class RegistrationControllerTest extends WebTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        static::ensureKernelShutdown();
+    }
+
     public function testRegisterChoicePageLoads(): void
     {
         $client = static::createClient();
@@ -16,4 +22,3 @@ final class RegistrationControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
     }
 }
-

@@ -6,6 +6,12 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class ForumControllerTest extends WebTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        static::ensureKernelShutdown();
+    }
+
     public function testForumAiAssistantRejectsInvalidJsonPayload(): void
     {
         $client = static::createClient();
@@ -16,4 +22,3 @@ final class ForumControllerTest extends WebTestCase
         $this->assertResponseStatusCodeSame(400);
     }
 }
-

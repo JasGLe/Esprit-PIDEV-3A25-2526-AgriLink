@@ -6,6 +6,12 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class SecurityControllerTest extends WebTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        static::ensureKernelShutdown();
+    }
+
     public function testLoginPageLoads(): void
     {
         $client = static::createClient();
@@ -16,4 +22,3 @@ final class SecurityControllerTest extends WebTestCase
         $this->assertResponseIsSuccessful();
     }
 }
-

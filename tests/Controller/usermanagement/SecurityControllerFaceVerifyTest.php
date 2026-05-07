@@ -6,6 +6,12 @@ use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
 
 final class SecurityControllerFaceVerifyTest extends WebTestCase
 {
+    protected function setUp(): void
+    {
+        parent::setUp();
+        static::ensureKernelShutdown();
+    }
+
     public function testVerifyFaceWithoutDescriptorReturnsBadRequest(): void
     {
         $client = static::createClient();
@@ -26,4 +32,3 @@ final class SecurityControllerFaceVerifyTest extends WebTestCase
         );
     }
 }
-

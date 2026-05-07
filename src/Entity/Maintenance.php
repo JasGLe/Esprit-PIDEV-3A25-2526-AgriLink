@@ -57,11 +57,6 @@ class Maintenance
         'Annulée'   => 'Annulée',
     ];
 
-    public function __construct()
-    {
-        $this->datePlanifiee = new \DateTime('today');
-    }
-
     // ════════════════════════════════════════════════════════
     // Propriétés
     // ════════════════════════════════════════════════════════

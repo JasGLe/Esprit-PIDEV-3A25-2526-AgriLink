@@ -1,0 +1,48 @@
+###> symfony/framework-bundle ###
+/.env.local
+/.env.local.php
+/.env.*.local
+/config/secrets/dev/
+/config/secrets/prod/
+/public/bundles/
+/var/
+/vendor/
+###< symfony/framework-bundle ###
+
+###> phpunit/phpunit ###
+/phpunit.xml
+.phpunit.result.cache
+###< phpunit/phpunit ###
+
+###> symfony/phpunit-bridge ###
+.phpunit.result.cache
+/phpunit.xml
+###< symfony/phpunit-bridge ###
+
+###> symfony/webpack-encore-bundle ###
+/node_modules/
+/public/build/
+npm-debug.log
+yarn-error.log
+###< symfony/webpack-encore-bundle ###
+
+###> Project-specific ###
+.DS_Store
+*.log
+/Entity_backup_*/
+/prompt*.txt
+/assets/vendor/
+/.claude/
+/docs/
+/public/uploads/
+
+# Local sprint/story HTML (not versioned)
+/sprint.html
+/sprint_backlog_planification_evenement_activite.html
+/story_test_activite.html
+
+###> phpstan/phpstan ###
+phpstan.neon
+###< phpstan/phpstan ###
+*.md
+!README.md

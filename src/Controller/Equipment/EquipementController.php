@@ -69,15 +69,19 @@ class EquipementController extends AbstractController
         ProduitsRepository $produitsRepository,
         PaginatorInterface $paginator
     ): Response {
-        /** @var \App\Entity\UserManagement\User $user */ // Fix PHPStan — getUser() retourne UserInterface|null, pas App\Entity\User
-        $user      = $this->getUser();
+        $user = $this->getUser();
+        if ($user === null || $user->getId() === null) {
+            throw $this->createAccessDeniedException('Utilisateur non authentifie.');
+        }
+
         $search    = $request->query->get('search', '');
         $statut    = $request->query->get('statut', '');
+        $userId    = $user->getId();
 
         // ── Requête de base : uniquement les équipements de l'utilisateur connecté ──
         $qb = $repo->createQueryBuilder('e')
             ->where('e.userlog = :userId')
-            ->setParameter('userId', $user->getId())
+            ->setParameter('userId', $userId)
             ->orderBy('e.dateCreation', 'DESC');
 
         // ── Filtre recherche texte (nom, type, marque) ──────────────────────────
@@ -102,7 +106,7 @@ class EquipementController extends AbstractController
 
         // ── Équipements déjà en vente en boutique (pour désactiver le bouton) ───
         $equipementIdsEnBoutique = [];
-        $equipementIdsEnBoutique = $produitsRepository->findEquipementIdsAlreadyInBoutiqueByOwner($user->getId()); // Fix PHPStan #105 — $user typé non-nullable, gardes $user!==null et method_exists supprimées
+        $equipementIdsEnBoutique = $produitsRepository->findEquipementIdsAlreadyInBoutiqueByOwner($userId);
 
         // ── Tokens CSRF pour les formulaires "Mettre en vente" ──────────────────
         // Un token unique par équipement pour prévenir les soumissions forgées
@@ -120,7 +124,7 @@ class EquipementController extends AbstractController
             ->where('g.userlog = :userId')
             ->andWhere('g.latitude IS NOT NULL')
             ->andWhere('g.longitude IS NOT NULL')
-            ->setParameter('userId', $user->getId())
+            ->setParameter('userId', $userId)
             ->getQuery()
             ->getResult();
         foreach ($allGeo as $geo) {
