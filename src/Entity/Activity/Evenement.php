@@ -120,7 +120,7 @@ class Evenement
         return $this->dateEvenement;
     }
 
-    protected function setDateEvenement(?\DateTimeInterface $dateEvenement): static
+    public function setDateEvenement(?\DateTimeInterface $dateEvenement): static
     {
         $this->dateEvenement = $dateEvenement;
 

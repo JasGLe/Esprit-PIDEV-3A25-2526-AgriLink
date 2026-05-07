@@ -54,8 +54,10 @@ final class MarketplaceProductRecommendationService
             $lastViewedProductId = $this->eventRepository->findLastViewedProductId($uid);
         }
 
+        $catalogList = array_values($catalog);
+
         $rankedSections = $this->rankSectionsWithPython(
-            $catalog,
+            $catalogList,
             $globalSales,
             $interactionScores,
             $searchTerms,
@@ -92,10 +94,10 @@ final class MarketplaceProductRecommendationService
 
         // Fallbacks if ML returns empty rails.
         if ($trending === []) {
-            $trending = $mapIdsToProducts($this->rankInPhp($catalog, $globalSales, [], [], self::MODE_TOP_SELLING, $limitPerSection));
+            $trending = $mapIdsToProducts($this->rankInPhp($catalogList, $globalSales, [], [], self::MODE_TOP_SELLING, $limitPerSection));
         }
         if ($recommended === []) {
-            $recommended = $mapIdsToProducts($this->rankInPhp($catalog, $globalSales, $interactionScores, [], self::MODE_HYBRID, $limitPerSection));
+            $recommended = $mapIdsToProducts($this->rankInPhp($catalogList, $globalSales, $interactionScores, [], self::MODE_HYBRID, $limitPerSection));
         }
         if ($offers === []) {
             $offers = array_values(array_slice(array_filter($catalog, static fn (Produits $p): bool => $p->isPromoActive()), 0, $limitPerSection));
@@ -320,7 +322,8 @@ final class MarketplaceProductRecommendationService
         foreach ($commands as $cmd) {
             try {
                 $process = new Process($cmd, $this->projectDir);
-                $process->setInput(json_encode($payload, JSON_UNESCAPED_UNICODE));
+                $jsonPayload = json_encode($payload, JSON_UNESCAPED_UNICODE);
+                $process->setInput($jsonPayload === false ? null : $jsonPayload);
                 $process->setTimeout(5);
                 $process->run();
 
@@ -444,4 +447,3 @@ final class MarketplaceProductRecommendationService
         return false;
     }
 }
-

@@ -434,7 +434,7 @@ class ActiviteController extends AbstractController
 
         $user = $this->getUser();
 
-        if ($user instanceof User) {
+        if ($user instanceof User && $user->getId() !== null) {
             $activite->setIdAgriculteur($user->getId());
         }
     }
