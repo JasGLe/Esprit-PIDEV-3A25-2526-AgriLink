@@ -10,15 +10,10 @@
                 </h3>
                 <p class="title-subtitle">Améliorez votre visibilité et votre crédibilité</p>
             </div>
-            <div class="header-actions">
-                <button id="profile-widget-minimize" class="widget-minimize-btn" type="button" title="Minimize widget" aria-label="Minimize">
-                    <span class="minimize-icon">−</span>
-                </button>
-                <span class="completion-percentage-circle">
-                    <span class="percentage-value">--</span>
-                    <span class="percentage-unit">%</span>
-                </span>
-            </div>
+            <span class="completion-percentage-circle">
+                <span class="percentage-value">--</span>
+                <span class="percentage-unit">%</span>
+            </span>
         </div>
 
         <div id="profile-widget-content" class="profile-widget-content">
@@ -209,35 +204,6 @@
     }
 })();
 
-// Handle minimize button
-document.addEventListener('DOMContentLoaded', function() {
-    const minimizeBtn = document.getElementById('profile-widget-minimize');
-    const contentDiv = document.getElementById('profile-widget-content');
-    const minimizeIcon = document.querySelector('.minimize-icon');
-    
-    if (minimizeBtn && contentDiv && minimizeIcon) {
-        // Restore minimized state from localStorage
-        if (localStorage.getItem('profile-widget-minimized') === 'true') {
-            contentDiv.classList.add('minimized');
-            minimizeBtn.classList.add('minimized');
-            minimizeIcon.textContent = '+';
-            minimizeBtn.title = 'Expand widget';
-        }
-        
-        minimizeBtn.addEventListener('click', function() {
-            contentDiv.classList.toggle('minimized');
-            minimizeBtn.classList.toggle('minimized');
-            
-            // Update icon and title
-            const isMinimized = contentDiv.classList.contains('minimized');
-            minimizeIcon.textContent = isMinimized ? '+' : '−';
-            minimizeBtn.title = isMinimized ? 'Expand widget' : 'Minimize widget';
-            
-            // Save state
-            localStorage.setItem('profile-widget-minimized', isMinimized);
-        });
-    }
-});
 </script>
 
 <style>
@@ -650,63 +616,6 @@ document.addEventListener('DOMContentLoaded', function() {
     font-size: 13px;
     color: #78350f;
     font-weight: 500;
-}
-
-/* ========== MINIMIZE BUTTON ========== */
-.header-actions {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: flex-end;
-}
-
-.widget-minimize-btn {
-    background: #22c55e;
-    border: 2px solid #16a34a;
-    border-radius: 8px;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 28px;
-    color: white;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    padding: 0;
-    flex-shrink: 0;
-    font-weight: bold;
-    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-}
-
-.widget-minimize-btn:hover {
-    border-color: #15803d;
-    background-color: #16a34a;
-    box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
-    transform: translateY(-2px);
-}
-
-.widget-minimize-btn:active {
-    transform: scale(0.95);
-}
-
-.minimize-icon {
-    display: inline-block;
-    line-height: 1;
-    font-weight: 900;
-}
-
-#profile-widget-content {
-    transition: all 0.3s ease;
-    max-height: 1000px;
-    overflow: hidden;
-}
-
-#profile-widget-content.minimized {
-    max-height: 0;
-    overflow: hidden;
-    display: none;
 }
 
 /* ========== RESPONSIVE ========== */

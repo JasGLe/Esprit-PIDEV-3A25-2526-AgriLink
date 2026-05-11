@@ -1,7 +1,7 @@
 {% extends 'layouts/dashboard_layout.html.twig' %}
 
 {% block title %}Tableau de bord Agriculteur - AgriLink{% endblock %}
-{% block page_title %}Mon exploitation{% endblock %}
+{% block page_title %}Mon tableau de bords{% endblock %}
 
 {% block role_specific_navigation %}
     <hr class="my-3 border-secondary">
@@ -53,6 +53,104 @@
 
 {% block dashboard_content %}
 
+<style>
+.ag-dashboard-section {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.ag-dashboard-section-title {
+    margin: 0;
+    color: #111827;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.ag-dashboard-section-copy {
+    margin: 0.3rem 0 0;
+    color: #6b7280;
+    font-size: 0.82rem;
+}
+
+.ag-dashboard-kpi {
+    border: 1px solid #e5e7eb;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.06);
+    overflow: hidden;
+}
+
+.ag-dashboard-kpi .card-body,
+.ag-dashboard-panel .card-body {
+    padding: 1.35rem;
+}
+
+.ag-dashboard-kpi .card-footer,
+.ag-dashboard-panel .card-footer {
+    background: rgba(248, 250, 252, 0.95);
+    border-top: 1px solid #e5e7eb;
+}
+
+.ag-dashboard-panel {
+    border: 1px solid #e5e7eb;
+    border-radius: 18px;
+    background: #ffffff;
+    box-shadow: 0 16px 38px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+}
+
+.ag-dashboard-panel-title {
+    margin-bottom: 0.25rem;
+    color: #111827;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.ag-dashboard-panel-copy {
+    margin-bottom: 0;
+    color: #6b7280;
+    font-size: 0.78rem;
+}
+
+.ag-map-shell {
+    padding: 0.75rem;
+    border: 1px solid #dcfce7;
+    border-radius: 16px;
+    background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+}
+
+.ag-map-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.85rem;
+}
+
+.ag-map-legend .badge {
+    padding: 0.45rem 0.7rem;
+    border-radius: 999px;
+    font-weight: 600;
+}
+
+.ag-maintenance-item {
+    padding: 0.9rem 0;
+}
+
+.ag-maintenance-item + .ag-maintenance-item {
+    border-top: 1px solid #edf2f7;
+}
+
+@media (max-width: 767.98px) {
+    .ag-dashboard-section {
+        align-items: start;
+        flex-direction: column;
+    }
+}
+</style>
+
 {# ── Welcome Banner ── #}
 <div class="ag-welcome-banner ag-animate-fade-up mb-4" style="background:linear-gradient(135deg,#166534 0%,#16a34a 60%,#0d9488 100%);">
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
@@ -89,7 +187,19 @@
 
 {# ── Quick Navigation Cards ── #}
 <div class="row g-3 mb-4 ag-animate-fade-up ag-delay-2">
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-md-4">
+        <a href="{{ path('exploitation_index') }}" class="ag-action-item text-decoration-none h-100" style="padding:1.1rem 1.25rem;">
+            <div class="ag-action-icon" style="background:rgba(22,163,74,.12);width:52px;height:52px;">
+                <svg width="24" height="24" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22V12m0 0C12 7 7 4 3 5c0 5 3 9 9 7m0 0c0-5 5-8 9-7-1 5-4 8-9 7"/></svg>
+            </div>
+            <div class="flex-fill">
+                <p class="fw-bold text-dark mb-0">Exploitations agricoles</p>
+                <p class="text-muted small mb-0">Parcelles, cultures et suivi</p>
+            </div>
+            <svg class="ag-action-chevron" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+        </a>
+    </div>
+    <div class="col-12 col-md-4">
         <a href="{{ path('activite_list') }}" class="ag-action-item text-decoration-none h-100" style="padding:1.1rem 1.25rem;">
             <div class="ag-action-icon" style="background:rgba(34,197,94,.12);width:52px;height:52px;font-size:1.4rem;">🌾</div>
             <div class="flex-fill">
@@ -99,7 +209,7 @@
             <svg class="ag-action-chevron" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </a>
     </div>
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-md-4">
         <a href="{{ path('evenement_list') }}" class="ag-action-item text-decoration-none h-100" style="padding:1.1rem 1.25rem;">
             <div class="ag-action-icon" style="background:rgba(59,130,246,.12);width:52px;height:52px;font-size:1.4rem;">📅</div>
             <div class="flex-fill">
@@ -112,28 +222,16 @@
 </div>
 
 {# ── Stat Cards ── #}
+<div class="ag-dashboard-section ag-animate-fade-up ag-delay-2">
+    <div>
+        <h5 class="ag-dashboard-section-title">Vue rapide</h5>
+        <p class="ag-dashboard-section-copy">Les raccourcis et indicateurs les plus utiles en début de journée.</p>
+    </div>
+</div>
 <div class="row g-3 mb-4">
 
-    {# Parcelles #}
-    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-1">
-        <div class="ag-stat-card">
-            <div class="ag-stat-body d-flex align-items-start gap-3">
-                <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(22,163,74,.14),rgba(34,197,94,.07));">
-                    <svg width="22" height="22" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg>
-                </div>
-                <div>
-                    <p class="text-muted small fw-semibold mb-1" style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.04em;">Mes parcelles</p>
-                    <p class="fw-bold mb-0" style="font-size:1.5rem;color:#111827;">--</p>
-                </div>
-            </div>
-            <div class="ag-stat-footer">
-                <a href="#" class="small fw-semibold text-decoration-none" style="color:#16a34a;">Gérer →</a>
-            </div>
-        </div>
-    </div>
-
     {# Événements #}
-    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-2">
+    <div class="col-12 col-md-6 col-xl-4 ag-animate-fade-up ag-delay-2">
         <div class="ag-stat-card">
             <div class="ag-stat-body d-flex align-items-start gap-3">
                 <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(245,158,11,.14),rgba(252,211,77,.07));">
@@ -159,7 +257,7 @@
     </div>
 
     {# Boutique #}
-    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-3">
+    <div class="col-12 col-md-6 col-xl-4 ag-animate-fade-up ag-delay-3">
         <div class="ag-stat-card">
             <div class="ag-stat-body d-flex align-items-start gap-3">
                 <div class="ag-stat-icon" style="background:linear-gradient(135deg,rgba(249,115,22,.14),rgba(245,158,11,.07));">
@@ -177,7 +275,7 @@
     </div>
 
     {# Météo #}
-    <div class="col-12 col-sm-6 col-lg-3 ag-animate-fade-up ag-delay-4">
+    <div class="col-12 col-md-6 col-xl-4 ag-animate-fade-up ag-delay-4">
         <div class="ag-weather-card">
             <div class="ag-stat-body d-flex align-items-start gap-3">
                 <div class="ag-stat-icon" style="background:rgba(255,255,255,.18);">
@@ -216,14 +314,22 @@
     </div>
 
     {# ── Section Équipements & Maintenances ── #}
-    <h5 class="fw-bold mt-4 mb-3">⚙️ Mes Équipements & Maintenances</h5>
+    <div class="ag-dashboard-section mt-3">
+        <div>
+            <h5 class="ag-dashboard-section-title">Mes équipements et maintenances</h5>
+            <p class="ag-dashboard-section-copy">Une vue centralisée sur votre parc matériel, son état et les interventions à venir.</p>
+        </div>
+        <a href="{{ path('equipement_index') }}" class="btn btn-sm fw-semibold" style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:999px;">
+            Gérer les équipements
+        </a>
+    </div>
 
     {# KPI Cards — 4 cards #}
     <div class="row g-3 mb-4">
 
         {# Card 1 — Total Équipements #}
         <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden">
+            <div class="card ag-dashboard-kpi h-100">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center gap-3">
                         <span style="font-size:2.2rem">🚜</span>
@@ -241,7 +347,7 @@
 
         {# Card 2 — Statuts équipements #}
         <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden">
+            <div class="card ag-dashboard-kpi h-100">
                 <div class="card-body p-4">
                     <div class="small fw-semibold text-muted mb-3 text-uppercase" style="letter-spacing:.06em;font-size:.68rem">Statuts équipements</div>
                     <div class="d-flex flex-column gap-2">
@@ -280,7 +386,7 @@
 
         {# Card 3 — Maintenances #}
         <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden">
+            <div class="card ag-dashboard-kpi h-100">
                 <div class="card-body p-4">
                     <div class="d-flex align-items-center gap-3 mb-2">
                         <span style="font-size:2.2rem">🔧</span>
@@ -305,7 +411,7 @@
 
         {# Card 4 — Coût total maintenances #}
         <div class="col-12 col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden">
+            <div class="card ag-dashboard-kpi h-100">
                 <div class="card-body p-4">
                     <div class="small fw-semibold text-muted mb-2 text-uppercase" style="letter-spacing:.06em;font-size:.68rem">Coût total maintenances</div>
                     {% if coutTotalMaintenances|default(0) > 0 %}
@@ -327,12 +433,20 @@
 
         {# Carte Leaflet — col-lg-7 #}
         <div class="col-12 col-lg-7">
-            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden">
+            <div class="card ag-dashboard-panel h-100">
                 <div class="card-body p-4">
-                    <h6 class="fw-semibold mb-3 text-dark">📍 Localisation de mes équipements</h6>
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                        <div>
+                            <h6 class="ag-dashboard-panel-title">📍 Localisation de mes équipements</h6>
+                            <p class="ag-dashboard-panel-copy">Repérez rapidement vos matériels et leur état directement depuis le tableau de bord.</p>
+                        </div>
+                        <a href="{{ path('carte_index') }}" class="small fw-semibold text-decoration-none" style="color:#15803d;">Ouvrir la carte →</a>
+                    </div>
                     {% if equipementsGeo|default([])|length > 0 %}
-                        <div id="dashEquipMap" style="height:280px;border-radius:12px;border:1px solid #e5e7eb;z-index:0"></div>
-                        <div class="d-flex flex-wrap gap-2 mt-2">
+                        <div class="ag-map-shell">
+                            <div id="dashEquipMap" style="height:280px;border-radius:12px;border:1px solid #d1fae5;z-index:0"></div>
+                        </div>
+                        <div class="ag-map-legend">
                             <span class="badge rounded-pill" style="background:#19875422;color:#198754;font-size:.7rem">● Actif</span>
                             <span class="badge rounded-pill" style="background:#ffc10722;color:#b45309;font-size:.7rem">● En maintenance</span>
                             <span class="badge rounded-pill" style="background:#dc354522;color:#dc3545;font-size:.7rem">● En panne</span>
@@ -352,15 +466,16 @@
 
         {# Prochaines maintenances — col-lg-5 #}
         <div class="col-12 col-lg-5">
-            <div class="card border-0 shadow-sm h-100" style="border-radius:12px;overflow:hidden">
+            <div class="card ag-dashboard-panel h-100">
                 <div class="card-body p-4">
-                    <h6 class="fw-semibold mb-3 text-dark">🔧 Prochaines maintenances planifiées</h6>
+                    <h6 class="ag-dashboard-panel-title">🔧 Prochaines maintenances planifiées</h6>
+                    <p class="ag-dashboard-panel-copy mb-3">Anticipez les interventions urgentes et les opérations préventives à venir.</p>
                     {% set prochaines = prochainesMaintenances|default([]) %}
                     {% if prochaines|length > 0 %}
                         {% for m in prochaines %}
                             {% set equip = equipMap[m.equipementId]|default(null) %}
                             {% set jours = ((m.datePlanifiee|date('U') - "now"|date('U')) / 86400)|round(0, 'ceil') %}
-                            <div class="{% if not loop.last %}pb-3 mb-3 border-bottom{% endif %}">
+                            <div class="ag-maintenance-item">
                                 <div class="d-flex align-items-start justify-content-between gap-2">
                                     <div class="flex-fill" style="min-width:0">
                                         {% if equip %}
@@ -404,100 +519,10 @@
             </div>
         </div>
     </div>
-
-    {# Main content grid #}
-    <div class="row g-4">
-        {# Quick Actions #}
-        <div class="col-12 col-lg-6">
-        {% embed 'components/_card.html.twig' %}
-            {% block card_title %}Actions rapides{% endblock %}
-            {% block card_content %}
-                <div class="d-flex flex-column gap-2">
-                    <a href="#" class="d-flex align-items-center p-3 rounded border border-light-subtle text-decoration-none">
-                        <div class="d-flex align-items-center justify-content-center rounded" style="width: 40px; height: 40px; background-color: #dcfce7; margin-right: 1rem;">
-                            <svg class="w-5 h-5 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="small fw-medium text-dark mb-0">Ajouter une parcelle</p>
-                            <p class="small text-muted mb-0">Enregistrez une nouvelle zone de culture</p>
-                        </div>
-                    </a>
-
-                    <a href="#" class="d-flex align-items-center p-3 rounded border border-light-subtle text-decoration-none">
-                        <div class="d-flex align-items-center justify-content-center rounded" style="width: 40px; height: 40px; background-color: #dbeafe; margin-right: 1rem;">
-                            <svg class="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                        </div>
-                        <div>
-                            <p class="small fw-medium text-dark mb-0">Commander des fournitures</p>
-                            <p class="small text-muted mb-0">Parcourir le catalogue fournisseurs</p>
-                        </div>
-                    </a>
-                </div>
-            {% endblock %}
-        {% endembed %}
-    </div>
-</div>
-
 {# ── Main Grid ── #}
 <div class="row g-3 mb-4">
-
-    {# Quick Actions #}
-    <div class="col-12 col-lg-6 ag-animate-fade-up ag-delay-2">
-        <div class="ag-card h-100">
-            <div class="ag-card-header">
-                <p class="ag-card-title">⚡ Actions rapides</p>
-            </div>
-            <div class="ag-card-body d-flex flex-column gap-2">
-                <a href="{{ path('exploitation_index') }}" class="ag-action-item text-decoration-none">
-                    <div class="ag-action-icon" style="background:rgba(22,163,74,.1);">
-                        <svg width="18" height="18" fill="none" stroke="#16a34a" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-                    </div>
-                    <div>
-                        <p class="small fw-semibold text-dark mb-0">Gérer l'exploitation</p>
-                        <p class="text-muted mb-0" style="font-size:0.775rem;">Parcelles, cultures et suivi</p>
-                    </div>
-                    <svg class="ag-action-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <a href="{{ path('marketplace_index') }}" class="ag-action-item text-decoration-none">
-                    <div class="ag-action-icon" style="background:rgba(37,99,235,.1);">
-                        <svg width="18" height="18" fill="none" stroke="#2563eb" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                    </div>
-                    <div>
-                        <p class="small fw-semibold text-dark mb-0">Commander des fournitures</p>
-                        <p class="text-muted mb-0" style="font-size:0.775rem;">Parcourir le catalogue fournisseurs</p>
-                    </div>
-                    <svg class="ag-action-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <a href="{{ path('calendar_index') }}" class="ag-action-item text-decoration-none">
-                    <div class="ag-action-icon" style="background:rgba(139,92,246,.1);">
-                        <svg width="18" height="18" fill="none" stroke="#8b5cf6" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                    </div>
-                    <div>
-                        <p class="small fw-semibold text-dark mb-0">Planifier une tâche</p>
-                        <p class="text-muted mb-0" style="font-size:0.775rem;">Ajouter au calendrier agricole</p>
-                    </div>
-                    <svg class="ag-action-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-                <a href="{{ path('ia_anomalie_page') }}" class="ag-action-item text-decoration-none">
-                    <div class="ag-action-icon" style="background:rgba(245,158,11,.1);">
-                        <svg width="18" height="18" fill="none" stroke="#d97706" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.29 3.86l-7.39 12.8A1 1 0 003.76 18h16.48a1 1 0 00.86-1.34l-7.39-12.8a1 1 0 00-1.72 0z"/></svg>
-                    </div>
-                    <div>
-                        <p class="small fw-semibold text-dark mb-0">Détection d'anomalies IA</p>
-                        <p class="text-muted mb-0" style="font-size:0.775rem;">Analyser vos cultures avec l'IA</p>
-                    </div>
-                    <svg class="ag-action-chevron" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
-            </div>
-        </div>
-    </div>
-
     {# Calendar Preview #}
-    <div class="col-12 col-lg-6 ag-animate-fade-up ag-delay-3">
+    <div class="col-12 ag-animate-fade-up ag-delay-3">
         <div class="ag-card h-100">
             <div class="ag-card-header">
                 <div>
@@ -600,20 +625,33 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
     <script>
-    (function () {
-        var geoData = {{ equipementsGeo|json_encode|raw }};
+    window.agriDashboardMapData = {{ equipementsGeo|json_encode|raw }};
 
-        var map = L.map('dashEquipMap');
+    window.initAgriDashboardMap = function () {
+        var mapElement = document.getElementById('dashEquipMap');
+        var geoData = window.agriDashboardMapData || [];
+
+        if (!mapElement || typeof L === 'undefined' || geoData.length === 0) {
+            return;
+        }
+
+        if (window.agriDashboardEquipMap) {
+            window.agriDashboardEquipMap.remove();
+            window.agriDashboardEquipMap = null;
+        }
+
+        var map = L.map(mapElement, { zoomControl: true });
+        window.agriDashboardEquipMap = map;
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors'
         }).addTo(map);
 
         var statusColors = {
-            'Actif'          : '#198754',
-            'En maintenance' : '#ffc107',
-            'En panne'       : '#dc3545',
-            'Hors service'   : '#6f42c1'
+            'Actif': '#198754',
+            'En maintenance': '#ffc107',
+            'En panne': '#dc3545',
+            'Hors service': '#6f42c1'
         };
 
         var bounds = [];
@@ -621,12 +659,12 @@
         geoData.forEach(function (eq) {
             var color = statusColors[eq.statut] || '#6c757d';
             var marker = L.circleMarker([eq.lat, eq.lng], {
-                radius       : 9,
-                fillColor    : color,
-                color        : '#fff',
-                weight       : 2,
-                opacity      : 1,
-                fillOpacity  : 0.9
+                radius: 9,
+                fillColor: color,
+                color: '#fff',
+                weight: 2,
+                opacity: 1,
+                fillOpacity: 0.9
             }).addTo(map);
 
             marker.bindPopup(
@@ -646,16 +684,64 @@
         } else if (bounds.length > 1) {
             map.fitBounds(bounds, { padding: [20, 20] });
         }
-    })();
+
+        setTimeout(function () {
+            if (window.agriDashboardEquipMap) {
+                window.agriDashboardEquipMap.invalidateSize();
+            }
+        }, 0);
+    };
+
+    if (!window.agriDashboardMapListenersBound) {
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.initAgriDashboardMap) {
+                window.initAgriDashboardMap();
+            }
+        });
+
+        document.addEventListener('turbo:load', function () {
+            if (window.initAgriDashboardMap) {
+                window.initAgriDashboardMap();
+            }
+        });
+
+        document.addEventListener('turbo:before-cache', function () {
+            if (window.agriDashboardEquipMap) {
+                window.agriDashboardEquipMap.remove();
+                window.agriDashboardEquipMap = null;
+            }
+        });
+
+        window.agriDashboardMapListenersBound = true;
+    }
+
+    if (document.readyState !== 'loading') {
+        window.initAgriDashboardMap();
+    }
     </script>
     {% endif %}
 <script>
-document.addEventListener('DOMContentLoaded', function () {
+if (!window.agriDashboardModalListenersBound) {
+    document.addEventListener('turbo:load', initDashboardModalArrow);
+    document.addEventListener('DOMContentLoaded', initDashboardModalArrow);
+    window.agriDashboardModalListenersBound = true;
+}
+
+function initDashboardModalArrow() {
     const modal = document.getElementById('mesEvenementsModal');
     const arrow = document.getElementById('mes-evenements-arrow');
-    if (!modal || !arrow) return;
-    modal.addEventListener('show.bs.modal',   () => arrow.classList.add('is-open'));
+
+    if (!modal || !arrow || modal.dataset.arrowBound === 'true') {
+        return;
+    }
+
+    modal.addEventListener('show.bs.modal', () => arrow.classList.add('is-open'));
     modal.addEventListener('hidden.bs.modal', () => arrow.classList.remove('is-open'));
-});
+    modal.dataset.arrowBound = 'true';
+}
+
+if (document.readyState !== 'loading') {
+    initDashboardModalArrow();
+}
 </script>
 {% endblock %}
