@@ -69,9 +69,6 @@ services:
             $googleClientId: "%env(GOOGLE_CLIENT_ID)%"
             $googleClientSecret: "%env(GOOGLE_CLIENT_SECRET)%"
             $googleRedirectUri: "%env(GOOGLE_REDIRECT_URI)%"
-            $facebookAppId: "%env(FACEBOOK_APP_ID)%"
-            $facebookAppSecret: "%env(FACEBOOK_APP_SECRET)%"
-            $facebookRedirectUri: "%env(FACEBOOK_REDIRECT_URI)%"
 
     App\Service\RecapitulatifMailService:
         arguments:

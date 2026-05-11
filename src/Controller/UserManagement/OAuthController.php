@@ -72,49 +72,6 @@ class OAuthController extends AbstractController
     }
 
     /**
-     * Redirect to Facebook OAuth
-     */
-    #[Route('/facebook', name: 'facebook')]
-    public function facebookLogin(): Response
-    {
-        return $this->redirect($this->oauthService->getFacebookAuthUrl());
-    }
-
-    /**
-     * Handle Facebook OAuth callback
-     */
-    #[Route('/facebook/callback', name: 'facebook_callback')]
-    public function facebookCallback(Request $request): Response
-    {
-        // If already authenticated, skip to dashboard
-        if ($this->getUser()) {
-            return $this->redirectToRoute('app_dashboard');
-        }
-
-        $code = $request->query->getString('code', '');
-        $error = $request->query->getString('error', '');
-
-        if ($error !== '') {
-            $this->addFlash('danger', 'Erreur OAuth: ' . $error);
-            return $this->redirectToRoute('app_login');
-        }
-
-        if ($code === '') {
-            $this->addFlash('danger', 'Code d\'autorisation manquant');
-            return $this->redirectToRoute('app_login');
-        }
-
-        $oauthUser = $this->oauthService->handleFacebookCallback($code);
-
-        if (!$oauthUser) {
-            $this->addFlash('danger', 'Échec de l\'authentification avec Facebook');
-            return $this->redirectToRoute('app_login');
-        }
-
-        return $this->authenticateOrCreateUser($oauthUser, $request);
-    }
-
-    /**
      * Authenticate or create user based on OAuth data
      */
     /**
@@ -203,4 +160,3 @@ class OAuthController extends AbstractController
         return $this->redirectToRoute('app_dashboard');
     }
 }
-

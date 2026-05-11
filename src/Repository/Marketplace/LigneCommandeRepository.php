@@ -221,8 +221,8 @@ class LigneCommandeRepository extends ServiceEntityRepository
             ->setParameter('sid', $sellerUserId)
             ->setParameter('cancelled', 'ANNULEE')
             ->groupBy('lc.nomProduit')
-            ->orderBy('qty', 'DESC')
-            ->addOrderBy('revenue', 'DESC')
+            ->orderBy('SUM(lc.quantite)', 'DESC')
+            ->addOrderBy('SUM(lc.prixTotal)', 'DESC')
             ->setMaxResults($limit)
             ->getQuery()
             ->getArrayResult();
@@ -257,7 +257,7 @@ class LigneCommandeRepository extends ServiceEntityRepository
             ->setParameter('sid', $sellerUserId)
             ->setParameter('cancelled', 'ANNULEE')
             ->groupBy('p.categorie')
-            ->orderBy('revenue', 'DESC')
+            ->orderBy('SUM(lc.prixTotal)', 'DESC')
             ->getQuery()
             ->getArrayResult();
 
