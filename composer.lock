@@ -4,112 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "702d5b95de367ee4a9617a95fc6b2745",
+    "content-hash": "9afd0500bfea8319ec56ad1a401a31dd",
     "packages": [
-        {
-            "name": "ahmed-bhs/doctrine-doctor",
-            "version": "v1.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/ahmed-bhs/doctrine-doctor.git",
-                "reference": "cacebcb65db55ecfcc8ae2cf4699851173c6b7a3"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/ahmed-bhs/doctrine-doctor/zipball/cacebcb65db55ecfcc8ae2cf4699851173c6b7a3",
-                "reference": "cacebcb65db55ecfcc8ae2cf4699851173c6b7a3",
-                "shasum": ""
-            },
-            "require": {
-                "doctrine/doctrine-bundle": "^2.12",
-                "doctrine/orm": "^2.10|^3.0|^4.0",
-                "nikic/php-parser": "^5.6",
-                "php": "^8.2",
-                "phpmyadmin/sql-parser": "^6.0",
-                "symfony/framework-bundle": "^6.0|^7.0",
-                "webmozart/assert": "^1.11"
-            },
-            "require-dev": {
-                "bitbag/coding-standard": "^3.0",
-                "deptrac/deptrac": "^4.2",
-                "php-parallel-lint/php-parallel-lint": "^1.4",
-                "phpmd/phpmd": "^2.15",
-                "phpstan/extension-installer": "^1.4",
-                "phpstan/phpstan": "^2.1",
-                "phpstan/phpstan-doctrine": "^2.0",
-                "phpstan/phpstan-phpunit": "^2.0",
-                "phpstan/phpstan-symfony": "^2.0",
-                "phpunit/phpunit": "^10.0",
-                "symfony/stopwatch": "^6.0|^7.0",
-                "symfony/var-dumper": "^6.0|^7.0",
-                "symfony/var-exporter": "^6.4|^7.0",
-                "symplify/easy-coding-standard": "^12.6",
-                "twig/twig": "^3.0"
-            },
-            "type": "symfony-bundle",
-            "extra": {
-                "symfony": {
-                    "require": "^6.0|^7.0",
-                    "allow-contrib": false
-                },
-                "branch-alias": {
-                    "dev-main": "1.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "AhmedBhs\\DoctrineDoctor\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Ahmed EBEN HASSINE",
-                    "email": "ahmedbhs123@gmail.com",
-                    "role": "Maintainer"
-                }
-            ],
-            "description": "Runtime analysis tool for Doctrine ORM integrated into Symfony Web Profiler. Unlike static linters, it analyzes actual query execution at runtime to detect performance bottlenecks, security vulnerabilities, and best practice violations during development with real execution context and data.",
-            "homepage": "https://github.com/ahmed-bhs/doctrine-doctor",
-            "keywords": [
-                "Best-Practices",
-                "analyzer",
-                "code-quality",
-                "database-performance",
-                "debugging",
-                "developer-tools",
-                "development-tools",
-                "doctrine",
-                "doctrine-analyzer",
-                "doctrine-orm",
-                "dql",
-                "missing-indexes",
-                "n-plus-one",
-                "n-plus-one-detection",
-                "orm-debugging",
-                "performance",
-                "performance-monitoring",
-                "profiler",
-                "query-analysis",
-                "query-analyzer",
-                "query-optimization",
-                "runtime-analysis",
-                "security",
-                "slow-queries",
-                "sql-profiler",
-                "symfony",
-                "symfony-bundle",
-                "web-profiler"
-            ],
-            "support": {
-                "issues": "https://github.com/ahmed-bhs/doctrine-doctor/issues",
-                "source": "https://github.com/ahmed-bhs/doctrine-doctor"
-            },
-            "time": "2026-03-10T18:51:00+00:00"
-        },
         {
             "name": "bacon/bacon-qr-code",
             "version": "v3.1.1",
@@ -1442,16 +1338,16 @@
         },
         {
             "name": "doctrine/orm",
-            "version": "2.20.10",
+            "version": "2.20.12",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/orm.git",
-                "reference": "9fe8ce4bf75fbb7342f35835d9a90640902164db"
+                "reference": "5fc5b1991d6a4301cbab8ee4d47e90401235be09"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/orm/zipball/9fe8ce4bf75fbb7342f35835d9a90640902164db",
-                "reference": "9fe8ce4bf75fbb7342f35835d9a90640902164db",
+                "url": "https://api.github.com/repos/doctrine/orm/zipball/5fc5b1991d6a4301cbab8ee4d47e90401235be09",
+                "reference": "5fc5b1991d6a4301cbab8ee4d47e90401235be09",
                 "shasum": ""
             },
             "require": {
@@ -1537,9 +1433,9 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/orm/issues",
-                "source": "https://github.com/doctrine/orm/tree/2.20.10"
+                "source": "https://github.com/doctrine/orm/tree/2.20.12"
             },
-            "time": "2026-04-02T06:18:54+00:00"
+            "time": "2026-05-08T11:18:45+00:00"
         },
         {
             "name": "doctrine/persistence",
@@ -2799,64 +2695,6 @@
             "time": "2026-01-02T08:56:05+00:00"
         },
         {
-            "name": "nikic/php-parser",
-            "version": "v5.7.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/nikic/PHP-Parser.git",
-                "reference": "dca41cd15c2ac9d055ad70dbfd011130757d1f82"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/dca41cd15c2ac9d055ad70dbfd011130757d1f82",
-                "reference": "dca41cd15c2ac9d055ad70dbfd011130757d1f82",
-                "shasum": ""
-            },
-            "require": {
-                "ext-ctype": "*",
-                "ext-json": "*",
-                "ext-tokenizer": "*",
-                "php": ">=7.4"
-            },
-            "require-dev": {
-                "ircmaxell/php-yacc": "^0.0.7",
-                "phpunit/phpunit": "^9.0"
-            },
-            "bin": [
-                "bin/php-parse"
-            ],
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "5.x-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "PhpParser\\": "lib/PhpParser"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "BSD-3-Clause"
-            ],
-            "authors": [
-                {
-                    "name": "Nikita Popov"
-                }
-            ],
-            "description": "A PHP parser written in PHP",
-            "keywords": [
-                "parser",
-                "php"
-            ],
-            "support": {
-                "issues": "https://github.com/nikic/PHP-Parser/issues",
-                "source": "https://github.com/nikic/PHP-Parser/tree/v5.7.0"
-            },
-            "time": "2025-12-06T11:56:16+00:00"
-        },
-        {
             "name": "phpdocumentor/reflection-common",
             "version": "2.2.0",
             "source": {
@@ -3030,96 +2868,6 @@
                 "source": "https://github.com/phpDocumentor/TypeResolver/tree/1.12.0"
             },
             "time": "2025-11-21T15:09:14+00:00"
-        },
-        {
-            "name": "phpmyadmin/sql-parser",
-            "version": "6.0.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/phpmyadmin/sql-parser.git",
-                "reference": "75397801ef687ef6b850e907a40c60b9d6b755db"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/phpmyadmin/sql-parser/zipball/75397801ef687ef6b850e907a40c60b9d6b755db",
-                "reference": "75397801ef687ef6b850e907a40c60b9d6b755db",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^8.2",
-                "symfony/polyfill-mbstring": "^1.24"
-            },
-            "conflict": {
-                "phpmyadmin/motranslator": "<5.2"
-            },
-            "require-dev": {
-                "phpbench/phpbench": "^1.2",
-                "phpmyadmin/coding-standard": "^4.0",
-                "phpmyadmin/motranslator": "^5.3",
-                "phpstan/extension-installer": "^1.4",
-                "phpstan/phpstan": "^2.1",
-                "phpstan/phpstan-deprecation-rules": "^2.0",
-                "phpstan/phpstan-phpunit": "^2.0",
-                "phpstan/phpstan-strict-rules": "^2.0",
-                "phpunit/phpunit": "^11.5",
-                "psalm/plugin-phpunit": "^0.19.2",
-                "vimeo/psalm": "^6.0",
-                "zumba/json-serializer": "^3.2"
-            },
-            "suggest": {
-                "ext-mbstring": "For best performance",
-                "phpmyadmin/motranslator": "Translate messages to your favorite locale"
-            },
-            "bin": [
-                "bin/sql-parser"
-            ],
-            "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "6.0-dev"
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "PhpMyAdmin\\SqlParser\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "The phpMyAdmin Team",
-                    "email": "developers@phpmyadmin.net",
-                    "homepage": "https://www.phpmyadmin.net/team/"
-                }
-            ],
-            "description": "A validating SQL lexer and parser with a focus on MySQL dialect.",
-            "homepage": "https://github.com/phpmyadmin/sql-parser",
-            "keywords": [
-                "analysis",
-                "lexer",
-                "parser",
-                "query linter",
-                "sql",
-                "sql lexer",
-                "sql linter",
-                "sql parser",
-                "sql syntax highlighter",
-                "sql tokenizer"
-            ],
-            "support": {
-                "issues": "https://github.com/phpmyadmin/sql-parser/issues",
-                "source": "https://github.com/phpmyadmin/sql-parser"
-            },
-            "funding": [
-                {
-                    "url": "https://www.phpmyadmin.net/donate/",
-                    "type": "other"
-                }
-            ],
-            "time": "2025-10-31T22:05:33+00:00"
         },
         {
             "name": "phpoffice/phpspreadsheet",
@@ -4034,16 +3782,16 @@
         },
         {
             "name": "symfony/cache-contracts",
-            "version": "v3.6.0",
+            "version": "v3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/cache-contracts.git",
-                "reference": "5d68a57d66910405e5c0b63d6f0af941e66fc868"
+                "reference": "225e8a254166bd3442e370c6f50145465db63831"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/cache-contracts/zipball/5d68a57d66910405e5c0b63d6f0af941e66fc868",
-                "reference": "5d68a57d66910405e5c0b63d6f0af941e66fc868",
+                "url": "https://api.github.com/repos/symfony/cache-contracts/zipball/225e8a254166bd3442e370c6f50145465db63831",
+                "reference": "225e8a254166bd3442e370c6f50145465db63831",
                 "shasum": ""
             },
             "require": {
@@ -4057,7 +3805,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.6-dev"
+                    "dev-main": "3.7-dev"
                 }
             },
             "autoload": {
@@ -4090,7 +3838,7 @@
                 "standards"
             ],
             "support": {
-                "source": "https://github.com/symfony/cache-contracts/tree/v3.6.0"
+                "source": "https://github.com/symfony/cache-contracts/tree/v3.7.0"
             },
             "funding": [
                 {
@@ -4102,11 +3850,15 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-03-13T15:25:07+00:00"
+            "time": "2026-05-05T15:33:14+00:00"
         },
         {
             "name": "symfony/clock",
@@ -4450,16 +4202,16 @@
         },
         {
             "name": "symfony/deprecation-contracts",
-            "version": "v3.6.0",
+            "version": "v3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/deprecation-contracts.git",
-                "reference": "63afe740e99a13ba87ec199bb07bbdee937a5b62"
+                "reference": "50f59d1f3ca46d41ac911f97a78626b6756af35b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/63afe740e99a13ba87ec199bb07bbdee937a5b62",
-                "reference": "63afe740e99a13ba87ec199bb07bbdee937a5b62",
+                "url": "https://api.github.com/repos/symfony/deprecation-contracts/zipball/50f59d1f3ca46d41ac911f97a78626b6756af35b",
+                "reference": "50f59d1f3ca46d41ac911f97a78626b6756af35b",
                 "shasum": ""
             },
             "require": {
@@ -4472,7 +4224,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.6-dev"
+                    "dev-main": "3.7-dev"
                 }
             },
             "autoload": {
@@ -4497,7 +4249,7 @@
             "description": "A generic function and convention to trigger deprecation notices",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.6.0"
+                "source": "https://github.com/symfony/deprecation-contracts/tree/v3.7.0"
             },
             "funding": [
                 {
@@ -4509,11 +4261,15 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-25T14:21:43+00:00"
+            "time": "2026-04-13T15:52:40+00:00"
         },
         {
             "name": "symfony/doctrine-bridge",
@@ -4946,16 +4702,16 @@
         },
         {
             "name": "symfony/event-dispatcher-contracts",
-            "version": "v3.6.0",
+            "version": "v3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/event-dispatcher-contracts.git",
-                "reference": "59eb412e93815df44f05f342958efa9f46b1e586"
+                "reference": "ccba7060602b7fed0b03c85bf025257f76d9ef32"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/event-dispatcher-contracts/zipball/59eb412e93815df44f05f342958efa9f46b1e586",
-                "reference": "59eb412e93815df44f05f342958efa9f46b1e586",
+                "url": "https://api.github.com/repos/symfony/event-dispatcher-contracts/zipball/ccba7060602b7fed0b03c85bf025257f76d9ef32",
+                "reference": "ccba7060602b7fed0b03c85bf025257f76d9ef32",
                 "shasum": ""
             },
             "require": {
@@ -4969,7 +4725,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.6-dev"
+                    "dev-main": "3.7-dev"
                 }
             },
             "autoload": {
@@ -5002,7 +4758,7 @@
                 "standards"
             ],
             "support": {
-                "source": "https://github.com/symfony/event-dispatcher-contracts/tree/v3.6.0"
+                "source": "https://github.com/symfony/event-dispatcher-contracts/tree/v3.7.0"
             },
             "funding": [
                 {
@@ -5014,11 +4770,15 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-09-25T14:21:43+00:00"
+            "time": "2026-01-05T13:30:16+00:00"
         },
         {
             "name": "symfony/expression-language",
@@ -5718,16 +5478,16 @@
         },
         {
             "name": "symfony/http-client-contracts",
-            "version": "v3.6.0",
+            "version": "v3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/http-client-contracts.git",
-                "reference": "75d7043853a42837e68111812f4d964b01e5101c"
+                "reference": "4a2d00c37651c0bdc2b9e1c773487a8bf4edb12d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/http-client-contracts/zipball/75d7043853a42837e68111812f4d964b01e5101c",
-                "reference": "75d7043853a42837e68111812f4d964b01e5101c",
+                "url": "https://api.github.com/repos/symfony/http-client-contracts/zipball/4a2d00c37651c0bdc2b9e1c773487a8bf4edb12d",
+                "reference": "4a2d00c37651c0bdc2b9e1c773487a8bf4edb12d",
                 "shasum": ""
             },
             "require": {
@@ -5740,7 +5500,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.6-dev"
+                    "dev-main": "3.7-dev"
                 }
             },
             "autoload": {
@@ -5776,7 +5536,7 @@
                 "standards"
             ],
             "support": {
-                "source": "https://github.com/symfony/http-client-contracts/tree/v3.6.0"
+                "source": "https://github.com/symfony/http-client-contracts/tree/v3.7.0"
             },
             "funding": [
                 {
@@ -5788,11 +5548,15 @@
                     "type": "github"
                 },
                 {
+                    "url": "https://github.com/nicolas-grekas",
+                    "type": "github"
+                },
+                {
                     "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-04-29T11:18:49+00:00"
+            "time": "2026-03-06T13:17:50+00:00"
         },
         {
             "name": "symfony/http-foundation",
@@ -8205,16 +7969,16 @@
         },
         {
             "name": "symfony/service-contracts",
-            "version": "v3.6.1",
+            "version": "v3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/service-contracts.git",
-                "reference": "45112560a3ba2d715666a509a0bc9521d10b6c43"
+                "reference": "d25d82433a80eba6aa0e6c24b61d7370d99e444a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/45112560a3ba2d715666a509a0bc9521d10b6c43",
-                "reference": "45112560a3ba2d715666a509a0bc9521d10b6c43",
+                "url": "https://api.github.com/repos/symfony/service-contracts/zipball/d25d82433a80eba6aa0e6c24b61d7370d99e444a",
+                "reference": "d25d82433a80eba6aa0e6c24b61d7370d99e444a",
                 "shasum": ""
             },
             "require": {
@@ -8232,7 +7996,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.6-dev"
+                    "dev-main": "3.7-dev"
                 }
             },
             "autoload": {
@@ -8268,7 +8032,7 @@
                 "standards"
             ],
             "support": {
-                "source": "https://github.com/symfony/service-contracts/tree/v3.6.1"
+                "source": "https://github.com/symfony/service-contracts/tree/v3.7.0"
             },
             "funding": [
                 {
@@ -8288,7 +8052,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-07-15T11:30:57+00:00"
+            "time": "2026-03-28T09:44:51+00:00"
         },
         {
             "name": "symfony/stimulus-bundle",
@@ -8619,16 +8383,16 @@
         },
         {
             "name": "symfony/translation-contracts",
-            "version": "v3.6.1",
+            "version": "v3.7.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/translation-contracts.git",
-                "reference": "65a8bc82080447fae78373aa10f8d13b38338977"
+                "reference": "0ab302977a952b42fd51475c4ebac81f8da0a95d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/translation-contracts/zipball/65a8bc82080447fae78373aa10f8d13b38338977",
-                "reference": "65a8bc82080447fae78373aa10f8d13b38338977",
+                "url": "https://api.github.com/repos/symfony/translation-contracts/zipball/0ab302977a952b42fd51475c4ebac81f8da0a95d",
+                "reference": "0ab302977a952b42fd51475c4ebac81f8da0a95d",
                 "shasum": ""
             },
             "require": {
@@ -8641,7 +8405,7 @@
                     "name": "symfony/contracts"
                 },
                 "branch-alias": {
-                    "dev-main": "3.6-dev"
+                    "dev-main": "3.7-dev"
                 }
             },
             "autoload": {
@@ -8677,7 +8441,7 @@
                 "standards"
             ],
             "support": {
-                "source": "https://github.com/symfony/translation-contracts/tree/v3.6.1"
+                "source": "https://github.com/symfony/translation-contracts/tree/v3.7.0"
             },
             "funding": [
                 {
@@ -8697,7 +8461,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-07-15T13:41:35+00:00"
+            "time": "2026-01-05T13:30:16+00:00"
         },
         {
             "name": "symfony/twig-bridge",
@@ -9897,16 +9661,16 @@
         },
         {
             "name": "twilio/sdk",
-            "version": "8.11.5",
+            "version": "8.11.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/twilio/twilio-php",
-                "reference": "766e44f9986622335ecbbbd131e61390eddbd700"
+                "reference": "57754efb0998086007ec9a63874fd85def5afb7f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/twilio/twilio-php/zipball/766e44f9986622335ecbbbd131e61390eddbd700",
-                "reference": "766e44f9986622335ecbbbd131e61390eddbd700",
+                "url": "https://api.github.com/repos/twilio/twilio-php/zipball/57754efb0998086007ec9a63874fd85def5afb7f",
+                "reference": "57754efb0998086007ec9a63874fd85def5afb7f",
                 "shasum": ""
             },
             "require": {
@@ -9943,7 +9707,7 @@
                 "sms",
                 "twilio"
             ],
-            "time": "2026-05-06T08:38:47+00:00"
+            "time": "2026-05-07T16:40:31+00:00"
         },
         {
             "name": "webmozart/assert",
@@ -10006,6 +9770,110 @@
     ],
     "packages-dev": [
         {
+            "name": "ahmed-bhs/doctrine-doctor",
+            "version": "v1.1.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ahmed-bhs/doctrine-doctor.git",
+                "reference": "cacebcb65db55ecfcc8ae2cf4699851173c6b7a3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ahmed-bhs/doctrine-doctor/zipball/cacebcb65db55ecfcc8ae2cf4699851173c6b7a3",
+                "reference": "cacebcb65db55ecfcc8ae2cf4699851173c6b7a3",
+                "shasum": ""
+            },
+            "require": {
+                "doctrine/doctrine-bundle": "^2.12",
+                "doctrine/orm": "^2.10|^3.0|^4.0",
+                "nikic/php-parser": "^5.6",
+                "php": "^8.2",
+                "phpmyadmin/sql-parser": "^6.0",
+                "symfony/framework-bundle": "^6.0|^7.0",
+                "webmozart/assert": "^1.11"
+            },
+            "require-dev": {
+                "bitbag/coding-standard": "^3.0",
+                "deptrac/deptrac": "^4.2",
+                "php-parallel-lint/php-parallel-lint": "^1.4",
+                "phpmd/phpmd": "^2.15",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-doctrine": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpstan/phpstan-symfony": "^2.0",
+                "phpunit/phpunit": "^10.0",
+                "symfony/stopwatch": "^6.0|^7.0",
+                "symfony/var-dumper": "^6.0|^7.0",
+                "symfony/var-exporter": "^6.4|^7.0",
+                "symplify/easy-coding-standard": "^12.6",
+                "twig/twig": "^3.0"
+            },
+            "type": "symfony-bundle",
+            "extra": {
+                "symfony": {
+                    "require": "^6.0|^7.0",
+                    "allow-contrib": false
+                },
+                "branch-alias": {
+                    "dev-main": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "AhmedBhs\\DoctrineDoctor\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ahmed EBEN HASSINE",
+                    "email": "ahmedbhs123@gmail.com",
+                    "role": "Maintainer"
+                }
+            ],
+            "description": "Runtime analysis tool for Doctrine ORM integrated into Symfony Web Profiler. Unlike static linters, it analyzes actual query execution at runtime to detect performance bottlenecks, security vulnerabilities, and best practice violations during development with real execution context and data.",
+            "homepage": "https://github.com/ahmed-bhs/doctrine-doctor",
+            "keywords": [
+                "Best-Practices",
+                "analyzer",
+                "code-quality",
+                "database-performance",
+                "debugging",
+                "developer-tools",
+                "development-tools",
+                "doctrine",
+                "doctrine-analyzer",
+                "doctrine-orm",
+                "dql",
+                "missing-indexes",
+                "n-plus-one",
+                "n-plus-one-detection",
+                "orm-debugging",
+                "performance",
+                "performance-monitoring",
+                "profiler",
+                "query-analysis",
+                "query-analyzer",
+                "query-optimization",
+                "runtime-analysis",
+                "security",
+                "slow-queries",
+                "sql-profiler",
+                "symfony",
+                "symfony-bundle",
+                "web-profiler"
+            ],
+            "support": {
+                "issues": "https://github.com/ahmed-bhs/doctrine-doctor/issues",
+                "source": "https://github.com/ahmed-bhs/doctrine-doctor"
+            },
+            "time": "2026-03-10T18:51:00+00:00"
+        },
+        {
             "name": "myclabs/deep-copy",
             "version": "1.13.4",
             "source": {
@@ -10064,6 +9932,64 @@
                 }
             ],
             "time": "2025-08-01T08:46:24+00:00"
+        },
+        {
+            "name": "nikic/php-parser",
+            "version": "v5.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/nikic/PHP-Parser.git",
+                "reference": "dca41cd15c2ac9d055ad70dbfd011130757d1f82"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/nikic/PHP-Parser/zipball/dca41cd15c2ac9d055ad70dbfd011130757d1f82",
+                "reference": "dca41cd15c2ac9d055ad70dbfd011130757d1f82",
+                "shasum": ""
+            },
+            "require": {
+                "ext-ctype": "*",
+                "ext-json": "*",
+                "ext-tokenizer": "*",
+                "php": ">=7.4"
+            },
+            "require-dev": {
+                "ircmaxell/php-yacc": "^0.0.7",
+                "phpunit/phpunit": "^9.0"
+            },
+            "bin": [
+                "bin/php-parse"
+            ],
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "5.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PhpParser\\": "lib/PhpParser"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Nikita Popov"
+                }
+            ],
+            "description": "A PHP parser written in PHP",
+            "keywords": [
+                "parser",
+                "php"
+            ],
+            "support": {
+                "issues": "https://github.com/nikic/PHP-Parser/issues",
+                "source": "https://github.com/nikic/PHP-Parser/tree/v5.7.0"
+            },
+            "time": "2025-12-06T11:56:16+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -10182,6 +10108,96 @@
                 "source": "https://github.com/phar-io/version/tree/3.2.1"
             },
             "time": "2022-02-21T01:04:05+00:00"
+        },
+        {
+            "name": "phpmyadmin/sql-parser",
+            "version": "6.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpmyadmin/sql-parser.git",
+                "reference": "75397801ef687ef6b850e907a40c60b9d6b755db"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/phpmyadmin/sql-parser/zipball/75397801ef687ef6b850e907a40c60b9d6b755db",
+                "reference": "75397801ef687ef6b850e907a40c60b9d6b755db",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^8.2",
+                "symfony/polyfill-mbstring": "^1.24"
+            },
+            "conflict": {
+                "phpmyadmin/motranslator": "<5.2"
+            },
+            "require-dev": {
+                "phpbench/phpbench": "^1.2",
+                "phpmyadmin/coding-standard": "^4.0",
+                "phpmyadmin/motranslator": "^5.3",
+                "phpstan/extension-installer": "^1.4",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-deprecation-rules": "^2.0",
+                "phpstan/phpstan-phpunit": "^2.0",
+                "phpstan/phpstan-strict-rules": "^2.0",
+                "phpunit/phpunit": "^11.5",
+                "psalm/plugin-phpunit": "^0.19.2",
+                "vimeo/psalm": "^6.0",
+                "zumba/json-serializer": "^3.2"
+            },
+            "suggest": {
+                "ext-mbstring": "For best performance",
+                "phpmyadmin/motranslator": "Translate messages to your favorite locale"
+            },
+            "bin": [
+                "bin/sql-parser"
+            ],
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "6.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PhpMyAdmin\\SqlParser\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "The phpMyAdmin Team",
+                    "email": "developers@phpmyadmin.net",
+                    "homepage": "https://www.phpmyadmin.net/team/"
+                }
+            ],
+            "description": "A validating SQL lexer and parser with a focus on MySQL dialect.",
+            "homepage": "https://github.com/phpmyadmin/sql-parser",
+            "keywords": [
+                "analysis",
+                "lexer",
+                "parser",
+                "query linter",
+                "sql",
+                "sql lexer",
+                "sql linter",
+                "sql parser",
+                "sql syntax highlighter",
+                "sql tokenizer"
+            ],
+            "support": {
+                "issues": "https://github.com/phpmyadmin/sql-parser/issues",
+                "source": "https://github.com/phpmyadmin/sql-parser"
+            },
+            "funding": [
+                {
+                    "url": "https://www.phpmyadmin.net/donate/",
+                    "type": "other"
+                }
+            ],
+            "time": "2025-10-31T22:05:33+00:00"
         },
         {
             "name": "phpstan/phpstan",

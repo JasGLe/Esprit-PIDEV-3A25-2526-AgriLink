@@ -595,12 +595,6 @@
 .mes-evenements-arrow.is-open { transform: rotate(180deg); }
 </style>
 
-            modal.addEventListener('hidden.bs.modal', function () {
-                arrow.classList.remove('is-open');
-            });
-        });
-    </script>
-
     {% if equipementsGeo|default([])|length > 0 %}
     {# Leaflet chargé uniquement si des équipements géolocalisés existent #}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">

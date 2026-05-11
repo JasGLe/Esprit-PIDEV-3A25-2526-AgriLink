@@ -21,32 +21,54 @@ final class Version20260429230323 extends AbstractMigration
 
     public function up(Schema $schema): void
     {
-        // First, check for NULL values and handle them gracefully
-        // For evenement: Set created_by_id to a default user (ID 1) if NULL
-        $this->addSql('UPDATE evenement SET created_by_id = COALESCE(created_by_id, 1) WHERE created_by_id IS NULL');
+        $schemaManager = $this->connection->createSchemaManager();
 
-        // For activite: Set created_by_id to a default user (ID 1) if NULL
-        $this->addSql('UPDATE activite SET created_by_id = COALESCE(created_by_id, 1) WHERE created_by_id IS NULL');
+        foreach (['activite', 'evenement'] as $tableName) {
+            $columns = $schemaManager->listTableColumns($tableName);
 
-        // Now make created_by_id NOT NULL in evenement
-        $this->addSql('ALTER TABLE evenement CHANGE created_by_id created_by_id INT NOT NULL');
+            if (!isset($columns['created_by_id'])) {
+                $this->addSql(sprintf('ALTER TABLE %s ADD created_by_id INT DEFAULT NULL', $tableName));
+            }
 
-        // Make created_by_id NOT NULL in activite
-        $this->addSql('ALTER TABLE activite CHANGE created_by_id created_by_id INT NOT NULL');
+            if (!isset($columns['updated_by_id'])) {
+                $this->addSql(sprintf('ALTER TABLE %s ADD updated_by_id INT DEFAULT NULL', $tableName));
+            }
+        }
 
-        // Add updated_at to security_event if it doesn't exist
-        $this->addSql('ALTER TABLE security_event ADD COLUMN updated_at DATETIME NULL AFTER created_at');
+        $firstUserId = $this->connection->fetchOne('SELECT id_utilisateur FROM user ORDER BY id_utilisateur ASC LIMIT 1');
+
+        if ($firstUserId !== false) {
+            $this->addSql(sprintf('UPDATE activite SET created_by_id = %d WHERE created_by_id IS NULL', (int) $firstUserId));
+            $this->addSql(sprintf('UPDATE evenement SET created_by_id = %d WHERE created_by_id IS NULL', (int) $firstUserId));
+            $this->addSql('ALTER TABLE activite MODIFY created_by_id INT NOT NULL');
+            $this->addSql('ALTER TABLE evenement MODIFY created_by_id INT NOT NULL');
+        } else {
+            $this->write('Skipping NOT NULL enforcement for activite/evenement.created_by_id because no user rows exist yet.');
+        }
+
+        $securityEventColumns = $schemaManager->listTableColumns('security_event');
+
+        if (!isset($securityEventColumns['updated_at'])) {
+            $this->addSql('ALTER TABLE security_event ADD COLUMN updated_at DATETIME NULL AFTER created_at');
+        }
     }
 
     public function down(Schema $schema): void
     {
-        // Revert: Make created_by_id nullable in evenement
-        $this->addSql('ALTER TABLE evenement CHANGE created_by_id created_by_id INT DEFAULT NULL');
+        $schemaManager = $this->connection->createSchemaManager();
 
-        // Revert: Make created_by_id nullable in activite
-        $this->addSql('ALTER TABLE activite CHANGE created_by_id created_by_id INT DEFAULT NULL');
+        foreach (['activite', 'evenement'] as $tableName) {
+            $columns = $schemaManager->listTableColumns($tableName);
 
-        // Remove updated_at from security_event
-        $this->addSql('ALTER TABLE security_event DROP COLUMN updated_at');
+            if (isset($columns['created_by_id'])) {
+                $this->addSql(sprintf('ALTER TABLE %s MODIFY created_by_id INT DEFAULT NULL', $tableName));
+            }
+        }
+
+        $securityEventColumns = $schemaManager->listTableColumns('security_event');
+
+        if (isset($securityEventColumns['updated_at'])) {
+            $this->addSql('ALTER TABLE security_event DROP COLUMN updated_at');
+        }
     }
 }

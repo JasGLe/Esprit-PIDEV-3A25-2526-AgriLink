@@ -152,7 +152,7 @@ class EquipementRepository extends ServiceEntityRepository
             ->where('e.userlog = :userId')
             ->setParameter('userId', $userId)
             ->groupBy('e.type')
-            ->orderBy('total', 'DESC')
+            ->orderBy('COUNT(e.id)', 'DESC')
             ->getQuery()
             ->getResult();
 
