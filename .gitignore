@@ -1,4 +1,9 @@
 ###> symfony/framework-bundle ###
+/.env
+/.env.dev
+/.env.test
+!.env.example
+!.env.local.exemple
 /.env.local
 /.env.local.php
 /.env.*.local
@@ -29,6 +34,9 @@ yarn-error.log
 ###> Project-specific ###
 .DS_Store
 *.log
+/.codex_*
+/.phpunit.cache/
+/phpstan-output.txt
 /Entity_backup_*/
 /prompt*.txt
 /assets/vendor/
