@@ -147,17 +147,6 @@ git push origin features/module[X]
 
 ---
 
-## 🔑 Comptes de Test
-
-| Rôle           | Email                       | Mot de passe |
-| -------------- | --------------------------- | ------------ |
-| 🛡️ Admin       | jasser@agrilink.tn          | `test123`    |
-| 🌾 Agriculteur | hassen.trabelsi@agrilink.tn | `agri123`    |
-
-> ⚠️ Ces identifiants sont réservés à l'environnement de développement local.
-
----
-
 ## 🔗 Ressources Utiles
 
 - 📘 [Documentation Symfony](https://symfony.com/doc/current/index.html)
