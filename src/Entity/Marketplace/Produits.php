@@ -85,6 +85,11 @@ class Produits
     #[ORM\Column(type: Types::DATETIME_MUTABLE)]
     private \DateTimeInterface $createdAt;
 
+    public function __construct()
+    {
+        $this->createdAt = new \DateTime();
+    }
+
     public function getId(): int
     {
         return $this->id;
@@ -399,7 +404,7 @@ class Produits
     #[ORM\PrePersist]
     public function onPrePersist(): void
     {
-        if ($this->createdAt === null) {
+        if (!isset($this->createdAt)) {
             $this->createdAt = new \DateTime();
         }
         if ($this->moderationStatus === '') {
