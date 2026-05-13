@@ -2,6 +2,11 @@
 
 use App\Kernel;
 
+if (!is_file(dirname(__DIR__).'/.env')) {
+    $_SERVER['APP_RUNTIME_OPTIONS']['disable_dotenv'] = true;
+    $_ENV['APP_RUNTIME_OPTIONS']['disable_dotenv'] = true;
+}
+
 require_once dirname(__DIR__).'/vendor/autoload_runtime.php';
 
 return function (array $context) {
