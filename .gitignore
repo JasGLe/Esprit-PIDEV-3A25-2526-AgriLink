@@ -3,7 +3,6 @@
 /.env.dev
 /.env.test
 !.env.example
-!.env.local.exemple
 /.env.local
 /.env.local.php
 /.env.*.local
@@ -42,6 +41,9 @@ yarn-error.log
 /assets/vendor/
 /.claude/
 /docs/
+/public/assets/
+/public/agrilink
+/.vscode/
 /public/uploads/
 
 # Local sprint/story HTML (not versioned)
@@ -52,5 +54,3 @@ yarn-error.log
 ###> phpstan/phpstan ###
 phpstan.neon
 ###< phpstan/phpstan ###
-*.md
-!README.md
