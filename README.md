@@ -18,6 +18,12 @@
 
 **AgriLink** is a Symfony web application built for **collaborative agricultural management**. It provides a complete set of tools for farmers, farm managers, and stakeholders in the agri-food ecosystem.
 
+## Demo
+
+[![Watch Demo](https://img.shields.io/badge/Watch-Demo-2ea44f?style=for-the-badge)](https://cap.so/s/8j4gep1426npaat)
+
+Live demo: [cap.so/s/8j4gep1426npaat](https://cap.so/s/8j4gep1426npaat)
+
 ---
 
 ## Project Modules
